@@ -34,31 +34,10 @@ export interface Artist {
     profilePicture?: string; // base64 string or URL
     originalLocation: Location; // Where artist is from
     activeLocation: Location; // Where artist is currently based
+    bio?: string;
     socialLinks?: SocialLinks;
     createdAt: Date | string;
     updatedAt: Date | string;
-}
-
-/**
- * Artist data for creation (without auto-generated fields)
- */
-export interface CreateArtistDTO {
-    name: string;
-    profilePicture?: string;
-    originalLocation: Location;
-    activeLocation: Location;
-    socialLinks?: SocialLinks;
-}
-
-/**
- * Artist data for updates (all fields optional except those needed for validation)
- */
-export interface UpdateArtistDTO {
-    name?: string;
-    profilePicture?: string;
-    originalLocation?: Location;
-    activeLocation?: Location;
-    socialLinks?: SocialLinks;
 }
 
 /**
