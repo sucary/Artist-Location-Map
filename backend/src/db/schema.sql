@@ -45,6 +45,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+/*
+  TODO: Remove this annotation when ready to get rid of errors
+
+  -- Trigger to automatically update updated_at
+  DROP TRIGGER IF EXISTS update_artists_updated_at ON artists;
+*/
+
 -- Trigger to automatically update updated_at
 CREATE TRIGGER update_artists_updated_at
   BEFORE UPDATE ON artists

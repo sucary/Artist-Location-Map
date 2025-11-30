@@ -7,6 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src/**/*.ts",
     "dev": "nodemon src/server.ts",
+    "db:init": "ts-node src/db/init.ts",
+    "test:db": "ts-node src/tests/test-db.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
