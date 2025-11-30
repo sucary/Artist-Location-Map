@@ -56,7 +56,6 @@ const MapView = () => {
                             <p className="text-sm text-gray-600">
                                 {artist.activeLocation.city}, {artist.activeLocation.province}
                             </p>
-                            {artist.bio && <p className="mt-2 text-sm">{artist.bio}</p>}
                         </div>
                     </Popup>
                 </Marker>

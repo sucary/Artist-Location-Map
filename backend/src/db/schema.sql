@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS artists (
   active_coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
 
   -- Additional Info
-  bio TEXT,
   instagram_url TEXT,
   twitter_url TEXT,
   spotify_url TEXT,

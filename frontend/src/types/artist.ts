@@ -34,7 +34,6 @@ export interface Artist {
     profilePicture?: string; // base64 string or URL
     originalLocation: Location; // Where artist is from
     activeLocation: Location; // Where artist is currently based
-    bio?: string;
     socialLinks?: SocialLinks;
     createdAt: Date | string;
     updatedAt: Date | string;
