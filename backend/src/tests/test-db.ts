@@ -6,7 +6,6 @@ async function testConnection() {
         console.log('Database connected successfully!');
         console.log('Current time from DB:', result.rows[0].now);
 
-        // Test PostGIS
         const postgisVersion = await pool.query('SELECT PostGIS_version()');
         console.log('PostGIS version:', postgisVersion.rows[0].postgis_version);
 

@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db:up": "docker-compose -f docker-compose.test.yml up -d",
+    "test:db:down": "docker-compose -f docker-compose.test.yml down",
     "lint": "eslint src/**/*.ts",
     "dev": "nodemon src/server.ts",
     "db:init": "ts-node src/db/init.ts",
@@ -29,11 +32,13 @@
     "@types/pg": "^8.15.6",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
+    "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.48.0"
+    "typescript-eslint": "^8.48.0",
+    "vitest": "^4.0.16"
   }
 }
