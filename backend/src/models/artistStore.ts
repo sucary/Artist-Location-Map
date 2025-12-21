@@ -1,4 +1,4 @@
-import { Artist, CreateArtistDTO, UpdateArtistDTO } from '../types/artist';
+import { Artist, CreateArtistDTO, UpdateArtistDTO, LocationCount, LocationView } from '../types/artist';
 import pool from '../config/database';
 
 /**
@@ -245,6 +245,23 @@ export const ArtistStore = {
             return result.rowCount !== null && result.rowCount > 0;
         } catch (error) {
             console.error('Error deleting artist:', error);
+            throw error;
+        }
+    },
+
+    countByCity: async (view: LocationView = 'active'): Promise<LocationCount[]> => {
+        try {
+            const column = view === 'original' ? 'original_city' : 'active_city';
+            const result = await pool.query(`
+                SELECT ${column} as location, COUNT(*)::int as count
+                FROM artists
+                GROUP BY ${column}
+                ORDER BY count DESC
+            `);
+
+            return result.rows;
+        } catch (error) {
+            console.error('Error counting artists by city:', error);
             throw error;
         }
     }

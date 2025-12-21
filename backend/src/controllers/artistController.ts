@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ArtistStore } from '../models/artistStore';
-import { CreateArtistDTO, UpdateArtistDTO, ArtistQueryParams } from '../types/artist';
+import { CreateArtistDTO, UpdateArtistDTO, ArtistQueryParams, LocationView } from '../types/artist';
 import { isValidLocation, isValidSocialLinks } from '../types/validation';
 
 export const getAllArtists = async (req: Request, res: Response) => {
@@ -121,6 +121,22 @@ export const deleteArtist = async (req: Request, res: Response) => {
         res.status(204).send();
     } catch (error) {
         console.error('Error in deleteArtist:', error);
+        res.status(500).json({ message: 'Database error' });
+    }
+};
+
+export const getArtistCountByCity = async (req: Request, res: Response) => {
+    try {
+        const view = (req.query.view as LocationView) || 'active';
+        if (view !== 'original' && view !== 'active') {
+            res.status(400).json({ message: 'Invalid view parameter. Use "original" or "active"' });
+            return;
+        }
+
+        const counts = await ArtistStore.countByCity(view);
+        res.json(counts);
+    } catch (error) {
+        console.error('Error in getArtistCountByCity:', error);
         res.status(500).json({ message: 'Database error' });
     }
 };

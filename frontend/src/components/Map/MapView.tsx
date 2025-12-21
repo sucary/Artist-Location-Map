@@ -18,7 +18,7 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapView = () => {
-    const defaultCenter: LatLngExpression = [43.6532, -79.3832]; // Toronto
+    const defaultCenter: LatLngExpression = [35.6762, 139.6503]; // Tokyo
     const defaultZoom = 4;
     const [artists, setArtists] = useState<Artist[]>([]);
 

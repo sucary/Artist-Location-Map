@@ -4,13 +4,17 @@ import {
     getArtistById,
     createArtist,
     updateArtist,
-    deleteArtist
+    deleteArtist,
+    getArtistCountByCity
 } from '../controllers/artistController';
 
 const router = Router();
 
 // GET /api/artists
 router.get('/', getAllArtists);
+
+// GET /api/artists/stats/by-city
+router.get('/stats/by-city', getArtistCountByCity);
 
 // GET /api/artists/:id
 router.get('/:id', getArtistById);

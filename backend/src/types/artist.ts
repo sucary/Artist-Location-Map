@@ -75,3 +75,11 @@ export interface ArtistQueryParams {
     province?: string;
     view?: LocationView; // Which location to search by
 }
+
+/**
+ * Count of artists per location (city or province)
+ */
+export interface LocationCount {
+    location: string;
+    count: number;
+}
