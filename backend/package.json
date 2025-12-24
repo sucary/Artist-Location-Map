@@ -11,6 +11,7 @@
     "lint": "eslint src/**/*.ts",
     "dev": "nodemon src/server.ts",
     "db:init": "ts-node src/db/init.ts",
+    "db:seed": "ts-node src/db/seed.ts",
     "test:db": "ts-node src/tests/test-db.ts",
     "build": "tsc",
     "start": "node dist/server.js"

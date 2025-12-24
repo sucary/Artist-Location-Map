@@ -202,7 +202,7 @@ export const ArtistStore = {
 
             if (updates.length === 0) {
                 // No fields to update, just return the existing artist
-                return await this.getById(id);
+                return await ArtistStore.getById(id);
             }
 
             // Add the id as the last parameter
