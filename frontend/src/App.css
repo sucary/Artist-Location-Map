@@ -1,0 +1,16 @@
+/* Leaflet default style killer! */
+
+.artist-popup .leaflet-popup-content-wrapper {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.artist-popup .leaflet-popup-tip-container {
+    display: none;
+}
+
+.artist-popup .leaflet-popup-content {
+    margin: 0;
+    width: auto !important;
+}

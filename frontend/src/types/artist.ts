@@ -21,8 +21,9 @@ export interface Location {
 export interface SocialLinks {
     instagram?: string;
     twitter?: string;
-    spotify?: string;
+    appleMusic?: string;
     website?: string;
+    youtube?: string;
 }
 
 /**

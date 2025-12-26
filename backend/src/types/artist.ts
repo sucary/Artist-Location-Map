@@ -23,6 +23,7 @@ export interface SocialLinks {
     twitter?: string;
     spotify?: string;
     website?: string;
+    youtube?: string;
 }
 
 /**
@@ -31,7 +32,7 @@ export interface SocialLinks {
 export interface Artist {
     id: string;
     name: string;
-    profilePicture?: string; // base64 string or URL
+    profilePicture?: string; // currently avatar and background image together
     originalLocation: Location; // Where artist is from
     activeLocation: Location; // Where artist is currently based
     socialLinks?: SocialLinks;

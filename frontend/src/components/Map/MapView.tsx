@@ -7,6 +7,7 @@ import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { getArtists } from '../../services/api';
 import type { Artist } from '../../types/artist';
+import ArtistProfile from '../../components/ArtistProfile';
 
 const DefaultIcon = L.icon({
     iconUrl: icon,
@@ -74,13 +75,8 @@ const MapView = () => {
                     key={artist.id}
                     position={[artist.activeLocation.coordinates.lat, artist.activeLocation.coordinates.lng]}
                 >
-                    <Popup>
-                        <div className="p-2">
-                            <h3 className="font-bold text-lg">{artist.name}</h3>
-                            <p className="text-sm text-gray-600">
-                                {artist.activeLocation.city}, {artist.activeLocation.province}
-                            </p>
-                        </div>
+                    <Popup className="artist-popup" closeButton={false}>
+                        <ArtistProfile artist={artist} />
                     </Popup>
                 </Marker>
             ))}
