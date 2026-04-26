@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createArtist, updateArtist } from '../services/api';
-import type { SearchResult } from '../services/api';
+import type { MusicBrainzCatalogArtist, SearchResult } from '../services/api';
 import type { Artist, CropArea } from '../types/artist';
 import type { SocialLinkKey } from '../constants/artist';
 import { extractLocationData, createEmptyLocation, hasValidCoordinates } from '../utils/locationUtils';
@@ -21,6 +21,11 @@ export interface UseArtistFormReturn {
 
     isSaving: boolean;
     error: string | null;
+    musicBrainzLocationStatus: string | null;
+    musicBrainzLocationSearches: {
+        originalLocation: { query: string; key: number } | null;
+        activeLocation: { query: string; key: number } | null;
+    };
     pendingField: 'originalLocation' | 'activeLocation' | null;
 
     handleLocationSelect: (result: SearchResult, locationType: 'originalLocation' | 'activeLocation') => void;
@@ -31,6 +36,7 @@ export interface UseArtistFormReturn {
     clearError: () => void;
     updateSocialLink: (key: SocialLinkKey, value: string) => void;
     updateName: (name: string) => void;
+    applyMusicBrainzArtist: (artist: MusicBrainzCatalogArtist) => Promise<void>;
     updateDebutYear: (year: number | undefined) => void;
     updateInactiveYear: (year: number | undefined) => void;
 
@@ -44,11 +50,11 @@ export interface UseArtistFormReturn {
     isEditing: boolean;
 }
 
-const createInitialFormData = (initialData: Artist | undefined, defaultName: string): Partial<Artist> => {
+const createInitialFormData = (initialData: Artist | undefined): Partial<Artist> => {
     if (initialData) return initialData;
 
     return {
-        name: defaultName,
+        name: '',
         sourceImage: '',
         avatarCrop: undefined,
         profileCrop: undefined,
@@ -66,9 +72,17 @@ export const useArtistForm = ({
     const queryClient = useQueryClient();
     const { t } = useTranslation();
 
-    const [formData, setFormData] = useState<Partial<Artist>>(() => createInitialFormData(initialData, t('artistForm.defaults.newArtist')));
+    const [formData, setFormData] = useState<Partial<Artist>>(() => createInitialFormData(initialData));
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [musicBrainzLocationStatus, setMusicBrainzLocationStatus] = useState<string | null>(null);
+    const [musicBrainzLocationSearches, setMusicBrainzLocationSearches] = useState<{
+        originalLocation: { query: string; key: number } | null;
+        activeLocation: { query: string; key: number } | null;
+    }>({
+        originalLocation: null,
+        activeLocation: null
+    });
     const [pendingField, setPendingField] = useState<'originalLocation' | 'activeLocation' | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -89,6 +103,10 @@ export const useArtistForm = ({
             [locationType]: locationData
         }));
         setError(null);
+        setMusicBrainzLocationSearches(prev => ({
+            ...prev,
+            [locationType]: null
+        }));
     }, []);
 
     const copyOriginalToActive = useCallback(() => {
@@ -112,6 +130,95 @@ export const useArtistForm = ({
     const updateName = useCallback((name: string) => {
         setFormData(prev => ({ ...prev, name }));
     }, []);
+
+    const parseYear = useCallback((value?: string | null) => {
+        if (!value) return undefined;
+        const year = Number(value.slice(0, 4));
+        return Number.isInteger(year) && year >= 1900 && year <= 2100 ? year : undefined;
+    }, []);
+
+    const getLinkHost = useCallback((url?: string | null) => {
+        if (!url) return '';
+        try {
+            return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+        } catch {
+            return '';
+        }
+    }, []);
+
+    const findMusicBrainzLink = useCallback((
+        artist: MusicBrainzCatalogArtist,
+        hosts: string[],
+        fallback?: string | null
+    ) => {
+        const links = 'links' in artist && Array.isArray(artist.links) ? artist.links : [];
+        const match = links.find((link) => {
+            const host = getLinkHost(link.url);
+            return hosts.some((candidate) => host === candidate || host.endsWith(`.${candidate}`));
+        });
+
+        return match?.url || fallback || '';
+    }, [getLinkHost]);
+
+    const getMusicBrainzSocialLinks = useCallback((artist: MusicBrainzCatalogArtist) => {
+        return {
+            website: findMusicBrainzLink(artist, [], artist.websiteUrl),
+            instagram: findMusicBrainzLink(artist, ['instagram.com'], artist.instagramUrl),
+            twitter: findMusicBrainzLink(artist, ['x.com', 'twitter.com'], artist.twitterUrl),
+            appleMusic: findMusicBrainzLink(artist, ['music.apple.com', 'itunes.apple.com'], artist.appleMusicUrl),
+            youtube: findMusicBrainzLink(artist, ['youtube.com', 'youtu.be'], artist.youtubeUrl),
+        };
+    }, [findMusicBrainzLink]);
+
+    const buildLocationQuery = useCallback((primary?: string | null, context?: string | null) => {
+        const first = primary?.trim();
+        const second = context?.trim();
+        if (!first) return '';
+        if (!second || first.toLowerCase() === second.toLowerCase()) return first;
+        return `${first}, ${second}`;
+    }, []);
+
+    const applyMusicBrainzArtist = useCallback(async (artist: MusicBrainzCatalogArtist) => {
+        const originalLocationQuery = buildLocationQuery(
+            artist.beginAreaName || artist.areaName,
+            artist.beginAreaName ? artist.areaName : artist.country
+        );
+        const activeLocationQuery = buildLocationQuery(
+            artist.areaName || artist.beginAreaName,
+            artist.country
+        );
+
+        setFormData(prev => ({
+            ...prev,
+            musicbrainzMbid: artist.mbid,
+            name: artist.name,
+            debutYear: parseYear(artist.lifeSpanBegin),
+            inactiveYear: artist.ended ? parseYear(artist.lifeSpanEnd) : undefined,
+            socialLinks: getMusicBrainzSocialLinks(artist)
+        }));
+        setError(null);
+        setMusicBrainzLocationStatus(null);
+
+        if (!originalLocationQuery && !activeLocationQuery) {
+            setMusicBrainzLocationSearches({
+                originalLocation: null,
+                activeLocation: null
+            });
+            setMusicBrainzLocationStatus('MusicBrainz has no usable area for this artist.');
+            return;
+        }
+
+        const key = Date.now();
+        setMusicBrainzLocationSearches({
+            originalLocation: originalLocationQuery ? { query: originalLocationQuery, key } : null,
+            activeLocation: activeLocationQuery ? { query: activeLocationQuery, key: key + 1 } : null
+        });
+        setMusicBrainzLocationStatus('Career years and social media links auto-filled. Choose locations from the search results.');
+    }, [
+        buildLocationQuery,
+        getMusicBrainzSocialLinks,
+        parseYear,
+    ]);
 
     const updateDebutYear = useCallback((year: number | undefined) => {
         setFormData(prev => ({ ...prev, debutYear: year }));
@@ -153,7 +260,7 @@ export const useArtistForm = ({
     }, []);
 
     const validateForm = useCallback((): string | null => {
-        if (!formData.name || formData.name.trim() === '' || formData.name === t('artistForm.defaults.newArtist')) {
+        if (!formData.name || formData.name.trim() === '') {
             return t('artistForm.errors.nameRequired');
         }
 
@@ -224,6 +331,8 @@ export const useArtistForm = ({
         setFormData,
         isSaving,
         error,
+        musicBrainzLocationStatus,
+        musicBrainzLocationSearches,
         pendingField,
         isUploadingImage,
         uploadError,
@@ -235,6 +344,7 @@ export const useArtistForm = ({
         clearError,
         updateSocialLink,
         updateName,
+        applyMusicBrainzArtist,
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,

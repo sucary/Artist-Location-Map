@@ -10,6 +10,7 @@ interface UseLocationSearchProps {
     onChange: (result: SearchResult) => void;
     pendingCoordinates?: { lat: number; lng: number } | null;
     onCoordinatesConsumed?: () => void;
+    pendingSearch?: { query: string; key: number } | null;
 }
 
 export function useLocationSearch({
@@ -17,6 +18,7 @@ export function useLocationSearch({
     onChange,
     pendingCoordinates,
     onCoordinatesConsumed,
+    pendingSearch,
 }: UseLocationSearchProps) {
     const [state, dispatch] = useReducer(locationSearchReducer, initialState);
     const { locationLanguage } = useLocationLanguage();
@@ -149,6 +151,14 @@ export function useLocationSearch({
 
         handleReverseSearch();
     }, [pendingCoordinates, onCoordinatesConsumed, onChange, service, t]);
+
+    useEffect(() => {
+        const query = pendingSearch?.query.trim();
+        if (!query || query.length < 2) return;
+
+        dispatch({ type: 'SET_QUERY', query });
+        void service.search(query, 'auto');
+    }, [pendingSearch?.key, pendingSearch?.query, service]);
 
     // Effect: reset query when displayValue changes externally
     const prevDisplayValue = useRef(displayValue);

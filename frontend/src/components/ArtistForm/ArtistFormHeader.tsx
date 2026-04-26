@@ -33,14 +33,18 @@ const ArtistFormHeader = ({
         ? `${name.substring(0, MAX_NAME_LENGTH)}...`
         : name;
 
-    const placeholderUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || t('artistForm.defaults.newArtist'))}&size=150&background=e5e7eb&color=9ca3af`;
+    const trimmedName = name.trim();
+    const firstCharacter = Array.from(trimmedName)[0];
+    const useSingleCharacterFallback = !!firstCharacter && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(firstCharacter);
+    const placeholderUrl = name
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=150&background=e5e7eb&color=9ca3af`
+        : '';
 
     const handleProfileClick = (e: React.MouseEvent) => {
         if (mouseDownPos.current) {
             const dx = e.clientX - mouseDownPos.current.x;
             const dy = e.clientY - mouseDownPos.current.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            
 
             // If mouse moved more than 5 pixels, it's a drag, not a click
             // Prevents accidental clicks when trying to drag the name
@@ -59,7 +63,6 @@ const ArtistFormHeader = ({
             const dx = e.clientX - mouseDownPos.current.x;
             const dy = e.clientY - mouseDownPos.current.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            
 
             if (distance > 5) {
                 mouseDownPos.current = null;
@@ -107,11 +110,25 @@ const ArtistFormHeader = ({
                     </div>
                 ) : (
                     <>
-                        <img
-                            src={avatarUrl || placeholderUrl}
-                            alt={t('artistForm.alts.avatar')}
-                            className="w-full h-full object-cover"
-                        />
+                        {avatarUrl ? (
+                            <img
+                                src={avatarUrl}
+                                alt={t('artistForm.alts.avatar')}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : useSingleCharacterFallback ? (
+                            <div className="w-full h-full flex items-center justify-center bg-surface-muted text-2xl font-medium text-text-muted">
+                                {firstCharacter}
+                            </div>
+                        ) : placeholderUrl ? (
+                            <img
+                                src={placeholderUrl}
+                                alt={t('artistForm.alts.avatar')}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-surface-muted" />
+                        )}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                             <EditIcon aria-hidden="true" className="w-6 h-6 text-white" />
                         </div>

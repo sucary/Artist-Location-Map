@@ -20,6 +20,12 @@ type MusicBrainzRemoteArtist = {
     }>;
 };
 
+type MusicBrainzRemoteSearchResponse = {
+    count?: number;
+    offset?: number;
+    artists?: MusicBrainzRemoteArtist[];
+};
+
 type MusicBrainzRemoteRelation = NonNullable<MusicBrainzRemoteArtist['relations']>[number];
 
 type CatalogArtistRow = {
@@ -66,6 +72,29 @@ type CatalogLinkRow = {
 
 const musicBrainzBaseUrl = 'https://musicbrainz.org/ws/2';
 const musicBrainzUserAgent = process.env.MUSICBRAINZ_USER_AGENT || 'Achizu/0.1 (artist-location-map)';
+const musicBrainzMinRequestIntervalMs = 1000;
+let nextMusicBrainzRequestAt = 0;
+let musicBrainzRequestQueue = Promise.resolve();
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function scheduleMusicBrainzRequest<T>(task: () => Promise<T>): Promise<T> {
+    const run = async () => {
+        const waitMs = Math.max(0, nextMusicBrainzRequestAt - Date.now());
+        if (waitMs > 0) {
+            await sleep(waitMs);
+        }
+
+        nextMusicBrainzRequestAt = Date.now() + musicBrainzMinRequestIntervalMs;
+        return await task();
+    };
+
+    const result = musicBrainzRequestQueue.then(run, run);
+    musicBrainzRequestQueue = result.then(() => undefined, () => undefined);
+    return result;
+}
 
 function rowToArtist(row: CatalogArtistRow) {
     return {
@@ -101,6 +130,14 @@ function rowToArtist(row: CatalogArtistRow) {
         globalRank: row.global_rank,
         regionalRanks: row.regional_ranks || []
     };
+}
+
+function queryTokens(value: string) {
+    return value
+        .trim()
+        .split(/\s+/)
+        .map((token) => token.trim())
+        .filter(Boolean);
 }
 
 function hostFor(url: string) {
@@ -226,18 +263,20 @@ function extractLinks(artist: MusicBrainzRemoteArtist) {
 }
 
 async function fetchMusicBrainzJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-        headers: {
-            'User-Agent': musicBrainzUserAgent,
-            'Accept': 'application/json'
+    return scheduleMusicBrainzRequest(async () => {
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': musicBrainzUserAgent,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`MusicBrainz HTTP ${response.status}`);
         }
+
+        return await response.json() as T;
     });
-
-    if (!response.ok) {
-        throw new Error(`MusicBrainz HTTP ${response.status}`);
-    }
-
-    return await response.json() as T;
 }
 
 async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist) {
@@ -335,12 +374,27 @@ async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist) {
 }
 
 export const MusicBrainzCatalogService = {
-    search: async (options: { q: string; country?: string; type?: string; limit?: number }) => {
+    search: async (options: { q: string; country?: string; type?: string; limit?: number; offset?: number }) => {
         const q = options.q.trim();
         const limit = Math.min(options.limit || 20, 100);
-        const values: unknown[] = [q, `%${q}%`];
-        const where = ['(name ILIKE $2 OR sort_name ILIKE $2)'];
-        let paramIndex = 3;
+        const offset = Math.max(options.offset || 0, 0);
+        const values: unknown[] = [q];
+        const where: string[] = [];
+        let paramIndex = 2;
+
+        for (const token of queryTokens(q)) {
+            const clauses = [
+                `name ILIKE $${paramIndex}`,
+                `sort_name ILIKE $${paramIndex}`,
+                `disambiguation ILIKE $${paramIndex}`,
+                `area_name ILIKE $${paramIndex}`,
+                `begin_area_name ILIKE $${paramIndex}`,
+            ];
+
+            where.push(`(${clauses.join(' OR ')})`);
+            values.push(`%${token}%`);
+            paramIndex += 1;
+        }
 
         if (options.country?.trim()) {
             where.push(`country = $${paramIndex++}`);
@@ -352,20 +406,28 @@ export const MusicBrainzCatalogService = {
             values.push(options.type.trim());
         }
 
-        values.push(limit);
+        values.push(limit + 1, offset);
         const result = await pool.query(`
             SELECT *
             FROM public.musicbrainz_artists
             WHERE ${where.join(' AND ')}
             ORDER BY
                 CASE WHEN LOWER(name) = LOWER($1) THEN 0 ELSE 1 END,
+                CASE WHEN LOWER(name) LIKE LOWER($1) || '%' THEN 0 ELSE 1 END,
                 global_rank NULLS LAST,
                 relation_count DESC,
                 name ASC
             LIMIT $${paramIndex}
+            OFFSET $${paramIndex + 1}
         `, values);
 
-        return result.rows.map(rowToArtist);
+        const rows = result.rows.slice(0, limit);
+        return {
+            results: rows.map(rowToArtist),
+            hasMore: result.rows.length > limit,
+            offset,
+            limit
+        };
     },
 
     getByMbid: async (mbid: string) => {
@@ -397,15 +459,67 @@ export const MusicBrainzCatalogService = {
         return await upsertRemoteArtist(remoteArtist);
     },
 
-    searchRemoteAndCacheFirst: async (query: string) => {
+    searchRemote: async (query: string, options: { limit?: number; offset?: number } = {}) => {
+        const limit = Math.min(options.limit || 10, 25);
+        const offset = Math.max(options.offset || 0, 0);
         const params = new URLSearchParams({
             fmt: 'json',
             query,
-            limit: '1'
+            limit: String(limit),
+            offset: String(offset)
         });
-        const response = await fetchMusicBrainzJson<{ artists?: MusicBrainzRemoteArtist[] }>(`${musicBrainzBaseUrl}/artist?${params.toString()}`);
-        const remoteArtist = response.artists?.[0];
-        if (!remoteArtist?.id) return null;
-        return await MusicBrainzCatalogService.fetchAndCacheByMbid(remoteArtist.id);
+
+        const response = await fetchMusicBrainzJson<MusicBrainzRemoteSearchResponse>(`${musicBrainzBaseUrl}/artist?${params.toString()}`);
+        const results = (response.artists || [])
+            .filter((artist) => artist.id && artist.name)
+            .map((artist) => ({
+                mbid: artist.id,
+                name: artist.name || '',
+                sortName: artist['sort-name'] || null,
+                type: artist.type || null,
+                country: artist.country || null,
+                areaName: artist.area?.name || null,
+                areaMbid: artist.area?.id || null,
+                beginAreaName: artist['begin-area']?.name || null,
+                beginAreaMbid: artist['begin-area']?.id || null,
+                lifeSpanBegin: artist['life-span']?.begin || null,
+                lifeSpanEnd: artist['life-span']?.end || null,
+                ended: artist['life-span']?.ended ?? null,
+                disambiguation: artist.disambiguation || null,
+                aliasCount: Array.isArray(artist.aliases) ? artist.aliases.length : 0,
+                genreCount: 0,
+                tagCount: 0,
+                relationCount: 0,
+                websiteUrl: null,
+                wikidataUrl: null,
+                instagramUrl: null,
+                twitterUrl: null,
+                tiktokUrl: null,
+                youtubeUrl: null,
+                spotifyUrl: null,
+                appleMusicUrl: null,
+                bandcampUrl: null,
+                soundcloudUrl: null,
+                seedSources: ['musicbrainz-api-search'],
+                popularity: null,
+                globalRank: null,
+                regionalRanks: []
+            }));
+
+        const count = response.count || offset + results.length;
+        return {
+            results,
+            hasMore: offset + results.length < count,
+            offset,
+            limit,
+            count
+        };
+    },
+
+    searchRemoteAndCacheFirst: async (query: string) => {
+        const response = await MusicBrainzCatalogService.searchRemote(query, { limit: 1 });
+        const remoteArtist = response.results[0];
+        if (!remoteArtist?.mbid) return null;
+        return await MusicBrainzCatalogService.fetchAndCacheByMbid(remoteArtist.mbid);
     }
 };

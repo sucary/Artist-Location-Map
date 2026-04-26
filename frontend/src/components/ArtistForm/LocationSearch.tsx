@@ -18,6 +18,7 @@ interface LocationSearchProps {
     label?: string;
     pendingCoordinates?: { lat: number; lng: number } | null;
     onCoordinatesConsumed?: () => void;
+    pendingSearch?: { query: string; key: number } | null;
 }
 
 export const LocationSearch = ({
@@ -27,7 +28,8 @@ export const LocationSearch = ({
     placeholder,
     label,
     pendingCoordinates,
-    onCoordinatesConsumed
+    onCoordinatesConsumed,
+    pendingSearch
 }: LocationSearchProps) => {
     const {
         query,
@@ -52,6 +54,7 @@ export const LocationSearch = ({
         onChange,
         pendingCoordinates,
         onCoordinatesConsumed,
+        pendingSearch,
     });
 
     const { profile } = useAuth();

@@ -7,6 +7,7 @@ import SocialLinkInput, { type SocialLinkField } from './SocialLinkInput';
 import ImageCropper, { type CropResult } from './ImageCropper';
 import ArtistFormHeader from './ArtistFormHeader';
 import YearSelect from './YearSelect';
+import { MusicBrainzArtistPicker } from './MusicBrainzArtistPicker';
 import { useArtistForm } from '../../hooks/useArtistForm';
 import { getAvatarUrl, getProfileUrl } from '../../utils/cloudinaryUrl';
 import { Alert, IconButton, Button } from '../ui';
@@ -57,6 +58,8 @@ const ArtistForm = ({
         formData,
         isSaving,
         error,
+        musicBrainzLocationStatus,
+        musicBrainzLocationSearches,
         pendingField,
         isUploadingImage,
         uploadError,
@@ -67,6 +70,7 @@ const ArtistForm = ({
         clearPendingField,
         updateSocialLink,
         updateName,
+        applyMusicBrainzArtist,
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,
@@ -171,7 +175,7 @@ const ArtistForm = ({
         )}
 
         <div className="absolute top-28 right-2 z-[1050] w-80 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] font-sans">
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 [scrollbar-gutter:stable]">
                 {/* Header with background and avatar */}
                 <ArtistFormHeader
                     name={formData.name || ''}
@@ -190,6 +194,18 @@ const ArtistForm = ({
                         <Alert variant="error">{uploadError}</Alert>
                     )}
 
+                    <MusicBrainzArtistPicker
+                        value={formData.name}
+                        selectedMbid={formData.musicbrainzMbid}
+                        onNameChange={updateName}
+                        onSelect={applyMusicBrainzArtist}
+                    />
+                    {musicBrainzLocationStatus && (
+                        <div className="text-xs text-text-secondary -mt-2">
+                            {musicBrainzLocationStatus}
+                        </div>
+                    )}
+
                     {/* Location inputs */}
                     <div className="space-y-4">
                         <LocationSearch
@@ -200,6 +216,7 @@ const ArtistForm = ({
                             label={t('artistForm.fields.originalLocation')}
                             pendingCoordinates={getPendingCoordinatesFor('originalLocation')}
                             onCoordinatesConsumed={handleCoordinatesConsumed}
+                            pendingSearch={musicBrainzLocationSearches.originalLocation}
                         />
 
                         <div className="flex justify-center -my-2 relative z-10">
@@ -223,6 +240,7 @@ const ArtistForm = ({
                             label={t('artistForm.fields.activeLocation')}
                             pendingCoordinates={getPendingCoordinatesFor('activeLocation')}
                             onCoordinatesConsumed={handleCoordinatesConsumed}
+                            pendingSearch={musicBrainzLocationSearches.activeLocation}
                         />
                     </div>
 

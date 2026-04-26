@@ -1,18 +1,33 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { z } from 'zod';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { requireAuth, requireApproval } from '../middleware/authMiddleware';
+import { optionalAuth, requireAuth, requireApproval, type AuthenticatedRequest } from '../middleware/authMiddleware';
 import { MusicBrainzCatalogService } from '../services/musicbrainzCatalogService';
 
 const router = Router();
 
+const userOrIpKey = (req: AuthenticatedRequest) => {
+    if (req.user?.id) return `user:${req.user.id}`;
+    return `ip:${ipKeyGenerator(req.ip || '')}`;
+};
+
 const remoteCacheLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 10,
+    windowMs: 2 * 1000,
+    max: 1,
     message: 'Too many MusicBrainz cache requests, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
+});
+
+const remoteSearchLimiter = rateLimit({
+    windowMs: 2 * 1000,
+    max: 1,
+    message: 'Too many MusicBrainz online searches, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: userOrIpKey,
 });
 
 const CacheRequestSchema = z.object({
@@ -32,10 +47,25 @@ router.get('/search', asyncHandler(async (req, res) => {
         q,
         country: req.query.country as string | undefined,
         type: req.query.type as string | undefined,
-        limit: parseInt(req.query.limit as string) || 20
+        limit: parseInt(req.query.limit as string) || 20,
+        offset: parseInt(req.query.offset as string) || 0
     });
 
-    res.json({ results });
+    res.json(results);
+}));
+
+router.get('/search-online', optionalAuth, remoteSearchLimiter, asyncHandler(async (req, res) => {
+    const q = (req.query.q as string | undefined)?.trim();
+    if (!q || q.length < 2) {
+        throw new AppError('Query must be at least 2 characters', 400);
+    }
+
+    const results = await MusicBrainzCatalogService.searchRemote(q, {
+        limit: parseInt(req.query.limit as string) || 10,
+        offset: parseInt(req.query.offset as string) || 0
+    });
+
+    res.json(results);
 }));
 
 router.get('/:mbid', asyncHandler(async (req, res) => {

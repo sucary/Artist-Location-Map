@@ -140,15 +140,42 @@ export type MusicBrainzCatalogArtistDetail = MusicBrainzCatalogArtist & {
     links: MusicBrainzCatalogLink[];
 };
 
-export const searchMusicBrainzCatalog = async (
-    params: { q: string; country?: string; type?: string; limit?: number },
+export interface MusicBrainzCatalogSearchResponse {
+    results: MusicBrainzCatalogArtist[];
+    hasMore: boolean;
+    offset: number;
+    limit: number;
+    count?: number;
+}
+
+export const searchMusicBrainzCatalogPage = async (
+    params: { q: string; country?: string; type?: string; limit?: number; offset?: number },
     signal?: AbortSignal
-): Promise<MusicBrainzCatalogArtist[]> => {
-    const response = await api.get<{ results: MusicBrainzCatalogArtist[] }>('/musicbrainz-catalog/search', {
+): Promise<MusicBrainzCatalogSearchResponse> => {
+    const response = await api.get<MusicBrainzCatalogSearchResponse>('/musicbrainz-catalog/search', {
         params,
         signal
     });
-    return response.data.results;
+    return response.data;
+};
+
+export const searchMusicBrainzCatalog = async (
+    params: { q: string; country?: string; type?: string; limit?: number; offset?: number },
+    signal?: AbortSignal
+): Promise<MusicBrainzCatalogArtist[]> => {
+    const response = await searchMusicBrainzCatalogPage(params, signal);
+    return response.results;
+};
+
+export const searchMusicBrainzCatalogOnline = async (
+    params: { q: string; limit?: number; offset?: number },
+    signal?: AbortSignal
+): Promise<MusicBrainzCatalogSearchResponse> => {
+    const response = await api.get<MusicBrainzCatalogSearchResponse>('/musicbrainz-catalog/search-online', {
+        params,
+        signal
+    });
+    return response.data;
 };
 
 export const getMusicBrainzCatalogArtist = async (mbid: string): Promise<MusicBrainzCatalogArtistDetail> => {
