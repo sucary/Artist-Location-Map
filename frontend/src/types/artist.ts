@@ -68,6 +68,7 @@ export interface CropArea {
  */
 export interface Artist {
     id: string;
+    musicbrainzMbid?: string;
     name: string;
     sourceImage?: string; // Original uploaded image URL
     avatarCrop?: CropArea; // Crop coordinates for avatar (1:1)

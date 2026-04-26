@@ -5,7 +5,7 @@ import pool from '../config/database';
 
 // Base columns for artist reads (used with table alias 'a')
 const ARTIST_BASE_COLUMNS = `
-    a.id, a.user_id, a.name, a.source_image, a.avatar_crop, a.profile_crop,
+    a.id, a.user_id, a.musicbrainz_mbid, a.name, a.source_image, a.avatar_crop, a.profile_crop,
     a.original_city, a.original_province, a.original_country, a.original_city_id, a.original_display_name,
     ST_Y(a.original_coordinates::geometry) as original_lat,
     ST_X(a.original_coordinates::geometry) as original_lng,
@@ -29,7 +29,7 @@ const ARTIST_SELECT_COLUMNS = `${ARTIST_BASE_COLUMNS},
 
 // For INSERT/UPDATE RETURNING (no JOIN available)
 const ARTIST_RETURNING_COLUMNS = `
-    id, user_id, name, source_image, avatar_crop, profile_crop,
+    id, user_id, musicbrainz_mbid, name, source_image, avatar_crop, profile_crop,
     original_city, original_province, original_country, original_city_id, original_display_name,
     ST_Y(original_coordinates::geometry) as original_lat,
     ST_X(original_coordinates::geometry) as original_lng,
@@ -55,6 +55,7 @@ function rowToArtist(row: Record<string, unknown>): Artist {
     return {
         id: row.id as string,
         userId: row.user_id as string | undefined,
+        musicbrainzMbid: row.musicbrainz_mbid as string | undefined,
         name: row.name as string,
         sourceImage: row.source_image as string | undefined,
         avatarCrop: row.avatar_crop as CropArea | undefined,
@@ -192,7 +193,7 @@ export const ArtistStore = {
         try {
             const result = await pool.query(`
                 INSERT INTO artists (
-                    user_id, name, source_image, avatar_crop, profile_crop,
+                    user_id, musicbrainz_mbid, name, source_image, avatar_crop, profile_crop,
                     original_city, original_province, original_country, original_coordinates, original_city_id, original_display_name,
                     active_city, active_province, active_country, active_coordinates, active_city_id, active_display_name,
                     original_display_coordinates,
@@ -200,17 +201,18 @@ export const ArtistStore = {
                     instagram_url, twitter_url, apple_music_url, website_url, youtube_url,
                     debut_year, inactive_year
                 ) VALUES (
-                    $1, $2, $3, $4, $5,
-                    $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326)::geography, $21, $29,
-                    $11, $12, $13, ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography, $22, $30,
-                    ST_SetSRID(ST_MakePoint($23, $24), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint($25, $26), 4326)::geography,
-                    $16, $17, $18, $19, $20,
-                    $27, $28
+                    $1, $2, $3, $4, $5, $6,
+                    $7, $8, $9, ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography, $22, $30,
+                    $12, $13, $14, ST_SetSRID(ST_MakePoint($15, $16), 4326)::geography, $23, $31,
+                    ST_SetSRID(ST_MakePoint($24, $25), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint($26, $27), 4326)::geography,
+                    $17, $18, $19, $20, $21,
+                    $28, $29
                 )
                 RETURNING ${ARTIST_RETURNING_COLUMNS}
             `, [
                 data.userId,
+                data.musicbrainzMbid || null,
                 data.name,
                 data.sourceImage || null,
                 data.avatarCrop ? JSON.stringify(data.avatarCrop) : null,
@@ -261,6 +263,11 @@ export const ArtistStore = {
             if (data.name !== undefined) {
                 updates.push(`name = $${paramIndex++}`);
                 values.push(data.name);
+            }
+
+            if (data.musicbrainzMbid !== undefined) {
+                updates.push(`musicbrainz_mbid = $${paramIndex++}`);
+                values.push(data.musicbrainzMbid || null);
             }
 
             if (data.sourceImage !== undefined) {

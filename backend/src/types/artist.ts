@@ -49,6 +49,7 @@ export interface CropArea {
 export interface Artist {
     id: string;
     userId?: string;
+    musicbrainzMbid?: string;
     name: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
@@ -70,6 +71,7 @@ export interface Artist {
  * Artist data for creation (without auto-generated fields)
  */
 export interface CreateArtistDTO {
+    musicbrainzMbid?: string;
     name: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
@@ -96,6 +98,7 @@ export interface StoreArtistDTO extends CreateArtistDTO {
  * Artist data for updates (all fields optional except those needed for validation)
  */
 export interface UpdateArtistDTO {
+    musicbrainzMbid?: string;
     name?: string;
     sourceImage?: string;
     avatarCrop?: CropArea;

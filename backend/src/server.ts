@@ -8,6 +8,7 @@ import cityRoutes from './routes/cityRoutes';
 import authRoutes from './routes/authRoutes';
 import searchRoutes from './routes/searchRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import musicbrainzCatalogRoutes from './routes/musicbrainzCatalogRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { verifyDatabaseConnection } from './config/database';
 
@@ -41,6 +42,7 @@ app.use('/api/cities', cityRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/musicbrainz-catalog', musicbrainzCatalogRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({

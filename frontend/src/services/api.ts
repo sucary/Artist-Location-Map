@@ -94,6 +94,75 @@ export interface SearchResponse {
     hasMore: boolean;
 }
 
+export interface MusicBrainzCatalogArtist {
+    mbid: string;
+    name: string;
+    sortName?: string | null;
+    type?: string | null;
+    country?: string | null;
+    areaName?: string | null;
+    areaMbid?: string | null;
+    beginAreaName?: string | null;
+    beginAreaMbid?: string | null;
+    lifeSpanBegin?: string | null;
+    lifeSpanEnd?: string | null;
+    ended?: boolean | null;
+    disambiguation?: string | null;
+    aliasCount: number;
+    genreCount: number;
+    tagCount: number;
+    relationCount: number;
+    websiteUrl?: string | null;
+    wikidataUrl?: string | null;
+    instagramUrl?: string | null;
+    twitterUrl?: string | null;
+    tiktokUrl?: string | null;
+    youtubeUrl?: string | null;
+    spotifyUrl?: string | null;
+    appleMusicUrl?: string | null;
+    bandcampUrl?: string | null;
+    soundcloudUrl?: string | null;
+    seedSources?: string[];
+    popularity?: unknown;
+    globalRank?: number | null;
+    regionalRanks?: unknown;
+}
+
+export interface MusicBrainzCatalogLink {
+    url: string;
+    host?: string | null;
+    relationType: string;
+    category: string;
+    isPrimary: boolean;
+}
+
+export type MusicBrainzCatalogArtistDetail = MusicBrainzCatalogArtist & {
+    links: MusicBrainzCatalogLink[];
+};
+
+export const searchMusicBrainzCatalog = async (
+    params: { q: string; country?: string; type?: string; limit?: number },
+    signal?: AbortSignal
+): Promise<MusicBrainzCatalogArtist[]> => {
+    const response = await api.get<{ results: MusicBrainzCatalogArtist[] }>('/musicbrainz-catalog/search', {
+        params,
+        signal
+    });
+    return response.data.results;
+};
+
+export const getMusicBrainzCatalogArtist = async (mbid: string): Promise<MusicBrainzCatalogArtistDetail> => {
+    const response = await api.get<MusicBrainzCatalogArtistDetail>(`/musicbrainz-catalog/${mbid}`);
+    return response.data;
+};
+
+export const cacheMusicBrainzCatalogArtist = async (
+    input: { mbid: string } | { query: string }
+): Promise<MusicBrainzCatalogArtist> => {
+    const response = await api.post<MusicBrainzCatalogArtist>('/musicbrainz-catalog/cache', input);
+    return response.data;
+};
+
 export const searchCities = async (
     query: string,
     limit: number = 20,

@@ -31,6 +31,7 @@ export const CropAreaSchema = z.object({
 });
 
 export const ArtistInputSchema = z.object({
+    musicbrainzMbid: z.string().uuid().optional().nullable().transform(val => val ?? undefined),
     name: z.string().min(1, "Name is required"),
     sourceImage: z.string().optional().nullable().transform(val => val ?? undefined),
     avatarCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),

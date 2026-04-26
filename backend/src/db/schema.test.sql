@@ -7,6 +7,8 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Drop tables if they exist (reverse dependency order)
 DROP TABLE IF EXISTS artists CASCADE;
+DROP TABLE IF EXISTS musicbrainz_artist_links CASCADE;
+DROP TABLE IF EXISTS musicbrainz_artists CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
 DROP TABLE IF EXISTS priority_locations CASCADE;
 DROP TABLE IF EXISTS water_polygons CASCADE;
@@ -113,6 +115,58 @@ CREATE TABLE IF NOT EXISTS search_cache (
 );
 
 -- ============================================
+-- MusicBrainz Catalog
+-- ============================================
+CREATE TABLE IF NOT EXISTS musicbrainz_artists (
+    mbid UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    sort_name TEXT,
+    type TEXT,
+    country VARCHAR(2),
+    area_name TEXT,
+    area_mbid UUID,
+    begin_area_name TEXT,
+    begin_area_mbid UUID,
+    life_span_begin TEXT,
+    life_span_end TEXT,
+    ended BOOLEAN,
+    disambiguation TEXT,
+    alias_count INTEGER NOT NULL DEFAULT 0,
+    genre_count INTEGER NOT NULL DEFAULT 0,
+    tag_count INTEGER NOT NULL DEFAULT 0,
+    relation_count INTEGER NOT NULL DEFAULT 0,
+    website_url TEXT,
+    wikidata_url TEXT,
+    instagram_url TEXT,
+    twitter_url TEXT,
+    tiktok_url TEXT,
+    youtube_url TEXT,
+    spotify_url TEXT,
+    apple_music_url TEXT,
+    bandcamp_url TEXT,
+    soundcloud_url TEXT,
+    seed_sources TEXT[] NOT NULL DEFAULT '{}',
+    popularity JSONB,
+    global_rank INTEGER,
+    regional_ranks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS musicbrainz_artist_links (
+    id BIGSERIAL PRIMARY KEY,
+    artist_mbid UUID NOT NULL REFERENCES musicbrainz_artists(mbid) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    host TEXT,
+    relation_type TEXT NOT NULL DEFAULT 'url',
+    category TEXT NOT NULL DEFAULT 'external',
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_musicbrainz_artist_link UNIQUE (artist_mbid, url)
+);
+
+-- ============================================
 -- Artists
 -- ============================================
 CREATE TABLE IF NOT EXISTS artists (
@@ -153,6 +207,7 @@ CREATE TABLE IF NOT EXISTS artists (
     -- Year fields
     debut_year INTEGER,
     inactive_year INTEGER,
+    musicbrainz_mbid UUID REFERENCES musicbrainz_artists(mbid),
 
     -- Timestamps
     created_at TIMESTAMP DEFAULT NOW(),
@@ -193,6 +248,7 @@ CREATE INDEX IF NOT EXISTS idx_artists_original_city ON artists(original_city);
 CREATE INDEX IF NOT EXISTS idx_artists_active_city ON artists(active_city);
 CREATE INDEX IF NOT EXISTS idx_artists_original_city_id ON artists(original_city_id);
 CREATE INDEX IF NOT EXISTS idx_artists_active_city_id ON artists(active_city_id);
+CREATE INDEX IF NOT EXISTS idx_artists_musicbrainz_mbid ON artists(musicbrainz_mbid);
 
 -- ============================================
 -- Triggers
