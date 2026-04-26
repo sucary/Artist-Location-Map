@@ -60,6 +60,7 @@ const ArtistForm = ({
         error,
         musicBrainzLocationStatus,
         musicBrainzLocationSearches,
+        locationInputSyncKeys,
         pendingField,
         isUploadingImage,
         uploadError,
@@ -175,18 +176,18 @@ const ArtistForm = ({
         )}
 
         <div className="absolute top-28 right-2 z-[1050] w-80 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] font-sans">
-            <div className="overflow-y-auto flex-1 [scrollbar-gutter:stable]">
-                {/* Header with background and avatar */}
-                <ArtistFormHeader
-                    name={formData.name || ''}
-                    avatarUrl={avatarUrl}
-                    profileUrl={profileUrl}
-                    isUploading={isUploadingImage}
-                    onAvatarClick={() => openCropper('avatar')}
-                    onProfileClick={() => openCropper('profile')}
-                    onNameChange={updateName}
-                />
+            {/* Header with background and avatar */}
+            <ArtistFormHeader
+                name={formData.name || ''}
+                avatarUrl={avatarUrl}
+                profileUrl={profileUrl}
+                isUploading={isUploadingImage}
+                onAvatarClick={() => openCropper('avatar')}
+                onProfileClick={() => openCropper('profile')}
+                onNameChange={updateName}
+            />
 
+            <div className="overflow-y-auto flex-1 [scrollbar-gutter:stable]">
                 {/* Form content */}
                 <div className="mt-10 px-4 flex flex-col gap-4">
                     {/* Upload error */}
@@ -217,6 +218,7 @@ const ArtistForm = ({
                             pendingCoordinates={getPendingCoordinatesFor('originalLocation')}
                             onCoordinatesConsumed={handleCoordinatesConsumed}
                             pendingSearch={musicBrainzLocationSearches.originalLocation}
+                            syncKey={locationInputSyncKeys.originalLocation}
                         />
 
                         <div className="flex justify-center -my-2 relative z-10">
@@ -241,6 +243,7 @@ const ArtistForm = ({
                             pendingCoordinates={getPendingCoordinatesFor('activeLocation')}
                             onCoordinatesConsumed={handleCoordinatesConsumed}
                             pendingSearch={musicBrainzLocationSearches.activeLocation}
+                            syncKey={locationInputSyncKeys.activeLocation}
                         />
                     </div>
 

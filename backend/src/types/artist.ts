@@ -19,6 +19,7 @@ export interface Location {
     displayName?: string;       // Full Nominatim display name for point locations
     osmId?: number;
     osmType?: string;
+    isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
 }
 
@@ -51,6 +52,7 @@ export interface Artist {
     userId?: string;
     musicbrainzMbid?: string;
     name: string;
+    romanizedName?: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
     profileCrop?: CropArea;
@@ -73,6 +75,7 @@ export interface Artist {
 export interface CreateArtistDTO {
     musicbrainzMbid?: string;
     name: string;
+    romanizedName?: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
     profileCrop?: CropArea;
@@ -100,6 +103,7 @@ export interface StoreArtistDTO extends CreateArtistDTO {
 export interface UpdateArtistDTO {
     musicbrainzMbid?: string;
     name?: string;
+    romanizedName?: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
     profileCrop?: CropArea;

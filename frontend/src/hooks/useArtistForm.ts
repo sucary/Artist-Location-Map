@@ -26,6 +26,10 @@ export interface UseArtistFormReturn {
         originalLocation: { query: string; key: number } | null;
         activeLocation: { query: string; key: number } | null;
     };
+    locationInputSyncKeys: {
+        originalLocation: number;
+        activeLocation: number;
+    };
     pendingField: 'originalLocation' | 'activeLocation' | null;
 
     handleLocationSelect: (result: SearchResult, locationType: 'originalLocation' | 'activeLocation') => void;
@@ -83,6 +87,11 @@ export const useArtistForm = ({
         originalLocation: null,
         activeLocation: null
     });
+    const [, setQueuedMusicBrainzActiveLocationSearch] = useState<string | null>(null);
+    const [locationInputSyncKeys, setLocationInputSyncKeys] = useState({
+        originalLocation: 0,
+        activeLocation: 0
+    });
     const [pendingField, setPendingField] = useState<'originalLocation' | 'activeLocation' | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -102,18 +111,47 @@ export const useArtistForm = ({
             ...prev,
             [locationType]: locationData
         }));
+        setLocationInputSyncKeys(prev => ({
+            ...prev,
+            [locationType]: prev[locationType] + 1
+        }));
         setError(null);
         setMusicBrainzLocationSearches(prev => ({
             ...prev,
             [locationType]: null
         }));
+        if (locationType === 'originalLocation') {
+            setQueuedMusicBrainzActiveLocationSearch((query) => {
+                if (!query) return null;
+                setMusicBrainzLocationSearches(prev => ({
+                    ...prev,
+                    activeLocation: { query, key: Date.now() }
+                }));
+                return null;
+            });
+        }
     }, []);
 
     const copyOriginalToActive = useCallback(() => {
         setFormData(prev => ({
             ...prev,
-            activeLocation: prev.originalLocation
+            activeLocation: prev.originalLocation ? { ...prev.originalLocation } : prev.activeLocation,
+            activeLocationDisplayCoordinates: prev.originalLocationDisplayCoordinates
+                ? { ...prev.originalLocationDisplayCoordinates }
+                : prev.originalLocation?.coordinates
+                    ? { ...prev.originalLocation.coordinates }
+                    : prev.activeLocationDisplayCoordinates,
+            activeCityId: prev.originalCityId || prev.activeCityId
         }));
+        setMusicBrainzLocationSearches(prev => ({
+            ...prev,
+            activeLocation: null
+        }));
+        setLocationInputSyncKeys(prev => ({
+            ...prev,
+            activeLocation: prev.activeLocation + 1
+        }));
+        setPendingField(null);
     }, []);
 
     const startManualPinSelection = useCallback((field: 'originalLocation' | 'activeLocation') => {
@@ -192,6 +230,7 @@ export const useArtistForm = ({
             ...prev,
             musicbrainzMbid: artist.mbid,
             name: artist.name,
+            romanizedName: artist.sortName && artist.sortName !== artist.name ? artist.sortName : undefined,
             debutYear: parseYear(artist.lifeSpanBegin),
             inactiveYear: artist.ended ? parseYear(artist.lifeSpanEnd) : undefined,
             socialLinks: getMusicBrainzSocialLinks(artist)
@@ -204,6 +243,7 @@ export const useArtistForm = ({
                 originalLocation: null,
                 activeLocation: null
             });
+            setQueuedMusicBrainzActiveLocationSearch(null);
             setMusicBrainzLocationStatus('MusicBrainz has no usable area for this artist.');
             return;
         }
@@ -211,8 +251,9 @@ export const useArtistForm = ({
         const key = Date.now();
         setMusicBrainzLocationSearches({
             originalLocation: originalLocationQuery ? { query: originalLocationQuery, key } : null,
-            activeLocation: activeLocationQuery ? { query: activeLocationQuery, key: key + 1 } : null
+            activeLocation: !originalLocationQuery && activeLocationQuery ? { query: activeLocationQuery, key: key + 1 } : null
         });
+        setQueuedMusicBrainzActiveLocationSearch(originalLocationQuery ? activeLocationQuery || null : null);
         setMusicBrainzLocationStatus('Career years and social media links auto-filled. Choose locations from the search results.');
     }, [
         buildLocationQuery,
@@ -333,6 +374,7 @@ export const useArtistForm = ({
         error,
         musicBrainzLocationStatus,
         musicBrainzLocationSearches,
+        locationInputSyncKeys,
         pendingField,
         isUploadingImage,
         uploadError,

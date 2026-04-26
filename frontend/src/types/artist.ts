@@ -39,6 +39,7 @@ export interface Location {
     displayName?: string;
     osmId?: number;
     osmType?: string;
+    isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
 }
 
@@ -70,6 +71,7 @@ export interface Artist {
     id: string;
     musicbrainzMbid?: string;
     name: string;
+    romanizedName?: string;
     sourceImage?: string; // Original uploaded image URL
     avatarCrop?: CropArea; // Crop coordinates for avatar (1:1)
     profileCrop?: CropArea; // Crop coordinates for profile banner (2.5:1)

@@ -8,6 +8,7 @@ export interface ArtistSearchResult {
     type: 'artist';
     id: string;
     name: string;
+    romanizedName?: string;
     sourceImage?: string;
     avatarCrop?: CropArea;
     activeLocation: { city: string; province: string; country?: string; localizedChain?: LocalizedChain };
@@ -46,6 +47,7 @@ function mapArtistToSearchResult(artist: Artist): ArtistSearchResult {
         type: 'artist',
         id: artist.id,
         name: artist.name,
+        romanizedName: artist.romanizedName,
         sourceImage: artist.sourceImage,
         avatarCrop: artist.avatarCrop,
         activeLocation: {

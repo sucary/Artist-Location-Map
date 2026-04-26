@@ -13,6 +13,7 @@ export const LocationSchema = z.object({
     coordinates: CoordinatesSchema,
     osmId: z.number().optional(),
     osmType: z.string().optional(),
+    isManualSelection: z.boolean().optional(),
 });
 
 export const SocialLinksSchema = z.object({
@@ -33,6 +34,7 @@ export const CropAreaSchema = z.object({
 export const ArtistInputSchema = z.object({
     musicbrainzMbid: z.string().uuid().optional().nullable().transform(val => val ?? undefined),
     name: z.string().min(1, "Name is required"),
+    romanizedName: z.string().optional().nullable().transform(val => val?.trim() || undefined),
     sourceImage: z.string().optional().nullable().transform(val => val ?? undefined),
     avatarCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),
     profileCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),

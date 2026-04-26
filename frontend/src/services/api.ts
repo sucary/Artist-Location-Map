@@ -85,6 +85,7 @@ export interface SearchResult {
     importance?: number;
     isPriority?: boolean;
     isLocal?: boolean;
+    isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
 }
 

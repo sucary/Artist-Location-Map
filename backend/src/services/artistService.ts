@@ -16,6 +16,15 @@ function isManualSelection(coords: Coordinates, cityCenter: Coordinates): boolea
     return !coordsMatch(coords, cityCenter);
 }
 
+function shouldUseManualCoordinates(
+    location: { coordinates?: Coordinates; isManualSelection?: boolean; osmType?: string },
+    cityCenter: Coordinates
+): boolean {
+    if (!location.coordinates) return false;
+    if (location.isManualSelection) return true;
+    return location.osmType !== 'node' && isManualSelection(location.coordinates, cityCenter);
+}
+
 async function resolveCity(osmId: number, osmType: string): Promise<City> {
     let city = await CityService.getByOsmId(osmId, osmType);
     if (!city) {
@@ -56,13 +65,8 @@ export const ArtistService = {
         const activeCity = await resolveCity(data.activeLocation.osmId, data.activeLocation.osmType);
 
         // 2. Determine coordinate selection method
-        // Point locations (node) always use random placement; only non-point manual selections use exact coords
-        const isOriginalPointLocation = data.originalLocation.osmType === 'node';
-        const isActivePointLocation = data.activeLocation.osmType === 'node';
-        const originalManual = !isOriginalPointLocation && data.originalLocation.coordinates &&
-            isManualSelection(data.originalLocation.coordinates, originalCity.center);
-        const activeManual = !isActivePointLocation && data.activeLocation.coordinates &&
-            isManualSelection(data.activeLocation.coordinates, activeCity.center);
+        const originalManual = shouldUseManualCoordinates(data.originalLocation, originalCity.center);
+        const activeManual = shouldUseManualCoordinates(data.activeLocation, activeCity.center);
         const isCopiedFromOriginal = data.originalLocation.coordinates && data.activeLocation.coordinates &&
             coordsMatch(data.originalLocation.coordinates, data.activeLocation.coordinates);
 
@@ -144,16 +148,11 @@ export const ArtistService = {
             delete storeData.activeLocation;
         }
 
-        // Point locations (node) always use random placement; only non-point manual selections use exact coords
-        const isOriginalPointLocation = data.originalLocation?.osmType === 'node';
-        const isActivePointLocation = data.activeLocation?.osmType === 'node';
-        const originalManual = originalLocationChanged && originalCity && !isOriginalPointLocation &&
-            data.originalLocation!.coordinates &&
-            isManualSelection(data.originalLocation!.coordinates, originalCity.center);
+        const originalManual = Boolean(originalLocationChanged && originalCity &&
+            shouldUseManualCoordinates(data.originalLocation!, originalCity.center));
 
-        const activeManual = activeLocationChanged && activeCity && !isActivePointLocation &&
-            data.activeLocation!.coordinates &&
-            isManualSelection(data.activeLocation!.coordinates, activeCity.center);
+        const activeManual = Boolean(activeLocationChanged && activeCity &&
+            shouldUseManualCoordinates(data.activeLocation!, activeCity.center));
 
         const isCopiedFromOriginal = originalLocationChanged && activeLocationChanged &&
             data.originalLocation?.coordinates && data.activeLocation?.coordinates &&

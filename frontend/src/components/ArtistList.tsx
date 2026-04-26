@@ -41,6 +41,7 @@ const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, on
     const filteredArtists = artists.filter((artist) => {
         const q = searchQuery.toLowerCase();
         return artist.name.toLowerCase().includes(q) ||
+            artist.romanizedName?.toLowerCase().includes(q) ||
             getSearchableLocationText(artist.activeLocation).includes(q) ||
             getSearchableLocationText(artist.originalLocation).includes(q);
     });

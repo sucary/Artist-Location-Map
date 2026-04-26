@@ -11,6 +11,7 @@ interface UseLocationSearchProps {
     pendingCoordinates?: { lat: number; lng: number } | null;
     onCoordinatesConsumed?: () => void;
     pendingSearch?: { query: string; key: number } | null;
+    syncKey?: number;
 }
 
 export function useLocationSearch({
@@ -19,11 +20,13 @@ export function useLocationSearch({
     pendingCoordinates,
     onCoordinatesConsumed,
     pendingSearch,
+    syncKey = 0,
 }: UseLocationSearchProps) {
     const [state, dispatch] = useReducer(locationSearchReducer, initialState);
     const { locationLanguage } = useLocationLanguage();
     const { t } = useTranslation();
     const { clickedCoords, query, retryFn } = state;
+    const clickedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
     // Create service with callbacks that dispatch to reducer
     const service = useMemo(() => new LocationSearchService({
@@ -64,10 +67,12 @@ export function useLocationSearch({
     }, [service]);
 
     const handleSelect = useCallback((result: SearchResult) => {
-        const finalResult = clickedCoords
-            ? { ...result, center: clickedCoords }
+        const latestClickedCoords = clickedCoordsRef.current || clickedCoords;
+        const finalResult = latestClickedCoords
+            ? { ...result, center: latestClickedCoords, isManualSelection: true }
             : result;
         onChange(finalResult);
+        clickedCoordsRef.current = null;
         dispatch({ type: 'RESET_QUERY' });
     }, [clickedCoords, onChange]);
 
@@ -109,6 +114,7 @@ export function useLocationSearch({
     useEffect(() => {
         if (!pendingCoordinates) return;
 
+        clickedCoordsRef.current = pendingCoordinates;
         dispatch({ type: 'SET_CLICKED_COORDS', coords: pendingCoordinates });
 
         const handleReverseSearch = async () => {
@@ -130,7 +136,8 @@ export function useLocationSearch({
 
                 if (response.results.length === 1) {
                     const result = response.results[0];
-                    onChange({ ...result, center: pendingCoordinates });
+                    onChange({ ...result, center: pendingCoordinates, isManualSelection: true });
+                    clickedCoordsRef.current = null;
                     dispatch({ type: 'RESET_QUERY' });
                 } else {
                     dispatch({
@@ -162,12 +169,14 @@ export function useLocationSearch({
 
     // Effect: reset query when displayValue changes externally
     const prevDisplayValue = useRef(displayValue);
+    const prevSyncKey = useRef(syncKey);
     useEffect(() => {
-        if (prevDisplayValue.current !== displayValue) {
+        if (prevDisplayValue.current !== displayValue || prevSyncKey.current !== syncKey) {
             prevDisplayValue.current = displayValue;
+            prevSyncKey.current = syncKey;
             dispatch({ type: 'RESET_QUERY' });
         }
-    }, [displayValue]);
+    }, [displayValue, syncKey]);
 
     return {
         query: state.query,

@@ -49,6 +49,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     const [onlineOffset, setOnlineOffset] = useState(0);
     const [onlineHasMore, setOnlineHasMore] = useState(false);
     const [isOnlineSearching, setIsOnlineSearching] = useState(false);
+    const [isSelectingArtist, setIsSelectingArtist] = useState(false);
     const [hasOnlineSearched, setHasOnlineSearched] = useState(false);
     const [onlineError, setOnlineError] = useState<string | null>(null);
     const [resultMode, setResultMode] = useState<'catalog' | 'online'>('catalog');
@@ -184,15 +185,22 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     }, [isCatalogSearching, isOnlineSearching, localResults.length, onlineResults.length]);
 
     const handleSelect = async (artist: MusicBrainzCatalogArtist, source: 'local' | 'online') => {
-        // Online hits are only lightweight MusicBrainz search rows. Cache first, then fetch
-        // the full catalog detail so location/social autofill uses the same shape as DB hits.
-        const cached = source === 'online'
-            ? await cacheMusicBrainzCatalogArtist({ mbid: artist.mbid })
-            : artist;
-        const detail = await getMusicBrainzCatalogArtist(cached.mbid).catch(() => cached);
-        await onSelect(detail);
-        setQuery(detail.name);
         setIsOpen(false);
+        suppressNextCatalogSearchRef.current = true;
+        setIsSelectingArtist(true);
+
+        try {
+            // Online hits are only lightweight MusicBrainz search rows. Cache first, then fetch
+            // the full catalog detail so location/social autofill uses the same shape as DB hits.
+            const cached = source === 'online'
+                ? await cacheMusicBrainzCatalogArtist({ mbid: artist.mbid })
+                : artist;
+            const detail = await getMusicBrainzCatalogArtist(cached.mbid).catch(() => cached);
+            await onSelect(detail);
+            setQuery(detail.name);
+        } finally {
+            setIsSelectingArtist(false);
+        }
     };
 
     const handleSearchOnline = async (append = false) => {
@@ -372,9 +380,18 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 </div>
             </div>
 
-            {selectedMbid && (
+            {(isSelectingArtist || (profile?.isAdmin && selectedMbid)) && (
                 <div className="mt-2 text-xs text-text-secondary">
-                    Linked: <span className="font-medium text-text">{selectedArtist?.name || selectedMbid}</span>
+                    {isSelectingArtist ? (
+                        <span className="inline-flex items-center gap-1.5">
+                            <Spinner size="sm" className="text-text-muted" />
+                            Processing artist...
+                        </span>
+                    ) : (
+                        <>
+                            Linked: <span className="font-medium text-text">{selectedArtist?.name || selectedMbid}</span>
+                        </>
+                    )}
                 </div>
             )}
 

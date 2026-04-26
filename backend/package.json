@@ -16,6 +16,7 @@
     "db:import-ocean": "ts-node src/scripts/import-ocean.ts",
     "db:backfill-localizations": "ts-node src/scripts/backfill-multilingual-locations.ts",
     "mb:import-seed": "ts-node src/scripts/import-musicbrainz-seed.ts",
+    "mb:backfill-artists": "ts-node src/scripts/backfill-artist-musicbrainz.ts",
     "inspect:db": "ts-node src/tests/inspect-db.ts",
     "build": "tsc",
     "start": "node dist/server.js"
