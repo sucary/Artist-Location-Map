@@ -148,9 +148,10 @@ export const getArtistById = asyncHandler(async (req: AuthenticatedRequest, res:
 export const createArtist = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const data = ArtistInputSchema.parse(req.body);
     const userId = req.user!.id;
+    const isAdmin = req.profile?.isAdmin ?? false;
 
     try {
-        const newArtist = await ArtistService.create(data, userId);
+        const newArtist = await ArtistService.create(data, userId, isAdmin);
         res.status(201).json(newArtist);
     } catch (error) {
         if (error instanceof Error && error.message.includes('City not found')) {
@@ -175,7 +176,7 @@ export const updateArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
     }
 
     try {
-        const updatedArtist = await ArtistService.update(req.params.id, data);
+        const updatedArtist = await ArtistService.update(req.params.id, data, userId, isAdmin);
         res.json(updatedArtist);
     } catch (error) {
         if (error instanceof Error && error.message.includes('City not found')) {

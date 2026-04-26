@@ -3,6 +3,7 @@ import { CityService } from './cityService';
 import { LocationLocalizationService } from './locationLocalizationService';
 import { CreateArtistDTO, UpdateArtistDTO, Artist, StoreArtistDTO, UpdateStoreArtistDTO, ArtistQueryParams, Coordinates } from '../types/artist';
 import { City } from '../types/city';
+import pool from '../config/database';
 
 // ~1km tolerance to account for Nominatim coordinate variations
 const COORD_TOLERANCE = 0.01;
@@ -43,6 +44,83 @@ async function resolveCity(osmId: number, osmType: string): Promise<City> {
     return city;
 }
 
+async function applySharedArtistMedia(
+    data: CreateArtistDTO | UpdateArtistDTO,
+    userId: string,
+    isAdmin: boolean
+) {
+    if (!data.musicbrainzMbid || !data.sourceImage) return;
+
+    const uploadResult = await pool.query<{
+        public_id: string;
+        bytes: number | null;
+        width: number | null;
+        height: number | null;
+        format: string | null;
+    }>(`
+        SELECT public_id, bytes, width, height, format
+        FROM media_upload_events
+        WHERE user_id = $1
+          AND secure_url = $2
+          AND status = 'uploaded'
+        ORDER BY completed_at DESC NULLS LAST, created_at DESC
+        LIMIT 1
+    `, [userId, data.sourceImage]);
+
+    const upload = uploadResult.rows[0];
+
+    const existingResult = await pool.query<{ id: string }>(`
+        SELECT id
+        FROM artist_media_assets
+        WHERE musicbrainz_mbid = $1
+    `, [data.musicbrainzMbid]);
+
+    const hasSharedAsset = existingResult.rows.length > 0;
+
+    if (hasSharedAsset && !isAdmin) {
+        delete data.sourceImage;
+        delete data.avatarCrop;
+        delete data.profileCrop;
+        return;
+    }
+
+    await pool.query(`
+        INSERT INTO artist_media_assets (
+            musicbrainz_mbid, source_image, avatar_crop, profile_crop,
+            public_id, bytes, width, height, format, uploaded_by, updated_by
+        ) VALUES (
+            $1, $2, $3, $4,
+            $5, $6, $7, $8, $9, $10, $10
+        )
+        ON CONFLICT (musicbrainz_mbid) DO UPDATE
+        SET
+            source_image = EXCLUDED.source_image,
+            avatar_crop = EXCLUDED.avatar_crop,
+            profile_crop = EXCLUDED.profile_crop,
+            public_id = EXCLUDED.public_id,
+            bytes = EXCLUDED.bytes,
+            width = EXCLUDED.width,
+            height = EXCLUDED.height,
+            format = EXCLUDED.format,
+            updated_by = EXCLUDED.updated_by
+    `, [
+        data.musicbrainzMbid,
+        data.sourceImage,
+        data.avatarCrop ? JSON.stringify(data.avatarCrop) : null,
+        data.profileCrop ? JSON.stringify(data.profileCrop) : null,
+        upload?.public_id || null,
+        upload?.bytes || null,
+        upload?.width || null,
+        upload?.height || null,
+        upload?.format || null,
+        userId
+    ]);
+
+    delete data.sourceImage;
+    delete data.avatarCrop;
+    delete data.profileCrop;
+}
+
 export const ArtistService = {
     getAll: async (params: ArtistQueryParams) => {
         return await ArtistStore.getAll(params);
@@ -52,7 +130,7 @@ export const ArtistService = {
         return await ArtistStore.getById(id);
     },
 
-    create: async (data: CreateArtistDTO, userId: string): Promise<Artist> => {
+    create: async (data: CreateArtistDTO, userId: string, isAdmin: boolean = false): Promise<Artist> => {
         // 1. Resolve cities
         if (!data.originalLocation.osmId || !data.originalLocation.osmType) {
             throw new Error('Original location must include osmId and osmType');
@@ -93,6 +171,8 @@ export const ArtistService = {
         }
 
         // 4. Prepare data for Store
+        await applySharedArtistMedia(data, userId, isAdmin);
+
         const storeData: StoreArtistDTO = {
             ...data,
             userId,
@@ -102,10 +182,11 @@ export const ArtistService = {
             activeLocationDisplayCoordinates: activeDisplayCoordinates
         };
 
-        return await ArtistStore.create(storeData);
+        const createdArtist = await ArtistStore.create(storeData);
+        return await ArtistStore.getById(createdArtist.id) || createdArtist;
     },
 
-    update: async (id: string, data: UpdateArtistDTO): Promise<Artist | undefined> => {
+    update: async (id: string, data: UpdateArtistDTO, userId: string, isAdmin: boolean = false): Promise<Artist | undefined> => {
         const storeData: UpdateStoreArtistDTO = { ...data };
 
         // Fetch current artist to check city IDs
@@ -113,6 +194,9 @@ export const ArtistService = {
         if (!currentArtist) {
             return undefined;
         }
+
+        storeData.musicbrainzMbid = data.musicbrainzMbid ?? currentArtist.musicbrainzMbid;
+        await applySharedArtistMedia(storeData, userId, isAdmin);
 
         let finalOriginalCityId = currentArtist.originalCityId;
         let finalActiveCityId = currentArtist.activeCityId;
@@ -181,7 +265,8 @@ export const ArtistService = {
             }
         }
 
-        return await ArtistStore.update(id, storeData);
+        const updatedArtist = await ArtistStore.update(id, storeData);
+        return updatedArtist ? await ArtistStore.getById(updatedArtist.id) || updatedArtist : undefined;
     },
 
     delete: async (id: string) => {

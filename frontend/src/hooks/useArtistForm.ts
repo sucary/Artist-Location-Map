@@ -8,6 +8,7 @@ import { extractLocationData, createEmptyLocation, hasValidCoordinates } from '.
 import { uploadImageToCloudinary } from '../utils/cloudinary';
 import { validateAllSocialLinks } from '../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 export interface UseArtistFormOptions {
     initialData?: Artist;
@@ -75,6 +76,7 @@ export const useArtistForm = ({
 }: UseArtistFormOptions): UseArtistFormReturn => {
     const queryClient = useQueryClient();
     const { t } = useTranslation();
+    const { profile } = useAuth();
 
     const [formData, setFormData] = useState<Partial<Artist>>(() => createInitialFormData(initialData));
     const [isSaving, setIsSaving] = useState(false);
@@ -275,7 +277,10 @@ export const useArtistForm = ({
         setUploadError(null);
 
         try {
-            const imageUrl = await uploadImageToCloudinary(file);
+            const imageUrl = await uploadImageToCloudinary(file, {
+                musicbrainzMbid: formData.musicbrainzMbid,
+                allowExistingShared: profile?.isAdmin
+            });
             setFormData(prev => ({
                 ...prev,
                 sourceImage: imageUrl
@@ -289,7 +294,7 @@ export const useArtistForm = ({
         } finally {
             setIsUploadingImage(false);
         }
-    }, [t]);
+    }, [formData.musicbrainzMbid, profile?.isAdmin, t]);
 
     // Update crop coordinates
     const updateCrops = useCallback((avatarCrop: CropArea, profileCrop: CropArea) => {

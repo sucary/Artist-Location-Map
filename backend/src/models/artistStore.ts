@@ -5,7 +5,10 @@ import pool from '../config/database';
 
 // Base columns for artist reads (used with table alias 'a')
 const ARTIST_BASE_COLUMNS = `
-    a.id, a.user_id, a.musicbrainz_mbid, a.name, a.romanized_name, a.source_image, a.avatar_crop, a.profile_crop,
+    a.id, a.user_id, a.musicbrainz_mbid, a.name, a.romanized_name,
+    COALESCE(ama.source_image, a.source_image) as source_image,
+    COALESCE(ama.avatar_crop, a.avatar_crop) as avatar_crop,
+    COALESCE(ama.profile_crop, a.profile_crop) as profile_crop,
     a.original_city, a.original_province, a.original_country, a.original_city_id, a.original_display_name,
     ST_Y(a.original_coordinates::geometry) as original_lat,
     ST_X(a.original_coordinates::geometry) as original_lng,
@@ -159,6 +162,7 @@ export const ArtistStore = {
                 FROM artists a
                 LEFT JOIN locations ol ON a.original_city_id = ol.id
                 LEFT JOIN locations al ON a.active_city_id = al.id
+                LEFT JOIN artist_media_assets ama ON a.musicbrainz_mbid = ama.musicbrainz_mbid
                 ${whereClause}
                 ORDER BY a.created_at DESC
             `, values);
@@ -177,6 +181,7 @@ export const ArtistStore = {
                 FROM artists a
                 LEFT JOIN locations ol ON a.original_city_id = ol.id
                 LEFT JOIN locations al ON a.active_city_id = al.id
+                LEFT JOIN artist_media_assets ama ON a.musicbrainz_mbid = ama.musicbrainz_mbid
                 WHERE a.id = $1
             `, [id]);
 
@@ -452,9 +457,10 @@ export const ArtistStore = {
                 FROM artists a
                 LEFT JOIN locations ol ON a.original_city_id = ol.id
                 LEFT JOIN locations al ON a.active_city_id = al.id
+                LEFT JOIN artist_media_assets ama ON a.musicbrainz_mbid = ama.musicbrainz_mbid
                 JOIN profiles p ON a.user_id = p.id
                 WHERE p.is_private = false
-                  AND a.source_image IS NOT NULL
+                  AND COALESCE(ama.source_image, a.source_image) IS NOT NULL
                   AND a.musicbrainz_mbid IS NOT NULL
                   AND a.active_display_coordinates IS NOT NULL
                 ORDER BY RANDOM()

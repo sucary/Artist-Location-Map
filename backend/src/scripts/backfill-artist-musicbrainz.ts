@@ -18,6 +18,11 @@ type MusicBrainzCandidate = {
     begin_area_name: string | null;
     relation_count: number;
     global_rank: number | null;
+    website_url: string | null;
+    instagram_url: string | null;
+    twitter_url: string | null;
+    youtube_url: string | null;
+    apple_music_url: string | null;
 };
 
 type MatchResult =
@@ -48,7 +53,7 @@ function toPositiveInt(value: string | undefined): number | undefined {
 
 function printHelp() {
     console.log(`
-Backfill existing app artists with MusicBrainz MBIDs and romanized names.
+Backfill existing app artists with MusicBrainz MBIDs, romanized names, and missing links.
 
 Usage:
   npm run mb:backfill-artists
@@ -57,12 +62,14 @@ Usage:
 
 Options:
   --apply          Write exact unambiguous matches to artists.
+  --links-only     Fill missing links for already-linked artists.
   --limit <n>      Process at most n app artists.
   --help           Show this help.
 
 Notes:
   Dry-run is the default.
   The script never changes images or locations.
+  Existing artist links are preserved; only empty link fields are filled.
   Matching uses the existing Supabase musicbrainz_artists table only.
 `);
 }
@@ -96,9 +103,48 @@ async function getExistingArtists(limit?: number): Promise<AppArtist[]> {
     return result.rows;
 }
 
+async function getLinkedArtistsMissingLinks(limit?: number): Promise<AppArtist[]> {
+    const values: unknown[] = [];
+    const limitClause = limit ? 'LIMIT $1' : '';
+    if (limit) values.push(limit);
+
+    const result = await pool.query<AppArtist>(`
+        SELECT id, name, musicbrainz_mbid, romanized_name
+        FROM artists
+        WHERE musicbrainz_mbid IS NOT NULL
+          AND (
+              website_url IS NULL
+              OR instagram_url IS NULL
+              OR twitter_url IS NULL
+              OR youtube_url IS NULL
+              OR apple_music_url IS NULL
+          )
+        ORDER BY created_at ASC
+        ${limitClause}
+    `, values);
+
+    return result.rows;
+}
+
+async function getCandidateByMbid(mbid: string): Promise<MusicBrainzCandidate | null> {
+    const result = await pool.query<MusicBrainzCandidate>(`
+        SELECT
+            mbid, name, sort_name, type, country, area_name, begin_area_name,
+            relation_count, global_rank, website_url, instagram_url, twitter_url,
+            youtube_url, apple_music_url
+        FROM musicbrainz_artists
+        WHERE mbid = $1
+    `, [mbid]);
+
+    return result.rows[0] || null;
+}
+
 async function findCandidates(name: string): Promise<MusicBrainzCandidate[]> {
     const result = await pool.query<MusicBrainzCandidate>(`
-        SELECT mbid, name, sort_name, type, country, area_name, begin_area_name, relation_count, global_rank
+        SELECT
+            mbid, name, sort_name, type, country, area_name, begin_area_name,
+            relation_count, global_rank, website_url, instagram_url, twitter_url,
+            youtube_url, apple_music_url
         FROM musicbrainz_artists
         WHERE lower(name) = lower($1)
            OR lower(sort_name) = lower($1)
@@ -148,9 +194,35 @@ async function applyMatch(match: Extract<MatchResult, { status: 'matched' }>) {
         UPDATE artists
         SET
             musicbrainz_mbid = COALESCE(musicbrainz_mbid, $1),
-            romanized_name = COALESCE(romanized_name, $2)
-        WHERE id = $3
-    `, [match.candidate.mbid, romanizedName, match.artist.id]);
+            romanized_name = COALESCE(romanized_name, $2),
+            website_url = COALESCE(website_url, $3),
+            instagram_url = COALESCE(instagram_url, $4),
+            twitter_url = COALESCE(twitter_url, $5),
+            youtube_url = COALESCE(youtube_url, $6),
+            apple_music_url = COALESCE(apple_music_url, $7)
+        WHERE id = $8
+    `, [
+        match.candidate.mbid,
+        romanizedName,
+        match.candidate.website_url,
+        match.candidate.instagram_url,
+        match.candidate.twitter_url,
+        match.candidate.youtube_url,
+        match.candidate.apple_music_url,
+        match.artist.id
+    ]);
+}
+
+function formatFilledLinks(candidate: MusicBrainzCandidate): string {
+    const fields = [
+        candidate.website_url ? 'website' : null,
+        candidate.instagram_url ? 'instagram' : null,
+        candidate.twitter_url ? 'twitter' : null,
+        candidate.youtube_url ? 'youtube' : null,
+        candidate.apple_music_url ? 'appleMusic' : null,
+    ].filter(Boolean);
+
+    return fields.length > 0 ? fields.join(', ') : 'no canonical links';
 }
 
 async function main() {
@@ -161,8 +233,9 @@ async function main() {
     }
 
     const apply = hasFlag(args, '--apply');
+    const linksOnly = hasFlag(args, '--links-only');
     const limit = toPositiveInt(getArgValue(args, '--limit'));
-    const artists = await getExistingArtists(limit);
+    const artists = linksOnly ? await getLinkedArtistsMissingLinks(limit) : await getExistingArtists(limit);
 
     let matched = 0;
     let applied = 0;
@@ -170,15 +243,19 @@ async function main() {
     let unmatched = 0;
 
     console.log(`Mode: ${apply ? 'apply' : 'dry-run'}`);
+    console.log(`Scope: ${linksOnly ? 'already-linked missing links' : 'match and link artists'}`);
     console.log(`Checking ${artists.length} existing artists`);
 
     for (const artist of artists) {
-        const candidates = await findCandidates(artist.name);
-        const result = chooseMatch(artist, candidates);
+        const result = artist.musicbrainz_mbid
+            ? await getCandidateByMbid(artist.musicbrainz_mbid).then((candidate): MatchResult => (
+                candidate ? { status: 'matched', artist, candidate } : { status: 'unmatched', artist }
+            ))
+            : chooseMatch(artist, await findCandidates(artist.name));
 
         if (result.status === 'matched') {
             matched++;
-            console.log(`[match] ${artist.name} -> ${formatCandidate(result.candidate)}`);
+            console.log(`[match] ${artist.name} -> ${formatCandidate(result.candidate)}; links: ${formatFilledLinks(result.candidate)}`);
             if (apply) {
                 await applyMatch(result);
                 applied++;
