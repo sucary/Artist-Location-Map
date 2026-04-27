@@ -5,10 +5,9 @@ import type { MusicBrainzCatalogArtist, SearchResult } from '../services/api';
 import type { Artist, CropArea } from '../types/artist';
 import type { SocialLinkKey } from '../constants/artist';
 import { extractLocationData, createEmptyLocation, hasValidCoordinates } from '../utils/locationUtils';
-import { uploadImageToCloudinary } from '../utils/cloudinary';
+import { getArtistMediaAssetStatus, uploadImageToCloudinary } from '../utils/cloudinary';
 import { validateAllSocialLinks } from '../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
 
 export interface UseArtistFormOptions {
     initialData?: Artist;
@@ -41,7 +40,10 @@ export interface UseArtistFormReturn {
     clearError: () => void;
     updateSocialLink: (key: SocialLinkKey, value: string) => void;
     updateName: (name: string) => void;
-    applyMusicBrainzArtist: (artist: MusicBrainzCatalogArtist) => Promise<void>;
+    applyMusicBrainzArtist: (
+        artist: MusicBrainzCatalogArtist,
+        options?: { useSharedImage?: boolean }
+    ) => Promise<void>;
     updateDebutYear: (year: number | undefined) => void;
     updateInactiveYear: (year: number | undefined) => void;
 
@@ -50,6 +52,7 @@ export interface UseArtistFormReturn {
     uploadError: string | null;
     clearUploadError: () => void;
     handleImageUpload: (file: File) => Promise<string | null>;
+    clearImage: () => void;
     updateCrops: (avatarCrop: CropArea, profileCrop: CropArea) => void;
 
     isEditing: boolean;
@@ -76,7 +79,6 @@ export const useArtistForm = ({
 }: UseArtistFormOptions): UseArtistFormReturn => {
     const queryClient = useQueryClient();
     const { t } = useTranslation();
-    const { profile } = useAuth();
 
     const [formData, setFormData] = useState<Partial<Artist>>(() => createInitialFormData(initialData));
     const [isSaving, setIsSaving] = useState(false);
@@ -218,7 +220,10 @@ export const useArtistForm = ({
         return `${first}, ${second}`;
     }, []);
 
-    const applyMusicBrainzArtist = useCallback(async (artist: MusicBrainzCatalogArtist) => {
+    const applyMusicBrainzArtist = useCallback(async (
+        artist: MusicBrainzCatalogArtist,
+        options?: { useSharedImage?: boolean }
+    ) => {
         const originalLocationQuery = buildLocationQuery(
             artist.beginAreaName || artist.areaName,
             artist.beginAreaName ? artist.areaName : artist.country
@@ -228,6 +233,13 @@ export const useArtistForm = ({
             artist.country
         );
 
+        const hasPreMusicBrainzUpload = Boolean(
+            formData.sourceImage &&
+            !formData.musicbrainzMbid &&
+            !options?.useSharedImage
+        );
+        const mediaStatus = await getArtistMediaAssetStatus(artist.mbid).catch(() => null);
+
         setFormData(prev => ({
             ...prev,
             musicbrainzMbid: artist.mbid,
@@ -235,7 +247,16 @@ export const useArtistForm = ({
             romanizedName: artist.sortName && artist.sortName !== artist.name ? artist.sortName : undefined,
             debutYear: parseYear(artist.lifeSpanBegin),
             inactiveYear: artist.ended ? parseYear(artist.lifeSpanEnd) : undefined,
-            socialLinks: getMusicBrainzSocialLinks(artist)
+            socialLinks: getMusicBrainzSocialLinks(artist),
+            sourceImage: !hasPreMusicBrainzUpload && mediaStatus?.sourceImage
+                ? mediaStatus.sourceImage
+                : prev.sourceImage,
+            avatarCrop: !hasPreMusicBrainzUpload && mediaStatus?.avatarCrop
+                ? mediaStatus.avatarCrop
+                : prev.avatarCrop,
+            profileCrop: !hasPreMusicBrainzUpload && mediaStatus?.profileCrop
+                ? mediaStatus.profileCrop
+                : prev.profileCrop
         }));
         setError(null);
         setMusicBrainzLocationStatus(null);
@@ -259,6 +280,8 @@ export const useArtistForm = ({
         setMusicBrainzLocationStatus('Career years and social media links auto-filled. Choose locations from the search results.');
     }, [
         buildLocationQuery,
+        formData.musicbrainzMbid,
+        formData.sourceImage,
         getMusicBrainzSocialLinks,
         parseYear,
     ]);
@@ -277,10 +300,7 @@ export const useArtistForm = ({
         setUploadError(null);
 
         try {
-            const imageUrl = await uploadImageToCloudinary(file, {
-                musicbrainzMbid: formData.musicbrainzMbid,
-                allowExistingShared: profile?.isAdmin
-            });
+            const imageUrl = await uploadImageToCloudinary(file);
             setFormData(prev => ({
                 ...prev,
                 sourceImage: imageUrl
@@ -294,7 +314,16 @@ export const useArtistForm = ({
         } finally {
             setIsUploadingImage(false);
         }
-    }, [formData.musicbrainzMbid, profile?.isAdmin, t]);
+    }, [t]);
+
+    const clearImage = useCallback(() => {
+        setFormData(prev => ({
+            ...prev,
+            sourceImage: '',
+            avatarCrop: undefined,
+            profileCrop: undefined
+        }));
+    }, []);
 
     // Update crop coordinates
     const updateCrops = useCallback((avatarCrop: CropArea, profileCrop: CropArea) => {
@@ -395,6 +424,7 @@ export const useArtistForm = ({
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,
+        clearImage,
         clearUploadError,
         updateCrops,
         isEditing

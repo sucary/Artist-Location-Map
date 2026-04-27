@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ArrowDownIcon, MusicNoteIcon, SleepIcon } from '../icons/FormIcons';
-import { ChevronDownIcon } from '../icons/GeneralIcons';
+import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from '../icons/SocialIcons';
 import { LocationSearch } from './LocationSearch';
 import SocialLinkInput, { type SocialLinkField } from './SocialLinkInput';
@@ -10,9 +10,12 @@ import YearSelect from './YearSelect';
 import { MusicBrainzArtistPicker } from './MusicBrainzArtistPicker';
 import { useArtistForm } from '../../hooks/useArtistForm';
 import { getAvatarUrl, getProfileUrl } from '../../utils/cloudinaryUrl';
+import { deleteUploadedImage, getArtistMediaAssetStatus, type ArtistMediaAssetStatus } from '../../utils/cloudinary';
 import { Alert, IconButton, Button } from '../ui';
 import type { Artist } from '../../types/artist';
+import type { MusicBrainzCatalogArtist } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 
 
 interface ArtistFormProps {
@@ -43,12 +46,23 @@ const ArtistForm = ({
     const [isSocialExpanded, setIsSocialExpanded] = useState(false);
     const [showInactive, setShowInactive] = useState(() => !!initialData?.inactiveYear);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const sessionUploadedUrlsRef = useRef<Set<string>>(new Set());
     const [cropperInitialMode, setCropperInitialMode] = useState<'avatar' | 'profile'>('avatar');
 
     // Cropper state - simplified: just need to know if it's open and have the image
     const [isCropperOpen, setIsCropperOpen] = useState(false);
     const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
+    const [mediaWarning, setMediaWarning] = useState<{
+        mode: 'avatar' | 'profile';
+        status: ArtistMediaAssetStatus;
+    } | null>(null);
+    const [preUploadSelectionWarning, setPreUploadSelectionWarning] = useState<{
+        artist: MusicBrainzCatalogArtist;
+        status: ArtistMediaAssetStatus;
+    } | null>(null);
+    const [preUploadImageChoice, setPreUploadImageChoice] = useState<'shared' | 'upload'>('shared');
     const { t } = useTranslation();
+    const { profile } = useAuth();
     const socialFields: SocialLinkField[] = SOCIAL_FIELD_CONFIG.map((field) => ({
         ...field,
         placeholder: t(`artistForm.socialMedia.${field.key}`),
@@ -75,6 +89,7 @@ const ArtistForm = ({
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,
+        clearImage,
         updateCrops,
     } = useArtistForm({
         initialData,
@@ -110,8 +125,7 @@ const ArtistForm = ({
         return '';
     };
 
-    
-    const openCropper = (mode: 'avatar' | 'profile') => {
+    const openImageEntry = (mode: 'avatar' | 'profile') => {
         setCropperInitialMode(mode);
         if (formData.sourceImage) {
             setCropperImageSrc(formData.sourceImage);
@@ -119,6 +133,80 @@ const ArtistForm = ({
         } else {
             fileInputRef.current?.click();
         }
+    };
+
+    const requestImageEntry = async (mode: 'avatar' | 'profile') => {
+        setCropperInitialMode(mode);
+
+        if (!formData.musicbrainzMbid) {
+            openImageEntry(mode);
+            return;
+        }
+
+        try {
+            const status = await getArtistMediaAssetStatus(formData.musicbrainzMbid);
+            if (!status.hasAsset) {
+                openImageEntry(mode);
+                return;
+            }
+
+            if (profile?.isAdmin || status.requiresReview) {
+                setMediaWarning({ mode, status });
+                return;
+            }
+
+            openImageEntry(mode);
+        } catch {
+            openImageEntry(mode);
+        }
+    };
+
+    const continueAfterMediaWarning = () => {
+        const warning = mediaWarning;
+        setMediaWarning(null);
+        if (!warning) return;
+
+        if (warning.status.requiresReview) {
+            fileInputRef.current?.click();
+            return;
+        }
+
+        openImageEntry(warning.mode);
+    };
+
+    const cleanupSessionUpload = async (imageUrl?: string | null) => {
+        if (!imageUrl || !sessionUploadedUrlsRef.current.has(imageUrl)) return;
+        sessionUploadedUrlsRef.current.delete(imageUrl);
+        await deleteUploadedImage(imageUrl).catch((error) => {
+            console.warn('Failed to clean up uploaded image:', error);
+        });
+    };
+
+    const handleArtistSelect = async (artist: MusicBrainzCatalogArtist) => {
+        if (formData.sourceImage && !formData.musicbrainzMbid) {
+            const status = await getArtistMediaAssetStatus(artist.mbid).catch(() => null);
+            if (status?.hasAsset && status.sourceImage) {
+                setPreUploadImageChoice('shared');
+                setPreUploadSelectionWarning({ artist, status });
+                return;
+            }
+        }
+
+        await applyMusicBrainzArtist(artist);
+    };
+
+    const confirmPreUploadImageChoice = async () => {
+        const warning = preUploadSelectionWarning;
+        setPreUploadSelectionWarning(null);
+        if (!warning) return;
+
+        if (preUploadImageChoice === 'upload') {
+            await applyMusicBrainzArtist(warning.artist);
+            return;
+        }
+
+        await cleanupSessionUpload(formData.sourceImage);
+        await applyMusicBrainzArtist(warning.artist, { useSharedImage: true });
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +217,7 @@ const ArtistForm = ({
         const imageUrl = await handleImageUpload(file);
 
         if (imageUrl) {
+            sessionUploadedUrlsRef.current.add(imageUrl);
             // Open cropper with the uploaded image
             setCropperImageSrc(imageUrl);
             setIsCropperOpen(true);
@@ -142,9 +231,39 @@ const ArtistForm = ({
 
     const closeCropper = () => { setIsCropperOpen(false); setCropperImageSrc(null); };
 
+    const cancelCropper = async () => {
+        const imageUrl = cropperImageSrc;
+        closeCropper();
+        await cleanupSessionUpload(imageUrl);
+        if (imageUrl && formData.sourceImage === imageUrl) {
+            clearImage();
+        }
+    };
+
     const handleCropSave = (result: CropResult) => {
         updateCrops(result.avatarCrop, result.profileCrop);
         closeCropper();
+    };
+
+    const handleReupload = async () => {
+        const imageUrl = cropperImageSrc;
+        closeCropper();
+        await cleanupSessionUpload(imageUrl);
+        if (imageUrl && formData.sourceImage === imageUrl) {
+            clearImage();
+        }
+        fileInputRef.current?.click();
+    };
+
+    const handleCancelForm = async () => {
+        const uploadsToClean = Array.from(sessionUploadedUrlsRef.current);
+        sessionUploadedUrlsRef.current.clear();
+        await Promise.all(uploadsToClean.map((url) => (
+            deleteUploadedImage(url).catch((error) => {
+                console.warn('Failed to clean up uploaded image:', error);
+            })
+        )));
+        onCancel?.();
     };
 
     // Get display URLs using Cloudinary transformations
@@ -170,9 +289,134 @@ const ArtistForm = ({
                 initialProfileCrop={formData.profileCrop}
                 initialMode={cropperInitialMode}
                 onSave={handleCropSave}
-                onCancel={closeCropper}
-                onReupload={() => { closeCropper(); fileInputRef.current?.click(); }}
+                onCancel={() => { void cancelCropper(); }}
+                onReupload={() => { void handleReupload(); }}
             />
+        )}
+
+        {mediaWarning && (
+            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
+                <div className="w-full max-w-sm rounded-lg bg-surface p-4 shadow-xl border border-border">
+                    <h2 className="text-base font-semibold text-text">
+                        {mediaWarning.status.requiresReview ? 'Image requires review' : 'Replace shared image?'}
+                    </h2>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        {mediaWarning.status.requiresReview
+                            ? 'This artist already has a shared image. Your upload will be submitted for admin review before it becomes visible to everyone.'
+                            : 'This artist already has a shared image. As an admin, continuing can replace the image shown to everyone.'}
+                    </p>
+                    {mediaWarning.status.sourceImage && (
+                        <div className="mt-3">
+                            <p className="mb-1 text-xs font-medium text-text-secondary">Current image</p>
+                            <img
+                                src={mediaWarning.status.sourceImage}
+                                alt="Current shared artist"
+                                className="w-full aspect-video rounded border border-border object-cover bg-surface-muted"
+                            />
+                        </div>
+                    )}
+                    <div className="mt-4 flex gap-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={() => setMediaWarning(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            className="flex-1"
+                            onClick={continueAfterMediaWarning}
+                        >
+                            Continue
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {preUploadSelectionWarning && (
+            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
+                <div className="w-full max-w-md rounded-lg bg-surface p-4 shadow-xl border border-border">
+                    <h2 className="text-base font-semibold text-text">Artist image already exists</h2>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        We highly recommend using shared artist image due to storage limits.
+                    </p>
+                    <p className="mt-1 text-sm text-text-secondary">
+                        If you think your image represents the artist better, you can submit it for review.
+                    </p>
+                    <p className="mt-4 text-xs font-medium text-text-secondary">Choose an image</p>
+                    <div className="mt-4 space-y-3">
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => setPreUploadImageChoice('shared')}
+                                className={`relative block w-full overflow-hidden rounded-md transition-all ${
+                                    preUploadImageChoice === 'shared'
+                                        ? 'shadow-md ring-2 ring-text-secondary'
+                                        : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
+                                }`}
+                            >
+                                <img
+                                    src={getProfileUrl(
+                                        preUploadSelectionWarning.status.sourceImage || undefined,
+                                        preUploadSelectionWarning.status.profileCrop || undefined
+                                    )}
+                                    alt="Current shared artist"
+                                    className="block w-full aspect-[3/1] object-cover bg-surface-muted"
+                                />
+                                {preUploadImageChoice === 'shared' && (
+                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-text shadow">
+                                        <CheckCircleIcon className="h-5 w-5" />
+                                    </span>
+                                )}
+                                <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
+                                    preUploadImageChoice === 'shared' ? 'bg-text-secondary' : 'bg-text/60'
+                                }`}>
+                                    Shared image
+                                </span>
+                            </button>
+                        </div>
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => setPreUploadImageChoice('upload')}
+                                className={`relative block w-full overflow-hidden rounded-md transition-all ${
+                                    preUploadImageChoice === 'upload'
+                                        ? 'shadow-md ring-2 ring-text-secondary'
+                                        : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
+                                }`}
+                            >
+                                <img
+                                    src={getProfileUrl(formData.sourceImage, formData.profileCrop)}
+                                    alt="Your uploaded artist"
+                                    className="block w-full aspect-[3/1] object-cover bg-surface-muted"
+                                />
+                                {preUploadImageChoice === 'upload' && (
+                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-text shadow">
+                                        <CheckCircleIcon className="h-5 w-5" />
+                                    </span>
+                                )}
+                                <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
+                                    preUploadImageChoice === 'upload' ? 'bg-text-secondary' : 'bg-text/60'
+                                }`}>
+                                    Your upload
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div className="mt-4">
+                        <Button
+                            type="button"
+                            className="w-full"
+                            onClick={confirmPreUploadImageChoice}
+                        >
+                            Confirm
+                        </Button>
+                    </div>
+                </div>
+            </div>
         )}
 
         <div className="absolute top-28 right-2 z-[1050] w-80 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] font-sans">
@@ -182,8 +426,8 @@ const ArtistForm = ({
                 avatarUrl={avatarUrl}
                 profileUrl={profileUrl}
                 isUploading={isUploadingImage}
-                onAvatarClick={() => openCropper('avatar')}
-                onProfileClick={() => openCropper('profile')}
+                onAvatarClick={() => void requestImageEntry('avatar')}
+                onProfileClick={() => void requestImageEntry('profile')}
                 onNameChange={updateName}
             />
 
@@ -199,7 +443,7 @@ const ArtistForm = ({
                         value={formData.name}
                         selectedMbid={formData.musicbrainzMbid}
                         onNameChange={updateName}
-                        onSelect={applyMusicBrainzArtist}
+                        onSelect={handleArtistSelect}
                     />
                     {musicBrainzLocationStatus && (
                         <div className="text-xs text-text-secondary -mt-2">
@@ -308,7 +552,7 @@ const ArtistForm = ({
                 )}
                 <div className="flex gap-3">
                     <Button
-                        onClick={onCancel}
+                        onClick={() => { void handleCancelForm(); }}
                         disabled={isSaving}
                         variant="secondary"
                         className="flex-1"

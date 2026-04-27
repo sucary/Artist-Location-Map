@@ -5,6 +5,7 @@
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
 import { API_URL } from '../services/api';
+import type { CropArea } from '../types/artist';
 
 interface CloudinaryUploadResponse {
   secure_url: string;
@@ -29,10 +30,15 @@ interface SignatureResponse {
   cloudName: string;
 }
 
-interface ArtistMediaAssetResponse {
+export interface ArtistMediaAssetStatus {
   hasAsset: boolean;
   sourceImage?: string | null;
+  avatarCrop?: CropArea | null;
+  profileCrop?: CropArea | null;
+  canReplaceDirectly: boolean;
+  requiresReview: boolean;
 }
+
 
 /**
  * Validates image file before upload
@@ -70,10 +76,10 @@ async function getUploadSignature(): Promise<SignatureResponse> {
   return response.data;
 }
 
-async function getArtistMediaAsset(musicbrainzMbid: string): Promise<ArtistMediaAssetResponse> {
+export async function getArtistMediaAssetStatus(musicbrainzMbid: string): Promise<ArtistMediaAssetStatus> {
   const { data: { session } } = await supabase.auth.getSession();
 
-  const response = await axios.get<ArtistMediaAssetResponse>(
+  const response = await axios.get<ArtistMediaAssetStatus>(
     `${API_URL}/upload/artist-media/${musicbrainzMbid}`,
     {
       headers: {
@@ -83,6 +89,20 @@ async function getArtistMediaAsset(musicbrainzMbid: string): Promise<ArtistMedia
   );
 
   return response.data;
+}
+
+export async function deleteUploadedImage(secureUrl: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  await axios.delete(
+    `${API_URL}/upload/uploaded-image`,
+    {
+      data: { secureUrl },
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+    }
+  );
 }
 
 async function recordUploadComplete(data: CloudinaryUploadResponse): Promise<void> {
@@ -110,20 +130,10 @@ async function recordUploadComplete(data: CloudinaryUploadResponse): Promise<voi
  * Uploads image to Cloudinary using a signed request
  * @returns The secure URL of the uploaded image
  */
-export const uploadImageToCloudinary = async (
-  file: File,
-  options: { musicbrainzMbid?: string; allowExistingShared?: boolean } = {}
-): Promise<string> => {
+export const uploadImageToCloudinary = async (file: File): Promise<string> => {
   const validationError = validateImageFile(file);
   if (validationError) {
     throw new Error(validationError);
-  }
-
-  if (options.musicbrainzMbid && !options.allowExistingShared) {
-    const asset = await getArtistMediaAsset(options.musicbrainzMbid);
-    if (asset.hasAsset) {
-      throw new Error('This artist already has a shared image.');
-    }
   }
 
   const { signature, timestamp, publicId, apiKey, cloudName } = await getUploadSignature();

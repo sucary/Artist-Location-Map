@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner, Alert, Button, CloseButton } from '../ui';
 import { CheckCircleIcon } from '../icons/GeneralIcons';
@@ -11,18 +11,31 @@ interface AdminDashboardProps {
     onClose: () => void;
 }
 
+interface PendingMediaReview {
+    id: string;
+    musicbrainzMbid: string;
+    artistName: string;
+    sourceImage: string;
+    currentSourceImage?: string | null;
+    submittedByUsername?: string | null;
+    submittedByEmail?: string | null;
+    createdAt: string;
+}
+
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { user, profile } = useAuth();
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+    const [pendingMediaReviews, setPendingMediaReviews] = useState<PendingMediaReview[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [approvalsOpen, setApprovalsOpen] = useState(true);
+    const [mediaReviewsOpen, setMediaReviewsOpen] = useState(true);
     const [translationsOpen, setTranslationsOpen] = useState(false);
 
     const dialogRef = useDialogAccessibility(onClose);
 
     useEffect(() => {
-        fetchPendingUsers();
+        void fetchAdminData();
     }, []);
 
     // Close modal on esc pressed
@@ -36,31 +49,40 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         return () => document.removeEventListener('keydown', handleKeyDown);
         }, [onClose]);
 
-    const fetchPendingUsers = async () => {
+    const getAuthHeaders = async () => {
+        const { supabase } = await import('../../lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+            throw new Error('No authentication token found');
+        }
+
+        return {
+            'Authorization': `Bearer ${session.access_token}`,
+        };
+    };
+
+    const fetchAdminData = async () => {
         setLoading(true);
         setError(null);
         try {
-            const { supabase } = await import('../../lib/supabase');
-            const { data: { session } } = await supabase.auth.getSession();
+            const headers = await getAuthHeaders();
+            const [usersResponse, mediaResponse] = await Promise.all([
+                fetch(`${API_URL}/auth/admin/pending-users`, { headers }),
+                fetch(`${API_URL}/upload/admin/media-reviews`, { headers }),
+            ]);
 
-            if (!session?.access_token) {
-                throw new Error('No authentication token found');
-            }
-
-            const response = await fetch(`${API_URL}/auth/admin/pending-users`, {
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-            });
-
-            if (!response.ok) {
+            if (!usersResponse.ok) {
                 throw new Error('Failed to fetch pending users');
             }
+            if (!mediaResponse.ok) {
+                throw new Error('Failed to fetch media reviews');
+            }
 
-            const data = await response.json();
-            setPendingUsers(data);
+            setPendingUsers(await usersResponse.json());
+            setPendingMediaReviews(await mediaResponse.json());
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load pending users');
+            setError(err instanceof Error ? err.message : 'Failed to load admin data');
         } finally {
             setLoading(false);
         }
@@ -68,18 +90,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
     const handleApprove = async (userId: string) => {
         try {
-            const { supabase } = await import('../../lib/supabase');
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session?.access_token) {
-                throw new Error('No authentication token found');
-            }
+            const headers = await getAuthHeaders();
 
             const response = await fetch(`${API_URL}/auth/admin/approve/${userId}`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
+                headers,
             });
 
             if (!response.ok) {
@@ -99,18 +114,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         }
 
         try {
-            const { supabase } = await import('../../lib/supabase');
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session?.access_token) {
-                throw new Error('No authentication token found');
-            }
+            const headers = await getAuthHeaders();
 
             const response = await fetch(`${API_URL}/auth/admin/reject/${userId}`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
+                headers,
             });
 
             if (!response.ok) {
@@ -121,6 +129,24 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             setPendingUsers(prev => prev.filter(u => u.id !== userId));
         } catch (err) {
             alert(err instanceof Error ? err.message : 'Failed to reject user');
+        }
+    };
+
+    const handleMediaReview = async (reviewId: string, action: 'approve' | 'reject') => {
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`${API_URL}/upload/admin/media-reviews/${reviewId}/${action}`, {
+                method: 'POST',
+                headers,
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to ${action} media review`);
+            }
+
+            setPendingMediaReviews(prev => prev.filter(review => review.id !== reviewId));
+        } catch (err) {
+            alert(err instanceof Error ? err.message : `Failed to ${action} media review`);
         }
     };
 
@@ -161,7 +187,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             <h2 className="text-lg text-text">
                                 Pending User Approvals ({pendingUsers.length})
                             </h2>
-                            <span className="text-text-muted text-sm">{approvalsOpen ? '▲' : '▼'}</span>
+                            <span className="text-text-muted text-sm">{approvalsOpen ? '-' : '+'}</span>
                         </button>
 
                         {approvalsOpen && (
@@ -217,6 +243,96 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         )}
                     </div>
 
+                    {/* Pending Artist Image Reviews */}
+                    <div className="border-t border-border pt-4 mb-4">
+                        <button
+                            onClick={() => setMediaReviewsOpen(!mediaReviewsOpen)}
+                            className="w-full flex items-center justify-between py-2 text-left"
+                        >
+                            <h2 className="text-lg text-text">
+                                Artist Image Reviews ({pendingMediaReviews.length})
+                            </h2>
+                            <span className="text-text-muted text-sm">{mediaReviewsOpen ? '-' : '+'}</span>
+                        </button>
+
+                        {mediaReviewsOpen && (
+                            <div className="mt-2">
+                                {loading && (
+                                    <div className="text-center py-8">
+                                        <Spinner size="lg" className="mx-auto text-primary" />
+                                        <p className="text-text-secondary mt-2">Loading...</p>
+                                    </div>
+                                )}
+
+                                {!loading && pendingMediaReviews.length === 0 && (
+                                    <div className="text-center py-8 text-text-secondary">
+                                        <CheckCircleIcon className="w-12 h-12 mx-auto mb-2 text-text-muted" />
+                                        <p>No pending image reviews</p>
+                                    </div>
+                                )}
+
+                                {!loading && pendingMediaReviews.length > 0 && (
+                                    <div className="space-y-4">
+                                        {pendingMediaReviews.map(review => (
+                                            <div key={review.id} className="border border-border rounded-lg p-4">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-text">{review.artistName}</p>
+                                                        <p className="text-xs text-text-secondary">
+                                                            Submitted by {review.submittedByUsername || review.submittedByEmail || 'Unknown user'}
+                                                        </p>
+                                                        <p className="text-xs text-text-muted mt-1">
+                                                            {new Date(review.createdAt).toLocaleDateString('fi-FI')} {new Date(review.createdAt).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':')}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            onClick={() => handleMediaReview(review.id, 'approve')}
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                        >
+                                                            Approve
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleMediaReview(review.id, 'reject')}
+                                                            className="bg-red-600 hover:bg-red-700"
+                                                        >
+                                                            Reject
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3 mt-4">
+                                                    <div>
+                                                        <p className="text-xs font-medium text-text-secondary mb-1">Current</p>
+                                                        {review.currentSourceImage ? (
+                                                            <img
+                                                                src={review.currentSourceImage}
+                                                                alt={`${review.artistName} current`}
+                                                                className="w-full aspect-video object-cover rounded border border-border bg-surface-muted"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full aspect-video rounded border border-border bg-surface-muted flex items-center justify-center text-xs text-text-secondary">
+                                                                No image
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-medium text-text-secondary mb-1">Proposed</p>
+                                                        <img
+                                                            src={review.sourceImage}
+                                                            alt={`${review.artistName} proposed`}
+                                                            className="w-full aspect-video object-cover rounded border border-border bg-surface-muted"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Location Translations */}
                     <div className="border-t border-border pt-4">
                         <button
@@ -224,7 +340,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             className="w-full flex items-center justify-between py-2 text-left"
                         >
                             <h2 className="text-lg text-text">Location Translations</h2>
-                            <span className="text-text-muted text-sm">{translationsOpen ? '▲' : '▼'}</span>
+                            <span className="text-text-muted text-sm">{translationsOpen ? '-' : '+'}</span>
                         </button>
 
                         {translationsOpen && (

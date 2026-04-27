@@ -199,7 +199,7 @@ export const deleteArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
         throw new AppError('Not authorized to delete this artist', 403);
     }
 
-    await ArtistService.delete(req.params.id);
+    await ArtistService.delete(req.params.id, artist.userId || userId);
     res.status(204).send();
 });
 

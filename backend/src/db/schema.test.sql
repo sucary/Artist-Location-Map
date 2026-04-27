@@ -7,6 +7,9 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Drop tables if they exist (reverse dependency order)
 DROP TABLE IF EXISTS artists CASCADE;
+DROP TABLE IF EXISTS artist_media_assets CASCADE;
+DROP TABLE IF EXISTS artist_media_asset_reviews CASCADE;
+DROP TABLE IF EXISTS media_upload_events CASCADE;
 DROP TABLE IF EXISTS musicbrainz_artist_links CASCADE;
 DROP TABLE IF EXISTS musicbrainz_artists CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
@@ -167,12 +170,66 @@ CREATE TABLE IF NOT EXISTS musicbrainz_artist_links (
 );
 
 -- ============================================
+-- Media Upload Tracking
+-- ============================================
+CREATE TABLE IF NOT EXISTS media_upload_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    public_id TEXT NOT NULL UNIQUE,
+    secure_url TEXT,
+    bytes INTEGER,
+    width INTEGER,
+    height INTEGER,
+    format TEXT,
+    status TEXT NOT NULL DEFAULT 'signed' CHECK (status IN ('signed', 'uploaded', 'failed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS artist_media_assets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    musicbrainz_mbid UUID NOT NULL UNIQUE REFERENCES musicbrainz_artists(mbid),
+    source_image TEXT NOT NULL,
+    avatar_crop JSONB,
+    profile_crop JSONB,
+    public_id TEXT,
+    bytes INTEGER,
+    width INTEGER,
+    height INTEGER,
+    format TEXT,
+    original_uploaded_by UUID REFERENCES users(id),
+    uploaded_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS artist_media_asset_reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    musicbrainz_mbid UUID NOT NULL REFERENCES musicbrainz_artists(mbid),
+    source_image TEXT NOT NULL,
+    avatar_crop JSONB,
+    profile_crop JSONB,
+    public_id TEXT,
+    bytes INTEGER,
+    width INTEGER,
+    height INTEGER,
+    format TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    submitted_by UUID REFERENCES users(id),
+    reviewed_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ
+);
+
+-- ============================================
 -- Artists
 -- ============================================
 CREATE TABLE IF NOT EXISTS artists (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
+    romanized_name TEXT,
 
     -- Image fields (after migration 002)
     source_image TEXT,
@@ -244,17 +301,30 @@ CREATE INDEX IF NOT EXISTS idx_artists_active_coords ON artists USING GIST(activ
 CREATE INDEX IF NOT EXISTS idx_artists_original_display_coords ON artists USING GIST(original_display_coordinates);
 CREATE INDEX IF NOT EXISTS idx_artists_active_display_coords ON artists USING GIST(active_display_coordinates);
 CREATE INDEX IF NOT EXISTS idx_artists_name ON artists(name);
+CREATE INDEX IF NOT EXISTS idx_artists_romanized_name_trgm ON artists USING gin(romanized_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_artists_original_city ON artists(original_city);
 CREATE INDEX IF NOT EXISTS idx_artists_active_city ON artists(active_city);
 CREATE INDEX IF NOT EXISTS idx_artists_original_city_id ON artists(original_city_id);
 CREATE INDEX IF NOT EXISTS idx_artists_active_city_id ON artists(active_city_id);
 CREATE INDEX IF NOT EXISTS idx_artists_musicbrainz_mbid ON artists(musicbrainz_mbid);
+CREATE INDEX IF NOT EXISTS idx_media_upload_events_user_created ON media_upload_events(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_media_upload_events_status ON media_upload_events(status);
+CREATE INDEX IF NOT EXISTS idx_artist_media_assets_uploaded_by ON artist_media_assets(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_artist_media_assets_original_uploaded_by ON artist_media_assets(original_uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_artist_media_asset_reviews_status ON artist_media_asset_reviews(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_artist_media_asset_reviews_mbid ON artist_media_asset_reviews(musicbrainz_mbid);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_artist_media_asset_reviews_pending_user ON artist_media_asset_reviews(musicbrainz_mbid, submitted_by) WHERE status = 'pending';
 
 -- ============================================
 -- Triggers
 -- ============================================
 CREATE TRIGGER update_artists_updated_at
     BEFORE UPDATE ON artists
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_artist_media_assets_updated_at
+    BEFORE UPDATE ON artist_media_assets
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

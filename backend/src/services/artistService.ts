@@ -4,6 +4,7 @@ import { LocationLocalizationService } from './locationLocalizationService';
 import { CreateArtistDTO, UpdateArtistDTO, Artist, StoreArtistDTO, UpdateStoreArtistDTO, ArtistQueryParams, Coordinates } from '../types/artist';
 import { City } from '../types/city';
 import pool from '../config/database';
+import { MediaCleanupService } from './mediaCleanupService';
 
 // ~1km tolerance to account for Nominatim coordinate variations
 const COORD_TOLERANCE = 0.01;
@@ -69,28 +70,82 @@ async function applySharedArtistMedia(
 
     const upload = uploadResult.rows[0];
 
-    const existingResult = await pool.query<{ id: string }>(`
-        SELECT id
-        FROM artist_media_assets
-        WHERE musicbrainz_mbid = $1
-    `, [data.musicbrainzMbid]);
-
-    const hasSharedAsset = existingResult.rows.length > 0;
-
-    if (hasSharedAsset && !isAdmin) {
+    if (!upload) {
         delete data.sourceImage;
         delete data.avatarCrop;
         delete data.profileCrop;
         return;
     }
 
+    const existingResult = await pool.query<{
+        id: string;
+        public_id: string | null;
+        uploaded_by: string | null;
+        original_uploaded_by: string | null;
+    }>(`
+        SELECT id, public_id, uploaded_by, original_uploaded_by
+        FROM artist_media_assets
+        WHERE musicbrainz_mbid = $1
+    `, [data.musicbrainzMbid]);
+
+    const existingAsset = existingResult.rows[0];
+    const hasSharedAsset = Boolean(existingAsset);
+    const isOriginalUploader = (existingAsset?.original_uploaded_by || existingAsset?.uploaded_by) === userId;
+
+    if (hasSharedAsset && !isAdmin && !isOriginalUploader) {
+        await pool.query(`
+            WITH updated AS (
+                UPDATE artist_media_asset_reviews
+                SET
+                    source_image = $2,
+                    avatar_crop = $3,
+                    profile_crop = $4,
+                    public_id = $5,
+                    bytes = $6,
+                    width = $7,
+                    height = $8,
+                    format = $9,
+                    created_at = NOW()
+                WHERE musicbrainz_mbid = $1
+                  AND submitted_by = $10
+                  AND status = 'pending'
+                RETURNING id
+            )
+            INSERT INTO artist_media_asset_reviews (
+                musicbrainz_mbid, source_image, avatar_crop, profile_crop,
+                public_id, bytes, width, height, format, submitted_by
+            )
+            SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+            WHERE NOT EXISTS (SELECT 1 FROM updated)
+        `, [
+            data.musicbrainzMbid,
+            data.sourceImage,
+            data.avatarCrop ? JSON.stringify(data.avatarCrop) : null,
+            data.profileCrop ? JSON.stringify(data.profileCrop) : null,
+            upload.public_id,
+            upload.bytes,
+            upload.width,
+            upload.height,
+            upload.format,
+            userId
+        ]);
+
+        delete data.sourceImage;
+        delete data.avatarCrop;
+        delete data.profileCrop;
+        return;
+    }
+
+    const previousSharedPublicId = existingAsset?.public_id || null;
+    const nextPublicId = upload?.public_id || null;
+
     await pool.query(`
         INSERT INTO artist_media_assets (
             musicbrainz_mbid, source_image, avatar_crop, profile_crop,
-            public_id, bytes, width, height, format, uploaded_by, updated_by
+            public_id, bytes, width, height, format, original_uploaded_by, uploaded_by, updated_by
         ) VALUES (
             $1, $2, $3, $4,
-            $5, $6, $7, $8, $9, $10, $10
+            $5, $6, $7, $8, $9, $10, $10, $10
         )
         ON CONFLICT (musicbrainz_mbid) DO UPDATE
         SET
@@ -102,6 +157,8 @@ async function applySharedArtistMedia(
             width = EXCLUDED.width,
             height = EXCLUDED.height,
             format = EXCLUDED.format,
+            original_uploaded_by = COALESCE(artist_media_assets.original_uploaded_by, artist_media_assets.uploaded_by, EXCLUDED.original_uploaded_by),
+            uploaded_by = EXCLUDED.uploaded_by,
             updated_by = EXCLUDED.updated_by
     `, [
         data.musicbrainzMbid,
@@ -115,6 +172,10 @@ async function applySharedArtistMedia(
         upload?.format || null,
         userId
     ]);
+
+    if (previousSharedPublicId && previousSharedPublicId !== nextPublicId) {
+        await MediaCleanupService.deletePublicIdIfUnused(previousSharedPublicId);
+    }
 
     delete data.sourceImage;
     delete data.avatarCrop;
@@ -269,8 +330,21 @@ export const ArtistService = {
         return updatedArtist ? await ArtistStore.getById(updatedArtist.id) || updatedArtist : undefined;
     },
 
-    delete: async (id: string) => {
-        return await ArtistStore.delete(id);
+    delete: async (id: string, userId: string) => {
+        const mediaResult = await pool.query<{ source_image: string | null }>(`
+            SELECT source_image
+            FROM artists
+            WHERE id = $1
+        `, [id]);
+
+        const sourceImage = mediaResult.rows[0]?.source_image;
+        const deleted = await ArtistStore.delete(id);
+
+        if (deleted && sourceImage) {
+            await MediaCleanupService.deleteOwnedUploadByUrlIfUnused(userId, sourceImage);
+        }
+
+        return deleted;
     },
 
     countByCity: async (view: 'original' | 'active' = 'active', userId?: string) => {
