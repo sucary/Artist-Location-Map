@@ -9,6 +9,8 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 DROP TABLE IF EXISTS artists CASCADE;
 DROP TABLE IF EXISTS artist_media_assets CASCADE;
 DROP TABLE IF EXISTS artist_media_asset_reviews CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS rejected_registrations CASCADE;
 DROP TABLE IF EXISTS media_upload_events CASCADE;
 DROP TABLE IF EXISTS musicbrainz_artist_links CASCADE;
 DROP TABLE IF EXISTS musicbrainz_artists CASCADE;
@@ -154,6 +156,46 @@ CREATE TABLE IF NOT EXISTS musicbrainz_artists (
     regional_ranks JSONB NOT NULL DEFAULT '[]'::jsonb,
     imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+    is_private BOOLEAN NOT NULL DEFAULT FALSE,
+    location_language TEXT NOT NULL DEFAULT 'native',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    is_hard BOOLEAN NOT NULL DEFAULT FALSE,
+    link_label TEXT,
+    link_url TEXT,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    aggregation_key TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_visible
+ON notifications(user_id, is_hard DESC, is_read ASC, created_at DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_user_aggregation
+ON notifications(user_id, aggregation_key)
+WHERE aggregation_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS rejected_registrations (
+    email TEXT PRIMARY KEY,
+    rejected_user_id UUID,
+    rejected_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS musicbrainz_artist_links (
