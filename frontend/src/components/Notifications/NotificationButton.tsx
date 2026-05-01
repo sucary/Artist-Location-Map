@@ -1,8 +1,15 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
+import {
+    clearNotifications,
+    deleteNotification,
+    getNotifications,
+    default as api,
+    type Notification
+} from '../../services/api';
 import { CloseButton } from '../ui';
-import api from '../../services/api';
 
 interface PendingUser {
     id: string;
@@ -11,110 +18,308 @@ interface PendingUser {
     createdAt: string;
 }
 
+type MenuNotification = Notification & {
+    source: 'persisted' | 'synthetic';
+};
+
+function formatTimestamp(value: string) {
+    return new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(new Date(value));
+}
+
+function BellIcon() {
+    return (
+        <svg aria-hidden="true" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+    );
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+    return (
+        <svg
+            aria-hidden="true"
+            className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            viewBox="0 0 24 24"
+            fill="none"
+        >
+            <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
+function getNotificationColor(notification: MenuNotification) {
+    if (notification.isHard) {
+        if (notification.type.includes('error') || notification.type.includes('failed')) {
+            return 'bg-red-50 border-surface-secondary';
+        }
+        return 'bg-yellow-50 border-surface-secondary';
+    }
+
+    return 'bg-surface border-surface-secondary';
+}
+
+function NotificationItem({
+    notification,
+    onClose,
+    onNavigate
+}: {
+    notification: MenuNotification;
+    onClose: (id: string) => void;
+    onNavigate: (url: string) => void;
+}) {
+    const [expanded, setExpanded] = useState(false);
+    const canExpand = notification.content.length > 72;
+
+    return (
+        <div
+            data-notification-id={notification.id}
+            className={`px-4 py-3 border-b last:border-b-0 ${getNotificationColor(notification)}`}
+        >
+            <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-text leading-snug">{notification.title}</p>
+                        {!notification.isHard && (
+                            <CloseButton
+                                size="sm"
+                                onClick={() => onClose(notification.id)}
+                                aria-label="Close notification"
+                                className="-mr-1 -mt-1"
+                            />
+                        )}
+                    </div>
+                    <p
+                        className="text-xs text-text-secondary mt-1 leading-relaxed overflow-hidden"
+                        // Collapse long content by default.
+                        style={expanded ? undefined : {
+                            display: '-webkit-box',
+                            WebkitLineClamp: 1,
+                            WebkitBoxOrient: 'vertical'
+                        }}
+                    >
+                        {notification.content}
+                    </p>
+                    <div className="flex items-center justify-between gap-3 mt-2">
+                        <span className="text-[11px] text-text-muted">{formatTimestamp(notification.createdAt)}</span>
+                        <div className="flex items-center gap-3">
+                            {canExpand && (
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary"
+                                    onClick={() => setExpanded((current) => !current)}
+                                >
+                                    {expanded ? 'Less' : 'More'}
+                                    <ChevronIcon expanded={expanded} />
+                                </button>
+                            )}
+                            {notification.linkLabel && notification.linkUrl && (
+                                <button
+                                    type="button"
+                                    className="text-xs font-medium text-primary hover:text-primary-hover"
+                                    onClick={() => onNavigate(notification.linkUrl!)}
+                                >
+                                    {notification.linkLabel}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function NotificationButton() {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { profile } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Fetch pending users for admin
-    const { data: pendingUsers } = useQuery({
+    const { data: persistedNotifications = [] } = useQuery({
+        queryKey: ['notifications'],
+        queryFn: getNotifications,
+        enabled: !!profile,
+        refetchInterval: 30000,
+    });
+
+    const { data: pendingUsers = [] } = useQuery({
         queryKey: ['pendingUsers'],
         queryFn: async () => {
             const response = await api.get<PendingUser[]>('/auth/admin/pending-users');
             return response.data;
         },
         enabled: !!profile?.isAdmin,
-        refetchInterval: 30000, // Refresh every 30 seconds
+        refetchInterval: 30000,
     });
 
-    // Build notifications
-    const notifications: { type: string; message: string; detail?: string; action?: string }[] = [];
+    const deleteMutation = useMutation({
+        mutationFn: deleteNotification,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    });
 
-    if (profile && !profile.isApproved) {
-        notifications.push({
-            type: 'warning',
-            message: 'Account Pending Approval',
-            detail: 'Your account is awaiting admin approval.'
+    const clearMutation = useMutation({
+        mutationFn: clearNotifications,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    });
+
+    const syntheticNotifications = useMemo<MenuNotification[]>(() => {
+        const now = new Date().toISOString();
+        const notifications: MenuNotification[] = [];
+
+        if (profile && !profile.isApproved) {
+            notifications.push({
+                id: 'account-pending-approval',
+                userId: profile.id,
+                type: 'account_pending_approval',
+                title: 'Account pending approval',
+                content: 'Your account is awaiting admin approval.',
+                isRead: false,
+                isHard: true,
+                linkLabel: null,
+                linkUrl: null,
+                metadata: {},
+                aggregationKey: 'account_pending_approval',
+                createdAt: now,
+                readAt: null,
+                source: 'synthetic'
+            });
+        }
+
+        if (profile?.isAdmin && pendingUsers.length > 0) {
+            notifications.push({
+                id: 'admin-pending-users',
+                userId: profile.id,
+                type: 'registration_pending',
+                title: `${pendingUsers.length} pending approval${pendingUsers.length > 1 ? 's' : ''}`,
+                content: 'Users are waiting for account approval.',
+                isRead: false,
+                isHard: true,
+                linkLabel: 'Open admin',
+                linkUrl: 'admin:dashboard',
+                metadata: { count: pendingUsers.length },
+                aggregationKey: 'admin_pending_users',
+                createdAt: pendingUsers[0]?.createdAt ?? now,
+                readAt: null,
+                source: 'synthetic'
+            });
+        }
+
+        return notifications;
+    }, [pendingUsers, profile]);
+
+    const notifications: MenuNotification[] = useMemo(() => {
+        const persisted = persistedNotifications.map((notification) => ({
+            ...notification,
+            source: 'persisted' as const
+        }));
+        return [...syntheticNotifications, ...persisted].sort((a, b) => {
+            if (a.isHard !== b.isHard) return a.isHard ? -1 : 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
-    }
+    }, [persistedNotifications, syntheticNotifications]);
 
-    if (profile?.isAdmin && pendingUsers && pendingUsers.length > 0) {
-        notifications.push({
-            type: 'info',
-            message: `${pendingUsers.length} Pending Approval${pendingUsers.length > 1 ? 's' : ''}`,
-            detail: 'Users waiting for account approval.',
-            action: 'admin'
-        });
-    }
+    const hardNotifications = notifications.filter((notification) => notification.isHard);
+    const normalNotifications = notifications.filter((notification) => !notification.isHard);
+    const notificationCount = notifications.length;
+    const canClear = notifications.some((notification) => !notification.isHard);
 
-    // Don't render if no notifications
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Outside click closes menu without blocking other controls.
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!containerRef.current?.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [isOpen]);
+
     if (notifications.length === 0) {
         return null;
     }
 
-    return (
-        <div className="relative">
-            <button
-                aria-label={`Notifications (${notifications.length})`}
-                aria-expanded={isOpen}
-                onClick={() => setIsOpen(!isOpen)}
-                // w h - 13, its 12 + 1 for exceed badge padding
-                className="w-13 h-13 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted transition-colors text-text relative"
-            >
-                {/* Bell Icon */}
-                <svg aria-hidden="true" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+    const handleNavigate = (url: string) => {
+        setIsOpen(false);
+        if (url === 'admin:dashboard') {
+            // Bridge header notification to App-owned dashboard modal.
+            window.dispatchEvent(new CustomEvent('open-admin-dashboard'));
+            return;
+        }
+        navigate(url);
+    };
 
-                {/* Badge */}
-                <span
-                    aria-hidden="true"
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                    {notifications.length}
-                </span>
-            </button>
+    const renderSection = (title: string, items: MenuNotification[]) => {
+        if (items.length === 0) return null;
 
-            {/* Dropdown */}
-            {isOpen && (
-                <>
-                    <div
-                        aria-hidden="true"
-                        className="fixed inset-0 z-1099"
-                        onClick={() => setIsOpen(false)}
+        return (
+            <section>
+                <div className="px-4 py-2 bg-surface-secondary text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                    {title}
+                </div>
+                {items.map((notification) => (
+                    <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        onClose={(id) => deleteMutation.mutate(id)}
+                        onNavigate={handleNavigate}
                     />
-                    <div className="absolute right-0 mt-2 w-72 bg-surface rounded-lg shadow-lg border border-border z-1100">
-                        <div className="p-3 border-b border-border flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-text">Notifications</h3>
-                            <CloseButton onClick={() => setIsOpen(false)} size="sm" />
-                        </div>
-                        <div className="max-h-64 overflow-y-auto">
-                            {notifications.map((notification, index) => (
-                                <div
-                                    key={index}
-                                    className="p-3 border-b border-surface-secondary last:border-b-0 hover:bg-surface-secondary"
+                ))}
+            </section>
+        );
+    };
+
+    return (
+        <div ref={containerRef} className="relative">
+            {!isOpen && (
+                <button
+                    aria-label={`Notifications (${notificationCount})`}
+                    aria-expanded={isOpen}
+                    onClick={() => setIsOpen(true)}
+                    className="w-13 h-13 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted active:bg-surface focus:bg-surface transition-colors text-text relative"
+                >
+                    <BellIcon />
+                    {notificationCount > 0 && (
+                        <span
+                            aria-hidden="true"
+                            className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
+                        >
+                            {notificationCount}
+                        </span>
+                    )}
+                </button>
+            )}
+            {isOpen && (
+                <div className="fixed top-2 right-[calc(12rem+1rem)] w-80 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                        <h3 className="text-lg font-semibold text-text">Notifications</h3>
+                        <div className="flex items-center gap-1">
+                            {canClear && (
+                                <button
+                                    type="button"
+                                    className="text-xs font-medium text-text-secondary hover:text-primary disabled:opacity-50"
+                                    disabled={clearMutation.isPending}
+                                    onClick={() => clearMutation.mutate()}
                                 >
-                                    <div className="flex items-start gap-2">
-                                        {notification.type === 'warning' && (
-                                            <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                        {notification.type === 'info' && (
-                                            <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                        <div>
-                                            <p className="text-sm font-medium text-text">{notification.message}</p>
-                                            {notification.detail && (
-                                                <p className="text-xs text-text-secondary mt-0.5">{notification.detail}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                    Clear all
+                                </button>
+                            )}
+                            <CloseButton onClick={() => setIsOpen(false)} size="md" />
                         </div>
                     </div>
-                </>
+                    <div className="max-h-96 overflow-y-auto">
+                        {renderSection('Pinned', hardNotifications)}
+                        {renderSection('Notifications', normalNotifications)}
+                    </div>
+                </div>
             )}
         </div>
     );

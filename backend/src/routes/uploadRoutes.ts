@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import cloudinary from '../config/cloudinary';
 import pool from '../config/database';
 import { MediaCleanupService } from '../services/mediaCleanupService';
+import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 const NORMAL_USER_DAILY_UPLOAD_LIMIT = 50;
@@ -226,6 +227,7 @@ router.post(
         const reviewResult = await pool.query<{
             id: string;
             musicbrainz_mbid: string;
+            artist_name: string | null;
             source_image: string;
             avatar_crop: unknown;
             profile_crop: unknown;
@@ -236,10 +238,11 @@ router.post(
             format: string | null;
             submitted_by: string | null;
         }>(`
-            SELECT *
-            FROM artist_media_asset_reviews
-            WHERE id = $1
-              AND status = 'pending'
+            SELECT r.*, a.name as artist_name
+            FROM artist_media_asset_reviews r
+            LEFT JOIN musicbrainz_artists a ON a.mbid = r.musicbrainz_mbid
+            WHERE r.id = $1
+              AND r.status = 'pending'
         `, [req.params.id]);
 
         const review = reviewResult.rows[0];
@@ -309,6 +312,19 @@ router.post(
                 await MediaCleanupService.deletePublicIdIfUnused(previousSharedPublicId);
             }
 
+            await NotificationService.createForUser(review.submitted_by, {
+                type: 'artist_media_approved',
+                title: 'Artist image approved',
+                content: `${review.artist_name || 'Your artist image'} was approved.`,
+                linkLabel: 'View artist',
+                linkUrl: `/artists/${review.musicbrainz_mbid}`,
+                aggregationKey: `artist_media_approved:${review.musicbrainz_mbid}`,
+                metadata: {
+                    musicbrainzMbid: review.musicbrainz_mbid,
+                    reviewId: review.id
+                }
+            });
+
             res.json({ ok: true });
         } catch (error) {
             await client.query('ROLLBACK');
@@ -324,20 +340,47 @@ router.post(
     requireAuth,
     requireAdmin,
     asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-        const result = await pool.query(`
+        const result = await pool.query<{
+            id: string;
+            musicbrainz_mbid: string;
+            submitted_by: string | null;
+            artist_name: string | null;
+        }>(`
             UPDATE artist_media_asset_reviews
             SET status = 'rejected',
                 reviewed_by = $1,
                 reviewed_at = NOW()
             WHERE id = $2
               AND status = 'pending'
-            RETURNING id
+            RETURNING
+                id,
+                musicbrainz_mbid,
+                submitted_by,
+                (
+                    SELECT name
+                    FROM musicbrainz_artists
+                    WHERE musicbrainz_artists.mbid = artist_media_asset_reviews.musicbrainz_mbid
+                ) as artist_name
         `, [req.user!.id, req.params.id]);
 
-        if (result.rows.length === 0) {
+        const review = result.rows[0];
+        if (!review) {
             res.status(404).json({ error: 'Pending media review not found' });
             return;
         }
+
+        await NotificationService.createForUser(review.submitted_by, {
+            type: 'artist_media_rejected',
+            title: 'Artist image rejected',
+            content: `${review.artist_name || 'Your artist image'} was rejected.`,
+            linkLabel: 'View artist',
+            linkUrl: `/artists/${review.musicbrainz_mbid}`,
+            aggregationKey: `artist_media_rejected:${review.musicbrainz_mbid}`,
+            metadata: {
+                musicbrainzMbid: review.musicbrainz_mbid,
+                reviewId: review.id
+            }
+        });
 
         res.json({ ok: true });
     })

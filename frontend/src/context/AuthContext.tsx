@@ -79,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     queryClient.removeQueries({ queryKey: ['artists'] });
                     queryClient.removeQueries({ queryKey: ['profile'] });
                     queryClient.removeQueries({ queryKey: ['pendingUsers'] });
+                    queryClient.removeQueries({ queryKey: ['notifications'] });
                 }
             }
         );
@@ -119,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.removeQueries({ queryKey: ['profile'] });
         queryClient.removeQueries({ queryKey: ['artists'] });
         queryClient.removeQueries({ queryKey: ['pendingUsers'] });
+        queryClient.removeQueries({ queryKey: ['notifications'] });
         await supabase.auth.signOut();
     };
 

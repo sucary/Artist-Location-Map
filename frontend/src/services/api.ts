@@ -95,6 +95,42 @@ export interface SearchResponse {
     hasMore: boolean;
 }
 
+export interface Notification {
+    id: string;
+    userId: string;
+    type: string;
+    title: string;
+    content: string;
+    isRead: boolean;
+    isHard: boolean;
+    linkLabel: string | null;
+    linkUrl: string | null;
+    metadata: Record<string, unknown>;
+    aggregationKey: string | null;
+    createdAt: string;
+    readAt: string | null;
+}
+
+export const getNotifications = async (): Promise<Notification[]> => {
+    const response = await api.get<Notification[]>('/notifications');
+    return response.data;
+};
+
+export const markNotificationsRead = async (ids: string[]): Promise<{ updated: number }> => {
+    const response = await api.post<{ updated: number }>('/notifications/mark-read', { ids });
+    return response.data;
+};
+
+export const deleteNotification = async (id: string): Promise<{ deleted: number }> => {
+    const response = await api.delete<{ deleted: number }>(`/notifications/${id}`);
+    return response.data;
+};
+
+export const clearNotifications = async (): Promise<{ deleted: number; keptHard: number }> => {
+    const response = await api.delete<{ deleted: number; keptHard: number }>('/notifications');
+    return response.data;
+};
+
 export interface MusicBrainzCatalogArtist {
     mbid: string;
     name: string;

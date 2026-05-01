@@ -32,8 +32,8 @@ router.post('/set-username', requireAuth, asyncHandler(async (req: Authenticated
     const userId = req.user!.id;
 
     // Validate username format
-    if (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-        res.status(400).json({ error: 'Username must be 3+ chars, letters/numbers/underscores only' });
+    if (!username || username.length < 1 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        res.status(400).json({ error: 'Username must contain letters, numbers, or underscores only' });
         return;
     }
 
@@ -56,8 +56,8 @@ router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedReques
 
     // Validate username if provided
     if (username !== undefined) {
-        if (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-            res.status(400).json({ error: 'Username must be 3+ chars, letters/numbers/underscores only' });
+        if (!username || username.length < 1 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+            res.status(400).json({ error: 'Username must contain letters, numbers, or underscores only' });
             return;
         }
 

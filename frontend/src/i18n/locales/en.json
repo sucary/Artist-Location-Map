@@ -34,6 +34,7 @@
       "title": "Sign In",
       "forgotPassword": "Forgot Password?",
       "dontHaveAccount": "Don't have an account?",
+      "rejectedAccountHint": "If your registration was rejected, this account can no longer sign in. Please contact an admin or register again.",
       "or": "Or"
     },
     "signUp": {
@@ -58,6 +59,7 @@
       "usernameLabel": "Username",
       "usernamePlaceholder": "Enter a username",
       "usernameAvailable": "Username available",
+      "notApprovedNotice": "If your registration was rejected, this account may no longer be usable. Please contact an admin or register again.",
       "submit": "Continue"
     },
     "messages": {
@@ -75,7 +77,7 @@
       "incorrectCredentials": "Incorrect email or password",
       "unexpectedError": "An unexpected error occurred, please try again",
       "unableToSignIn": "Unable to sign in with {{provider}}. Please try another method or contact support.",
-      "userNameMin": "Username must be at least 3 characters",
+      "userNameMin": "Username must be at least 1 character",
       "userNameMax": "Username must not exceed 16 characters",
       "userNamePattern": "Username can only contain letters, numbers, and underscores",
       "userNameTaken": "This username is already registered, please enter a new username",

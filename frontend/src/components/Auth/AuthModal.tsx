@@ -361,7 +361,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         )}
 
                         {error && <Alert variant="error" onClose={() => setError(null)}>{error}</Alert>}
-
                         <Button type="submit" isLoading={loading} className="w-full">
                             {isSignUp ? t('auth.buttons.signUp') : t('auth.buttons.signIn')}
                         </Button>

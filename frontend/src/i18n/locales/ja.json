@@ -34,6 +34,7 @@
       "title": "ログイン",
       "forgotPassword": "パスワードをお忘れですか？",
       "dontHaveAccount": "アカウントをお持ちでないですか？",
+      "rejectedAccountHint": "登録が拒否された場合、このアカウントではログインできません。管理者に連絡するか、再登録してください。",
       "or": "または"
     },
     "signUp": {
@@ -62,6 +63,7 @@
       "usernameLabel": "ユーザー名",
       "usernamePlaceholder": "ユーザー名を入力してください",
       "usernameAvailable": "このユーザー名は使用できます",
+      "notApprovedNotice": "登録が拒否された場合、このアカウントは使用できない可能性があります。管理者に連絡するか、再登録してください。",
       "submit": "続行"
     },
     "errors": {
@@ -75,7 +77,7 @@
       "incorrectCredentials": "メールアドレスまたはパスワードが間違っています。",
       "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
       "unableToSignIn": "{{provider}}でサインインできません。別の方法を試すか、サポートにお問い合わせください。",
-      "userNameMin": "ユーザー名は3文字以上で入力してください。",
+      "userNameMin": "ユーザー名は1文字以上で入力してください。",
       "userNameMax": "ユーザー名は16文字以内で入力してください。",
       "userNamePattern": "ユーザー名には英字、数字、アンダースコアのみ使用できます。",
       "userNameTaken": "そのユーザー名は既に登録されています。新しいユーザー名を入力してください。",

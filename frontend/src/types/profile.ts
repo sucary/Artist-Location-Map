@@ -6,6 +6,7 @@ export interface Profile {
     isApproved: boolean;
     isPrivate: boolean;
     locationLanguage: string;
+    isRejected: boolean;
 }
 
 export interface PendingUser {

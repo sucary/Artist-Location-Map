@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { ProfileStore } from '../models/profileStore';
+import { NotificationService } from '../services/notificationService';
 
 export const checkUsernameAvailability = asyncHandler(async (req: Request, res: Response) => {
     const { username } = req.query;
@@ -53,6 +54,13 @@ export const approveUser = asyncHandler(async (req: Request, res: Response) => {
     }
 
     await ProfileStore.approveUser(userId);
+    await NotificationService.createForUser(userId, {
+        type: 'registration_approved',
+        title: 'Account approved',
+        content: 'Your account has been approved. You can now add and edit artists.',
+        aggregationKey: 'registration_approved'
+    });
+
     res.json({ message: 'User approved successfully' });
 });
 

@@ -88,6 +88,13 @@ function App() {
         return () => subscription.unsubscribe();
     }, []);
 
+    useEffect(() => {
+        // Header notification opens App-owned dashboard modal.
+        const handleOpenAdminDashboard = () => setShowAdminDashboard(true);
+        window.addEventListener('open-admin-dashboard', handleOpenAdminDashboard);
+        return () => window.removeEventListener('open-admin-dashboard', handleOpenAdminDashboard);
+    }, []);
+
     const handleStartSelection = (targetField: 'originalLocation' | 'activeLocation') => {
         setSelectionMode({ active: true, targetField });
     };
