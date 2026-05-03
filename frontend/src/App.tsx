@@ -14,7 +14,7 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { MainSearch } from './components/MainSearch';
 import { useAuth } from './context/AuthContext';
 import type { Artist, SelectionMode } from './types/artist';
-import type { ArtistSearchResult, LocationSearchResult } from './types/search';
+import type { LocationSearchResult } from './types/search';
 import { UsernamePrompt } from './components/Auth/UsernamePrompt';
 import { ResetPasswordModal } from './components/Auth/ResetPasswordModal';
 import { ViewingUserBanner, AnonymousUserBanner, FeaturedArtistsBanner } from './components/Banner';
@@ -167,32 +167,6 @@ function App() {
     };
 
     // Search handlers
-    const handleSearchFocusArtist = useCallback((result: ArtistSearchResult) => {
-        const artist: Artist = {
-            id: result.id,
-            name: result.name,
-            sourceImage: result.sourceImage,
-            avatarCrop: result.avatarCrop,
-            activeLocation: {
-                city: result.activeLocation.city,
-                province: result.activeLocation.province,
-                coordinates: result.coordinates,
-            },
-            originalLocation: {
-                city: result.activeLocation.city,
-                province: result.activeLocation.province,
-                coordinates: result.coordinates,
-            },
-            originalLocationDisplayCoordinates: result.coordinates,
-            activeLocationDisplayCoordinates: result.coordinates,
-            originalCityId: '',
-            activeCityId: '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        setFocusedArtist(artist);
-    }, []);
-
     const handleSearchFocusLocation = useCallback((result: LocationSearchResult) => {
         setFocusedLocation({ ...result.center, locationType: result.locationType });
         setFocusedCityId(result.id || null);
@@ -219,7 +193,6 @@ function App() {
                 {user && (
                     <>
                         <MainSearch
-                            onFocusArtist={handleSearchFocusArtist}
                             onFocusLocation={handleSearchFocusLocation}
                         />
                         {viewingFeatured ? (

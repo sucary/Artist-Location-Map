@@ -1,5 +1,4 @@
-import type { ArtistSearchResult, LocationSearchResult, UserSearchResult, SearchResult } from '../../types/search';
-import { getAvatarUrl } from '../../utils/cloudinaryUrl';
+import type { LocationSearchResult, UserSearchResult, SearchResult } from '../../types/search';
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { UserIcon } from '../icons/GeneralIcons';
 import { useAuth } from '../../context/AuthContext';
@@ -8,39 +7,6 @@ import { useLocationLanguage } from '../../context/LocationLanguageContext';
 interface SearchResultRowProps {
     result: SearchResult;
     onSelect: () => void;
-}
-
-const getPlaceholderUrl = (name: string) =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=150&background=e5e7eb&color=9ca3af`;
-
-function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect: () => void }) {
-    const { locationLanguage } = useLocationLanguage();
-    const avatarUrl = getAvatarUrl(result.sourceImage, result.avatarCrop) || getPlaceholderUrl(result.name);
-
-    return (
-        <button
-            role="option"
-            onClick={onSelect}
-            className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
-        >
-            <img
-                src={avatarUrl}
-                alt={result.name}
-                className="w-10 h-10 rounded-full object-cover border border-border"
-            />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text truncate">{result.name}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                    <span className="px-[3.5px] py-[1.5px] text-[10px] font-bold bg-primary-light text-white border border-primary-light rounded-[3.5px]">
-                        Active
-                    </span>
-                    <span className="text-xs text-text-secondary truncate">
-                        {formatLocationLocalized(result.activeLocation, locationLanguage)}
-                    </span>
-                </div>
-            </div>
-        </button>
-    );
 }
 
 function LocationRow({ result, onSelect }: { result: LocationSearchResult; onSelect: () => void }) {
@@ -92,8 +58,6 @@ function UserRow({ result, onSelect }: { result: UserSearchResult; onSelect: () 
 
 export function SearchResultRow({ result, onSelect }: SearchResultRowProps) {
     switch (result.type) {
-        case 'artist':
-            return <ArtistRow result={result} onSelect={onSelect} />;
         case 'location':
             return <LocationRow result={result} onSelect={onSelect} />;
         case 'user':

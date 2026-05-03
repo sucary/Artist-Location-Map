@@ -4,15 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { mainSearch } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
-import type { MainSearchResponse, ArtistSearchResult, LocationSearchResult, UserSearchResult } from '../../types/search';
+import type { MainSearchResponse, LocationSearchResult, UserSearchResult } from '../../types/search';
 
 interface UseMainSearchOptions {
-    onAutoFocusArtist?: (result: ArtistSearchResult) => void;
     onAutoFocusLocation?: (result: LocationSearchResult) => void;
 }
 
 export function useMainSearch(options: UseMainSearchOptions = {}) {
-    const { onAutoFocusArtist, onAutoFocusLocation } = options;
+    const { onAutoFocusLocation } = options;
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { profile } = useAuth();
@@ -60,16 +59,16 @@ export function useMainSearch(options: UseMainSearchOptions = {}) {
         gcTime: 1000 * 60 * 30, // 30 minutes
     });
 
-    // Auto-focus when single artist result (and no other results)
+    // Auto-focus when single location result and no profile results
     useEffect(() => {
         if (!results || autoFocusTriggered.current) return;
 
-        if (results.artists.length === 1 && results.locations.length === 0 && results.users.length === 0) {
+        if (results.locations.length === 1 && results.users.length === 0) {
             autoFocusTriggered.current = true;
-            onAutoFocusArtist?.(results.artists[0]);
+            onAutoFocusLocation?.(results.locations[0]);
             setIsOpen(false);
         }
-    }, [results, onAutoFocusArtist]);
+    }, [results, onAutoFocusLocation]);
 
     const handleClose = useCallback(() => {
         setIsOpen(false);
@@ -80,11 +79,6 @@ export function useMainSearch(options: UseMainSearchOptions = {}) {
         setDebouncedQuery('');
         setIsOpen(false);
     }, []);
-
-    const handleSelectArtist = useCallback((result: ArtistSearchResult) => {
-        onAutoFocusArtist?.(result);
-        setIsOpen(false);
-    }, [onAutoFocusArtist]);
 
     const handleSelectLocation = useCallback((result: LocationSearchResult) => {
         onAutoFocusLocation?.(result);
@@ -174,7 +168,6 @@ export function useMainSearch(options: UseMainSearchOptions = {}) {
         setIsOpen,
         handleClose,
         handleClear,
-        handleSelectArtist,
         handleSelectLocation,
         handleSelectUser,
         handleSearchMore,

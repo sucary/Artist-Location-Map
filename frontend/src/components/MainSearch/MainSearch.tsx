@@ -3,14 +3,13 @@ import { useMainSearch } from './useMainSearch';
 import { SearchResultRow } from './SearchResultRow';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
 import { IconButton, Spinner, Button } from '../ui';
-import type { ArtistSearchResult, LocationSearchResult } from '../../types/search';
+import type { LocationSearchResult } from '../../types/search';
 
 interface MainSearchProps {
-    onFocusArtist?: (result: ArtistSearchResult) => void;
     onFocusLocation?: (result: LocationSearchResult) => void;
 }
 
-export function MainSearch({ onFocusArtist, onFocusLocation }: MainSearchProps) {
+export function MainSearch({ onFocusLocation }: MainSearchProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,12 +24,10 @@ export function MainSearch({ onFocusArtist, onFocusLocation }: MainSearchProps) 
         isOpen,
         setIsOpen,
         handleClear,
-        handleSelectArtist,
         handleSelectLocation,
         handleSelectUser,
         handleSearchMore,
     } = useMainSearch({
-        onAutoFocusArtist: onFocusArtist,
         onAutoFocusLocation: onFocusLocation,
     });
 
@@ -73,12 +70,12 @@ export function MainSearch({ onFocusArtist, onFocusLocation }: MainSearchProps) 
                 <input
                     ref={inputRef}
                     role="combobox"
-                    aria-label="Search artists, users, and locations"
+                    aria-label="Search users and locations"
                     aria-expanded={showDropdown}
                     aria-controls="search-results"
                     aria-autocomplete="list"
                     type="text"
-                    placeholder="Search artists, users, locations..."
+                    placeholder="Search users, locations..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
@@ -122,22 +119,6 @@ export function MainSearch({ onFocusArtist, onFocusLocation }: MainSearchProps) 
                         </div>
                     ) : (
                         <>
-                            {/* Artists */}
-                            {results.artists.length > 0 && (
-                                <div>
-                                    <div role="group" aria-label="Artists" className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
-                                        Artists
-                                    </div>
-                                    {results.artists.map((artist) => (
-                                        <SearchResultRow
-                                            key={artist.id}
-                                            result={artist}
-                                            onSelect={() => handleSelectArtist(artist)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-
                             {/* Users */}
                             {results.users.length > 0 && (
                                 <div>

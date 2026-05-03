@@ -1,14 +1,4 @@
-import type { CropArea, LocalizedChain } from './artist';
-
-export interface ArtistSearchResult {
-    type: 'artist';
-    id: string;
-    name: string;
-    sourceImage?: string;
-    avatarCrop?: CropArea;
-    activeLocation: { city: string; province: string; country?: string; localizedChain?: LocalizedChain };
-    coordinates: { lat: number; lng: number };
-}
+import type { LocalizedChain } from './artist';
 
 export interface LocationSearchResult {
     type: 'location';
@@ -28,10 +18,9 @@ export interface UserSearchResult {
     username: string;
 }
 
-export type SearchResult = ArtistSearchResult | LocationSearchResult | UserSearchResult;
+export type SearchResult = LocationSearchResult | UserSearchResult;
 
 export interface MainSearchResponse {
-    artists: ArtistSearchResult[];
     locations: LocationSearchResult[];
     users: UserSearchResult[];
     totalCount: number;

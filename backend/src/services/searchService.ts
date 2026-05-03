@@ -1,19 +1,6 @@
-import { ArtistStore } from '../models/artistStore';
 import { TextSearch, type LocationLanguage } from './searchHelper';
-import type { Artist, CropArea } from '../types/artist';
 import type { LocalizedChain } from '../types/city';
 import pool from '../config/database';
-
-export interface ArtistSearchResult {
-    type: 'artist';
-    id: string;
-    name: string;
-    romanizedName?: string;
-    sourceImage?: string;
-    avatarCrop?: CropArea;
-    activeLocation: { city: string; province: string; country?: string; localizedChain?: LocalizedChain };
-    coordinates: { lat: number; lng: number };
-}
 
 export interface LocationSearchResult {
     type: 'location';
@@ -34,33 +21,11 @@ export interface UserSearchResult {
 }
 
 export interface UnifiedSearchResponse {
-    artists: ArtistSearchResult[];
     locations: LocationSearchResult[];
     users: UserSearchResult[];
     totalCount: number;
     locationSource: 'local' | 'nominatim' | 'cache';
     hasMoreLocations: boolean;
-}
-
-function mapArtistToSearchResult(artist: Artist): ArtistSearchResult {
-    return {
-        type: 'artist',
-        id: artist.id,
-        name: artist.name,
-        romanizedName: artist.romanizedName,
-        sourceImage: artist.sourceImage,
-        avatarCrop: artist.avatarCrop,
-        activeLocation: {
-            city: artist.activeLocation.city,
-            province: artist.activeLocation.province,
-            country: artist.activeLocation.country,
-            ...(artist.activeLocation.localizedChain?.city ? { localizedChain: artist.activeLocation.localizedChain } : {}),
-        },
-        coordinates: {
-            lat: artist.activeLocation.coordinates.lat,
-            lng: artist.activeLocation.coordinates.lng,
-        },
-    };
 }
 
 async function searchUsers(query: string, limit: number, excludeUsername?: string): Promise<UserSearchResult[]> {
@@ -98,15 +63,10 @@ export const SearchService = {
         lang?: LocationLanguage
     ): Promise<UnifiedSearchResponse> => {
         // Execute all searches in parallel
-        const [artists, locationResponse, users] = await Promise.all([
-            ArtistStore.getAll({ name: query }),
+        const [locationResponse, users] = await Promise.all([
             TextSearch.search(query, limit, source, lang),
             searchUsers(query, limit, excludeUsername),
         ]);
-
-        const artistResults: ArtistSearchResult[] = artists
-            .slice(0, limit)
-            .map(mapArtistToSearchResult);
 
         const locationResults: LocationSearchResult[] = locationResponse.results
             .slice(0, limit)
@@ -132,10 +92,9 @@ export const SearchService = {
             });
 
         return {
-            artists: artistResults,
             locations: locationResults,
             users,
-            totalCount: artistResults.length + locationResults.length + users.length,
+            totalCount: locationResults.length + users.length,
             locationSource: locationResponse.source,
             hasMoreLocations: locationResponse.hasMore,
         };
