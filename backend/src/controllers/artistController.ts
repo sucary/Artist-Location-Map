@@ -128,6 +128,99 @@ export const getArtistsByUsername = asyncHandler(async (req: AuthenticatedReques
     res.json(artists);
 });
 
+export const copyArtistsByUsername = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const sourceUser = await resolveUsernameWithAccess(req);
+    const targetUserId = req.user!.id;
+
+    if (sourceUser.id === targetUserId) {
+        throw new AppError('Cannot copy your own artist collection', 400);
+    }
+
+    const result = await pool.query<{
+        total: number;
+        copied: number;
+        skipped_musicbrainz: number;
+        skipped_custom: number;
+    }>(`
+        WITH source_artists AS (
+            SELECT *
+            FROM artists
+            WHERE user_id = $1
+        ),
+        classified AS (
+            SELECT
+                s.*,
+                CASE
+                    WHEN s.musicbrainz_mbid IS NOT NULL AND EXISTS (
+                        SELECT 1
+                        FROM artists t
+                        WHERE t.user_id = $2
+                          AND t.musicbrainz_mbid = s.musicbrainz_mbid
+                    ) THEN 'musicbrainz'
+                    WHEN s.musicbrainz_mbid IS NULL AND EXISTS (
+                        SELECT 1
+                        FROM artists t
+                        WHERE t.user_id = $2
+                          AND t.musicbrainz_mbid IS NULL
+                          AND t.name = s.name
+                          AND t.original_city IS NOT DISTINCT FROM s.original_city
+                          AND t.original_province IS NOT DISTINCT FROM s.original_province
+                          AND t.original_country IS NOT DISTINCT FROM s.original_country
+                          AND t.original_city_id IS NOT DISTINCT FROM s.original_city_id
+                          AND t.active_city IS NOT DISTINCT FROM s.active_city
+                          AND t.active_province IS NOT DISTINCT FROM s.active_province
+                          AND t.active_country IS NOT DISTINCT FROM s.active_country
+                          AND t.active_city_id IS NOT DISTINCT FROM s.active_city_id
+                    ) THEN 'custom'
+                    ELSE NULL
+                END AS skip_reason
+            FROM source_artists s
+        ),
+        inserted AS (
+            INSERT INTO artists (
+                user_id, musicbrainz_mbid, name, romanized_name, source_image, avatar_crop, profile_crop,
+                original_city, original_province, original_country, original_display_name,
+                original_coordinates, original_city_id, original_display_coordinates,
+                active_city, active_province, active_country, active_display_name,
+                active_coordinates, active_city_id, active_display_coordinates,
+                instagram_url, twitter_url, apple_music_url, website_url, youtube_url,
+                debut_year, inactive_year
+            )
+            SELECT
+                $2, musicbrainz_mbid, name, romanized_name, source_image, avatar_crop, profile_crop,
+                original_city, original_province, original_country, original_display_name,
+                original_coordinates, original_city_id, original_display_coordinates,
+                active_city, active_province, active_country, active_display_name,
+                active_coordinates, active_city_id, active_display_coordinates,
+                instagram_url, twitter_url, apple_music_url, website_url, youtube_url,
+                debut_year, inactive_year
+            FROM classified
+            WHERE skip_reason IS NULL
+            RETURNING id
+        )
+        SELECT
+            (SELECT COUNT(*) FROM source_artists)::int AS total,
+            (SELECT COUNT(*) FROM inserted)::int AS copied,
+            (SELECT COUNT(*) FROM classified WHERE skip_reason = 'musicbrainz')::int AS skipped_musicbrainz,
+            (SELECT COUNT(*) FROM classified WHERE skip_reason = 'custom')::int AS skipped_custom
+    `, [sourceUser.id, targetUserId]);
+
+    const summary = result.rows[0] ?? {
+        total: 0,
+        copied: 0,
+        skipped_musicbrainz: 0,
+        skipped_custom: 0
+    };
+
+    res.status(201).json({
+        total: summary.total,
+        copied: summary.copied,
+        skipped: summary.skipped_musicbrainz + summary.skipped_custom,
+        skippedMusicBrainz: summary.skipped_musicbrainz,
+        skippedCustom: summary.skipped_custom
+    });
+});
+
 export const getArtistById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const isAdmin = req.profile?.isAdmin ?? false;
     const userId = req.user!.id;

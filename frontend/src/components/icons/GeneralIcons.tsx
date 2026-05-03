@@ -42,6 +42,13 @@ export const ListIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     </svg>
 );
 
+export const CopyIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M4 16V6C4 4.89543 4.89543 4 6 4H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 export const ChevronDownIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
         <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

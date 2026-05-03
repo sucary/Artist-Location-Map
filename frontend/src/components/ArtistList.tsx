@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getArtists, getArtistsByUsername, getFeaturedArtists } from '../services/api';
-import { SearchIcon, EditIcon, TrashIcon } from './icons/GeneralIcons';
+import { SearchIcon, EditIcon, TrashIcon, CopyIcon } from './icons/GeneralIcons';
 import { MapPinIcon } from './icons/MapIcons';
 import { getAvatarUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized, getSearchableLocationText } from '../utils/locationUtils';
@@ -17,12 +17,23 @@ interface ArtistListProps {
     onNavigateToArtist?: (artist: Artist) => void;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
+    onCopyCollection?: (artistCount: number) => void;
+    isCopyingCollection?: boolean;
 }
 
 const getPlaceholderUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=150&background=e5e7eb&color=9ca3af`;
 
-const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, onEditArtist, onDeleteArtist }: ArtistListProps) => {
+const ArtistList = ({
+    username,
+    viewingFeatured,
+    onClose,
+    onNavigateToArtist,
+    onEditArtist,
+    onDeleteArtist,
+    onCopyCollection,
+    isCopyingCollection = false
+}: ArtistListProps) => {
     const { locationLanguage } = useLocationLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
@@ -46,15 +57,29 @@ const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, on
             getSearchableLocationText(artist.originalLocation).includes(q);
     });
 
-    const handleRowClick = (artist: Artist, e: React.MouseEvent<HTMLButtonElement>) => {
+    const positionProfileCard = (rowElement: HTMLElement) => {
         // Get the row's position relative to the wrapper
-        const rowRect = e.currentTarget.getBoundingClientRect();
+        const rowRect = rowElement.getBoundingClientRect();
         const wrapperRect = listRef.current?.getBoundingClientRect();
         if (wrapperRect) {
             // Calculate position relative to wrapper, centered on the row
             const rowCenterY = rowRect.top - wrapperRect.top + rowRect.height / 2;
             setCardPosition(rowCenterY);
         }
+    };
+
+    const handleRowClick = (artist: Artist, e: React.MouseEvent<HTMLElement>) => {
+        positionProfileCard(e.currentTarget);
+        setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
+    };
+
+    const handleRowKeyDown = (artist: Artist, e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+
+        e.preventDefault();
+        positionProfileCard(e.currentTarget);
         setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
     };
 
@@ -78,7 +103,25 @@ const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, on
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h2 className="text-lg font-semibold text-text">{viewingFeatured ? 'Featured Artists' : 'Artists'} ({artists.length})</h2>
-                <CloseButton onClick={onClose} size="md" />
+                <div className="flex items-center gap-2">
+                    {onCopyCollection && (
+                        <button
+                            type="button"
+                            aria-label="Copy all artists to my map"
+                            title="Copy all artists to my map"
+                            disabled={isLoading || artists.length === 0}
+                            onClick={() => onCopyCollection(artists.length)}
+                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
+                        >
+                            {isCopyingCollection ? (
+                                <Spinner size="sm" className="w-5 h-5" />
+                            ) : (
+                                <CopyIcon className="w-5 h-5" />
+                            )}
+                        </button>
+                    )}
+                    <CloseButton onClick={onClose} size="md" />
+                </div>
             </div>
 
             {/* Search */}
@@ -107,8 +150,11 @@ const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, on
                     <ul className="divide-y divide-border">
                         {filteredArtists.map((artist) => (
                             <li key={artist.id} className="group">
-                                <button
+                                <div
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={(e) => handleRowClick(artist, e)}
+                                    onKeyDown={(e) => handleRowKeyDown(artist, e)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer ${selectedArtist?.id === artist.id ? 'bg-surface-muted' : ''}`}
                                 >
                                     {/* Avatar */}
@@ -168,7 +214,7 @@ const ArtistList = ({ username, viewingFeatured, onClose, onNavigateToArtist, on
                                             </IconButton>
                                         )}
                                     </div>
-                                </button>
+                                </div>
                             </li>
                         ))}
                     </ul>

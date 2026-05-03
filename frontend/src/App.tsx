@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
-import { deleteArtist, getArtistsByUsername, getFeaturedArtists } from './services/api';
+import { copyArtistCollectionByUsername, deleteArtist, getArtistsByUsername, getFeaturedArtists } from './services/api';
 import MapView from './components/Map/MapView';
 import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
@@ -47,6 +47,7 @@ function App() {
     const [focusedArtist, setFocusedArtist] = useState<Artist | null>(null);
     const [focusedLocation, setFocusedLocation] = useState<{ lat: number; lng: number; locationType?: string } | null>(null);
     const [focusedCityId, setFocusedCityId] = useState<string | null>(null);
+    const [isCopyingCollection, setIsCopyingCollection] = useState(false);
 
     // Featured mode from URL param
     const viewingFeatured = searchParams.get('view') === 'featured';
@@ -164,6 +165,31 @@ function App() {
     const handleNavigateToArtist = (artist: Artist) => {
         setShowArtistList(false);
         setFocusedArtist(artist);
+    };
+
+    const handleCopyArtistCollection = async (artistCount: number) => {
+        if (!username || !user || !profile?.isApproved || isCopyingCollection) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Copy ${artistCount} artist${artistCount === 1 ? '' : 's'} from ${username}'s map to your map?\n\nArtists already on your map will be skipped.`
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        setIsCopyingCollection(true);
+        try {
+            const result = await copyArtistCollectionByUsername(username);
+            await queryClient.invalidateQueries({ queryKey: ['artists'] });
+            alert(`Copied ${result.copied} artist${result.copied === 1 ? '' : 's'}. Skipped ${result.skipped}.`);
+        } catch (error) {
+            console.error('Failed to copy artist collection:', error);
+            alert('Failed to copy artist collection. Please try again.');
+        } finally {
+            setIsCopyingCollection(false);
+        }
     };
 
     // Search handlers
@@ -309,6 +335,8 @@ function App() {
                     onNavigateToArtist={handleNavigateToArtist}
                     onEditArtist={isViewingOther || viewingFeatured ? undefined : handleEditFromList}
                     onDeleteArtist={isViewingOther || viewingFeatured ? undefined : handleDeleteArtist}
+                    onCopyCollection={isViewingOther && !viewingFeatured && user && profile?.isApproved ? handleCopyArtistCollection : undefined}
+                    isCopyingCollection={isCopyingCollection}
                 />
             )}
             {showAdminDashboard && (

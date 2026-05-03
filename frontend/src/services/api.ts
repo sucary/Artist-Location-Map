@@ -52,6 +52,24 @@ export const getArtistsByUsername = async (username: string, params?: ArtistQuer
     }
 };
 
+export interface CopyArtistCollectionResult {
+    total: number;
+    copied: number;
+    skipped: number;
+    skippedMusicBrainz: number;
+    skippedCustom: number;
+}
+
+export const copyArtistCollectionByUsername = async (username: string): Promise<CopyArtistCollectionResult> => {
+    try {
+        const response = await api.post<CopyArtistCollectionResult>(`/artists/u/${username}/copy`);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to copy artist collection:', error);
+        throw error;
+    }
+};
+
 export const getFeaturedArtists = async (): Promise<Artist[]> => {
     try {
         const response = await api.get<Artist[]>('/artists/featured');
