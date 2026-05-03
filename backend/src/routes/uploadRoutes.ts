@@ -176,6 +176,26 @@ router.post(
             return;
         }
 
+        const expectedPrefix = `artist_uploads/${userId}/`;
+        if (!publicId.startsWith(expectedPrefix)) {
+            res.status(403).json({ error: 'Invalid upload owner' });
+            return;
+        }
+
+        const reservationResult = await pool.query<{ id: string }>(`
+            SELECT id
+            FROM media_upload_events
+            WHERE public_id = $1
+              AND user_id = $2
+              AND status = 'signed'
+            LIMIT 1
+        `, [publicId, userId]);
+
+        if (reservationResult.rows.length === 0) {
+            res.status(404).json({ error: 'Upload reservation not found' });
+            return;
+        }
+
         if (Number.isFinite(bytes) && bytes! > MAX_IMAGE_BYTES) {
             await rejectAndDeleteUpload(publicId, 'Image size must be smaller than 1 MB', res);
             return;
