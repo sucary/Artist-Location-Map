@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner, Alert, Button, CloseButton } from '../ui';
-import { CheckCircleIcon } from '../icons/GeneralIcons';
+import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { API_URL } from '../../services/api';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import type { PendingUser } from '../../types/profile';
@@ -182,12 +182,15 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="mb-4">
                         <button
                             onClick={() => setApprovalsOpen(!approvalsOpen)}
-                            className="w-full flex items-center justify-between py-2 text-left"
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-lg text-text">
+                            <h2 className="text-xl font-semibold text-text">
                                 Pending User Approvals ({pendingUsers.length})
                             </h2>
-                            <span className="text-text-muted text-sm">{approvalsOpen ? '-' : '+'}</span>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${approvalsOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
                         {approvalsOpen && (
@@ -247,12 +250,15 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4 mb-4">
                         <button
                             onClick={() => setMediaReviewsOpen(!mediaReviewsOpen)}
-                            className="w-full flex items-center justify-between py-2 text-left"
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-lg text-text">
+                            <h2 className="text-xl font-semibold text-text">
                                 Artist Image Reviews ({pendingMediaReviews.length})
                             </h2>
-                            <span className="text-text-muted text-sm">{mediaReviewsOpen ? '-' : '+'}</span>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${mediaReviewsOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
                         {mediaReviewsOpen && (
@@ -337,10 +343,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setTranslationsOpen(!translationsOpen)}
-                            className="w-full flex items-center justify-between py-2 text-left"
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-lg text-text">Location Translations</h2>
-                            <span className="text-text-muted text-sm">{translationsOpen ? '-' : '+'}</span>
+                            <h2 className="text-xl font-semibold text-text">Location Translations</h2>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${translationsOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
                         {translationsOpen && (

@@ -77,6 +77,10 @@ async function applySharedArtistMedia(
         return;
     }
 
+    if (!isAdmin) {
+        return;
+    }
+
     const existingResult = await pool.query<{
         id: string;
         public_id: string | null;
@@ -256,6 +260,13 @@ export const ArtistService = {
             return undefined;
         }
 
+        const currentPrivateMediaResult = await pool.query<{ source_image: string | null }>(`
+            SELECT source_image
+            FROM artists
+            WHERE id = $1
+        `, [id]);
+        const previousPrivateSourceImage = currentPrivateMediaResult.rows[0]?.source_image || null;
+
         storeData.musicbrainzMbid = data.musicbrainzMbid ?? currentArtist.musicbrainzMbid;
         await applySharedArtistMedia(storeData, userId, isAdmin);
 
@@ -327,6 +338,15 @@ export const ArtistService = {
         }
 
         const updatedArtist = await ArtistStore.update(id, storeData);
+        if (
+            updatedArtist &&
+            previousPrivateSourceImage &&
+            storeData.sourceImage !== undefined &&
+            storeData.sourceImage !== previousPrivateSourceImage
+        ) {
+            await MediaCleanupService.deleteOwnedUploadByUrlIfUnused(userId, previousPrivateSourceImage);
+        }
+
         return updatedArtist ? await ArtistStore.getById(updatedArtist.id) || updatedArtist : undefined;
     },
 

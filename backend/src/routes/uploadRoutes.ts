@@ -8,7 +8,47 @@ import { MediaCleanupService } from '../services/mediaCleanupService';
 import { NotificationService } from '../services/notificationService';
 
 const router = Router();
-const NORMAL_USER_DAILY_UPLOAD_LIMIT = 50;
+const NORMAL_USER_DAILY_UPLOAD_LIMIT = 25;
+const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+const LANDSCAPE_MAX_WIDTH = 1920;
+const LANDSCAPE_MAX_HEIGHT = 1080;
+const PORTRAIT_MAX_WIDTH = 1080;
+const PORTRAIT_MAX_HEIGHT = 1920;
+const SQUARE_MAX_DIMENSION = 1080;
+const ALLOWED_IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'webp']);
+
+function isAllowedImageResolution(width?: number, height?: number): boolean {
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        return true;
+    }
+
+    const imageWidth = width!;
+    const imageHeight = height!;
+
+    if (imageWidth === imageHeight) {
+        return imageWidth <= SQUARE_MAX_DIMENSION;
+    }
+
+    return imageWidth > imageHeight
+        ? imageWidth <= LANDSCAPE_MAX_WIDTH && imageHeight <= LANDSCAPE_MAX_HEIGHT
+        : imageWidth <= PORTRAIT_MAX_WIDTH && imageHeight <= PORTRAIT_MAX_HEIGHT;
+}
+
+async function rejectAndDeleteUpload(publicId: string, message: string, res: Response) {
+    await cloudinary.uploader.destroy(publicId, {
+        resource_type: 'image'
+    }).catch((error) => {
+        console.error('Failed to delete rejected Cloudinary upload:', error);
+    });
+
+    await pool.query(`
+        UPDATE media_upload_events
+        SET status = 'deleted'
+        WHERE public_id = $1
+    `, [publicId]);
+
+    res.status(400).json({ error: message });
+}
 
 router.get(
     '/artist-media/:mbid',
@@ -32,14 +72,15 @@ router.get(
         const asset = result.rows[0];
         const isOriginalUploader = (asset?.original_uploaded_by || asset?.uploaded_by) === userId;
         const hasAsset = Boolean(asset);
+        const canUseSharedMedia = isAdmin;
 
         res.json({
-            hasAsset,
-            sourceImage: asset?.source_image || null,
-            avatarCrop: asset?.avatar_crop || null,
-            profileCrop: asset?.profile_crop || null,
-            canReplaceDirectly: !hasAsset || isAdmin || isOriginalUploader,
-            requiresReview: hasAsset && !isAdmin && !isOriginalUploader
+            hasAsset: canUseSharedMedia && hasAsset,
+            sourceImage: canUseSharedMedia ? asset?.source_image || null : null,
+            avatarCrop: canUseSharedMedia ? asset?.avatar_crop || null : null,
+            profileCrop: canUseSharedMedia ? asset?.profile_crop || null : null,
+            canReplaceDirectly: true,
+            requiresReview: false
         });
     })
 );
@@ -63,14 +104,14 @@ router.post(
                 FROM media_upload_events
                 WHERE user_id = $1
                   AND created_at > NOW() - INTERVAL '24 hours'
-                  AND status = 'uploaded'
+                  AND status IN ('signed', 'uploaded')
             `, [userId]);
 
             const uploadCount = Number(quotaResult.rows[0]?.count || 0);
             if (uploadCount >= NORMAL_USER_DAILY_UPLOAD_LIMIT) {
                 res.status(429).json({
                     error: 'Daily upload limit reached',
-                    message: `You can upload up to ${NORMAL_USER_DAILY_UPLOAD_LIMIT} images per 24 hours.`
+                    message: `You can request up to ${NORMAL_USER_DAILY_UPLOAD_LIMIT} image uploads per 24 hours.`
                 });
                 return;
             }
@@ -132,6 +173,21 @@ router.post(
 
         if (!publicId || !secureUrl) {
             res.status(400).json({ error: 'publicId and secureUrl are required' });
+            return;
+        }
+
+        if (Number.isFinite(bytes) && bytes! > MAX_IMAGE_BYTES) {
+            await rejectAndDeleteUpload(publicId, 'Image size must be smaller than 1 MB', res);
+            return;
+        }
+
+        if (!isAllowedImageResolution(width, height)) {
+            await rejectAndDeleteUpload(publicId, 'Image resolution must fit within 1920x1080 or 1080x1920', res);
+            return;
+        }
+
+        if (format && !ALLOWED_IMAGE_FORMATS.has(format.toLowerCase())) {
+            await rejectAndDeleteUpload(publicId, 'Only JPG, PNG, and WebP images are allowed', res);
             return;
         }
 
