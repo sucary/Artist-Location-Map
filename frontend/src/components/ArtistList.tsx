@@ -227,7 +227,7 @@ const ArtistList = ({
                         {isSortOpen && (
                             <div
                                 role="listbox"
-                                className="absolute left-0 top-full z-[1200] mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg"
+                                className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
                             >
                                 {sortOptions.map((option) => (
                                     <button
