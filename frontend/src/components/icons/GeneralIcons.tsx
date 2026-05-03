@@ -49,6 +49,18 @@ export const CopyIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     </svg>
 );
 
+export const ArrowUpIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <path d="M12 19V5M5 12L12 5L19 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
+export const ArrowDownIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <path d="M12 5V19M5 12L12 19L19 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 export const ChevronDownIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
         <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
