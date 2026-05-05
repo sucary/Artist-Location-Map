@@ -84,7 +84,7 @@ const ArtistFormHeader = ({
                 }
             }}
             aria-label={t('artistForm.buttons.editBanner')}
-            className="relative w-full h-32 bg-surface-muted bg-cover bg-center group/profile cursor-pointer"
+            className="relative z-[80] w-full h-32 shrink-0 bg-surface-muted bg-cover bg-center group/profile cursor-pointer"
             style={{ backgroundImage: profileUrl ? `url(${profileUrl})` : undefined }}
             onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
             onClick={handleProfileClick}

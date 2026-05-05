@@ -6,6 +6,7 @@ export interface Profile {
     isApproved: boolean;
     isPrivate: boolean;
     locationLanguage: string;
+    tutorialCompleted: boolean;
     isRejected: boolean;
 }
 

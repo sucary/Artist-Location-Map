@@ -10,6 +10,7 @@ interface YearSelectProps {
     label?: string;
     minYear?: number;
     maxYear?: number;
+    tutorialTarget?: string;
 }
 
 const YearSelect = ({
@@ -18,7 +19,8 @@ const YearSelect = ({
     placeholder,
     label,
     minYear = 1900,
-    maxYear = new Date().getFullYear()
+    maxYear = new Date().getFullYear(),
+    tutorialTarget
 }: YearSelectProps) => {
     const inputId = useId();
     const [isOpen, setIsOpen] = useState(false);
@@ -138,7 +140,7 @@ const YearSelect = ({
     };
 
     return (
-        <div>
+        <div data-tutorial-target={tutorialTarget} className="rounded-md p-1">
             {label && (
                 <label 
                     htmlFor={inputId}

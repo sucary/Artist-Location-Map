@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
-import { copyArtistCollectionByUsername, deleteArtist, getArtistsByUsername, getFeaturedArtists } from './services/api';
+import { copyArtistCollectionByUsername, deleteArtist, getArtistsByUsername, getFeaturedArtists, updateProfile } from './services/api';
 import MapView from './components/Map/MapView';
 import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
@@ -20,7 +20,8 @@ import { ResetPasswordModal } from './components/Auth/ResetPasswordModal';
 import { ViewingUserBanner, AnonymousUserBanner, FeaturedArtistsBanner } from './components/Banner';
 import { UserNotFound } from './components/UserNotFound';
 import { supabase } from './lib/supabase';
-
+import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
+import { TutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
 
 function App() {
     const { username } = useParams<{ username?: string }>();
@@ -48,6 +49,8 @@ function App() {
     const [focusedLocation, setFocusedLocation] = useState<{ lat: number; lng: number; locationType?: string } | null>(null);
     const [focusedCityId, setFocusedCityId] = useState<string | null>(null);
     const [isCopyingCollection, setIsCopyingCollection] = useState(false);
+    const [tutorialStepIndex, setTutorialStepIndex] = useState<number | null>(null);
+    const [isTutorialDismissed, setIsTutorialDismissed] = useState(false);
 
     // Featured mode from URL param
     const viewingFeatured = searchParams.get('view') === 'featured';
@@ -96,6 +99,53 @@ function App() {
         return () => window.removeEventListener('open-admin-dashboard', handleOpenAdminDashboard);
     }, []);
 
+    useEffect(() => {
+        // Open tutorial on user's own map
+        if (
+            user
+            && profile?.isApproved
+            && profile.tutorialCompleted === false
+            && !isTutorialDismissed
+            && tutorialStepIndex === null
+            && !isViewingOther
+            && !viewingFeatured
+            && !showForm
+        ) {
+            setTutorialStepIndex(0);
+        }
+    }, [isTutorialDismissed, isViewingOther, profile, showForm, tutorialStepIndex, user, viewingFeatured]);
+
+    const completeTutorial = useCallback(async () => {
+        setTutorialStepIndex(null);
+        setIsTutorialDismissed(true);
+
+        if (!user || profile?.tutorialCompleted) return;
+
+        try {
+            await updateProfile({ tutorialCompleted: true });
+            await queryClient.invalidateQueries({ queryKey: ['profile'] });
+        } catch (error) {
+            console.error('Failed to update tutorial state:', error);
+        }
+    }, [profile?.tutorialCompleted, queryClient, user]);
+
+    const handleArtistFormSubmit = useCallback(() => {
+        // Complete tutorial after saving artist
+        if (tutorialStepIndex !== null) {
+            void completeTutorial();
+        }
+    }, [completeTutorial, tutorialStepIndex]);
+
+    const handleTutorialAction = useCallback((action: TutorialAction) => {
+        // Move tutorial after required form actions
+        setTutorialStepIndex((currentStep) => {
+            if (currentStep === 1 && action === 'artistSelected') return 2;
+            if (currentStep === 2 && action === 'originalLocationSet') return 3;
+            if (currentStep === 3 && action === 'activeLocationSet') return 4;
+            return currentStep;
+        });
+    }, []);
+
     const handleStartSelection = (targetField: 'originalLocation' | 'activeLocation') => {
         setSelectionMode({ active: true, targetField });
     };
@@ -122,6 +172,9 @@ function App() {
         setShowForm(false);
         setEditingArtist(null);
         setSelectionMode(null);
+        if (tutorialStepIndex !== null && tutorialStepIndex > 0) {
+            setTutorialStepIndex(0);
+        }
     };
 
     const handleDeleteArtist = async (artist: Artist) => {
@@ -149,6 +202,9 @@ function App() {
         } else {
             setShowArtistList(false);
             setShowForm(true);
+            if (tutorialStepIndex === 0) {
+                setTutorialStepIndex(1);
+            }
         }
     };
 
@@ -321,10 +377,17 @@ function App() {
                 <ArtistForm
                     key={editingArtist?.id ?? 'new'}
                     initialData={editingArtist ?? undefined}
+                    onSubmit={handleArtistFormSubmit}
                     onCancel={handleCloseForm}
                     onRequestSelection={handleStartSelection}
                     pendingCoordinates={pendingCoordinates}
                     onConsumePendingCoordinates={handleConsumeCoordinates}
+                    onTutorialAction={handleTutorialAction}
+                    onTutorialComplete={() => {
+                        if (tutorialStepIndex !== null) {
+                            void completeTutorial();
+                        }
+                    }}
                 />
             )}
             {(showArtistList || (viewingFeatured && showFeaturedList)) && (
@@ -344,6 +407,14 @@ function App() {
             )}
             {showResetPassword && (
                 <ResetPasswordModal onClose={() => setShowResetPassword(false)} />
+            )}
+            {tutorialStepIndex !== null && (
+                <TutorialOverlay
+                    steps={TutorialText}
+                    stepIndex={tutorialStepIndex}
+                    onNext={setTutorialStepIndex}
+                    onSkip={completeTutorial}
+                />
             )}
             <MapView
                 username={username}

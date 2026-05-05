@@ -123,7 +123,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                     }
                 })
                 .finally(() => setIsCatalogSearching(false));
-        }, 300);
+        }, 500); // Search debounce!
 
         catalogDebounceTimeoutRef.current = timeoutId;
 
@@ -300,7 +300,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     };
 
     return (
-        <div>
+        <div data-tutorial-target="artist-search" className="rounded-md p-1">
             <div className="mb-1 flex items-center justify-between gap-3">
                 <label className="block text-sm font-bold text-text" htmlFor="musicbrainz-artist-search">
                     Artist
@@ -410,11 +410,11 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 >
                     <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: dropdownPosition.maxHeight }}>
                         {resultMode === 'catalog' && ((isCatalogDebouncing || isCatalogSearching) && localResults.length === 0 ? (
-                            <div className="px-3 py-2 text-sm text-text-secondary">Searching catalog...</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">Searching artists...</div>
                         ) : localResults.length > 0 ? (
                             <>
                                 <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-surface-secondary">
-                                    Catalog
+                                    Artists
                                 </div>
                                 {localResults.map((artist) => (
                                     <button

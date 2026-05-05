@@ -8,6 +8,7 @@ export interface Profile {
   isApproved: boolean;
   isPrivate: boolean;
   locationLanguage: string;
+  tutorialCompleted: boolean;
   isRejected: boolean;
 }
 
@@ -28,8 +29,18 @@ async function ensureRejectedRegistrationsTable(): Promise<void> {
     `);
 }
 
+async function ensureAddArtistTutorialColumn(): Promise<void> {
+    // Create tutorial completion column
+    await pool.query(`
+        ALTER TABLE profiles
+        ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+}
+
 export const ProfileStore = {
     getByUserId: async (userId: string): Promise<Profile | null> => {
+        await ensureAddArtistTutorialColumn();
+
         const result = await pool.query<Omit<Profile, 'isRejected'>>(
             `SELECT
                 p.id,
@@ -38,7 +49,8 @@ export const ProfileStore = {
                 p.is_admin as "isAdmin",
                 p.is_approved as "isApproved",
                 p.is_private as "isPrivate",
-                p.location_language as "locationLanguage"
+                p.location_language as "locationLanguage",
+                COALESCE(p.tutorial_completed, false) as "tutorialCompleted"
               FROM profiles p
               WHERE p.id = $1`,
             [userId]
@@ -70,7 +82,11 @@ export const ProfileStore = {
         };
     },
 
-    updateProfile: async (userId: string, updates: { username?: string; isPrivate?: boolean; locationLanguage?: string }): Promise<void> => {
+    updateProfile: async (userId: string, updates: { username?: string; isPrivate?: boolean; locationLanguage?: string; tutorialCompleted?: boolean }): Promise<void> => {
+        if (updates.tutorialCompleted !== undefined) {
+            await ensureAddArtistTutorialColumn();
+        }
+
         const setClauses: string[] = [];
         const values: (string | boolean)[] = [];
         let paramIndex = 1;
@@ -86,6 +102,10 @@ export const ProfileStore = {
         if (updates.locationLanguage !== undefined) {
             setClauses.push(`location_language = $${paramIndex++}`);
             values.push(updates.locationLanguage);
+        }
+        if (updates.tutorialCompleted !== undefined) {
+            setClauses.push(`tutorial_completed = $${paramIndex++}`);
+            values.push(updates.tutorialCompleted);
         }
 
         if (setClauses.length === 0) return;

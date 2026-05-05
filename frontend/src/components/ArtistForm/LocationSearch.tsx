@@ -20,6 +20,7 @@ interface LocationSearchProps {
     onCoordinatesConsumed?: () => void;
     pendingSearch?: { query: string; key: number } | null;
     syncKey?: number;
+    tutorialInputTarget?: string;
 }
 
 export const LocationSearch = ({
@@ -31,7 +32,8 @@ export const LocationSearch = ({
     pendingCoordinates,
     onCoordinatesConsumed,
     pendingSearch,
-    syncKey
+    syncKey,
+    tutorialInputTarget
 }: LocationSearchProps) => {
     const {
         query,
@@ -129,55 +131,57 @@ export const LocationSearch = ({
 
     return (
         <div>
-            {label && (
-                <label 
-                    htmlFor={inputId}
-                    className="block text-sm font-bold text-text mb-1"
-                >
-                    {label}
-                </label>
-            )}
             <div className="relative" ref={dropdownRef}>
-                <div className="flex items-center gap-2" ref={inputRef}>
-                    <div className="relative flex-1">
-                        <input
-                            id={inputId}
-                            type="text"
-                            placeholder={placeholder || t('artistForm.locationSearch.placeholder')}
-                            className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${isLoading ? 'pr-14' : 'pr-9'}`}
-                            value={query !== null ? query : displayValue}
-                            onChange={handleInputChange}
-                            onFocus={handleInputFocus}
-                            onKeyDown={handleKeyDown}
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                            {(isLoading || queueSize > 0) && (
-                                <div className="relative inline-flex items-center justify-center">
-                                    {isLoading && <Spinner size="sm" className="text-text-muted" />}
-                                    {queueSize > 0 && (
-                                        <div className={`${isLoading ? 'absolute inset-0' : ''} flex items-center justify-center`}>
-                                            <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary'}`}>{queueSize}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <button
-                                aria-label={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
-                                onClick={(isLoading || queueSize > 0) ? handleCancel : handleSearch}
-                                type="button"
-                                disabled={!isLoading && queueSize === 0 && !canSearch}
-                                className={`p-1 rounded transition-colors ${(isLoading || queueSize > 0) ? 'text-text-secondary hover:bg-error hover:text-white' : 'text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary'}`}
-                                title={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
+                <div className="flex items-end gap-2 rounded-md p-1" ref={inputRef} data-tutorial-target={tutorialInputTarget}>
+                    <div className="flex-1">
+                        {label && (
+                            <label
+                                htmlFor={inputId}
+                                className="block text-sm font-bold text-text mb-1"
                             >
-                                {(isLoading || queueSize > 0) ? <CloseIcon className="w-4 h-4" /> : <SearchIcon className="w-4 h-4" />}
-                            </button>
-                        </div>
+                                {label}
+                            </label>
+                        )}
+                        <div className="relative">
+                            <input
+                                id={inputId}
+                                type="text"
+                                placeholder={placeholder || t('artistForm.locationSearch.placeholder')}
+                                className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${isLoading ? 'pr-14' : 'pr-9'}`}
+                                value={query !== null ? query : displayValue}
+                                onChange={handleInputChange}
+                                onFocus={handleInputFocus}
+                                onKeyDown={handleKeyDown}
+                            />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                {(isLoading || queueSize > 0) && (
+                                    <div className="relative inline-flex items-center justify-center">
+                                        {isLoading && <Spinner size="sm" className="text-text-muted" />}
+                                        {queueSize > 0 && (
+                                            <div className={`${isLoading ? 'absolute inset-0' : ''} flex items-center justify-center`}>
+                                                <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary'}`}>{queueSize}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <button
+                                    aria-label={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
+                                    onClick={(isLoading || queueSize > 0) ? handleCancel : handleSearch}
+                                    type="button"
+                                    disabled={!isLoading && queueSize === 0 && !canSearch}
+                                    className={`p-1 rounded transition-colors ${(isLoading || queueSize > 0) ? 'text-text-secondary hover:bg-error hover:text-white' : 'text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary'}`}
+                                    title={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
+                                >
+                                    {(isLoading || queueSize > 0) ? <CloseIcon className="w-4 h-4" /> : <SearchIcon className="w-4 h-4" />}
+                                </button>
+                            </div>
+                                        </div>
                     </div>
                     <button
                         aria-label={t('artistForm.locationSearch.manualSelect')}
                         onClick={onManualPin}
                         type="button"
-                        className="p-2 rounded text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                        className="mb-1 p-2 rounded text-text-secondary hover:bg-primary hover:text-white transition-colors"
                         title={t('artistForm.locationSearch.manualSelect')}
                     >
                         <MapPinIcon className="w-5 h-5" />

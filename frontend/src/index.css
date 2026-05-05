@@ -59,6 +59,33 @@
   transition: transform 0.15s ease-out;
 }
 
+/* Tutorial indicator */
+.tutorial-indicator {
+  position: relative;
+  z-index: 20;
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+[data-tutorial-target="add-artist-button"].tutorial-indicator {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+[data-tutorial-target="save-artist"].tutorial-indicator {
+  outline-color: var(--color-primary);
+}
+
+[data-tutorial-target="origin-location-field"].tutorial-indicator,
+[data-tutorial-target="active-location-field"].tutorial-indicator {
+  outline-offset: 1px;
+}
+
+[data-tutorial-target="social-links"].tutorial-indicator {
+  z-index: 60;
+}
+
 /* Scale control styling */
 .leaflet-control-scale-line {
   text-align: center;

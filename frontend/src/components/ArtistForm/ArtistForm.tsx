@@ -25,6 +25,8 @@ interface ArtistFormProps {
     onRequestSelection?: (targetField: 'originalLocation' | 'activeLocation') => void;
     pendingCoordinates?: { lat: number; lng: number } | null;
     onConsumePendingCoordinates?: () => void;
+    onTutorialAction?: (action: 'artistSelected' | 'originalLocationSet' | 'activeLocationSet' | 'debutYearSet' | 'inactiveEnabled' | 'inactiveDisabled' | 'inactiveYearSet' | 'socialOpened') => void;
+    onTutorialComplete?: () => void;
 }
 
 const SOCIAL_FIELD_CONFIG: Omit<SocialLinkField, 'placeholder'>[] = [
@@ -41,7 +43,9 @@ const ArtistForm = ({
     onCancel,
     onRequestSelection,
     pendingCoordinates,
-    onConsumePendingCoordinates
+    onConsumePendingCoordinates,
+    onTutorialAction,
+    onTutorialComplete
 }: ArtistFormProps) => {
     const [isSocialExpanded, setIsSocialExpanded] = useState(false);
     const [showInactive, setShowInactive] = useState(() => !!initialData?.inactiveYear);
@@ -193,6 +197,46 @@ const ArtistForm = ({
         }
 
         await applyMusicBrainzArtist(artist);
+        onTutorialAction?.('artistSelected');
+    };
+
+    const handleTutorialLocationSelect = (result: Parameters<typeof handleLocationSelect>[0], locationType: 'originalLocation' | 'activeLocation') => {
+        handleLocationSelect(result, locationType);
+        // Move location tutorial after applying result
+        onTutorialAction?.(locationType === 'originalLocation' ? 'originalLocationSet' : 'activeLocationSet');
+    };
+
+    const handleCopyOriginalToActive = () => {
+        copyOriginalToActive();
+        onTutorialAction?.('activeLocationSet');
+    };
+
+    const handleDebutYearChange = (year: number | undefined) => {
+        updateDebutYear(year);
+        if (year !== undefined) {
+            onTutorialAction?.('debutYearSet');
+        }
+    };
+
+    const handleInactiveYearChange = (year: number | undefined) => {
+        updateInactiveYear(year);
+        if (year !== undefined) {
+            onTutorialAction?.('inactiveYearSet');
+        }
+    };
+
+    const toggleInactive = () => {
+        const nextShowInactive = !showInactive;
+        setShowInactive(nextShowInactive);
+        if (showInactive) {
+            updateInactiveYear(undefined);
+        }
+        onTutorialAction?.(nextShowInactive ? 'inactiveEnabled' : 'inactiveDisabled');
+    };
+
+    const toggleSocialExpanded = () => {
+        setIsSocialExpanded(!isSocialExpanded);
+        onTutorialAction?.('socialOpened');
     };
 
     const confirmPreUploadImageChoice = async () => {
@@ -264,6 +308,12 @@ const ArtistForm = ({
             })
         )));
         onCancel?.();
+    };
+
+    const handleSaveClick = () => {
+        // Complete tutorial before saving
+        onTutorialComplete?.();
+        void handleSave();
     };
 
     // Get display URLs using Cloudinary transformations
@@ -420,20 +470,20 @@ const ArtistForm = ({
         )}
 
         <div className="absolute top-28 right-2 z-[1050] w-80 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] font-sans">
-            {/* Header with background and avatar */}
-            <ArtistFormHeader
-                name={formData.name || ''}
-                avatarUrl={avatarUrl}
-                profileUrl={profileUrl}
-                isUploading={isUploadingImage}
-                onAvatarClick={() => void requestImageEntry('avatar')}
-                onProfileClick={() => void requestImageEntry('profile')}
-                onNameChange={updateName}
-            />
+            <div className="overflow-y-auto flex-1">
+                {/* Header with background and avatar */}
+                <ArtistFormHeader
+                    name={formData.name || ''}
+                    avatarUrl={avatarUrl}
+                    profileUrl={profileUrl}
+                    isUploading={isUploadingImage}
+                    onAvatarClick={() => void requestImageEntry('avatar')}
+                    onProfileClick={() => void requestImageEntry('profile')}
+                    onNameChange={updateName}
+                />
 
-            <div className="overflow-y-auto flex-1 [scrollbar-gutter:stable]">
                 {/* Form content */}
-                <div className="mt-10 px-4 flex flex-col gap-4">
+                <div className="mt-10 px-4 pb-4 flex flex-col gap-4">
                     {/* Upload error */}
                     {uploadError && (
                         <Alert variant="error">{uploadError}</Alert>
@@ -454,8 +504,9 @@ const ArtistForm = ({
                     {/* Location inputs */}
                     <div className="space-y-4">
                         <LocationSearch
+                            tutorialInputTarget="origin-location-field"
                             displayValue={getLocationDisplayValue(formData.originalLocation)}
-                            onChange={(result) => handleLocationSelect(result, 'originalLocation')}
+                            onChange={(result) => handleTutorialLocationSelect(result, 'originalLocation')}
                             onManualPin={() => handleManualPin('originalLocation')}
                             placeholder={t('artistForm.fields.searchOriginalLocation')}
                             label={t('artistForm.fields.originalLocation')}
@@ -465,10 +516,11 @@ const ArtistForm = ({
                             syncKey={locationInputSyncKeys.originalLocation}
                         />
 
-                        <div className="flex justify-center -my-2 relative z-10">
+                        <div className="flex justify-center -my-2 relative z-50">
                             <IconButton
+                                data-tutorial-target="copy-origin-to-active"
                                 aria-label={t('artistForm.buttons.copyOriginalToActive')}
-                                onClick={copyOriginalToActive}
+                                onClick={handleCopyOriginalToActive}
                                 size="sm"
                                 className="bg-surface-muted border border-border text-text-secondary rounded-full hover:bg-primary hover:text-white hover:border-primary"
                                 title={t('artistForm.buttons.copyOriginalToActive')}
@@ -479,8 +531,9 @@ const ArtistForm = ({
                         </div>
 
                         <LocationSearch
+                            tutorialInputTarget="active-location-field"
                             displayValue={getLocationDisplayValue(formData.activeLocation)}
-                            onChange={(result) => handleLocationSelect(result, 'activeLocation')}
+                            onChange={(result) => handleTutorialLocationSelect(result, 'activeLocation')}
                             onManualPin={() => handleManualPin('activeLocation')}
                             placeholder={t('artistForm.fields.searchActiveLocation')}
                             label={t('artistForm.fields.activeLocation')}
@@ -491,15 +544,15 @@ const ArtistForm = ({
                         />
                     </div>
 
-                    <div>
+                    <div data-tutorial-target="debut-year" className="rounded-md p-1">
                         <span className="block text-sm font-bold text-text mb-1">{t('artistForm.fields.careerYears')}</span>
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
-                                <YearSelect value={formData.debutYear} onChange={updateDebutYear} placeholder={t('artistForm.fields.debut')} />
+                                <YearSelect value={formData.debutYear} onChange={handleDebutYearChange} placeholder={t('artistForm.fields.debut')} />
                             </div>
                             <div className="flex-1">
                                 {showInactive ? (
-                                    <YearSelect value={formData.inactiveYear} onChange={updateInactiveYear} placeholder={t('artistForm.fields.inactive')} />
+                                    <YearSelect tutorialTarget="inactive-year" value={formData.inactiveYear} onChange={handleInactiveYearChange} placeholder={t('artistForm.fields.inactive')} />
                                 ) : (
                                     <div className="h-full flex items-center justify-center">
                                         <span className="px-3 py-1 text-sm font-medium text-text-secondary bg-surface-muted rounded-full">{t('artistForm.fields.present')}</span>
@@ -507,8 +560,9 @@ const ArtistForm = ({
                                 )}
                             </div>
                             <IconButton
+                                data-tutorial-target="inactive-toggle"
                                 aria-label={showInactive ? t('artistForm.buttons.setActive') : t('artistForm.buttons.setInactive')}
-                                onClick={() => { setShowInactive(!showInactive); if (showInactive) updateInactiveYear(undefined); }}
+                                onClick={toggleInactive}
                                 title={showInactive ? t('artistForm.buttons.setActive') : t('artistForm.buttons.setInactive')}
                             >
                                 {showInactive ? <MusicNoteIcon /> : <SleepIcon />}
@@ -517,10 +571,10 @@ const ArtistForm = ({
                     </div>
 
                     {/* Social Media section */}
-                    <div>
+                    <div data-tutorial-target="social-links">
                         <button
                             aria-expanded={isSocialExpanded}  
-                            onClick={() => setIsSocialExpanded(!isSocialExpanded)}
+                            onClick={toggleSocialExpanded}
                             className={`flex items-center justify-between w-full px-3 py-2 text-sm font-bold text-text bg-surface-secondary hover:bg-surface-muted rounded-md transition-colors ${isSocialExpanded ? 'rounded-b-none' : ''}`}
                             type="button"
 
@@ -561,7 +615,8 @@ const ArtistForm = ({
                         {t('artistForm.buttons.cancel')}
                     </Button>
                     <Button
-                        onClick={handleSave}
+                        data-tutorial-target="save-artist"
+                        onClick={handleSaveClick}
                         isLoading={isSaving}
                         className="flex-1"
                         type="button"

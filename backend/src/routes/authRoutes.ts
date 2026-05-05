@@ -52,7 +52,7 @@ router.post('/set-username', requireAuth, asyncHandler(async (req: Authenticated
 // PUT /api/auth/profile - Update profile settings
 router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user!.id;
-    const { username, isPrivate, locationLanguage } = req.body;
+    const { username, isPrivate, locationLanguage, tutorialCompleted } = req.body;
 
     // Validate username if provided
     if (username !== undefined) {
@@ -79,8 +79,13 @@ router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedReques
         return;
     }
 
+    if (tutorialCompleted !== undefined && typeof tutorialCompleted !== 'boolean') {
+        res.status(400).json({ error: 'tutorialCompleted must be a boolean' });
+        return;
+    }
+
     // Update profile
-    await ProfileStore.updateProfile(userId, { username, isPrivate, locationLanguage });
+    await ProfileStore.updateProfile(userId, { username, isPrivate, locationLanguage, tutorialCompleted });
 
     // Return updated profile
     const updatedProfile = await ProfileStore.getByUserId(userId);

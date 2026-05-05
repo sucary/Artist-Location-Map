@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { Artist, ArtistQueryParams, LocalizedChain } from '../types/artist';
 import type { City } from '../types/city';
 import type { MainSearchResponse } from '../types/search';
+import type { Profile } from '../types/profile';
 import { supabase } from '../lib/supabase';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -146,6 +147,11 @@ export const deleteNotification = async (id: string): Promise<{ deleted: number 
 
 export const clearNotifications = async (): Promise<{ deleted: number; keptHard: number }> => {
     const response = await api.delete<{ deleted: number; keptHard: number }>('/notifications');
+    return response.data;
+};
+
+export const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 'isPrivate' | 'locationLanguage' | 'tutorialCompleted'>>): Promise<Profile> => {
+    const response = await api.put<Profile>('/auth/profile', updates);
     return response.data;
 };
 
