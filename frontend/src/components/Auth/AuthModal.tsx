@@ -27,6 +27,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+    const [messageType, setMessageType] = useState<'signup' | 'reset' | null>(null);
+    const [resendLoading, setResendLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
@@ -39,6 +41,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const clearMessages = () => {
         setError(null);
         setMessage(null);
+        setMessageType(null);
         setPasswordError(null);
         setConfirmPasswordError(null);
         setForgotPasswordEmailError(null);
@@ -134,6 +137,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         setError(error.message);
                     }
                 } else {
+                    setMessageType('signup');
                     setMessage(t('auth.messages.checkEmailConfirmation'));
                 }
             } else {
@@ -176,14 +180,68 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
         setLoading(true);
         setForgotPasswordEmailError(null);
-        const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-            redirectTo: `${window.location.origin}/`,
-        });
-        setLoading(false);
-        if (error) {
-            setForgotPasswordEmailError(error.message);
-        } else {
+        try {
+            const response = await fetch(`${API_URL}/auth/password-reset`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: forgotPasswordEmail,
+                    redirectTo: `${window.location.origin}/`,
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                setForgotPasswordEmailError(data.error || t('auth.errors.unexpectedError'));
+                return;
+            }
+
+            setMessageType('reset');
             setMessage(t('auth.messages.resetLinkSent'));
+        } catch {
+            setForgotPasswordEmailError(t('auth.errors.unexpectedError'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendEmail = async () => {
+        const targetEmail = messageType === 'reset' ? forgotPasswordEmail : email;
+        if (!targetEmail) {
+            setError(t('auth.errors.emailRequired'));
+            return;
+        }
+
+        setResendLoading(true);
+        setError(null);
+
+        try {
+            if (messageType === 'reset') {
+                const response = await fetch(`${API_URL}/auth/password-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: targetEmail,
+                        redirectTo: `${window.location.origin}/`,
+                    }),
+                });
+                if (!response.ok) throw new Error(t('auth.errors.unexpectedError'));
+                setMessage(t('auth.messages.resetLinkSent'));
+            } else {
+                const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: targetEmail,
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                    },
+                });
+                if (error) throw error;
+                setMessage(t('auth.messages.checkEmailConfirmation'));
+            }
+        } catch (resendError) {
+            setError(resendError instanceof Error ? resendError.message : t('auth.errors.unexpectedError'));
+        } finally {
+            setResendLoading(false);
         }
     };
 
@@ -214,8 +272,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         </div>
                         <h2 id="auth-title" className="text-xl font-bold text-text mb-2">{t('auth.emailCheck.title')}</h2>
                         <p className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
+                        {error && <Alert variant="error" onClose={() => setError(null)} className="mb-4">{error}</Alert>}
                         <div className="flex gap-3">
-                            <Button onClick={handleClose} variant="secondary" className="flex-1">{t('auth.buttons.resend')}</Button>
+                            <Button onClick={handleResendEmail} variant="secondary" isLoading={resendLoading} className="flex-1">{t('auth.buttons.resend')}</Button>
                             <Button onClick={handleClose} className="flex-1">{t('auth.buttons.done')}</Button>
                         </div>
                     </div>
@@ -233,6 +292,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <form onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }} className="space-y-4">
                             <Input
                                 type="email"
+                                name="forgot-password-email"
+                                autoComplete="email"
                                 label={t('auth.fields.email')}
 
                                 value={forgotPasswordEmail}
@@ -281,6 +342,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                         <Input
                             type="email"
+                            name="email"
+                            autoComplete="email"
                             label={t('auth.fields.email')}
                             value={email}
                             onChange={(e) => {
@@ -293,6 +356,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                         <Input
                             type={showPassword ? 'text' : 'password'}
+                            name={isSignUp ? 'new-password' : 'current-password'}
+                            autoComplete={isSignUp ? 'new-password' : 'current-password'}
                             label={t('auth.fields.password')}
                             value={password}
                             onChange={(e) => {
@@ -317,6 +382,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {isSignUp && (
                             <Input
                                 type={showConfirmPassword ? 'text' : 'password'}
+                                name="confirm-new-password"
+                                autoComplete="new-password"
                                 label={t('auth.fields.confirmPassword')}
                                 value={confirmPassword}
                                 onChange={(e) => {
@@ -340,6 +407,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             <div className="flex items-center justify-between">
                                 <label className="flex items-center cursor-pointer group">
                                     <input
+                                        name="remember-me"
+                                        autoComplete="off"
                                         type="checkbox"
                                         checked={rememberMe}
                                         onChange={(e) => setRememberMe(e.target.checked)}

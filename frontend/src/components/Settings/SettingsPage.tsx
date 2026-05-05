@@ -43,6 +43,8 @@ export function SettingsPage() {
 
     if (!user || !profile) return null;
 
+    const hasPasswordIdentity = user.identities?.some((identity) => identity.provider === 'email') ?? false;
+
     const handleUsernameSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (username === profile.username) return;
@@ -233,6 +235,10 @@ export function SettingsPage() {
                         </label>
                         <input
                             id="username"
+                            name="settings-username"
+                            autoComplete="username"
+                            autoCorrect="off"
+                            spellCheck={false}
                             aria-describedby={usernameError ? "username-error" : undefined}
                             aria-invalid={!!usernameError}
                             type="text"
@@ -257,64 +263,71 @@ export function SettingsPage() {
                 </form>
             </PageSection>
 
-            {/* Password */}
-            <PageSection title="Change Password">
-                <form onSubmit={handlePasswordSubmit} className="space-y-3">
-                    <div>
-                        <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary mb-1">Current password</label>
-                        <div className="relative">
-                            <input
-                                id="currentPassword"
-                                type={showCurrentPassword ? 'text' : 'password'}
-                                value={currentPassword}
-                                onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
-                                className={`${inputClass} pr-10`}
-                            />
-                            <button aria-label={showCurrentPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
-                                <EyeIcon open={showCurrentPassword} />
-                            </button>
+            {hasPasswordIdentity && (
+                <PageSection title="Change Password">
+                    <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                        <div>
+                            <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary mb-1">Current password</label>
+                            <div className="relative">
+                                <input
+                                    id="currentPassword"
+                                    name="current-password"
+                                    autoComplete="current-password"
+                                    type={showCurrentPassword ? 'text' : 'password'}
+                                    value={currentPassword}
+                                    onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
+                                    className={`${inputClass} pr-10`}
+                                />
+                                <button aria-label={showCurrentPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
+                                    <EyeIcon open={showCurrentPassword} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label htmlFor="newPassword" className="block text-sm font-medium text-text-secondary mb-1">New password</label>
-                        <div className="relative">
+                        <div>
+                            <label htmlFor="newPassword" className="block text-sm font-medium text-text-secondary mb-1">New password</label>
+                            <div className="relative">
+                                <input
+                                    id="newPassword"
+                                    name="new-password"
+                                    autoComplete="new-password"
+                                    type={showNewPassword ? 'text' : 'password'}
+                                    value={newPassword}
+                                    onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
+                                    className={`${inputClass} pr-10`}
+                                    minLength={6}
+                                />
+                                <button aria-label={showNewPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
+                                    <EyeIcon open={showNewPassword} />
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1">Confirm new password</label>
                             <input
-                                id="newPassword"
-                                type={showNewPassword ? 'text' : 'password'}
-                                value={newPassword}
-                                onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
-                                className={`${inputClass} pr-10`}
+                                id="confirmPassword"
+                                name="confirm-new-password"
+                                autoComplete="new-password"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
+                                className={inputClass}
                                 minLength={6}
                             />
-                            <button aria-label={showNewPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
-                                <EyeIcon open={showNewPassword} />
+                        </div>
+                        {passwordError && <p role="alert" className="text-xs text-error">{passwordError}</p>}
+                        {passwordSuccess && <p role="status" className="text-xs text-green-600">Password updated successfully</p>}
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+                                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {passwordSaving ? 'Updating...' : 'Change password'}
                             </button>
                         </div>
-                    </div>
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1">Confirm new password</label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
-                            className={inputClass}
-                            minLength={6}
-                        />
-                    </div>
-                    {passwordError && <p role="alert" className="text-xs text-error">{passwordError}</p>}
-                    {passwordSuccess && <p role="status" className="text-xs text-green-600">Password updated successfully</p>}
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {passwordSaving ? 'Updating...' : 'Change password'}
-                        </button>
-                    </div>
-                </form>
-            </PageSection>
+                    </form>
+                </PageSection>
+            )}
         </PageLayout>
     );
 }

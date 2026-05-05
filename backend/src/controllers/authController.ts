@@ -3,6 +3,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { ProfileStore } from '../models/profileStore';
 import { NotificationService } from '../services/notificationService';
+import { supabaseAdmin } from '../config/supabase';
 
 export const checkUsernameAvailability = asyncHandler(async (req: Request, res: Response) => {
     const { username } = req.query;
@@ -26,6 +27,29 @@ export const checkEmailAvailability = asyncHandler(async (req: Request, res: Res
 
     const available = await ProfileStore.checkEmailAvailable(email);
     res.json({ available });
+});
+
+export const requestPasswordReset = asyncHandler(async (req: Request, res: Response) => {
+    const { email, redirectTo } = req.body;
+
+    if (!email || typeof email !== 'string') {
+        res.status(400).json({ error: 'Email required' });
+        return;
+    }
+
+    const hasPasswordIdentity = await ProfileStore.emailHasPasswordIdentity(email);
+
+    if (hasPasswordIdentity) {
+        const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+            redirectTo: typeof redirectTo === 'string' ? redirectTo : undefined,
+        });
+
+        if (error) {
+            console.error('Password reset request failed:', error.message);
+        }
+    }
+
+    res.json({ success: true });
 });
 
 export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

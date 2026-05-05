@@ -81,6 +81,8 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                                 <div className="relative">
                                     <input
                                         id="reset-new-password"
+                                        name="new-password"
+                                        autoComplete="new-password"
                                         type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => { setPassword(e.target.value); setError(null); }}
@@ -113,6 +115,8 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                                 <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-text mb-1">{t('auth.fields.confirmNewPassword')}</label>
                                 <input
                                     id="reset-confirm-password"
+                                    name="confirm-new-password"
+                                    autoComplete="new-password"
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}

@@ -69,7 +69,7 @@
     "errors": {
       "emailRequired": "请输入邮箱",
       "validEmail": "请输入有效的邮箱",
-      "emailExists": "该邮箱已被注册，请直接登录或使用另一个邮箱。",
+      "emailExists": "该邮箱已被注册。请使用之前的登录方式登录。",
       "passwordRequired": "请输入密码",
       "passwordMin": "密码必须在6个字符以上",
       "confirmPasswordRequired": "请确认密码",

@@ -21,6 +21,13 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
     const [checking, setChecking] = useState(false);
     const { t } = useTranslation();
     const availabilityTimeoutRef = useRef<number | null>(null);
+    const availabilityCacheRef = useRef<Map<string, boolean>>(new Map());
+    const availabilityRequestRef = useRef(0);
+    const usernameRef = useRef(username);
+
+    useEffect(() => {
+        usernameRef.current = username;
+    }, [username]);
 
     // Validate on blur/submit; do not mutate user input while typing.
     const hasValidUsernameFormat = (value: string): boolean => (
@@ -51,10 +58,26 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
         // Prevent availability helper flicker on repeated blur.
         if (availableUsername === value) return;
 
+        const normalizedValue = value.toLowerCase();
+        const cachedAvailability = availabilityCacheRef.current.get(normalizedValue);
+        if (cachedAvailability !== undefined) {
+            if (!cachedAvailability) {
+                setError(t('auth.errors.userNameTaken'));
+                setAvailableUsername(null);
+            } else {
+                setAvailableUsername(value);
+            }
+            return;
+        }
+
+        const requestId = ++availabilityRequestRef.current;
         setChecking(true);
         try {
-            const res = await fetch(`${API_URL}/auth/check-username?username=${value}`);
+            const res = await fetch(`${API_URL}/auth/check-username?username=${encodeURIComponent(value)}`);
             const data = await res.json();
+            if (requestId !== availabilityRequestRef.current || value !== usernameRef.current) return;
+
+            availabilityCacheRef.current.set(normalizedValue, !!data.available);
             if (!data.available) {
                 setError(t('auth.errors.userNameTaken'));
                 setAvailableUsername(null);
@@ -62,7 +85,9 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                 setAvailableUsername(value);
             }
         } finally {
-            setChecking(false);
+            if (requestId === availabilityRequestRef.current) {
+                setChecking(false);
+            }
         }
     };
 
@@ -135,6 +160,10 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                         <Input
                             aria-label={t('auth.userNamePrompt.usernameLabel')}
                             type="text"
+                            name="username"
+                            autoComplete="username"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={username}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -146,10 +175,12 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                                 if (availabilityTimeoutRef.current !== null) {
                                     window.clearTimeout(availabilityTimeoutRef.current);
                                 }
+                                availabilityRequestRef.current += 1;
+                                setChecking(false);
                                 if (hasValidUsernameFormat(value)) {
                                     availabilityTimeoutRef.current = window.setTimeout(() => {
                                         checkAvailability(value);
-                                    }, 800);
+                                    }, 350);
                                 }
                             }}
                             onBlur={() => {

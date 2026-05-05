@@ -333,6 +333,10 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
             <div ref={inputWrapRef} className="relative">
                 <input
                     id="musicbrainz-artist-search"
+                    name="musicbrainz-artist-search"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={query}
                     onChange={(event) => {
                         const nextValue = event.target.value;

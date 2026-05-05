@@ -75,6 +75,10 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                     aria-controls="search-results"
                     aria-autocomplete="list"
                     type="text"
+                    name="main-search"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Search users, locations..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}

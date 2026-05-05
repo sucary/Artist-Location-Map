@@ -145,6 +145,10 @@ export const LocationSearch = ({
                         <div className="relative">
                             <input
                                 id={inputId}
+                                name={tutorialInputTarget ? `${tutorialInputTarget}-search` : 'location-search'}
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
                                 type="text"
                                 placeholder={placeholder || t('artistForm.locationSearch.placeholder')}
                                 className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${isLoading ? 'pr-14' : 'pr-9'}`}

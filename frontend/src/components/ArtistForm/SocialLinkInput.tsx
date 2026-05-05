@@ -48,6 +48,10 @@ const SocialLinkInput = ({ field, value, onChange }: SocialLinkInputProps) => {
             <input
                 aria-label={placeholder}
                 type="text"
+                name={`social-${key}`}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 placeholder={placeholder}
                 className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                 value={value}

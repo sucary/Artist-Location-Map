@@ -3,6 +3,7 @@ import { requireAuth, requireAdmin, AuthenticatedRequest } from '../middleware/a
 import {
     checkUsernameAvailability,
     checkEmailAvailability,
+    requestPasswordReset,
     getProfile,
     getPendingUsers,
     approveUser,
@@ -17,6 +18,7 @@ const router = Router();
 // Public routes
 router.get('/check-username', checkUsernameAvailability);
 router.get('/check-email', checkEmailAvailability);
+router.post('/password-reset', requestPasswordReset);
 
 // Protected routes
 router.get('/profile', requireAuth, getProfile);

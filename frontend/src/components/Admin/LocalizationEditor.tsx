@@ -128,6 +128,10 @@ export function LocalizationEditor() {
             {/* Search */}
             <div className="flex gap-2 mb-3">
                 <Input
+                    name="localization-location-search"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -213,6 +217,10 @@ export function LocalizationEditor() {
                                     {LANGS.map(({ key, label: langLabel }) => (
                                         <Input
                                             key={key}
+                                            name={`localization-${level}-${key}`}
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            spellCheck={false}
                                             value={names?.[key] || ''}
                                             onChange={e => updateField(level, key, e.target.value)}
                                             placeholder={langLabel}

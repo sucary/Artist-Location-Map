@@ -205,6 +205,10 @@ const ArtistList = ({
                 <Input
                     aria-label="Search artists or locations"
                     type="text"
+                    name="artist-list-search"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Search artists or locations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

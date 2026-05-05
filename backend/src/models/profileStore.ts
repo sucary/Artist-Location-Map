@@ -126,11 +126,39 @@ export const ProfileStore = {
     },
 
     checkEmailAvailable: async (email: string): Promise<boolean> => {
+        const normalizedEmail = email.trim().toLowerCase();
         const result = await pool.query(
-            `SELECT 1 FROM profiles WHERE email = $1`,
-            [email]
+            `SELECT 1 FROM profiles WHERE lower(email) = $1`,
+            [normalizedEmail]
         );
         return result.rows.length === 0;
+    },
+
+    emailHasPasswordIdentity: async (email: string): Promise<boolean> => {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const identitiesTableResult = await pool.query<{ exists: boolean }>(
+            `SELECT to_regclass('auth.identities') IS NOT NULL as "exists"`
+        );
+
+        if (!identitiesTableResult.rows[0]?.exists) {
+            return !(await ProfileStore.checkEmailAvailable(normalizedEmail));
+        }
+
+        const result = await pool.query(
+            `SELECT 1
+             FROM auth.identities
+             WHERE provider = 'email'
+               AND (
+                    lower(email) = $1
+                    OR user_id IN (
+                        SELECT id FROM auth.users WHERE lower(email) = $1
+                    )
+               )
+             LIMIT 1`,
+            [normalizedEmail]
+        );
+        return result.rows.length > 0;
     },
 
     getPendingUsers: async (): Promise<PendingUser[]> => {

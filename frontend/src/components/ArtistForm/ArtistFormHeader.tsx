@@ -146,6 +146,10 @@ const ArtistFormHeader = ({
                 {isEditingName ? (
                     <input
                         aria-label={t('artistForm.fields.name')}
+                        name="artist-name"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                         type="text"
                         value={name}
                         onChange={(e) => onNameChange(e.target.value)}

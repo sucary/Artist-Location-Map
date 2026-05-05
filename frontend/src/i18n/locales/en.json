@@ -69,7 +69,7 @@
     "errors": {
       "emailRequired": "Please enter your email",
       "validEmail": "Please enter a valid email",
-      "emailExists": "This email is already registered, please sign in or use another email",
+      "emailExists": "This email is already registered. Sign in with the method you used before.",
       "passwordRequired": "Please enter a password",
       "passwordMin": "Password must be at least 6 characters",
       "confirmPasswordRequired": "Please confirm your password",
