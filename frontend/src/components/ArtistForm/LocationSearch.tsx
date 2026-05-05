@@ -68,6 +68,7 @@ export const LocationSearch = ({
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 320 });
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLDivElement>(null);
+    const controlsRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
     // Update dropdown position when opening
@@ -95,10 +96,10 @@ export const LocationSearch = ({
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-            const clickedInside = dropdownRef.current?.contains(target);
+            const clickedInsideControls = controlsRef.current?.contains(target);
             const clickedOnDropdown = document.querySelector('.location-search-dropdown')?.contains(target);
 
-            if (!clickedInside && !clickedOnDropdown) {
+            if (!clickedInsideControls && !clickedOnDropdown) {
                 closeDropdown();
             }
         };
@@ -142,7 +143,7 @@ export const LocationSearch = ({
                                 {label}
                             </label>
                         )}
-                        <div className="relative">
+                        <div className="relative" ref={controlsRef}>
                             <input
                                 id={inputId}
                                 name={tutorialInputTarget ? `${tutorialInputTarget}-search` : 'location-search'}
