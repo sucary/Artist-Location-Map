@@ -43,6 +43,12 @@
 
 }
 
+label[for].block {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+}
+
 /* Custom utility for text shadow on image overlays */
 @utility text-shadow-overlay {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);

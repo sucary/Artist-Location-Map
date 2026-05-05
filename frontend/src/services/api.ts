@@ -130,6 +130,20 @@ export interface Notification {
     readAt: string | null;
 }
 
+export interface NotificationRecipient {
+    id: string;
+    email: string;
+    username: string | null;
+}
+
+export interface AdminNotificationInput {
+    audience: 'all' | 'user';
+    userId?: string;
+    title: string;
+    content: string;
+    isHard: boolean;
+}
+
 export const getNotifications = async (): Promise<Notification[]> => {
     const response = await api.get<Notification[]>('/notifications');
     return response.data;
@@ -147,6 +161,18 @@ export const deleteNotification = async (id: string): Promise<{ deleted: number 
 
 export const clearNotifications = async (): Promise<{ deleted: number; keptHard: number }> => {
     const response = await api.delete<{ deleted: number; keptHard: number }>('/notifications');
+    return response.data;
+};
+
+export const searchNotificationRecipients = async (query: string): Promise<NotificationRecipient[]> => {
+    const response = await api.get<NotificationRecipient[]>('/notifications/admin/recipients', {
+        params: { q: query }
+    });
+    return response.data;
+};
+
+export const postAdminNotification = async (input: AdminNotificationInput): Promise<{ sent: number }> => {
+    const response = await api.post<{ sent: number }>('/notifications/admin', input);
     return response.data;
 };
 

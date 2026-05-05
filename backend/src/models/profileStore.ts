@@ -19,6 +19,12 @@ export interface PendingUser {
     createdAt: Date;
 }
 
+export interface NotificationRecipient {
+    id: string;
+    email: string;
+    username: string | null;
+}
+
 async function ensureRejectedRegistrationsTable(): Promise<void> {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS rejected_registrations (
@@ -167,6 +173,38 @@ export const ProfileStore = {
              FROM profiles
              WHERE is_approved = false
              ORDER BY created_at DESC`
+        );
+        return result.rows;
+    },
+
+    getAllNotificationRecipientIds: async (): Promise<string[]> => {
+        const result = await pool.query<{ id: string }>(
+            `SELECT id
+             FROM profiles
+             ORDER BY created_at DESC`
+        );
+        return result.rows.map((row) => row.id);
+    },
+
+    searchNotificationRecipients: async (query: string): Promise<NotificationRecipient[]> => {
+        const normalizedQuery = query.trim().toLowerCase();
+        if (normalizedQuery.length < 2) return [];
+
+        const result = await pool.query<NotificationRecipient>(
+            `SELECT id, email, username
+             FROM profiles
+             WHERE lower(email) LIKE $1
+                OR lower(COALESCE(username, '')) LIKE $1
+             ORDER BY
+                CASE
+                    WHEN lower(COALESCE(username, '')) = $2 THEN 0
+                    WHEN lower(email) = $2 THEN 1
+                    ELSE 2
+                END,
+                username NULLS LAST,
+                email
+             LIMIT 10`,
+            [`%${normalizedQuery}%`, normalizedQuery]
         );
         return result.rows;
     },

@@ -10,6 +10,7 @@ import {
     type Notification
 } from '../../services/api';
 import { CloseButton } from '../ui';
+import { NotificationContent } from './NotificationContent';
 
 interface PendingUser {
     id: string;
@@ -102,7 +103,7 @@ function NotificationItem({
                             WebkitBoxOrient: 'vertical'
                         }}
                     >
-                        {notification.content}
+                        <NotificationContent content={notification.content} onNavigate={onNavigate} />
                     </p>
                     <div className="flex items-center justify-between gap-3 mt-2">
                         <span className="text-[11px] text-text-muted">{formatTimestamp(notification.createdAt)}</span>

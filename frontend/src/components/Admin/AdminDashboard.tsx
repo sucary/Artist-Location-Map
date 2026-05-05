@@ -1,8 +1,14 @@
 ﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import type { FormEvent } from 'react';
 import { Spinner, Alert, Button, CloseButton } from '../ui';
 import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
-import { API_URL } from '../../services/api';
+import {
+    API_URL,
+    postAdminNotification,
+    searchNotificationRecipients,
+    type NotificationRecipient
+} from '../../services/api';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import type { PendingUser } from '../../types/profile';
 import { LocalizationEditor } from './LocalizationEditor';
@@ -30,7 +36,19 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [error, setError] = useState<string | null>(null);
     const [approvalsOpen, setApprovalsOpen] = useState(true);
     const [mediaReviewsOpen, setMediaReviewsOpen] = useState(true);
+    const [postNotificationOpen, setPostNotificationOpen] = useState(false);
     const [translationsOpen, setTranslationsOpen] = useState(false);
+    const [notificationAudience, setNotificationAudience] = useState<'all' | 'user'>('all');
+    const [notificationTitle, setNotificationTitle] = useState('');
+    const [notificationContent, setNotificationContent] = useState('');
+    const [notificationIsPinned, setNotificationIsPinned] = useState(false);
+    const [recipientQuery, setRecipientQuery] = useState('');
+    const [recipientResults, setRecipientResults] = useState<NotificationRecipient[]>([]);
+    const [selectedRecipient, setSelectedRecipient] = useState<NotificationRecipient | null>(null);
+    const [recipientSearchLoading, setRecipientSearchLoading] = useState(false);
+    const [notificationPosting, setNotificationPosting] = useState(false);
+    const [notificationPostError, setNotificationPostError] = useState<string | null>(null);
+    const [notificationPostSuccess, setNotificationPostSuccess] = useState<string | null>(null);
 
     const dialogRef = useDialogAccessibility(onClose);
 
@@ -38,7 +56,42 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         void fetchAdminData();
     }, []);
 
-    // Close modal on esc pressed
+    useEffect(() => {
+        // Search recipients only after the admin chooses a specific-user audience.
+        if (notificationAudience !== 'user' || selectedRecipient || recipientQuery.trim().length < 2) {
+            setRecipientResults([]);
+            setRecipientSearchLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+        setRecipientSearchLoading(true);
+        const timeoutId = window.setTimeout(() => {
+            searchNotificationRecipients(recipientQuery)
+                .then((results) => {
+                    if (!cancelled) {
+                        setRecipientResults(results);
+                    }
+                })
+                .catch(() => {
+                    if (!cancelled) {
+                        setRecipientResults([]);
+                    }
+                })
+                .finally(() => {
+                    if (!cancelled) {
+                        setRecipientSearchLoading(false);
+                    }
+                });
+        }, 250);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeoutId);
+        };
+    }, [notificationAudience, recipientQuery, selectedRecipient]);
+
+    // Close the modal when Escape is pressed.
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
             if (event.key === 'Escape') {
@@ -47,7 +100,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         }
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-        }, [onClose]);
+    }, [onClose]);
 
     const getAuthHeaders = async () => {
         const { supabase } = await import('../../lib/supabase');
@@ -147,6 +200,52 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             setPendingMediaReviews(prev => prev.filter(review => review.id !== reviewId));
         } catch (err) {
             alert(err instanceof Error ? err.message : `Failed to ${action} media review`);
+        }
+    };
+
+    const resetNotificationForm = () => {
+        // Clear post state after a successful send while preserving the selected audience.
+        setNotificationTitle('');
+        setNotificationContent('');
+        setNotificationIsPinned(false);
+        setRecipientQuery('');
+        setRecipientResults([]);
+        setSelectedRecipient(null);
+    };
+
+    const handlePostNotification = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setNotificationPostError(null);
+        setNotificationPostSuccess(null);
+
+        const trimmedTitle = notificationTitle.trim();
+        const trimmedContent = notificationContent.trim();
+
+        if (!trimmedTitle || !trimmedContent) {
+            setNotificationPostError('Title and content are required.');
+            return;
+        }
+
+        if (notificationAudience === 'user' && !selectedRecipient) {
+            setNotificationPostError('Choose a recipient before posting.');
+            return;
+        }
+
+        setNotificationPosting(true);
+        try {
+            const result = await postAdminNotification({
+                audience: notificationAudience,
+                userId: notificationAudience === 'user' ? selectedRecipient!.id : undefined,
+                title: trimmedTitle,
+                content: trimmedContent,
+                isHard: notificationIsPinned
+            });
+            setNotificationPostSuccess(`Posted to ${result.sent} user${result.sent === 1 ? '' : 's'}.`);
+            resetNotificationForm();
+        } catch (err) {
+            setNotificationPostError(err instanceof Error ? err.message : 'Failed to post notification.');
+        } finally {
+            setNotificationPosting(false);
         }
     };
 
@@ -336,6 +435,138 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                     </div>
                                 )}
                             </div>
+                        )}
+                    </div>
+
+                    {/* Post Notification */}
+                    <div className="border-t border-border pt-4 mb-4">
+                        <button
+                            onClick={() => setPostNotificationOpen(!postNotificationOpen)}
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
+                        >
+                            <h2 className="text-xl font-semibold text-text">Post Notification</h2>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${postNotificationOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+
+                        {postNotificationOpen && (
+                            <form className="mt-2 border border-border rounded-lg p-4 space-y-4" onSubmit={handlePostNotification}>
+                                {notificationPostError && (
+                                    <Alert variant="error" onClose={() => setNotificationPostError(null)}>{notificationPostError}</Alert>
+                                )}
+                                {notificationPostSuccess && (
+                                    <Alert variant="success" onClose={() => setNotificationPostSuccess(null)}>{notificationPostSuccess}</Alert>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-text mb-2">Audience</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setNotificationAudience('all');
+                                                setSelectedRecipient(null);
+                                            }}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'all' ? 'bg-primary text-white border-primary' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                        >
+                                            All users
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setNotificationAudience('user')}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary text-white border-primary' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                        >
+                                            Specific user
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {notificationAudience === 'user' && (
+                                    <div>
+                                        <label htmlFor="notification-recipient" className="block text-sm font-medium text-text mb-1">
+                                            Recipient
+                                        </label>
+                                        <input
+                                            id="notification-recipient"
+                                            type="text"
+                                            value={selectedRecipient ? selectedRecipient.username || selectedRecipient.email : recipientQuery}
+                                            onChange={(event) => {
+                                                setSelectedRecipient(null);
+                                                setRecipientQuery(event.target.value);
+                                            }}
+                                            placeholder="Search username or email"
+                                            className="w-full px-3 py-2 bg-surface border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                                        />
+                                        {recipientSearchLoading && (
+                                            <p className="text-xs text-text-secondary mt-1">Searching...</p>
+                                        )}
+                                        {!recipientSearchLoading && recipientResults.length > 0 && (
+                                            <div className="mt-2 border border-border rounded-md overflow-hidden">
+                                                {recipientResults.map((recipient) => (
+                                                    <button
+                                                        key={recipient.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedRecipient(recipient);
+                                                            setRecipientQuery('');
+                                                            setRecipientResults([]);
+                                                        }}
+                                                        className="w-full text-left px-3 py-2 hover:bg-surface-muted border-b border-border last:border-b-0"
+                                                    >
+                                                        <span className="block text-sm font-medium text-text">{recipient.username || 'No username'}</span>
+                                                        <span className="block text-xs text-text-secondary">{recipient.email}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label htmlFor="notification-title" className="block text-sm font-medium text-text mb-1">Title</label>
+                                    <input
+                                        id="notification-title"
+                                        type="text"
+                                        maxLength={120}
+                                        value={notificationTitle}
+                                        onChange={(event) => setNotificationTitle(event.target.value)}
+                                        className="w-full px-3 py-2 bg-surface border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="notification-content" className="block text-sm font-medium text-text mb-1">Content</label>
+                                    <p className="text-xs text-text-secondary mb-2">
+                                        Add links as [link text](/internal-path) or [link text](https://example.com).
+                                    </p>
+                                    <textarea
+                                        id="notification-content"
+                                        maxLength={1000}
+                                        rows={4}
+                                        value={notificationContent}
+                                        onChange={(event) => setNotificationContent(event.target.value)}
+                                        className="w-full px-3 py-2 bg-surface border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary resize-y"
+                                    />
+                                </div>
+
+                                <label className="flex items-center gap-2 text-sm text-text">
+                                    <input
+                                        type="checkbox"
+                                        checked={notificationIsPinned}
+                                        onChange={(event) => setNotificationIsPinned(event.target.checked)}
+                                        className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                                    />
+                                    Pinned
+                                </label>
+
+                                <div className="flex justify-end">
+                                    <Button type="submit" isLoading={notificationPosting}>
+                                        Post notification
+                                    </Button>
+                                </div>
+                            </form>
                         )}
                     </div>
 
