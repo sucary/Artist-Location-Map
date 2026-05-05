@@ -31,7 +31,7 @@ function App() {
 
     const [showForm, setShowForm] = useState(false);
     const [showArtistList, setShowArtistList] = useState(false);
-    const [showFeaturedList, setShowFeaturedList] = useState(true);
+    const [showFeaturedList, setShowFeaturedList] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showAdminDashboard, setShowAdminDashboard] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(() => {
@@ -57,7 +57,7 @@ function App() {
     const setViewingFeatured = useCallback((featured: boolean) => {
         if (featured) {
             setSearchParams({ view: 'featured' });
-            setShowFeaturedList(true);
+            setShowFeaturedList(false);
         } else {
             setSearchParams({});
         }
@@ -270,65 +270,67 @@ function App() {
 
     return (
         <main className="h-screen w-screen flex flex-col">
-            {/* Top bar */}
-            <div className="absolute top-2 left-2 z-[1100] flex items-center gap-2">
-                {user && (
-                    <>
-                        <MainSearch
-                            onFocusLocation={handleSearchFocusLocation}
-                        />
-                        {viewingFeatured ? (
-                            <button
-                                aria-label="Back to my map"
-                                onClick={() => setViewingFeatured(false)}
-                                className="h-12 w-12 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted transition-colors"
-                                title="Back to my map"
-                            >
-                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                                    <polyline points="9 22 9 12 15 12 15 22" />
-                                </svg>
-                            </button>
-                        ) : (
-                            <button
-                                aria-label="View featured artists"
-                                onClick={() => setViewingFeatured(true)}
-                                className="h-12 w-12 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted transition-colors"
-                                title="View featured artists"
-                            >
-                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <polygon points="7.5,1.5 9,6 13.5,7.5 9,9 7.5,13.5 6,9 1.5,7.5 6,6" />
-                                    <polygon points="18.5,6.5 19.5,9.5 22.5,10.5 19.5,11.5 18.5,14.5 17.5,11.5 14.5,10.5 17.5,9.5" />
-                                    <polygon points="11.5,15.5 12.2,18 14.5,19 12.2,20 11.5,22.5 10.8,20 8.5,19 10.8,18" />
-                                </svg>
-                            </button>
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* Top right controls */}
-            <div className="absolute top-2 right-2 flex items-center gap-2">
-                <div className="z-[1250]">
-                    {user && <NotificationButton />}
+            {/* Top controls */}
+            <div className="absolute top-2 inset-x-2 z-[1100] flex items-start gap-2 pointer-events-none">
+                <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-auto">
+                    {user && (
+                        <>
+                            <div className="min-w-0 flex-1 sm:flex-none">
+                                <MainSearch
+                                    onFocusLocation={handleSearchFocusLocation}
+                                />
+                            </div>
+                            {viewingFeatured ? (
+                                <button
+                                    aria-label="Back to my map"
+                                    onClick={() => setViewingFeatured(false)}
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors"
+                                    title="Back to my map"
+                                >
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <polyline points="9 22 9 12 15 12 15 22" />
+                                    </svg>
+                                </button>
+                            ) : (
+                                <button
+                                    aria-label="View featured artists"
+                                    onClick={() => setViewingFeatured(true)}
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors"
+                                    title="View featured artists"
+                                >
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="7.5,1.5 9,6 13.5,7.5 9,9 7.5,13.5 6,9 1.5,7.5 6,6" />
+                                        <polygon points="18.5,6.5 19.5,9.5 22.5,10.5 19.5,11.5 18.5,14.5 17.5,11.5 14.5,10.5 17.5,9.5" />
+                                        <polygon points="11.5,15.5 12.2,18 14.5,19 12.2,20 11.5,22.5 10.8,20 8.5,19 10.8,18" />
+                                    </svg>
+                                </button>
+                            )}
+                        </>
+                    )}
                 </div>
-                <div className="z-[1100]">
-                    <AccountButton
-                        showAuthModal={showAuthModal}
-                        onOpenAuthModal={() => setShowAuthModal(true)}
-                        onCloseAuthModal={() => setShowAuthModal(false)}
-                        onOpenAdminDashboard={() => setShowAdminDashboard(true)}
-                    />
+                <div className="flex shrink-0 items-center gap-2 pointer-events-auto">
+                    <div className="z-[1250]">
+                        {user && <NotificationButton />}
+                    </div>
+                    <div className="z-[1100]">
+                        <AccountButton
+                            showAuthModal={showAuthModal}
+                            onOpenAuthModal={() => setShowAuthModal(true)}
+                            onCloseAuthModal={() => setShowAuthModal(false)}
+                            onOpenAdminDashboard={() => setShowAdminDashboard(true)}
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Bottom center: Viewing banner, Featured banner, or Anonymous banner */}
             {isViewingOther && username ? (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1100]">
+                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
                     <ViewingUserBanner username={username} />
                 </div>
             ) : viewingFeatured && user ? (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1100]">
+                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
                     <FeaturedArtistsBanner
                         artistCount={featuredArtists?.length || 0}
                         onHomeClick={() => setViewingFeatured(false)}
@@ -374,21 +376,23 @@ function App() {
                 }} />
             )}
             {showForm && (
-                <ArtistForm
-                    key={editingArtist?.id ?? 'new'}
-                    initialData={editingArtist ?? undefined}
-                    onSubmit={handleArtistFormSubmit}
-                    onCancel={handleCloseForm}
-                    onRequestSelection={handleStartSelection}
-                    pendingCoordinates={pendingCoordinates}
-                    onConsumePendingCoordinates={handleConsumeCoordinates}
-                    onTutorialAction={handleTutorialAction}
-                    onTutorialComplete={() => {
-                        if (tutorialStepIndex !== null) {
-                            void completeTutorial();
-                        }
-                    }}
-                />
+                <div className={selectionMode?.active ? 'hidden sm:block' : undefined}>
+                    <ArtistForm
+                        key={editingArtist?.id ?? 'new'}
+                        initialData={editingArtist ?? undefined}
+                        onSubmit={handleArtistFormSubmit}
+                        onCancel={handleCloseForm}
+                        onRequestSelection={handleStartSelection}
+                        pendingCoordinates={pendingCoordinates}
+                        onConsumePendingCoordinates={handleConsumeCoordinates}
+                        onTutorialAction={handleTutorialAction}
+                        onTutorialComplete={() => {
+                            if (tutorialStepIndex !== null) {
+                                void completeTutorial();
+                            }
+                        }}
+                    />
+                </div>
             )}
             {(showArtistList || (viewingFeatured && showFeaturedList)) && (
                 <ArtistList

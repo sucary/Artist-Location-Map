@@ -49,15 +49,15 @@ const MapClickHandler = ({ onLocationPick }: MapClickHandlerProps) => {
     return (
         <>
             {/* Banner-style location selection prompt */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1100]">
-                <div role="alert" className="flex items-center h-10 bg-surface border border-border rounded-lg shadow-md font-sans">
-                    <span className="text-sm text-text px-4">
+            <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
+                <div role="alert" className="flex h-10 max-w-full items-center overflow-hidden bg-surface border-2 border-primary rounded-lg shadow-md font-sans">
+                    <span className="min-w-0 flex-1 truncate whitespace-nowrap px-4 text-sm text-text">
                         Click on the map to select a location
                     </span>
-                    <div aria-hidden="true" className="w-px h-6 bg-border" />
+                    <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
                     <button
                         onClick={() => onLocationPick?.(null)}
-                        className="px-3 h-full text-sm text-text hover:bg-surface-muted transition-colors rounded-r-lg font-medium"
+                        className="h-full shrink-0 px-3 text-sm text-text hover:bg-surface-muted transition-colors rounded-r-lg font-medium"
                         style={{ cursor: 'default' }}
                     >
                         Cancel

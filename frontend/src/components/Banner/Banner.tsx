@@ -11,15 +11,15 @@ interface BannerProps {
 
 export function Banner({ content, action }: BannerProps) {
     return (
-        <div role="status" className="flex items-center h-10 bg-surface border border-border rounded-lg shadow-md font-sans">
-            <span className="text-sm text-text px-4">
+        <div role="status" className="flex h-10 max-w-full items-center overflow-hidden bg-surface border-2 border-primary rounded-lg shadow-md font-sans">
+            <span className="min-w-0 flex-1 truncate whitespace-nowrap px-4 text-sm text-text">
                 {content}
             </span>
-            <div aria-hidden="true" className="w-px h-6 bg-border" />
+            <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
             {action.type === 'text' ? (
                 <button
                     onClick={action.onClick}
-                    className="px-3 h-full text-sm text-text hover:bg-surface-muted transition-colors rounded-r-lg font-medium"
+                    className="h-full shrink-0 px-3 text-sm text-text hover:bg-surface-muted transition-colors rounded-r-lg font-medium"
                 >
                     {action.label}
                 </button>
@@ -27,7 +27,7 @@ export function Banner({ content, action }: BannerProps) {
                 <button
                     aria-label={action.title}
                     onClick={action.onClick}
-                    className="px-3 h-full text-text-secondary hover:bg-surface-muted hover:text-text transition-colors rounded-r-lg"
+                    className="h-full shrink-0 px-3 text-text-secondary hover:bg-surface-muted hover:text-text transition-colors rounded-r-lg"
                     title={action.title}
                 >
                     {action.icon}

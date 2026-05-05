@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { UserIcon } from '../icons/GeneralIcons';
 
 interface UserMenuProps {
     onOpenAdminDashboard?: () => void;
@@ -38,10 +39,12 @@ export function UserMenu({ onOpenAdminDashboard }: UserMenuProps) {
             <button
                 aria-expanded={isOpen}
                 aria-haspopup="true"
+                aria-label="Account menu"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center justify-between gap-2 px-4 py-2 bg-surface shadow-md hover:bg-surface-muted transition-colors w-48 ${isOpen ? 'rounded-t-lg' : 'rounded-lg'}`}
+                className={`flex h-12 w-12 items-center justify-center gap-2 bg-surface shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors sm:h-auto sm:w-48 sm:justify-between sm:px-4 sm:py-2 ${isOpen ? 'rounded-lg sm:rounded-t-lg sm:rounded-b-none' : 'rounded-lg'}`}
             >
-                <div className="flex flex-col items-start min-w-0 flex-1 gap-0.5">
+                <UserIcon className="h-6 w-6 text-text-secondary sm:hidden" />
+                <div className="hidden flex-col items-start min-w-0 flex-1 gap-0.5 sm:flex">
                     <span className="text-sm font-medium text-text truncate w-full text-left h-5">
                         {profile.username || ''}
                     </span>
@@ -56,7 +59,7 @@ export function UserMenu({ onOpenAdminDashboard }: UserMenuProps) {
                 <div 
                     role="menu"
                     onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
-                    className="absolute top-full right-0 w-48 bg-surface rounded-b-lg shadow-lg border-t border-border z-[1001]">
+                    className="absolute top-full right-0 mt-1 w-48 bg-surface rounded-lg shadow-lg border border-border z-[1001] sm:mt-0 sm:rounded-t-none">
                     <button
                         role="menuitem"
                         onClick={() => {

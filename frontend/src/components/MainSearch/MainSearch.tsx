@@ -64,7 +64,7 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
     const showDropdown = isOpen && query.length >= 2;
 
     return (
-        <div ref={containerRef} className="relative font-sans">
+        <div ref={containerRef} className="relative w-full font-sans sm:w-80">
             {/* Search Input */}
             <div className="relative">
                 <input
@@ -83,7 +83,7 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
-                    className="w-80 h-12 pl-4 pr-16 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="h-12 w-full min-w-0 pl-4 pr-16 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 {query && (
                     <IconButton
@@ -111,7 +111,7 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                     aria-live="polite"
                     id="search-results" 
                     role="listbox"
-                    className="absolute top-full left-0 mt-1 w-80 bg-surface border border-border rounded-md shadow-md overflow-hidden max-h-96 overflow-y-auto"
+                    className="fixed top-16 left-2 right-2 z-[1260] bg-surface border border-border rounded-md shadow-md overflow-hidden max-h-[calc(100vh-5rem)] overflow-y-auto sm:absolute sm:top-full sm:left-0 sm:right-auto sm:mt-1 sm:w-full sm:max-h-96"
                 >
                     {isLoading ? (
                         <div className="flex items-center justify-center py-8">

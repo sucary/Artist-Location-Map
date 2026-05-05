@@ -31,7 +31,6 @@ const YearSelect = ({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
-
     // Sync input value with prop value
     useEffect(() => {
         setInputValue(value?.toString() || '');

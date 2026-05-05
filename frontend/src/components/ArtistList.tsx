@@ -160,11 +160,11 @@ const ArtistList = ({
     };
 
     return (
-        <div ref={listRef} className="absolute top-28 right-2 z-[1050] font-sans">
+        <div ref={listRef} className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0">
             {/* Artist card - positioned to the left of the list */}
             {selectedArtist && (
                 <div
-                    className="absolute right-full mr-2"
+                    className="absolute right-full mr-2 hidden sm:block"
                     style={{ top: cardPosition, transform: 'translateY(-50%)' }}
                 >
                     <ArtistProfile artist={selectedArtist} showActions={!!(onEditArtist || onDeleteArtist)} locationLanguage={locationLanguage} />
@@ -175,7 +175,7 @@ const ArtistList = ({
             <div 
                 role="region" 
                 aria-label="artist list"
-                className="w-80 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-8rem)]">
+                className="w-full bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)]">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h2 className="text-lg font-semibold text-text">{viewingFeatured ? 'Featured Artists' : 'Artists'} ({artists.length})</h2>
@@ -283,14 +283,17 @@ const ArtistList = ({
                         </div>
                     ) : (
                         <ul className="divide-y divide-border">
-                            {sortedArtists.map((artist) => (
+                            {sortedArtists.map((artist) => {
+                                const isActive = selectedArtist?.id === artist.id;
+
+                                return (
                                 <li key={artist.id} className="group">
                                     <div
                                         role="button"
                                         tabIndex={0}
                                         onClick={(e) => handleRowClick(artist, e)}
                                         onKeyDown={(e) => handleRowKeyDown(artist, e)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer ${selectedArtist?.id === artist.id ? 'bg-surface-muted' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-muted focus:bg-surface-muted focus:outline-none transition-colors cursor-pointer ${isActive ? 'bg-surface-muted' : ''}`}
                                     >
                                         {/* Avatar */}
                                         <img
@@ -302,19 +305,19 @@ const ArtistList = ({
                                         <div className="flex-1 min-w-0 text-left">
                                             <p
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="text-sm font-medium text-text select-text cursor-text whitespace-nowrap group-hover:truncate"
+                                                className="truncate whitespace-nowrap text-sm font-medium text-text select-text cursor-text"
                                             >
                                                 {artist.name}
                                             </p>
                                             <p
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="text-xs text-text-secondary select-text cursor-text whitespace-nowrap group-hover:truncate"
+                                                className="truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
                                             >
                                                 {formatLocationLocalized(artist.activeLocation, locationLanguage)}
                                             </p>
                                         </div>
                                         {/* Actions */}
-                                        <div className="hidden group-hover:flex group-focus-within:flex gap-1 shrink-0">
+                                        <div className={`${isActive ? 'flex' : 'hidden'} group-hover:flex group-focus-within:flex gap-1 shrink-0`}>
                                             {onNavigateToArtist && (
                                                 <IconButton
                                                     aria-label="Go to location"
@@ -351,7 +354,8 @@ const ArtistList = ({
                                         </div>
                                     </div>
                                 </li>
-                            ))}
+                                );
+                            })}
                         </ul>
                     )}
             </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Input, Button, Spinner, Alert, IconButton, CloseButton } from '../ui';
@@ -245,7 +246,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[1200] flex items-center justify-center">
             <div aria-hidden="true" className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
@@ -449,6 +450,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

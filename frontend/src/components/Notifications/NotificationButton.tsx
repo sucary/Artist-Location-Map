@@ -280,26 +280,24 @@ export function NotificationButton() {
 
     return (
         <div ref={containerRef} className="relative">
-            {!isOpen && (
-                <button
-                    aria-label={`Notifications (${notificationCount})`}
-                    aria-expanded={isOpen}
-                    onClick={() => setIsOpen(true)}
-                    className="w-13 h-13 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted active:bg-surface focus:bg-surface transition-colors text-text relative"
-                >
-                    <BellIcon />
-                    {notificationCount > 0 && (
-                        <span
-                            aria-hidden="true"
-                            className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
-                        >
-                            {notificationCount}
-                        </span>
-                    )}
-                </button>
-            )}
+            <button
+                aria-label={`Notifications (${notificationCount})`}
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((open) => !open)}
+                className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors text-text relative sm:h-13 sm:w-13"
+            >
+                <BellIcon />
+                {notificationCount > 0 && (
+                    <span
+                        aria-hidden="true"
+                        className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
+                    >
+                        {notificationCount}
+                    </span>
+                )}
+            </button>
             {isOpen && (
-                <div className="fixed top-2 right-[calc(12rem+1rem)] w-80 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden">
+                <div className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                         <h3 className="text-lg font-semibold text-text">Notifications</h3>
                         <div className="flex items-center gap-1">
