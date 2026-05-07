@@ -56,11 +56,11 @@ label[for].block {
 
 /* Artist marker focus */
 .custom-artist-marker.marker-focused,
-.custom-artist-marker:has(+ .leaflet-popup) {
+.custom-artist-marker:has(+ .maplibregl-popup) {
   z-index: 10000 !important;
 }
 .custom-artist-marker.marker-focused > div,
-.custom-artist-marker:has(+ .leaflet-popup) > div {
+.custom-artist-marker:has(+ .maplibregl-popup) > div {
   transform: scale(1.25);
   transition: transform 0.15s ease-out;
 }
@@ -90,20 +90,6 @@ label[for].block {
 
 [data-tutorial-target="social-links"].tutorial-indicator {
   z-index: 60;
-}
-
-/* Scale control styling */
-.leaflet-control-scale-line {
-  text-align: center;
-  border-bottom: none !important;
-  border-left: 2px solid #333 !important;
-  border-right: 2px solid #333 !important;
-  border-top: none !important;
-  background: rgba(255, 255, 255, 0.8) !important;
-  line-height: 1.2;
-  height: auto !important;
-  padding: 0 4px;
-  text-shadow: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

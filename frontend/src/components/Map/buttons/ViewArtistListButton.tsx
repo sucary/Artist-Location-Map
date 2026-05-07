@@ -10,7 +10,7 @@ const ViewArtistListButton = ({ onClick }: ViewArtistListButtonProps) => {
             <button
                 aria-label="View Artist List"
                 onClick={onClick}
-                className="bg-surface p-3 rounded-md shadow-md hover:bg-primary hover:text-white transition-colors text-text"
+                className="bg-surface p-3 rounded-md shadow-md hover:bg-primary hover:text-white active:bg-primary active:text-white transition-colors text-text"
                 title="View Artist List"
             >
                 <ListIcon className="w-6 h-6" />

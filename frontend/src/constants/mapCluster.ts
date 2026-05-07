@@ -3,7 +3,7 @@ export const CLUSTER_CONFIG = {
   maxClusterRadius: 100,
   gridSpacing: 32,
   minClusterSize: 28,
-  maxClusterSize: 400,
+  maxClusterSize: 260,
   maxOffsetRatio: 0.25,
   refreshDelay: 100,
 } as const;

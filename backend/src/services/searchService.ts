@@ -1,17 +1,10 @@
-import { TextSearch, type LocationLanguage } from './searchHelper';
-import type { LocalizedChain } from '../types/city';
+import { ArtistStore } from '../models/artistStore';
+import type { Artist } from '../types/artist';
 import pool from '../config/database';
 
-export interface LocationSearchResult {
-    type: 'location';
-    id?: string;
-    displayName: string;
-    locationType?: string;
-    center: { lat: number; lng: number };
-    isLocal?: boolean;
-    osmId: number;
-    osmType: string;
-    localizedChain?: LocalizedChain;
+export interface ArtistSearchResult {
+    type: 'artist';
+    artist: Artist;
 }
 
 export interface UserSearchResult {
@@ -21,11 +14,9 @@ export interface UserSearchResult {
 }
 
 export interface UnifiedSearchResponse {
-    locations: LocationSearchResult[];
+    artists: ArtistSearchResult[];
     users: UserSearchResult[];
     totalCount: number;
-    locationSource: 'local' | 'nominatim' | 'cache';
-    hasMoreLocations: boolean;
 }
 
 async function searchUsers(query: string, limit: number, excludeUsername?: string): Promise<UserSearchResult[]> {
@@ -58,45 +49,23 @@ export const SearchService = {
     search: async (
         query: string,
         limit: number = 10,
-        source: 'auto' | 'nominatim' = 'auto',
-        excludeUsername?: string,
-        lang?: LocationLanguage
+        artistUserId?: string,
+        excludeUsername?: string
     ): Promise<UnifiedSearchResponse> => {
-        // Execute all searches in parallel
-        const [locationResponse, users] = await Promise.all([
-            TextSearch.search(query, limit, source, lang),
+        const [artists, users] = await Promise.all([
+            artistUserId ? ArtistStore.searchForMap(query, artistUserId, limit) : Promise.resolve([]),
             searchUsers(query, limit, excludeUsername),
         ]);
 
-        const locationResults: LocationSearchResult[] = locationResponse.results
-            .slice(0, limit)
-            .map((loc) => {
-                const r = loc as Record<string, unknown>;
-                const center = r.center as { lat: number; lng: number } | undefined;
-
-                const chain = r.localizedChain as LocalizedChain | undefined;
-                return {
-                    type: 'location' as const,
-                    id: loc.id,
-                    displayName: (r.displayName as string) || (r.name as string) || 'Unknown',
-                    locationType: r.type as string | undefined,
-                    center: {
-                        lat: (r.lat as number) ?? center?.lat ?? 0,
-                        lng: (r.lng as number) ?? center?.lng ?? 0,
-                    },
-                    isLocal: loc.isLocal,
-                    osmId: loc.osmId,
-                    osmType: loc.osmType,
-                    ...(chain?.city ? { localizedChain: chain } : {}),
-                };
-            });
+        const artistResults: ArtistSearchResult[] = artists.map((artist) => ({
+            type: 'artist' as const,
+            artist,
+        }));
 
         return {
-            locations: locationResults,
+            artists: artistResults,
             users,
-            totalCount: locationResults.length + users.length,
-            locationSource: locationResponse.source,
-            hasMoreLocations: locationResponse.hasMore,
+            totalCount: artistResults.length + users.length,
         };
     },
 };

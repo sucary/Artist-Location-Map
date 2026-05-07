@@ -438,6 +438,47 @@ export const ArtistStore = {
         }
     },
 
+    searchForMap: async (query: string, userId: string, limit: number = 10): Promise<Artist[]> => {
+        try {
+            const searchTerm = `%${query}%`;
+            const result = await pool.query(`
+                SELECT ${ARTIST_SELECT_COLUMNS}
+                FROM artists a
+                LEFT JOIN locations ol ON a.original_city_id = ol.id
+                LEFT JOIN locations al ON a.active_city_id = al.id
+                WHERE a.user_id = $1
+                  AND (
+                    a.name ILIKE $2
+                    OR a.romanized_name ILIKE $2
+                    OR a.original_city ILIKE $2
+                    OR a.original_province ILIKE $2
+                    OR a.original_country ILIKE $2
+                    OR a.original_display_name ILIKE $2
+                    OR a.active_city ILIKE $2
+                    OR a.active_province ILIKE $2
+                    OR a.active_country ILIKE $2
+                    OR a.active_display_name ILIKE $2
+                    OR ol.localized_names::text ILIKE $2
+                    OR al.localized_names::text ILIKE $2
+                  )
+                ORDER BY
+                    CASE
+                        WHEN a.name ILIKE $2 OR a.romanized_name ILIKE $2 THEN 0
+                        WHEN a.active_city ILIKE $2 OR a.active_province ILIKE $2 THEN 1
+                        WHEN a.original_city ILIKE $2 OR a.original_province ILIKE $2 THEN 2
+                        ELSE 3
+                    END,
+                    a.name
+                LIMIT $3
+            `, [userId, searchTerm, limit]);
+
+            return result.rows.map(rowToArtist);
+        } catch (error) {
+            console.error('Error searching artists for map:', error);
+            throw error;
+        }
+    },
+
     /**
      * Get featured artists for anonymous users.
      * Returns up to 50 random artists from non-private users with avatars,

@@ -186,7 +186,7 @@ export const LocationSearch = ({
                         aria-label={t('artistForm.locationSearch.manualSelect')}
                         onClick={onManualPin}
                         type="button"
-                        className="mb-1 p-2 rounded text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                        className="mb-1 p-2 rounded text-text-muted hover:bg-primary hover:text-white transition-colors"
                         title={t('artistForm.locationSearch.manualSelect')}
                     >
                         <MapPinIcon className="w-5 h-5" />

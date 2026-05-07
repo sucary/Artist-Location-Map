@@ -26,7 +26,10 @@ export function LocationLanguageProvider({ children }: { children: ReactNode }) 
     // Sync with profile when it loads/changes
     useEffect(() => {
         if (profile?.locationLanguage) {
-            setLangState(profile.locationLanguage as LocationLanguage);
+            const frameId = window.requestAnimationFrame(() => {
+                setLangState(profile.locationLanguage as LocationLanguage);
+            });
+            return () => window.cancelAnimationFrame(frameId);
         }
     }, [profile?.locationLanguage]);
 
@@ -61,6 +64,7 @@ export function LocationLanguageProvider({ children }: { children: ReactNode }) 
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLocationLanguage() {
     const context = useContext(LocationLanguageContext);
     if (context === undefined) {

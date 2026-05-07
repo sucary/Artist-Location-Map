@@ -11,11 +11,11 @@ const AddArtistButton = ({ onClick }: AddArtistButtonProps) => {
                 data-tutorial-target="add-artist-button"
                 aria-label="Add New Artist"
                 onClick={onClick}
-                className="bg-surface p-3 rounded-md shadow-md hover:bg-primary hover:text-white transition-colors text-text"
+                className="bg-surface p-3 rounded-md shadow-md hover:bg-primary hover:text-white active:bg-primary active:text-white transition-colors text-text"
                 title="Add New Artist"
                 
             >
-                <PlusIcon className="w-6 h-6" />
+                <PlusIcon className="h-6 w-6" />
             </button>
         </div>
     );

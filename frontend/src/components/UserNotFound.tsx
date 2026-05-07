@@ -5,7 +5,7 @@ interface UserNotFoundProps {
     username: string;
 }
 
-export function UserNotFound({ username: _username }: UserNotFoundProps) {
+export function UserNotFound({ username }: UserNotFoundProps) {
     const navigate = useNavigate();
 
     const handleGoBack = () => {
@@ -20,7 +20,7 @@ export function UserNotFound({ username: _username }: UserNotFoundProps) {
         <div className="h-screen w-screen flex items-center justify-center bg-surface-secondary">
             <div className="max-w-sm px-6">
                 <h1 className="text-xl font-medium text-text mb-4">
-                    Can't find this user ;_;
+                    Can't find {username} ;_;
                 </h1>
                 <p className="text-sm text-text-muted mb-2">This could be because:</p>
                 <ul className="text-sm text-text-muted mb-6 list-disc list-inside space-y-1">

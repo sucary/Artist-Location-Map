@@ -147,6 +147,7 @@ export const getLocalizedName = (
     preference: LocationLanguage
 ): string => {
     if (!names) return '';
+    if (preference === 'native') return names.native || '';
     return names[preference] || names.en || names.native || '';
 };
 
@@ -162,9 +163,9 @@ export const formatLocationLocalized = (
     if (!chain) return formatLocation(location);
 
     const parts = [
-        getLocalizedName(chain.city, preference),
-        getLocalizedName(chain.province, preference),
-        getLocalizedName(chain.country, preference),
+        getLocalizedName(chain.city, preference) || (preference === 'native' ? location.city : ''),
+        getLocalizedName(chain.province, preference) || (preference === 'native' ? location.province : ''),
+        getLocalizedName(chain.country, preference) || (preference === 'native' ? location.country : ''),
     ].filter(Boolean);
 
     // Dedupe adjacent identical parts (e.g. city-state where province == country)

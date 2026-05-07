@@ -40,6 +40,7 @@ function getTargetBox(selector: string): TargetBox | null {
     const formPanel = element.closest<HTMLElement>('.rounded-lg.shadow-xl');
     const formRect = formPanel?.getBoundingClientRect();
 
+    // Keep the tutorial panel outside the form when targeting form controls.
     return {
         top: rect.top,
         left: rect.left,
@@ -74,6 +75,7 @@ function getPanelPosition(box: TargetBox | null, panelHeight: number) {
     }
 
     if (box.avoidRect) {
+        // Prefer side placement around modal panels.
         const gap = 16;
         const fitsLeftOfPanel = box.avoidRect.left >= panelWidth + gap + 12;
         const fitsRightOfPanel = window.innerWidth - box.avoidRect.right >= panelWidth + gap + 12;
@@ -140,7 +142,8 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
     }, [step.target]);
 
     useLayoutEffect(() => {
-        updateTargetBox();
+        const frameId = window.requestAnimationFrame(updateTargetBox);
+        return () => window.cancelAnimationFrame(frameId);
     }, [updateTargetBox]);
 
     useLayoutEffect(() => {
@@ -149,11 +152,14 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
 
         // Update panel height after body renders
         const updatePanelHeight = () => setPanelHeight(panel.getBoundingClientRect().height);
-        updatePanelHeight();
+        const frameId = window.requestAnimationFrame(updatePanelHeight);
 
         const resizeObserver = new ResizeObserver(updatePanelHeight);
         resizeObserver.observe(panel);
-        return () => resizeObserver.disconnect();
+        return () => {
+            window.cancelAnimationFrame(frameId);
+            resizeObserver.disconnect();
+        };
     }, [stepIndex, step.body, step.title]);
 
     useEffect(() => {

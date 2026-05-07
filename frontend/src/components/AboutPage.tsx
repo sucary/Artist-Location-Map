@@ -9,10 +9,16 @@ export function AboutPage() {
             license: 'ODbL',
         },
         {
-            name: 'Leaflet',
-            description: 'Interactive map library.',
-            url: 'https://leafletjs.com/',
-            license: 'BSD-2-Clause',
+            name: 'MapLibre GL JS',
+            description: 'Interactive vector map rendering.',
+            url: 'https://maplibre.org/',
+            license: 'BSD-3-Clause',
+        },
+        {
+            name: 'CARTO',
+            description: 'Base map styles and tiles.',
+            url: 'https://carto.com/',
+            license: null,
         },
     ];
 

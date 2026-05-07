@@ -1,15 +1,8 @@
-import type { LocalizedChain } from './artist';
+import type { Artist } from './artist';
 
-export interface LocationSearchResult {
-    type: 'location';
-    id?: string;
-    displayName: string;
-    locationType?: string;
-    center: { lat: number; lng: number };
-    isLocal?: boolean;
-    osmId: number;
-    osmType: string;
-    localizedChain?: LocalizedChain;
+export interface ArtistSearchResult {
+    type: 'artist';
+    artist: Artist;
 }
 
 export interface UserSearchResult {
@@ -18,12 +11,10 @@ export interface UserSearchResult {
     username: string;
 }
 
-export type SearchResult = LocationSearchResult | UserSearchResult;
+export type SearchResult = ArtistSearchResult | UserSearchResult;
 
 export interface MainSearchResponse {
-    locations: LocationSearchResult[];
+    artists: ArtistSearchResult[];
     users: UserSearchResult[];
     totalCount: number;
-    locationSource: 'local' | 'nominatim' | 'cache';
-    hasMoreLocations: boolean;
 }

@@ -18,6 +18,13 @@ export const LocationIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => 
     </svg>
 );
 
+export const NorthIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2 L15.5 10 L12 12 L8.5 10 Z"  />
+    <path d="M12 22 L8.5 14 L12 12 L15.5 14 Z" />
+  </svg>
+);
+
 export const ExpandIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
         <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -28,5 +35,30 @@ export const ExpandIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
 export const CollapseIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <circle cx="12" cy="12" r="5" />
+    </svg>
+);
+
+export const DoubleChevronHandleIcon: React.FC<IconProps> = ({ className = "w-12 h-16" }) => (
+    <svg
+        viewBox="0 0 64 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        aria-hidden="true"
+    >
+        <path
+            d="M30 14 12 40l18 26"
+            stroke="currentColor"
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M52 14 34 40l18 26"
+            stroke="currentColor"
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
 );

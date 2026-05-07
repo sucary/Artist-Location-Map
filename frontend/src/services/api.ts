@@ -376,18 +376,17 @@ export const deleteArtist = async (id: string): Promise<void> => {
     }
 };
 
-// Main search across artists and locations
+// Main search across current-map artists and global users
 export const mainSearch = async (
     query: string,
     limit: number = 10,
-    source: 'auto' | 'nominatim' = 'auto',
     excludeUser?: string,
     signal?: AbortSignal,
-    lang?: string
+    mapUsername?: string
 ): Promise<MainSearchResponse> => {
     try {
         const response = await api.get<MainSearchResponse>('/search', {
-            params: { q: query, limit, source, excludeUser, ...(lang && lang !== 'native' ? { lang } : {}) },
+            params: { q: query, limit, excludeUser, mapUsername },
             signal
         });
         return response.data;

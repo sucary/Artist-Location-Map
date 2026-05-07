@@ -2,14 +2,15 @@ import { useRef, useEffect } from 'react';
 import { useMainSearch } from './useMainSearch';
 import { SearchResultRow } from './SearchResultRow';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
-import { IconButton, Spinner, Button } from '../ui';
-import type { LocationSearchResult } from '../../types/search';
+import { IconButton, Spinner } from '../ui';
+import type { Artist } from '../../types/artist';
 
 interface MainSearchProps {
-    onFocusLocation?: (result: LocationSearchResult) => void;
+    mapUsername?: string;
+    onSelectArtist?: (artist: Artist) => void;
 }
 
-export function MainSearch({ onFocusLocation }: MainSearchProps) {
+export function MainSearch({ mapUsername, onSelectArtist }: MainSearchProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -18,17 +19,14 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
         setQuery,
         results,
         isLoading,
-        isLoadingMore,
-        searchMoreQueueSize,
-        hasMoreLocations,
         isOpen,
         setIsOpen,
         handleClear,
-        handleSelectLocation,
+        handleSelectArtist,
         handleSelectUser,
-        handleSearchMore,
     } = useMainSearch({
-        onAutoFocusLocation: onFocusLocation,
+        mapUsername,
+        onSelectArtist,
     });
 
     // Close on click outside
@@ -70,7 +68,7 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                 <input
                     ref={inputRef}
                     role="combobox"
-                    aria-label="Search users and locations"
+                    aria-label="Search artists and users"
                     aria-expanded={showDropdown}
                     aria-controls="search-results"
                     aria-autocomplete="list"
@@ -79,18 +77,18 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="Search users, locations..."
+                    placeholder="Search artists, users..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
-                    className="h-12 w-full min-w-0 pl-4 pr-16 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="h-12 w-full min-w-0 pl-4 pr-20 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 {query && (
                     <IconButton
                         aria-label="Clear search"
                         onClick={handleClear}
                         size="sm"
-                        className="absolute right-9 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
+                        className="absolute right-12 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
                     >
                         <CloseIcon className="w-4 h-4" />
                     </IconButton>
@@ -99,9 +97,9 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                     aria-label="Search!"
                     type="button"
                     onClick={() => inputRef.current?.focus()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                    className="absolute right-2 top-1/2 flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-md text-text-secondary hover:bg-primary hover:text-white transition-colors"
                 >
-                    <SearchIcon className="w-4 h-4" />
+                    <SearchIcon className="w-5 h-5" />
                 </button>
             </div>
 
@@ -123,6 +121,22 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                         </div>
                     ) : (
                         <>
+                            {/* Artists */}
+                            {results.artists.length > 0 && (
+                                <div>
+                                    <div role="group" aria-label="Artists" className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
+                                        Artists
+                                    </div>
+                                    {results.artists.map((artistResult) => (
+                                        <SearchResultRow
+                                            key={artistResult.artist.id}
+                                            result={artistResult}
+                                            onSelect={() => handleSelectArtist(artistResult)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
                             {/* Users */}
                             {results.users.length > 0 && (
                                 <div>
@@ -137,44 +151,6 @@ export function MainSearch({ onFocusLocation }: MainSearchProps) {
                                         />
                                     ))}
                                 </div>
-                            )}
-
-                            {/* Locations */}
-                            {results.locations.length > 0 && (
-                                <div>
-                                    <div role="group" aria-label="Locations" className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
-                                        Locations
-                                    </div>
-                                    {results.locations.map((location) => (
-                                        <SearchResultRow
-                                            key={`${location.osmId}:${location.osmType}`}
-                                            result={location}
-                                            onSelect={() => handleSelectLocation(location)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Load more button */}
-                            {hasMoreLocations && (
-                                <Button
-                                    onClick={handleSearchMore}
-                                    disabled={isLoadingMore}
-                                    variant="ghost"
-                                    className="w-full border-t border-border rounded-none flex items-center justify-center gap-2"
-                                >
-                                    {isLoadingMore && (
-                                        <div className="relative inline-flex items-center justify-center">
-                                            <Spinner size="sm" />
-                                            {searchMoreQueueSize > 0 && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-text-muted">{searchMoreQueueSize}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    <span>{isLoadingMore ? 'Searching...' : 'Search for more locations'}</span>
-                                </Button>
                             )}
                         </>
                     )}

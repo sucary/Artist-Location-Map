@@ -1,38 +1,36 @@
-import type { LocationSearchResult, UserSearchResult, SearchResult } from '../../types/search';
+import type { ArtistSearchResult, UserSearchResult, SearchResult } from '../../types/search';
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { UserIcon } from '../icons/GeneralIcons';
-import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
+import { getAvatarUrl } from '../../utils/cloudinaryUrl';
 
 interface SearchResultRowProps {
     result: SearchResult;
     onSelect: () => void;
 }
 
-function LocationRow({ result, onSelect }: { result: LocationSearchResult; onSelect: () => void }) {
-    const { profile } = useAuth();
+const getPlaceholderUrl = (name: string) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=e5e7eb&color=9ca3af`;
+
+function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect: () => void }) {
     const { locationLanguage } = useLocationLanguage();
-    const displayText = result.localizedChain
-        ? formatLocationLocalized({ localizedChain: result.localizedChain }, locationLanguage)
-        : result.displayName;
+    const artist = result.artist;
     return (
-        <button            
+        <button
             role="option"
             onClick={onSelect}
             className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
         >
+            <img
+                src={getAvatarUrl(artist.sourceImage, artist.avatarCrop) || getPlaceholderUrl(artist.name)}
+                alt=""
+                className="w-9 h-9 rounded-full object-cover border border-border"
+            />
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text truncate">{displayText}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                    {result.locationType && (
-                        <span className="text-xs text-text-secondary capitalize">{result.locationType}</span>
-                    )}
-                    {profile?.isAdmin && result.isLocal && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-secondary/10 text-secondary ml-auto">
-                            DB
-                        </span>
-                    )}
-                </div>
+                <p className="text-sm font-medium text-text truncate">{artist.name}</p>
+                <p className="text-xs text-text-secondary truncate">
+                    {formatLocationLocalized(artist.activeLocation, locationLanguage)}
+                </p>
             </div>
         </button>
     );
@@ -58,8 +56,8 @@ function UserRow({ result, onSelect }: { result: UserSearchResult; onSelect: () 
 
 export function SearchResultRow({ result, onSelect }: SearchResultRowProps) {
     switch (result.type) {
-        case 'location':
-            return <LocationRow result={result} onSelect={onSelect} />;
+        case 'artist':
+            return <ArtistRow result={result} onSelect={onSelect} />;
         case 'user':
             return <UserRow result={result} onSelect={onSelect} />;
     }

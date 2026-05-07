@@ -53,10 +53,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const dialogRef = useDialogAccessibility(onClose);
 
     useEffect(() => {
-        void fetchAdminData();
-    }, []);
-
-    useEffect(() => {
         // Search recipients only after the admin chooses a specific-user audience.
         if (notificationAudience !== 'user' || selectedRecipient || recipientQuery.trim().length < 2) {
             setRecipientResults([]);
@@ -140,6 +136,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        void fetchAdminData();
+        // Admin data should load once when the dashboard opens.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleApprove = async (userId: string) => {
         try {

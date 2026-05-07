@@ -284,7 +284,7 @@ export function NotificationButton() {
                 aria-label={`Notifications (${notificationCount})`}
                 aria-expanded={isOpen}
                 onClick={() => setIsOpen((open) => !open)}
-                className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors text-text relative sm:h-13 sm:w-13"
+                className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors text-text relative sm:h-13 sm:w-13"
             >
                 <BellIcon />
                 {notificationCount > 0 && (

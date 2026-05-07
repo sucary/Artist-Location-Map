@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [queryClient]);
 
     const signIn = async (email: string, password: string, rememberMe = true) => {
         // Set storage mode BEFORE login so custom storage adapter uses the right storage
@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext);
     if (context === undefined) {

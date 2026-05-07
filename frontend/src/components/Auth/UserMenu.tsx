@@ -41,7 +41,7 @@ export function UserMenu({ onOpenAdminDashboard }: UserMenuProps) {
                 aria-haspopup="true"
                 aria-label="Account menu"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex h-12 w-12 items-center justify-center gap-2 bg-surface shadow-md hover:bg-surface-muted focus:bg-surface-muted active:bg-surface-muted transition-colors sm:h-auto sm:w-48 sm:justify-between sm:px-4 sm:py-2 ${isOpen ? 'rounded-lg sm:rounded-t-lg sm:rounded-b-none' : 'rounded-lg'}`}
+                className={`flex h-12 w-12 items-center justify-center gap-2 bg-surface shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors sm:h-auto sm:w-48 sm:justify-between sm:px-4 sm:py-2 ${isOpen ? 'rounded-lg sm:rounded-t-lg sm:rounded-b-none' : 'rounded-lg'}`}
             >
                 <UserIcon className="h-6 w-6 text-text-secondary sm:hidden" />
                 <div className="hidden flex-col items-start min-w-0 flex-1 gap-0.5 sm:flex">

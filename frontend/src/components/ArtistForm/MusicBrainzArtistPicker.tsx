@@ -83,7 +83,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         setHasOnlineSearched(false);
         setOnlineError(null);
         setResultMode(isDeepSearch ? 'online' : 'catalog');
-    }, [normalizedQuery]);
+    }, [isDeepSearch, normalizedQuery]);
 
     useEffect(() => {
         if (suppressNextCatalogSearchRef.current) {
