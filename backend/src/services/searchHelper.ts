@@ -1,6 +1,7 @@
 import { CityService } from './cityService';
 import { SearchCacheService } from './searchCacheService';
 import { LocationLocalizationService } from './locationLocalizationService';
+import pool from '../config/database';
 
 export type LocationLanguage = 'en' | 'zhHans' | 'zhHant' | 'ja' | 'native';
 export const VALID_LANGS = new Set<LocationLanguage>(['en', 'zhHans', 'zhHant', 'ja', 'native']);
@@ -49,6 +50,42 @@ export function deduplicateResults<T extends { osmId: number; osmType: string }>
     return unique;
 }
 
+function normalizeSearchQuery(query: string): string {
+    return query.trim().toLowerCase().replace(/\s+/g, '');
+}
+
+async function getSuppressedResultKeys(query: string): Promise<Set<string> | null> {
+    const normalizedQuery = normalizeSearchQuery(query);
+    if (!normalizedQuery) return null;
+
+    const result = await pool.query<{
+        suppressed_osm_id: string;
+        suppressed_osm_type: string;
+    }>(`
+        SELECT suppressed_osm_id, suppressed_osm_type
+        FROM location_search_suppressions
+        WHERE normalized_query = $1
+    `, [normalizedQuery]);
+
+    if (result.rows.length === 0) return null;
+
+    return new Set(result.rows.map((row) => (
+        `${String(row.suppressed_osm_id)}:${row.suppressed_osm_type}`
+    )));
+}
+
+async function suppressSearchResults<T extends { osmId: number; osmType: string }>(
+    query: string,
+    results: T[]
+): Promise<T[]> {
+    const suppressedKeys = await getSuppressedResultKeys(query);
+    if (!suppressedKeys) return results;
+
+    return results.filter((result) => (
+        !suppressedKeys.has(`${String(result.osmId)}:${result.osmType}`)
+    ));
+}
+
 
 /**
  * Text search helpers
@@ -65,7 +102,7 @@ export const TextSearch = {
             ...localResults.map(r => ({ ...r, isLocal: true }))
         ];
 
-        return deduplicateResults(combined);
+        return suppressSearchResults(query, deduplicateResults(combined));
     },
 
     async getNominatimResults(query: string, limit: number, lang?: LocationLanguage): Promise<{ results: SearchResult[]; fromCache: boolean }> {
@@ -109,6 +146,7 @@ export const TextSearch = {
                 ...(existing?.localizedNames?.city ? { localizedChain: existing.localizedNames } : {}),
             };
         });
+        const visibleResults = await suppressSearchResults(query, withFlags);
 
         // Fire-and-forget: localize DB entries that haven't been localized yet
         for (const [, existing] of existingMap) {
@@ -117,7 +155,7 @@ export const TextSearch = {
             }
         }
 
-        return { results: withFlags, fromCache };
+        return { results: visibleResults, fromCache };
     },
 
     async search(query: string, limit: number, source: 'auto' | 'local' | 'nominatim', lang?: LocationLanguage): Promise<SearchResponse> {

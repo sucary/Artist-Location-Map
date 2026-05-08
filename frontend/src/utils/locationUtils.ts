@@ -67,6 +67,7 @@ export interface ExtractedLocation {
     displayName: string;
     osmId?: number;
     osmType?: string;
+    type?: string;
     isManualSelection?: boolean;
 }
 
@@ -113,6 +114,7 @@ export const extractLocationData = (result: SearchResult): ExtractedLocation => 
         displayName: result.displayName,
         osmId: result.osmId,
         osmType: result.osmType,
+        type: result.type,
         isManualSelection: result.isManualSelection
     };
 };

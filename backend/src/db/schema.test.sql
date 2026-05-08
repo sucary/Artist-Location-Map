@@ -99,6 +99,24 @@ CREATE TABLE IF NOT EXISTS priority_locations (
 );
 
 -- ============================================
+-- Location Search Suppressions
+-- ============================================
+CREATE TABLE IF NOT EXISTS location_search_suppressions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    normalized_query VARCHAR(100) NOT NULL,
+    suppressed_osm_id BIGINT NOT NULL,
+    suppressed_osm_type VARCHAR(20) NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_location_search_suppression UNIQUE (
+        normalized_query,
+        suppressed_osm_id,
+        suppressed_osm_type
+    )
+);
+
+-- ============================================
 -- Water Polygons
 -- ============================================
 CREATE TABLE IF NOT EXISTS water_polygons (
@@ -163,7 +181,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT UNIQUE NOT NULL,
     username TEXT UNIQUE,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-    is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+    is_approved BOOLEAN NOT NULL DEFAULT TRUE,
     is_private BOOLEAN NOT NULL DEFAULT FALSE,
     location_language TEXT NOT NULL DEFAULT 'native',
     tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -378,6 +396,13 @@ CREATE TRIGGER update_artist_media_assets_updated_at
 -- Priority locations for testing (minimal set with valid Nominatim data)
 INSERT INTO priority_locations (search_query, osm_id, osm_type, name, province, country, display_name, lat, lng, rank) VALUES
     ('test', 1543125, 'relation', 'Tokyo', 'Tokyo', 'Japan', 'Tokyo, Japan', 35.6764, 139.6500, 0)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO location_search_suppressions (normalized_query, suppressed_osm_id, suppressed_osm_type, reason) VALUES
+    ('hongkong', 913110, 'relation', 'Prefer Hong Kong city relation 20044132 over duplicate SAR region result.'),
+    ('hongkong', 10264792, 'relation', 'Prefer Hong Kong city relation 20044132 over Hong Kong Island for broad Hong Kong searches.'),
+    ('香港', 913110, 'relation', 'Prefer Hong Kong city relation 20044132 over duplicate SAR region result.'),
+    ('香港', 10264792, 'relation', 'Prefer Hong Kong city relation 20044132 over Hong Kong Island for broad Hong Kong searches.')
 ON CONFLICT DO NOTHING;
 
 -- Test user for testing

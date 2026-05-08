@@ -9,8 +9,17 @@ export const TutorialText: TutorialStep[] = [
     },
     {
         target: '[data-tutorial-target="artist-search"]',
-        title: 'Search the artist to add',
-        body: 'Enter the artist name, then press Enter or the search button. If the artist is not found, switch on Deep search or check for a typo.',
+        title: 'Search the artist',
+        body: (
+            <>
+                <p>
+                    Enter the artist name, then press Enter or the search button.
+                </p>
+                <p>
+                    If the artist is not found, switch on <b>Deep search</b> and retry.
+                </p>
+            </>
+        ),
         actionLabel: 'Select an artist result',
         waitForTarget: true,
     },
@@ -59,9 +68,18 @@ export const TutorialText: TutorialStep[] = [
         nextStepIndex: 6,
     },
     {
+        target: '[data-tutorial-target="artist-image"]',
+        title: 'Upload an artist image',
+        body: 'Add an image for the artist. The image will be applied to both avatar and banner.',
+        actionLabel: 'Upload and crop an image',
+        waitForTarget: true,
+        nextStepIndex: 7,
+        hideIndicator: true,
+    },
+    {
         target: '[data-tutorial-target="save-artist"]',
         title: 'Save the artist',
-        body: 'When the important fields are filled in, press Save. This adds the artist to your map.',
+        body: 'Once everything is set, save your artist to the map!',
         actionLabel: 'Press Save when ready',
         waitForTarget: true,
     },
@@ -75,4 +93,5 @@ export type TutorialAction =
     | 'inactiveEnabled'
     | 'inactiveDisabled'
     | 'inactiveYearSet'
+    | 'artistImageSet'
     | 'socialOpened';

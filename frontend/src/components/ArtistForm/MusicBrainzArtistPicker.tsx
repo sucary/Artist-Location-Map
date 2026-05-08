@@ -7,7 +7,7 @@ import {
     searchMusicBrainzCatalogPage
 } from '../../services/api';
 import type { MusicBrainzCatalogArtist } from '../../services/api';
-import { Button, Spinner } from '../ui';
+import { Alert, Button, FieldStatusIcon, Spinner } from '../ui';
 import { useAuth } from '../../context/AuthContext';
 import { SearchIcon } from '../icons/GeneralIcons';
 
@@ -52,6 +52,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     const [isSelectingArtist, setIsSelectingArtist] = useState(false);
     const [hasOnlineSearched, setHasOnlineSearched] = useState(false);
     const [onlineError, setOnlineError] = useState<string | null>(null);
+    const [hasBlurredName, setHasBlurredName] = useState(false);
     const [resultMode, setResultMode] = useState<'catalog' | 'online'>('catalog');
     const [isDeepSearch, setIsDeepSearch] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -239,6 +240,8 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
 
     const showDropdown = isOpen && enabled;
     const isSearching = isCatalogDebouncing || isCatalogSearching || isOnlineSearching;
+    const showUnlinkedWarning = hasBlurredName && normalizedQuery.length > 0 && !selectedMbid;
+    const fieldStatus = selectedMbid && normalizedQuery.length > 0 ? 'success' : showUnlinkedWarning ? 'warning' : undefined;
 
     const handleSearchCatalog = async () => {
         if (!enabled || isDeepSearch || isCatalogSearching) return;
@@ -346,10 +349,12 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         setIsOpen(nextValue.trim().length >= 2 && !isDeepSearch);
                     }}
                     onFocus={() => {
+                        setHasBlurredName(false);
                         if (enabled && (!isDeepSearch || onlineResults.length > 0 || hasOnlineSearched)) {
                             setIsOpen(true);
                         }
                     }}
+                    onBlur={() => setHasBlurredName(true)}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter') {
                             event.preventDefault();
@@ -361,10 +366,14 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         }
                     }}
                     placeholder="Search artist"
-                    className="w-full px-3 py-2 pr-14 text-sm border border-border-strong rounded-md bg-surface text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                    className="w-full px-3 py-2 pr-20 text-sm border border-border-strong rounded-md bg-surface text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                     {isSearching && <Spinner size="sm" className="text-text-muted" />}
+                    <FieldStatusIcon
+                        status={fieldStatus}
+                        label={selectedMbid ? 'MusicBrainz artist selected' : 'Artist is not linked to MusicBrainz'}
+                    />
                     <button
                         aria-label={isDeepSearch ? 'Search MusicBrainz' : 'Search saved artists'}
                         onClick={() => {
@@ -399,7 +408,17 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 </div>
             )}
 
-            {onlineError && <div className="mt-2 text-xs text-error">{onlineError}</div>}
+            {onlineError && (
+                <Alert variant="error" header="MusicBrainz search failed" className="mt-2">
+                    {onlineError}
+                </Alert>
+            )}
+
+            {showUnlinkedWarning && (
+                <Alert variant="warning" className="mt-2" hideIcon>
+                    Using an existing artist entry from search is recommended
+                </Alert>
+            )}
 
             {showDropdown && createPortal(
                 <div
@@ -433,7 +452,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                 ))}
                             </>
                         ) : hasCatalogSearched ? (
-                            <div className="px-3 py-2 text-sm text-text-secondary">No artist found</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">No artist found. Try <b>deep search</b></div>
                         ) : (
                             null
                         ))}
@@ -483,7 +502,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         )}
 
                         {resultMode === 'online' && isOnlineSearching && onlineResults.length === 0 && (
-                            <div className="px-3 py-2 text-sm text-text-secondary">Searching MusicBrainz...</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">Searching artists...</div>
                         )}
 
                         {resultMode === 'online' && hasOnlineSearched && onlineResults.length === 0 && !isOnlineSearching && (

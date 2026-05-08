@@ -22,6 +22,9 @@ export interface MapViewProps {
     onFocusedLocationHandled?: () => void;
     focusedCityId?: string | null;
     isAuthenticated?: boolean;
+    suppressArtistPopup?: boolean;
+    onArtistPopupOpenChange?: (open: boolean) => void;
+    interactionsDisabled?: boolean;
 }
 
 export type ArtistPointProperties = {
@@ -60,4 +63,9 @@ export type ExpandedClusterState = {
     hiddenClusterKey: string;
     hiddenClusterLeafKey: string;
     clusterCenter: [number, number];
+};
+
+export type ArtistPopupLifecycleState = {
+    open: boolean;
+    closedAt: number;
 };

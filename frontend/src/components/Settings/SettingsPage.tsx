@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { supabase } from '../../lib/supabase';
 import { API_URL } from '../../services/api';
-import { PageLayout, PageSection } from '../ui';
+import { Alert, PageLayout, PageSection } from '../ui';
 import type { LocationLanguage } from '../../types/artist';
 
 export function SettingsPage() {
@@ -171,7 +171,11 @@ export function SettingsPage() {
                         <p className="text-sm text-text-secondary">
                             Hide your account from other users.
                         </p>
-                        {privacyError && <p className="text-xs text-error mt-1">{privacyError}</p>}
+                        {privacyError && (
+                            <Alert variant="error" header="Could not update privacy" className="mt-2">
+                                {privacyError}
+                            </Alert>
+                        )}
                     </div>
                     <button
                         aria-label={isPrivate ? "Make account public" : "Make account private"}
@@ -249,7 +253,13 @@ export function SettingsPage() {
                             }}
                             className={inputClass}
                         />
-                        {usernameError && <p id="username-error" className="text-xs text-error mt-1">{usernameError}</p>}
+                        {usernameError && (
+                            <div id="username-error">
+                                <Alert variant="error" header="Could not update username" className="mt-2">
+                                    {usernameError}
+                                </Alert>
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end">
                         <button
@@ -265,7 +275,7 @@ export function SettingsPage() {
 
             {hasPasswordIdentity && (
                 <PageSection title="Change Password">
-                    <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                    <form onSubmit={handlePasswordSubmit} className="space-y-3" noValidate>
                         <div>
                             <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary mb-1">Current password</label>
                             <div className="relative">
@@ -314,8 +324,16 @@ export function SettingsPage() {
                                 minLength={6}
                             />
                         </div>
-                        {passwordError && <p role="alert" className="text-xs text-error">{passwordError}</p>}
-                        {passwordSuccess && <p role="status" className="text-xs text-green-600">Password updated successfully</p>}
+                        {passwordError && (
+                            <Alert variant="error" header="Could not update password">
+                                {passwordError}
+                            </Alert>
+                        )}
+                        {passwordSuccess && (
+                            <Alert variant="success" header="Password updated">
+                                Password updated successfully.
+                            </Alert>
+                        )}
                         <div className="flex justify-end">
                             <button
                                 type="submit"

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ArrowDownIcon, MusicNoteIcon, SleepIcon } from '../icons/FormIcons';
 import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from '../icons/SocialIcons';
@@ -11,6 +11,7 @@ import { MusicBrainzArtistPicker } from './MusicBrainzArtistPicker';
 import { useArtistForm } from '../../hooks/useArtistForm';
 import { getAvatarUrl, getProfileUrl } from '../../utils/cloudinaryUrl';
 import { deleteUploadedImage, getArtistMediaAssetStatus, type ArtistMediaAssetStatus } from '../../utils/cloudinary';
+import { hasValidCoordinates } from '../../utils/locationUtils';
 import { Alert, IconButton, Button } from '../ui';
 import type { Artist } from '../../types/artist';
 import type { MusicBrainzCatalogArtist } from '../../services/api';
@@ -25,7 +26,8 @@ interface ArtistFormProps {
     onRequestSelection?: (targetField: 'originalLocation' | 'activeLocation') => void;
     pendingCoordinates?: { lat: number; lng: number } | null;
     onConsumePendingCoordinates?: () => void;
-    onTutorialAction?: (action: 'artistSelected' | 'originalLocationSet' | 'activeLocationSet' | 'debutYearSet' | 'inactiveEnabled' | 'inactiveDisabled' | 'inactiveYearSet' | 'socialOpened') => void;
+    onTutorialAction?: (action: 'artistSelected' | 'originalLocationSet' | 'activeLocationSet' | 'debutYearSet' | 'inactiveEnabled' | 'inactiveDisabled' | 'inactiveYearSet' | 'artistImageSet' | 'socialOpened') => void;
+    onTutorialImageStateChange?: (hasImage: boolean) => void;
     onTutorialComplete?: () => void;
 }
 
@@ -45,11 +47,13 @@ const ArtistForm = ({
     pendingCoordinates,
     onConsumePendingCoordinates,
     onTutorialAction,
+    onTutorialImageStateChange,
     onTutorialComplete
 }: ArtistFormProps) => {
     const [isSocialExpanded, setIsSocialExpanded] = useState(false);
     const [showInactive, setShowInactive] = useState(() => !!initialData?.inactiveYear);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const formScrollRef = useRef<HTMLDivElement>(null);
     const sessionUploadedUrlsRef = useRef<Set<string>>(new Set());
     const [cropperInitialMode, setCropperInitialMode] = useState<'avatar' | 'profile'>('avatar');
 
@@ -101,6 +105,30 @@ const ArtistForm = ({
         onCancel
     });
 
+    useEffect(() => {
+        onTutorialImageStateChange?.(Boolean(formData.sourceImage));
+    }, [formData.sourceImage, onTutorialImageStateChange]);
+
+    useEffect(() => {
+        const scrollElement = formScrollRef.current;
+        if (!scrollElement) return;
+
+        const syncContentWidth = () => {
+            scrollElement.style.setProperty('--artist-form-scroll-content-width', `${scrollElement.offsetWidth}px`);
+        };
+
+        syncContentWidth();
+
+        const resizeObserver = new ResizeObserver(syncContentWidth);
+        resizeObserver.observe(scrollElement);
+        window.addEventListener('resize', syncContentWidth);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', syncContentWidth);
+        };
+    }, []);
+
     const handleManualPin = (locationType: 'originalLocation' | 'activeLocation') => {
         startManualPinSelection(locationType);
         onRequestSelection?.(locationType);
@@ -127,6 +155,15 @@ const ArtistForm = ({
             return parts.join(', ');
         }
         return '';
+    };
+
+    const isCountryLevelLocation = (location?: { type?: string }) => (
+        location?.type?.toLowerCase() === 'country'
+    );
+
+    const getLocationFieldStatus = (location?: { coordinates?: { lat: number; lng: number }; type?: string }) => {
+        if (!hasValidCoordinates(location)) return undefined;
+        return isCountryLevelLocation(location) ? 'warning' : 'success';
     };
 
     const openImageEntry = (mode: 'avatar' | 'profile') => {
@@ -286,6 +323,7 @@ const ArtistForm = ({
 
     const handleCropSave = (result: CropResult) => {
         updateCrops(result.avatarCrop, result.profileCrop);
+        onTutorialAction?.('artistImageSet');
         closeCropper();
     };
 
@@ -470,23 +508,27 @@ const ArtistForm = ({
         )}
 
         <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0 sm:max-h-[calc(100vh-8rem)]">
-            <div className="overflow-y-auto flex-1">
-                {/* Header with background and avatar */}
-                <ArtistFormHeader
-                    name={formData.name || ''}
-                    avatarUrl={avatarUrl}
-                    profileUrl={profileUrl}
-                    isUploading={isUploadingImage}
-                    onAvatarClick={() => void requestImageEntry('avatar')}
-                    onProfileClick={() => void requestImageEntry('profile')}
-                    onNameChange={updateName}
-                />
+            <div ref={formScrollRef} className="artist-form-scroll flex-1 overflow-y-auto">
+                <div className="artist-form-scroll-content">
+                    {/* Header with background and avatar */}
+                    <ArtistFormHeader
+                        name={formData.name || ''}
+                        avatarUrl={avatarUrl}
+                        profileUrl={profileUrl}
+                        isUploading={isUploadingImage}
+                        onAvatarClick={() => void requestImageEntry('avatar')}
+                        onProfileClick={() => void requestImageEntry('profile')}
+                        onNameChange={updateName}
+                    />
 
-                {/* Form content */}
-                <div className="mt-10 px-4 pb-4 flex flex-col gap-4">
+                    {/* Form content */}
+                    <div className="mt-10 px-4 pb-4 flex flex-col gap-4">
                     {/* Upload error */}
                     {uploadError && (
-                        <Alert variant="error">{uploadError}</Alert>
+                        <Alert variant="error" header="Image upload failed">
+                            <span className="block">{uploadError}</span>
+                            <span className="mt-1 block text-xs">{t('artistForm.errors.imageRequirements')}</span>
+                        </Alert>
                     )}
 
                     <MusicBrainzArtistPicker
@@ -496,7 +538,7 @@ const ArtistForm = ({
                         onSelect={handleArtistSelect}
                     />
                     {musicBrainzLocationStatus && (
-                        <div className="text-xs text-text-secondary -mt-2">
+                        <div className="-mt-2 px-1 text-xs text-text-secondary">
                             {musicBrainzLocationStatus}
                         </div>
                     )}
@@ -514,6 +556,8 @@ const ArtistForm = ({
                             onCoordinatesConsumed={handleCoordinatesConsumed}
                             pendingSearch={musicBrainzLocationSearches.originalLocation}
                             syncKey={locationInputSyncKeys.originalLocation}
+                            status={getLocationFieldStatus(formData.originalLocation)}
+                            statusMessage="A more detailed location is recommended"
                         />
 
                         <div className="flex justify-center -my-2 relative z-50">
@@ -541,20 +585,21 @@ const ArtistForm = ({
                             onCoordinatesConsumed={handleCoordinatesConsumed}
                             pendingSearch={musicBrainzLocationSearches.activeLocation}
                             syncKey={locationInputSyncKeys.activeLocation}
+                            status={getLocationFieldStatus(formData.activeLocation)}
+                            statusMessage="A more detailed location is recommended"
                         />
                     </div>
 
                     <div data-tutorial-target="debut-year" className="rounded-md p-1">
-                        <span className="block text-sm font-bold text-text mb-1">{t('artistForm.fields.careerYears')}</span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-end gap-2">
                             <div className="flex-1">
-                                <YearSelect value={formData.debutYear} onChange={handleDebutYearChange} placeholder={t('artistForm.fields.debut')} />
+                                <YearSelect label={t('artistForm.fields.debutYear')} value={formData.debutYear} onChange={handleDebutYearChange} placeholder={t('artistForm.fields.debut')} />
                             </div>
                             <div className="flex-1">
                                 {showInactive ? (
-                                    <YearSelect tutorialTarget="inactive-year" value={formData.inactiveYear} onChange={handleInactiveYearChange} placeholder={t('artistForm.fields.inactive')} />
+                                    <YearSelect label={t('artistForm.fields.inactiveYear')} tutorialTarget="inactive-year" value={formData.inactiveYear} onChange={handleInactiveYearChange} placeholder={t('artistForm.fields.inactive')} />
                                 ) : (
-                                    <div className="h-full flex items-center justify-center">
+                                    <div className="flex min-h-10 items-center justify-center rounded-md p-1">
                                         <span className="px-3 py-1 text-sm font-medium text-text-secondary bg-surface-muted rounded-full">{t('artistForm.fields.present')}</span>
                                     </div>
                                 )}
@@ -596,13 +641,14 @@ const ArtistForm = ({
                             </div>
                         )}
                     </div>
+                    </div>
                 </div>
             </div>
 
             {/* Footer with error and buttons */}
             <div className="p-4 border-border bg-surface">
                 {error && (
-                    <Alert variant="error" className="mb-3">{error}</Alert>
+                    <Alert variant="error" header="Could not save artist" className="mb-3">{error}</Alert>
                 )}
                 <div className="flex gap-3">
                     <Button

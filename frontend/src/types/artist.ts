@@ -39,6 +39,7 @@ export interface Location {
     displayName?: string;
     osmId?: number;
     osmType?: string;
+    type?: string;
     isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
 }

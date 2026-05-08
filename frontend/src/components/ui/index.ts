@@ -16,7 +16,13 @@ export type { IconButtonProps } from './IconButton';
 export { FormGroup } from './FormGroup';
 export type { FormGroupProps } from './FormGroup';
 
+export { FieldStatusIcon } from './FieldStatusIcon';
+export type { FieldStatus } from './FieldStatusIcon';
+
 export { CloseButton } from './CloseButton';
 export type { CloseButtonProps } from './CloseButton';
+
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogVariant } from './ConfirmDialog';
 
 export { PageLayout, PageSection } from './PageLayout';

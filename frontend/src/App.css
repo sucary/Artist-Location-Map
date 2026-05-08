@@ -13,6 +13,47 @@
   display: none;
 }
 
+/* MapLibre sets drag cursors on the canvas container by default. */
+.maplibregl-canvas-container.maplibregl-interactive,
+.maplibregl-canvas-container.maplibregl-interactive:active,
+.maplibregl-canvas-container.maplibregl-interactive .maplibregl-canvas,
+.maplibregl-canvas-container.maplibregl-interactive:active .maplibregl-canvas,
+.maplibregl-canvas-container.maplibregl-touch-drag-pan .maplibregl-canvas,
+.maplibregl-canvas-container.maplibregl-touch-zoom-rotate .maplibregl-canvas {
+  cursor: default !important;
+}
+
+/* Markers and map controls use the active affordance cursor. */
+.artist-maplibre-marker,
+.artist-maplibre-cluster,
+.maplibregl-canvas-container.maplibregl-interactive button,
+.maplibregl-canvas-container.maplibregl-interactive a,
+.maplibregl-ctrl button,
+.maplibregl-ctrl a {
+  cursor: pointer;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href] {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .maplibregl-popup.artist-popup {
+    bottom: 1rem !important;
+    left: 50% !important;
+    position: fixed !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
 .maplibregl-ctrl-bottom-left {
   bottom: 8px !important;
   left: 10px !important;

@@ -212,6 +212,10 @@ export const useArtistForm = ({
         };
     }, [findMusicBrainzLink]);
 
+    const hasSocialLinks = useCallback((links: ReturnType<typeof getMusicBrainzSocialLinks>) => (
+        Object.values(links).some(Boolean)
+    ), []);
+
     const buildLocationQuery = useCallback((primary?: string | null, context?: string | null) => {
         const first = primary?.trim();
         const second = context?.trim();
@@ -232,6 +236,9 @@ export const useArtistForm = ({
             artist.areaName || artist.beginAreaName,
             artist.country
         );
+        const debutYear = parseYear(artist.lifeSpanBegin);
+        const inactiveYear = artist.ended ? parseYear(artist.lifeSpanEnd) : undefined;
+        const socialLinks = getMusicBrainzSocialLinks(artist);
 
         const hasPreMusicBrainzUpload = Boolean(
             formData.sourceImage &&
@@ -239,15 +246,21 @@ export const useArtistForm = ({
             !options?.useSharedImage
         );
         const mediaStatus = await getArtistMediaAssetStatus(artist.mbid).catch(() => null);
+        const hasAutofilledInfo = Boolean(
+            debutYear ||
+            inactiveYear ||
+            hasSocialLinks(socialLinks) ||
+            (!hasPreMusicBrainzUpload && mediaStatus?.sourceImage)
+        );
 
         setFormData(prev => ({
             ...prev,
             musicbrainzMbid: artist.mbid,
             name: artist.name,
             romanizedName: artist.sortName && artist.sortName !== artist.name ? artist.sortName : undefined,
-            debutYear: parseYear(artist.lifeSpanBegin),
-            inactiveYear: artist.ended ? parseYear(artist.lifeSpanEnd) : undefined,
-            socialLinks: getMusicBrainzSocialLinks(artist),
+            debutYear,
+            inactiveYear,
+            socialLinks,
             sourceImage: !hasPreMusicBrainzUpload && mediaStatus?.sourceImage
                 ? mediaStatus.sourceImage
                 : prev.sourceImage,
@@ -267,7 +280,9 @@ export const useArtistForm = ({
                 activeLocation: null
             });
             setQueuedMusicBrainzActiveLocationSearch(null);
-            setMusicBrainzLocationStatus('MusicBrainz has no usable area for this artist.');
+            if (hasAutofilledInfo) {
+                setMusicBrainzLocationStatus('MusicBrainz has no usable area for this artist.');
+            }
             return;
         }
 
@@ -283,6 +298,7 @@ export const useArtistForm = ({
         formData.musicbrainzMbid,
         formData.sourceImage,
         getMusicBrainzSocialLinks,
+        hasSocialLinks,
         parseYear,
     ]);
 

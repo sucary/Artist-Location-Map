@@ -24,7 +24,7 @@ import { getArtists, getArtistsByUsername, getCityById, getFeaturedArtists } fro
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import type { LocationView } from '../../types/artist';
-import type { MapViewProps } from './types';
+import type { ArtistPopupLifecycleState, MapViewProps } from './types';
 
 type MarkerWithUpdate = maplibregl.Marker & {
     // Reach MapLibre's private updater to follow inertial tile movement.
@@ -45,6 +45,9 @@ export default function MapView({
     onFocusedLocationHandled,
     focusedCityId,
     isAuthenticated = true,
+    suppressArtistPopup = false,
+    onArtistPopupOpenChange,
+    interactionsDisabled = false,
 }: MapViewProps) {
     const { profile } = useAuth();
     const { locationLanguage } = useLocationLanguage();
@@ -59,6 +62,14 @@ export default function MapView({
     const revertingStyleRef = useRef(false);
     const locationLanguageRef = useRef(locationLanguage);
     const attributionButtonRef = useRef<HTMLButtonElement | null>(null);
+    const artistPopupLifecycleRef = useRef<ArtistPopupLifecycleState>({ open: false, closedAt: 0 });
+    const mobileControlsOpenRef = useRef(true);
+    const attributionOpenRef = useRef(false);
+    const popupControlsSnapshotRef = useRef<{ mobileControlsOpen: boolean; attributionOpen: boolean } | null>(null);
+    const suppressClusterCollapseUntilRef = useRef(0);
+    const restoreDoubleClickZoomTimerRef = useRef<number | null>(null);
+    const interactionsDisabledRef = useRef(interactionsDisabled);
+    const desktopViewportRef = useRef(false);
 
     const isAdmin = profile?.isAdmin ?? false;
     const [mapReady, setMapReady] = useState(false);
@@ -70,6 +81,12 @@ export default function MapView({
     const [attributionOpen, setAttributionOpen] = useState(false);
     const [mobileControlsOpen, setMobileControlsOpen] = useState(true);
     const [canResetMapView, setCanResetMapView] = useState(false);
+
+    const isArtistPopupActive = useCallback(() => {
+        const lifecycle = artistPopupLifecycleRef.current;
+        // DOM fallback covers MapLibre popup refs that desync during fast touch gestures.
+        return lifecycle.open || !!containerRef.current?.querySelector('.artist-popup');
+    }, []);
 
     // Keep async map callbacks reading the latest label language.
     useEffect(() => {
@@ -103,6 +120,100 @@ export default function MapView({
         enabled: !!selectedCityId,
     });
 
+    useEffect(() => {
+        attributionOpenRef.current = attributionOpen;
+    }, [attributionOpen]);
+
+    useEffect(() => {
+        mobileControlsOpenRef.current = mobileControlsOpen;
+    }, [mobileControlsOpen]);
+
+    const handleArtistPopupOpenChange = useCallback((open: boolean) => {
+        const wasOpen = artistPopupLifecycleRef.current.open;
+        onArtistPopupOpenChange?.(open);
+
+        if (open) {
+            if (!wasOpen) {
+                // Restore the user's mobile controls state after the popup closes.
+                popupControlsSnapshotRef.current = {
+                    mobileControlsOpen: mobileControlsOpenRef.current,
+                    attributionOpen: attributionOpenRef.current,
+                };
+            }
+
+            if (mobileControlsOpenRef.current) {
+                setMobileControlsOpen(false);
+            }
+            if (attributionOpenRef.current) {
+                attributionButtonRef.current?.click();
+            }
+            return;
+        }
+
+        const snapshot = popupControlsSnapshotRef.current;
+        popupControlsSnapshotRef.current = null;
+        if (!snapshot) return;
+
+        setMobileControlsOpen(snapshot.mobileControlsOpen);
+        if (snapshot.attributionOpen && !attributionOpenRef.current) {
+            window.setTimeout(() => attributionButtonRef.current?.click(), 0);
+        }
+    }, [onArtistPopupOpenChange]);
+
+    useEffect(() => {
+        interactionsDisabledRef.current = interactionsDisabled;
+    }, [interactionsDisabled]);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 640px)');
+        const syncDesktopViewport = () => {
+            desktopViewportRef.current = mediaQuery.matches;
+        };
+
+        syncDesktopViewport();
+        mediaQuery.addEventListener('change', syncDesktopViewport);
+        return () => mediaQuery.removeEventListener('change', syncDesktopViewport);
+    }, []);
+
+    const suppressDoubleClickZoomBriefly = useCallback(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        // Prevent close-card and close-cluster taps from becoming a double-click zoom.
+        map.doubleClickZoom.disable();
+        if (restoreDoubleClickZoomTimerRef.current !== null) {
+            window.clearTimeout(restoreDoubleClickZoomTimerRef.current);
+        }
+        restoreDoubleClickZoomTimerRef.current = window.setTimeout(() => {
+            restoreDoubleClickZoomTimerRef.current = null;
+            if (!interactionsDisabledRef.current) {
+                map.doubleClickZoom.enable();
+            }
+        }, 500);
+    }, []);
+
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        const controls = [
+            map.dragPan,
+            map.scrollZoom,
+            map.boxZoom,
+            map.dragRotate,
+            map.keyboard,
+            map.doubleClickZoom,
+            map.touchZoomRotate,
+        ];
+
+        // Panels that own pointer input block map gestures underneath.
+        if (interactionsDisabled) {
+            controls.forEach((control) => control.disable());
+        } else {
+            controls.forEach((control) => control.enable());
+        }
+    }, [interactionsDisabled, mapReady]);
+
     // Keep popup close handlers comparing against the latest selected city.
     useEffect(() => {
         selectedCityIdRef.current = selectedCityId;
@@ -117,13 +228,13 @@ export default function MapView({
 
     const {
         clearMarkers,
+        closeActiveArtistPopup,
         collapseExpandedClusters,
         expandAllVisibleClusters,
         expandedRef,
         hasExpandedClusters,
         markersRef,
         openArtistPopup,
-        popupJustClosedRef,
         renderVisibleMarkers,
     } = useArtistMarkers({
         mapRef,
@@ -135,7 +246,16 @@ export default function MapView({
         setSelectedCityId,
         onEditArtist,
         onDeleteArtist,
+        onArtistPopupOpenChange: handleArtistPopupOpenChange,
+        artistPopupLifecycleRef,
     });
+
+    useEffect(() => {
+        if (suppressArtistPopup) {
+            // Mobile panels are exclusive with the floating artist card.
+            closeActiveArtistPopup();
+        }
+    }, [closeActiveArtistPopup, suppressArtistPopup]);
 
     // Create the MapLibre instance once and bind persistent map controls.
     useEffect(() => {
@@ -174,7 +294,9 @@ export default function MapView({
         }
         map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
         const attributionContainer = container.querySelector('.maplibregl-ctrl-attrib');
+        attributionContainer?.classList.remove('maplibregl-compact-show');
         attributionButtonRef.current = attributionContainer?.querySelector<HTMLButtonElement>('.maplibregl-ctrl-attrib-button') ?? null;
+        attributionButtonRef.current?.setAttribute('aria-expanded', 'false');
         const syncAttributionOpen = () => {
             const isOpen = attributionContainer?.classList.contains('maplibregl-compact-show') ?? false;
             setAttributionOpen(isOpen);
@@ -237,6 +359,10 @@ export default function MapView({
 
         return () => {
             attributionObserver?.disconnect();
+            if (restoreDoubleClickZoomTimerRef.current !== null) {
+                window.clearTimeout(restoreDoubleClickZoomTimerRef.current);
+                restoreDoubleClickZoomTimerRef.current = null;
+            }
             attributionButtonRef.current = null;
             clearMarkers();
             collapseExpandedClusters();
@@ -307,23 +433,46 @@ export default function MapView({
                 });
             });
         };
-        const handleRender = () => {
-            collapseExpandedClusters();
+        const handleMoveEnd = () => {
+            // Panning keeps expanded clusters; only visible marker membership changes.
             renderVisibleMarkers();
         };
-        const handleZoomStart = () => collapseExpandedClusters();
+        const handleDragStart = () => {
+            // Ignore the synthetic click that MapLibre can emit after a drag.
+            suppressClusterCollapseUntilRef.current = performance.now() + 600;
+        };
+        const handleDragEnd = () => {
+            // Keep the cluster open while drag inertia settles.
+            suppressClusterCollapseUntilRef.current = performance.now() + 600;
+        };
+        const handleZoomEnd = () => {
+            // Zoom changes cluster membership, so stale expanded markers are cleared.
+            collapseExpandedClusters(false);
+            renderVisibleMarkers();
+        };
+        const handleZoomStart = () => {
+            if (desktopViewportRef.current && isArtistPopupActive()) {
+                closeActiveArtistPopup();
+            }
+            // Clear expansion artifacts before zoom reshapes clusters.
+            collapseExpandedClusters(false);
+        };
 
         map.on('render', syncMarkerPositions);
-        map.on('moveend', handleRender);
-        map.on('zoomend', handleRender);
+        map.on('dragstart', handleDragStart);
+        map.on('dragend', handleDragEnd);
+        map.on('moveend', handleMoveEnd);
+        map.on('zoomend', handleZoomEnd);
         map.on('zoomstart', handleZoomStart);
         return () => {
             map.off('render', syncMarkerPositions);
-            map.off('moveend', handleRender);
-            map.off('zoomend', handleRender);
+            map.off('dragstart', handleDragStart);
+            map.off('dragend', handleDragEnd);
+            map.off('moveend', handleMoveEnd);
+            map.off('zoomend', handleZoomEnd);
             map.off('zoomstart', handleZoomStart);
         };
-    }, [collapseExpandedClusters, expandedRef, mapReady, markersRef, renderVisibleMarkers]);
+    }, [closeActiveArtistPopup, collapseExpandedClusters, expandedRef, isArtistPopupActive, mapReady, markersRef, renderVisibleMarkers]);
 
     // Track when north reset can change the current map orientation.
     useEffect(() => {
@@ -351,7 +500,10 @@ export default function MapView({
         if (!map || !mapReady) return;
 
         const handleMapClick = (event: maplibregl.MapMouseEvent) => {
-            if (isInteractiveTarget(event.originalEvent?.target)) return;
+            const target = event.originalEvent?.target as HTMLElement | null;
+            const interactiveTarget = isInteractiveTarget(target);
+
+            if (interactiveTarget) return;
 
             if (selectionMode?.active) {
                 // Selection mode turns plain map clicks into picked coordinates.
@@ -359,7 +511,19 @@ export default function MapView({
                 return;
             }
 
-            if (expandedRef.current.size > 0 && !popupJustClosedRef.current) {
+            if (isArtistPopupActive()) {
+                suppressDoubleClickZoomBriefly();
+                closeActiveArtistPopup();
+                return;
+            }
+
+            if (performance.now() < suppressClusterCollapseUntilRef.current) {
+                // Drag-generated map clicks should not collapse expanded clusters.
+                onEmptyClick?.();
+                return;
+            }
+
+            if (expandedRef.current.size > 0 && !isArtistPopupActive()) {
                 collapseExpandedClusters();
                 return;
             }
@@ -371,7 +535,7 @@ export default function MapView({
         return () => {
             map.off('click', handleMapClick);
         };
-    }, [collapseExpandedClusters, expandedRef, mapReady, onEmptyClick, onLocationPick, popupJustClosedRef, selectionMode?.active]);
+    }, [closeActiveArtistPopup, collapseExpandedClusters, expandedRef, isArtistPopupActive, mapReady, onEmptyClick, onLocationPick, selectionMode?.active, suppressDoubleClickZoomBriefly]);
 
     // Reflect location-pick mode in the MapLibre canvas cursor.
     useEffect(() => {
@@ -470,6 +634,8 @@ export default function MapView({
     return (
         <div role="application" aria-label="Achizu, Artist Map" className="relative h-full w-full overflow-hidden">
             <div ref={containerRef} className="h-full w-full" />
+            {/* Blocks canvas and marker input while higher-priority panels are open. */}
+            {interactionsDisabled && <div aria-hidden="true" className="absolute inset-0 z-[1040]" />}
 
             <MapControls
                 view={view}

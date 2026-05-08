@@ -109,8 +109,10 @@
       "activeLocation": "Active Location",
       "searchActiveLocation": "Search active location",
       "careerYears": "Career Years",
+      "debutYear": "Debut year",
       "debut": "Debut",
       "present": "Present",
+      "inactiveYear": "Inactive year",
       "inactive": "Inactive"
     },
     "alts": {
@@ -174,6 +176,7 @@
       "invalidSocialProfileUrl": "Enter a valid {{platform}} URL",
       "invalidSocialLinkUrl": "Invalid social link URL",
       "failedUploadImage": "Failed to upload image. Please try again.",
+      "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB.",
       "failedSaveArtist": "Failed to save artist. Please try again."
     }
   }

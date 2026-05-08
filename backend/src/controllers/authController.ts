@@ -64,7 +64,7 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
     res.json(profile);
 });
 
-export const getPendingUsers = asyncHandler(async (req: Request, res: Response) => {
+export const getPendingUsers = asyncHandler(async (_req: Request, res: Response) => {
     const pendingUsers = await ProfileStore.getPendingUsers();
     res.json(pendingUsers);
 });
@@ -99,3 +99,4 @@ export const rejectUser = asyncHandler(async (req: Request, res: Response) => {
     await ProfileStore.rejectUser(userId);
     res.json({ message: 'User rejected and removed' });
 });
+

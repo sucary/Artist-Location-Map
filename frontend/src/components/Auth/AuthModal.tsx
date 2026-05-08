@@ -14,6 +14,28 @@ interface AuthModalProps {
     onClose: () => void;
 }
 
+function AuthErrorBox({ message }: { message: string }) {
+    return (
+        <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error">
+            <svg
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 text-[#ef4444]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="m15 9-6 6" />
+                <path d="m9 9 6 6" />
+            </svg>
+            <span>{message}</span>
+        </div>
+    );
+}
+
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [isSignUp, setIsSignUp] = useState(false);
     const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -56,6 +78,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const dialogRef = useDialogAccessibility(handleClose);
 
     if (!isOpen) return null;
+
+    const authFormError = error || emailError || passwordError || confirmPasswordError;
+    const forgotFormError = forgotPasswordEmailError;
 
     const validateEmail = (value: string): boolean => {
         if (!value) {
@@ -247,8 +272,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center">
-            <div aria-hidden="true" className="absolute inset-0 bg-black/50" onClick={handleClose} />
+        <div className="fixed inset-0 z-[1200] pointer-events-none">
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-auto" onClick={handleClose} />
 
             <div
                 ref={dialogRef}
@@ -256,7 +281,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 aria-modal="true"
                 aria-labelledby="auth-title"
                 tabIndex={-1}
-                className="relative bg-surface rounded-lg shadow-xl w-full max-w-md mx-4 p-6 focus:outline-none"
+                className="absolute right-2 top-16 w-[calc(100vw-1rem)] max-w-[340px] rounded-lg bg-surface p-5 shadow-xl pointer-events-auto focus:outline-none"
             >
                 {!message && (
                     <CloseButton onClick={handleClose} size="lg" className="absolute top-4 right-4" />
@@ -264,16 +289,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 {message ? (
                     <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-text-muted/10 flex items-center justify-center">
-                            <div className="flex gap-1">
-                                <div className="w-2 h-2 rounded-full bg-text-muted" />
-                                <div className="w-2 h-2 rounded-full bg-text-muted" />
-                                <div className="w-2 h-2 rounded-full bg-text-muted" />
-                            </div>
-                        </div>
                         <h2 id="auth-title" className="text-xl font-bold text-text mb-2">{t('auth.emailCheck.title')}</h2>
                         <p className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
-                        {error && <Alert variant="error" onClose={() => setError(null)} className="mb-4">{error}</Alert>}
+                        {error && <Alert variant="error" header="Could not resend email" onClose={() => setError(null)} className="mb-4">{error}</Alert>}
                         <div className="flex gap-3">
                             <Button onClick={handleResendEmail} variant="secondary" isLoading={resendLoading} className="flex-1">{t('auth.buttons.resend')}</Button>
                             <Button onClick={handleClose} className="flex-1">{t('auth.buttons.done')}</Button>
@@ -290,7 +308,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <p className="text-sm text-text-secondary mb-6">
                             {t('auth.resetPassword.description')}
                         </p>
-                        <form onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }} className="space-y-4" noValidate>
                             <Input
                                 type="email"
                                 name="forgot-password-email"
@@ -299,10 +317,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                                 value={forgotPasswordEmail}
                                 onChange={(e) => { setForgotPasswordEmail(e.target.value); setForgotPasswordEmailError(null); }}
-                                error={forgotPasswordEmailError || undefined}
                                 required
                                 autoFocus
                             />
+                            {forgotFormError && <AuthErrorBox message={forgotFormError} />}
                             <Button type="submit" isLoading={loading} className="w-full">{t('auth.buttons.resetPassword')}</Button>
                             <p className="text-center text-sm text-text-secondary">
                                 <button
@@ -351,7 +369,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 setEmail(e.target.value);
                                 setEmailError(null);
                             }}
-                            error={emailError || undefined}
                             required
                         />
 
@@ -368,7 +385,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     setConfirmPasswordError(null);
                                 }
                             }}
-                            error={passwordError || undefined}
                             required
                             minLength={6}
                             rightIcon={
@@ -391,7 +407,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     setConfirmPassword(e.target.value);
                                     setConfirmPasswordError(null);
                                 }}
-                                error={confirmPasswordError || undefined}
                                 required
                                 minLength={6}
                                 rightIcon={
@@ -430,7 +445,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             </div>
                         )}
 
-                        {error && <Alert variant="error" onClose={() => setError(null)}>{error}</Alert>}
+                        {authFormError && <AuthErrorBox message={authFormError} />}
                         <Button type="submit" isLoading={loading} className="w-full">
                             {isSignUp ? t('auth.buttons.signUp') : t('auth.buttons.signIn')}
                         </Button>

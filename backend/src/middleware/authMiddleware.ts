@@ -105,8 +105,9 @@ export async function optionalAuth(
 }
 
 /**
- * Middleware that requires user to be approved
- * Use after requireAuth
+ * Middleware that requires user to be approved for privileged actions.
+ * New registrations are approved by default, but this preserves the gate for
+ * manual moderation and future policy changes.
  */
 export async function requireApproval(
     req: AuthenticatedRequest,

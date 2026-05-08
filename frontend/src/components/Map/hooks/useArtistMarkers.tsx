@@ -15,11 +15,13 @@ import type {
     ClusterProperties,
     ExpandedClusterState,
     MarkerEntry,
+    ArtistPopupLifecycleState,
 } from '../types';
 
 const markerMoveDuration = 260;
 const mergedClusterAppearDelay = markerMoveDuration;
 const markerMoveLinkMaxDistance = 360;
+const clusterCollapseAfterPopupCloseGraceMs = 800;
 
 const markerAnimations = new WeakMap<maplibregl.Marker, number>();
 
@@ -67,6 +69,22 @@ const getClusterLeafKey = (leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointPro
         .join('|')
 );
 
+// Rebuild the spatial index only when artist positions or view mode change.
+const getArtistIndexSignature = (artists: Artist[], view: LocationView) => (
+    `${view}|${artists.map((artist) => {
+        const active = artist.activeLocation.coordinates;
+        const original = artist.originalLocation.coordinates;
+        return [
+            artist.id,
+            active.lat,
+            active.lng,
+            original.lat,
+            original.lng,
+            artist.updatedAt ? new Date(artist.updatedAt).getTime() : '',
+        ].join(':');
+    }).join('|')}`
+);
+
 interface UseArtistMarkersOptions {
     mapRef: RefObject<maplibregl.Map | null>;
     mapReady: boolean;
@@ -77,6 +95,8 @@ interface UseArtistMarkersOptions {
     setSelectedCityId: Dispatch<SetStateAction<string | null>>;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
+    onArtistPopupOpenChange?: (open: boolean) => void;
+    artistPopupLifecycleRef?: RefObject<ArtistPopupLifecycleState>;
 }
 
 export const useArtistMarkers = ({
@@ -89,6 +109,8 @@ export const useArtistMarkers = ({
     setSelectedCityId,
     onEditArtist,
     onDeleteArtist,
+    onArtistPopupOpenChange,
+    artistPopupLifecycleRef,
 }: UseArtistMarkersOptions) => {
     const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
     const expandedRef = useRef<Map<string, ExpandedClusterState>>(new Map());
@@ -97,9 +119,9 @@ export const useArtistMarkers = ({
     const clusterIndexRef = useRef<Supercluster<ArtistPointProperties, ClusterProperties> | null>(null);
     const artistsByIdRef = useRef<Map<string, Artist>>(new Map());
     const activePopupRef = useRef<maplibregl.Popup | null>(null);
-    const popupJustClosedRef = useRef(false);
     const lastClusterZoomRef = useRef<number | null>(null);
     const lastMapZoomRef = useRef<number | null>(null);
+    const clusterIndexSignatureRef = useRef<string | null>(null);
     const mergeHoldUntilRef = useRef(0);
     const mergeHoldTokenRef = useRef(0);
     // Invalidate delayed cluster adds after newer zoom or expansion work.
@@ -232,7 +254,10 @@ export const useArtistMarkers = ({
     }, [displayArtists]);
 
     const removeMarkerEntry = useCallback((entry: MarkerEntry, destination?: [number, number], onDone?: () => void) => {
-        entry.popup?.remove();
+        // Preserve the open popup when its marker leaves the rendered viewport.
+        if (entry.popup && entry.popup !== activePopupRef.current) {
+            entry.popup.remove();
+        }
         if (destination) {
             entry.marker.getElement().style.pointerEvents = 'none';
             animateMarkerTo(entry.marker, destination, () => {
@@ -261,6 +286,28 @@ export const useArtistMarkers = ({
         collapsingClusterHidesRef.current.clear();
     }, [clearPendingMergeTimers, removeMarkerEntry]);
 
+    const setArtistPopupLifecycle = useCallback((open: boolean) => {
+        if (artistPopupLifecycleRef?.current) {
+            artistPopupLifecycleRef.current.open = open;
+            artistPopupLifecycleRef.current.closedAt = open ? 0 : performance.now();
+        }
+        onArtistPopupOpenChange?.(open);
+    }, [artistPopupLifecycleRef, onArtistPopupOpenChange]);
+
+    const closeActiveArtistPopup = useCallback(() => {
+        if (activePopupRef.current) {
+            activePopupRef.current.remove();
+            return;
+        }
+
+        // Fallback for popup DOM left behind after MapLibre ref churn.
+        const popupElements = mapRef.current?.getContainer().querySelectorAll('.artist-popup');
+        if (!popupElements?.length) return;
+
+        popupElements.forEach((element) => element.remove());
+        setArtistPopupLifecycle(false);
+    }, [mapRef, setArtistPopupLifecycle]);
+
     const isClusterSourceHidden = useCallback((key: string, leafKey: string) => {
         // Match by leaves because cluster ids can change across zoom levels.
         const matches = (state: Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>) => (
@@ -271,8 +318,17 @@ export const useArtistMarkers = ({
             || Array.from(collapsingClusterHidesRef.current.values()).some(matches);
     }, []);
 
+    // Keep expanded clusters through popup close/rebuild races.
+    const shouldKeepExpandedClusters = useCallback(() => (
+        !!artistPopupLifecycleRef?.current?.open
+        || (
+            !!artistPopupLifecycleRef?.current?.closedAt
+            && performance.now() - artistPopupLifecycleRef.current.closedAt < clusterCollapseAfterPopupCloseGraceMs
+        )
+    ), [artistPopupLifecycleRef]);
+
     // Remove temporary expansion layers before rerendering marker state.
-    const removeExpandedClusterArtifacts = useCallback(() => {
+    const removeExpandedClusterArtifacts = useCallback((animate = true) => {
         const map = mapRef.current;
         if (!map) return;
 
@@ -297,6 +353,15 @@ export const useArtistMarkers = ({
             }
             state.markers.forEach((marker) => {
                 marker.getElement().style.pointerEvents = 'none';
+                if (!animate) {
+                    // Zoom cleanup removes stale expansion markers without merge animation.
+                    marker.remove();
+                    remainingMarkers -= 1;
+                    if (remainingMarkers === 0) {
+                        restoreHiddenCluster();
+                    }
+                    return;
+                }
                 animateMarkerTo(marker, state.clusterCenter, () => {
                     marker.remove();
                     remainingMarkers -= 1;
@@ -311,8 +376,8 @@ export const useArtistMarkers = ({
         expandedRef.current.clear();
     }, [animateMarkerTo, mapRef]);
 
-    const collapseExpandedClusters = useCallback(() => {
-        removeExpandedClusterArtifacts();
+    const collapseExpandedClusters = useCallback((animate = true) => {
+        removeExpandedClusterArtifacts(animate);
         setHasExpandedClusters(false);
     }, [removeExpandedClusterArtifacts]);
 
@@ -321,6 +386,7 @@ export const useArtistMarkers = ({
         const map = mapRef.current;
         if (!map) return;
 
+        setArtistPopupLifecycle(true);
         activePopupRef.current?.remove();
         activePopupRef.current = null;
         markersRef.current.forEach((entry) => entry.marker.getElement().classList.remove('marker-focused'));
@@ -335,6 +401,8 @@ export const useArtistMarkers = ({
 
         const popup = new maplibregl.Popup({
             closeButton: false,
+            // MapView owns outside-click behavior so clusters can stay expanded.
+            closeOnClick: false,
             className: 'artist-popup',
             maxWidth: '320px',
             offset: 18,
@@ -356,13 +424,10 @@ export const useArtistMarkers = ({
                 event.preventDefault();
                 event.stopPropagation();
                 popup.remove();
-                collapseExpandedClusters();
                 onEditArtist(artist);
             } else if (deleteButton && onDeleteArtist) {
                 event.preventDefault();
                 event.stopPropagation();
-                popup.remove();
-                collapseExpandedClusters();
                 onDeleteArtist(artist);
             }
         };
@@ -381,10 +446,7 @@ export const useArtistMarkers = ({
             if (activePopupRef.current === popup) {
                 activePopupRef.current = null;
             }
-            popupJustClosedRef.current = true;
-            window.setTimeout(() => {
-                popupJustClosedRef.current = false;
-            }, 50);
+            setArtistPopupLifecycle(false);
             setSelectedCityId((current) => current === selectedCityIdRef.current ? null : current);
         });
 
@@ -396,7 +458,7 @@ export const useArtistMarkers = ({
             entry.popup = popup;
             entry.root = root;
         }
-    }, [collapseExpandedClusters, locationLanguage, mapRef, onDeleteArtist, onEditArtist, selectedCityIdRef, setSelectedCityId, view]);
+    }, [locationLanguage, mapRef, onDeleteArtist, onEditArtist, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId, view]);
 
     // Fan out a cluster into temporary artist markers around the cluster center.
     const expandCluster = useCallback((feature: ClusterPoint, sourceElement?: HTMLElement) => {
@@ -869,6 +931,14 @@ export const useArtistMarkers = ({
     }, [animateMarkerTo, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, removeMarkerEntry]);
 
     useEffect(() => {
+        const nextSignature = getArtistIndexSignature(displayArtists, view);
+        if (clusterIndexSignatureRef.current === nextSignature) {
+            renderVisibleMarkers();
+            return;
+        }
+
+        // UI-only rerenders should not reset expansion state.
+        clusterIndexSignatureRef.current = nextSignature;
         // Rebuild the spatial index whenever artist coordinates or map view mode changes.
         lastClusterZoomRef.current = null;
         lastMapZoomRef.current = null;
@@ -880,10 +950,12 @@ export const useArtistMarkers = ({
             radius: CLUSTER_CONFIG.maxClusterRadius,
             maxZoom: CLUSTER_CONFIG.disableClusteringAtZoomLevel - 1,
         }).load(displayArtists.map((artist) => makeArtistPoint(artist, view)));
-        removeExpandedClusterArtifacts();
-        window.setTimeout(() => setHasExpandedClusters(false), 0);
+        if (!shouldKeepExpandedClusters()) {
+            removeExpandedClusterArtifacts();
+            window.setTimeout(() => setHasExpandedClusters(false), 0);
+        }
         renderVisibleMarkers();
-    }, [clearPendingMergeTimers, displayArtists, removeExpandedClusterArtifacts, renderVisibleMarkers, view]);
+    }, [clearPendingMergeTimers, displayArtists, removeExpandedClusterArtifacts, renderVisibleMarkers, shouldKeepExpandedClusters, view]);
 
     // Expand every currently visible cluster from the toolbar action.
     const expandAllVisibleClusters = useCallback(() => {
@@ -892,13 +964,13 @@ export const useArtistMarkers = ({
 
     return {
         clearMarkers,
+        closeActiveArtistPopup,
         collapseExpandedClusters,
         expandAllVisibleClusters,
         expandedRef,
         hasExpandedClusters,
         markersRef,
         openArtistPopup,
-        popupJustClosedRef,
         renderVisibleMarkers,
     };
 };

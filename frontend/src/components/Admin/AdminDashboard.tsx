@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import type { FormEvent } from 'react';
-import { Spinner, Alert, Button, CloseButton } from '../ui';
+import type { FormEvent, ReactNode } from 'react';
+import { Spinner, Alert, Button, CloseButton, ConfirmDialog, type ConfirmDialogVariant } from '../ui';
 import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import {
     API_URL,
@@ -28,6 +28,17 @@ interface PendingMediaReview {
     createdAt: string;
 }
 
+interface AdminDialogState {
+    title: string;
+    message: ReactNode;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    variant?: ConfirmDialogVariant;
+    onConfirm: () => void | Promise<void>;
+}
+
+const dialogTestVariants: ConfirmDialogVariant[] = ['default', 'danger', 'warning', 'success', 'error'];
+
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { user, profile } = useAuth();
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
@@ -38,6 +49,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [mediaReviewsOpen, setMediaReviewsOpen] = useState(true);
     const [postNotificationOpen, setPostNotificationOpen] = useState(false);
     const [translationsOpen, setTranslationsOpen] = useState(false);
+    const [statusTemplateOpen, setStatusTemplateOpen] = useState(false);
     const [notificationAudience, setNotificationAudience] = useState<'all' | 'user'>('all');
     const [notificationTitle, setNotificationTitle] = useState('');
     const [notificationContent, setNotificationContent] = useState('');
@@ -49,6 +61,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [notificationPosting, setNotificationPosting] = useState(false);
     const [notificationPostError, setNotificationPostError] = useState<string | null>(null);
     const [notificationPostSuccess, setNotificationPostSuccess] = useState<string | null>(null);
+    const [adminDialog, setAdminDialog] = useState<AdminDialogState | null>(null);
+    const [adminDialogLoading, setAdminDialogLoading] = useState(false);
 
     const dialogRef = useDialogAccessibility(onClose);
 
@@ -143,6 +157,36 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const showAdminMessage = (
+        title: string,
+        message: ReactNode,
+        variant: ConfirmDialogVariant = 'default'
+    ) => {
+        setAdminDialog({
+            title,
+            message,
+            variant,
+            confirmLabel: 'OK',
+            onConfirm: () => setAdminDialog(null),
+        });
+    };
+
+    const handleOpenTestDialog = (variant: ConfirmDialogVariant) => {
+        setAdminDialog({
+            title: `${variant.charAt(0).toUpperCase()}${variant.slice(1)} dialog`,
+            message: (
+                <>
+                    <p>This checks the shared {variant} dialog style.</p>
+                    <p className="mt-1">Try keyboard focus, Escape, backdrop click, cancel, and confirm.</p>
+                </>
+            ),
+            variant,
+            confirmLabel: 'Looks good',
+            cancelLabel: 'Close',
+            onConfirm: () => setAdminDialog(null),
+        });
+    };
+
     const handleApprove = async (userId: string) => {
         try {
             const headers = await getAuthHeaders();
@@ -156,35 +200,42 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 throw new Error('Failed to approve user');
             }
 
-            // Remove from list
             setPendingUsers(prev => prev.filter(u => u.id !== userId));
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve user');
+            showAdminMessage('Could not approve user', err instanceof Error ? err.message : 'Failed to approve user', 'error');
         }
     };
 
     const handleReject = async (userId: string) => {
-        if (!confirm('Are you sure you want to reject and remove this user?')) {
-            return;
-        }
+        setAdminDialog({
+            title: 'Reject user?',
+            message: 'Rejecting this user will remove the account request.',
+            variant: 'danger',
+            confirmLabel: 'Reject',
+            cancelLabel: 'Cancel',
+            onConfirm: async () => {
+                setAdminDialogLoading(true);
+                try {
+                    const headers = await getAuthHeaders();
 
-        try {
-            const headers = await getAuthHeaders();
+                    const response = await fetch(`${API_URL}/auth/admin/reject/${userId}`, {
+                        method: 'POST',
+                        headers,
+                    });
 
-            const response = await fetch(`${API_URL}/auth/admin/reject/${userId}`, {
-                method: 'POST',
-                headers,
-            });
+                    if (!response.ok) {
+                        throw new Error('Failed to reject user');
+                    }
 
-            if (!response.ok) {
-                throw new Error('Failed to reject user');
-            }
-
-            // Remove from list
-            setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject user');
-        }
+                    setPendingUsers(prev => prev.filter(u => u.id !== userId));
+                    setAdminDialog(null);
+                } catch (err) {
+                    showAdminMessage('Could not reject user', err instanceof Error ? err.message : 'Failed to reject user', 'error');
+                } finally {
+                    setAdminDialogLoading(false);
+                }
+            },
+        });
     };
 
     const handleMediaReview = async (reviewId: string, action: 'approve' | 'reject') => {
@@ -201,7 +252,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
             setPendingMediaReviews(prev => prev.filter(review => review.id !== reviewId));
         } catch (err) {
-            alert(err instanceof Error ? err.message : `Failed to ${action} media review`);
+            showAdminMessage('Could not update media review', err instanceof Error ? err.message : `Failed to ${action} media review`, 'error');
         }
     };
 
@@ -257,6 +308,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     }
 
     return (
+        <>
         <div className="fixed inset-0 z-[1200] flex items-center justify-center">
             {/* Backdrop */}
             <div aria-hidden="true" className="absolute inset-0" onClick={onClose} />
@@ -278,6 +330,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
+                    {error && (
+                        <Alert variant="error" header="Could not load admin data" className="mb-4">{error}</Alert>
+                    )}
 
                     {/* Pending User Approvals */}
                     <div className="mb-4">
@@ -303,18 +358,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                     </div>
                                 )}
 
-                                {error && (
-                                    <Alert variant="error" className="mb-4">{error}</Alert>
-                                )}
-
-                                {!loading && !error && pendingUsers.length === 0 && (
+                                {!loading && pendingUsers.length === 0 && (
                                     <div className="text-center py-8 text-text-secondary">
                                         <CheckCircleIcon className="w-12 h-12 mx-auto mb-2 text-text-muted" />
                                         <p>No pending approvals</p>
                                     </div>
                                 )}
 
-                                {!loading && !error && pendingUsers.length > 0 && (
+                                {!loading && pendingUsers.length > 0 && (
                                     <div className="space-y-3">
                                         {pendingUsers.map(user => (
                                             <div key={user.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
@@ -328,13 +379,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                 <div className="flex gap-2">
                                                     <Button
                                                         onClick={() => handleApprove(user.id)}
-                                                        className="bg-green-600 hover:bg-green-700"
+                                                        className="bg-success hover:bg-success/90"
                                                     >
                                                         Approve
                                                     </Button>
                                                     <Button
                                                         onClick={() => handleReject(user.id)}
-                                                        className="bg-red-600 hover:bg-red-700"
+                                                        className="bg-error hover:bg-error/90"
                                                     >
                                                         Reject
                                                     </Button>
@@ -395,13 +446,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                     <div className="flex gap-2">
                                                         <Button
                                                             onClick={() => handleMediaReview(review.id, 'approve')}
-                                                            className="bg-green-600 hover:bg-green-700"
+                                                            className="bg-success hover:bg-success/90"
                                                         >
                                                             Approve
                                                         </Button>
                                                         <Button
                                                             onClick={() => handleMediaReview(review.id, 'reject')}
-                                                            className="bg-red-600 hover:bg-red-700"
+                                                            className="bg-error hover:bg-error/90"
                                                         >
                                                             Reject
                                                         </Button>
@@ -456,10 +507,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         {postNotificationOpen && (
                             <form className="mt-2 border border-border rounded-lg p-4 space-y-4" onSubmit={handlePostNotification}>
                                 {notificationPostError && (
-                                    <Alert variant="error" onClose={() => setNotificationPostError(null)}>{notificationPostError}</Alert>
+                                    <Alert variant="error" header="Could not post notification" onClose={() => setNotificationPostError(null)}>{notificationPostError}</Alert>
                                 )}
                                 {notificationPostSuccess && (
-                                    <Alert variant="success" onClose={() => setNotificationPostSuccess(null)}>{notificationPostSuccess}</Alert>
+                                    <Alert variant="success" header="Notification posted" onClose={() => setNotificationPostSuccess(null)}>{notificationPostSuccess}</Alert>
                                 )}
 
                                 <div>
@@ -591,8 +642,104 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             </div>
                         )}
                     </div>
+
+                    {/* Status Palette Template */}
+                    <div className="border-t border-border pt-4">
+                        <button
+                            onClick={() => setStatusTemplateOpen(!statusTemplateOpen)}
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
+                        >
+                            <h2 className="text-xl font-semibold text-text">Status Palette Template</h2>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${statusTemplateOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+
+                        {statusTemplateOpen && (
+                            <div className="mt-2 space-y-4 rounded-lg border border-border p-4">
+                                <div className="flex flex-wrap gap-1.5">
+                                    {dialogTestVariants.map((variant) => (
+                                        <button
+                                            key={variant}
+                                            type="button"
+                                            onClick={() => handleOpenTestDialog(variant)}
+                                            className="rounded-md border border-border bg-surface-secondary px-2.5 py-1.5 text-xs font-medium capitalize text-text-secondary transition-colors hover:bg-surface-muted active:bg-surface-muted"
+                                        >
+                                            {variant}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                    <div className="rounded-md border border-success/30 bg-success/10 p-3">
+                                        <div className="h-5 w-full rounded bg-success" />
+                                        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-success">Success</p>
+                                        <p className="text-xs text-text-secondary">#009E73</p>
+                                    </div>
+                                    <div className="rounded-md border border-warning/30 bg-warning/10 p-3">
+                                        <div className="h-5 w-full rounded bg-warning" />
+                                        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-warning">Warning / Notice</p>
+                                        <p className="text-xs text-text-secondary">#E69F00</p>
+                                    </div>
+                                    <div className="rounded-md border border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] p-3">
+                                        <div className="h-5 w-full rounded bg-[rgb(220,38,38)]" />
+                                        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[rgb(220,38,38)]">Error / Danger</p>
+                                        <p className="text-xs text-text-secondary">#DC2626</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Alert variant="success" header="Verification email sent">
+                                        Please check your inbox and click the link to verify your account.
+                                    </Alert>
+                                    <Alert variant="warning" header="Account will be locked">
+                                        You have 1 attempt left. The account will be locked for 15 minutes after another failed login.
+                                    </Alert>
+                                    <Alert variant="error" header="Incorrect password">
+                                        The email or password is incorrect. Please try again.
+                                    </Alert>
+                                </div>
+
+                                <div className="rounded-md border border-border p-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-warning">Warning</p>
+                                    <h3 className="mt-1 text-sm font-semibold text-text">Unsaved change example</h3>
+                                    <p className="mt-2 text-sm text-text-secondary">
+                                        This mirrors the dialog header treatment: semantic label, neutral title, neutral body.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="rounded-md bg-success/10 px-2 py-1 text-xs font-medium text-success">Saved</span>
+                                    <span className="rounded-md bg-warning/10 px-2 py-1 text-xs font-medium text-warning">Needs review</span>
+                                    <span className="rounded-md bg-[rgba(220,38,38,0.1)] px-2 py-1 text-xs font-medium text-[rgb(220,38,38)]">Failed</span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <button type="button" className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white">Primary action</button>
+                                    <button type="button" className="rounded-md bg-success px-3 py-1.5 text-xs font-medium text-white">Approve</button>
+                                    <button type="button" className="rounded-md bg-[rgb(220,38,38)] px-3 py-1.5 text-xs font-medium text-white">Reject</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
+        {adminDialog && (
+            <ConfirmDialog
+                open
+                title={adminDialog.title}
+                variant={adminDialog.variant}
+                confirmLabel={adminDialog.confirmLabel}
+                cancelLabel={adminDialog.cancelLabel}
+                isLoading={adminDialogLoading}
+                onCancel={() => setAdminDialog(null)}
+                onConfirm={() => { void adminDialog.onConfirm(); }}
+            >
+                {adminDialog.message}
+            </ConfirmDialog>
+        )}
+        </>
     );
 }

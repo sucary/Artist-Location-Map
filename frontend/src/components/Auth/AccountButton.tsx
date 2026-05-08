@@ -8,9 +8,10 @@ interface AccountButtonProps {
     onOpenAuthModal: () => void;
     onCloseAuthModal: () => void;
     onOpenAdminDashboard?: () => void;
+    onMenuOpenChange?: (open: boolean) => void;
 }
 
-export function AccountButton({ showAuthModal, onOpenAuthModal, onCloseAuthModal, onOpenAdminDashboard }: AccountButtonProps) {
+export function AccountButton({ showAuthModal, onOpenAuthModal, onCloseAuthModal, onOpenAdminDashboard, onMenuOpenChange }: AccountButtonProps) {
     const { user, loading } = useAuth();
     const { t } = useTranslation();
 
@@ -21,7 +22,7 @@ export function AccountButton({ showAuthModal, onOpenAuthModal, onCloseAuthModal
     return (
         <>
             {user ? (
-                <UserMenu onOpenAdminDashboard={onOpenAdminDashboard} />
+                <UserMenu onOpenAdminDashboard={onOpenAdminDashboard} onOpenChange={onMenuOpenChange} />
             ) : (
                 <button
                     onClick={onOpenAuthModal}

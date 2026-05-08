@@ -75,6 +75,7 @@ const ArtistFormHeader = ({
 
     return (
         <div
+            data-tutorial-target="artist-image"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {

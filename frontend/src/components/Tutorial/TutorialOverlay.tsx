@@ -8,6 +8,7 @@ export interface TutorialStep {
     actionLabel?: string;
     waitForTarget?: boolean;
     nextStepIndex?: number;
+    hideIndicator?: boolean;
 }
 
 interface TutorialOverlayProps {
@@ -175,12 +176,14 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
     }, [updateTargetBox]);
 
     useEffect(() => {
+        if (step.hideIndicator) return;
+
         const element = document.querySelector<HTMLElement>(step.target);
         if (!element) return;
 
         element.classList.add('tutorial-indicator');
         return () => element.classList.remove('tutorial-indicator');
-    }, [step.target]);
+    }, [step.hideIndicator, step.target]);
 
     return createPortal(
         <div className="fixed inset-0 z-[1400] pointer-events-none">

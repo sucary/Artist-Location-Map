@@ -69,7 +69,7 @@
     "errors": {
       "emailRequired": "请输入邮箱",
       "validEmail": "请输入有效的邮箱",
-      "emailExists": "该邮箱已被注册。请使用之前的登录方式登录。",
+      "emailExists": "该邮箱已被注册。",
       "passwordRequired": "请输入密码",
       "passwordMin": "密码必须在6个字符以上",
       "confirmPasswordRequired": "请确认密码",
@@ -104,13 +104,15 @@
   "artistForm": {
     "fields": {
       "name": "名字",
-      "originalLocation": "起始地点",
-      "searchOriginalLocation": "搜索起始地点",
+      "originalLocation": "出身地点",
+      "searchOriginalLocation": "搜索出身地点",
       "activeLocation": "活跃地点",
       "searchActiveLocation": "搜索活跃地点",
       "careerYears": "生涯年份",
+      "debutYear": "出道年",
       "debut": "出道",
       "present": "活跃中",
+      "inactiveYear": "停止活动年",
       "inactive": "停止活动"
     },
     "alts": {
@@ -125,7 +127,7 @@
       "uploadAvatar": "上传头像",
       "save": "保存",
       "cancel": "取消",
-      "copyOriginalToActive": "复制起始地点到活跃地点",
+      "copyOriginalToActive": "复制起出身地点到活跃地点",
       "setInactive": "设为停止活动",
       "setActive": "设为活跃中"
     },
@@ -174,6 +176,7 @@
       "invalidSocialProfileUrl": "请输入有效的{{platform}}链接",
       "invalidSocialLinkUrl": "请输入有效的社媒链接",
       "failedUploadImage": "无法上传图片，请重试。",
+      "imageRequirements": "请使用不超过 5 MB 的 JPG、PNG 或 WebP 图片。",
       "failedSaveArtist": "无法保存艺人，请重试。"
     }
   }

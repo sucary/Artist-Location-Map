@@ -88,6 +88,16 @@ export const ProfileStore = {
         };
     },
 
+    getPendingUsers: async (): Promise<PendingUser[]> => {
+        const result = await pool.query(
+            `SELECT id, email, username, created_at as "createdAt"
+             FROM profiles
+             WHERE is_approved = false
+             ORDER BY created_at DESC`
+        );
+        return result.rows;
+    },
+
     updateProfile: async (userId: string, updates: { username?: string; isPrivate?: boolean; locationLanguage?: string; tutorialCompleted?: boolean }): Promise<void> => {
         if (updates.tutorialCompleted !== undefined) {
             await ensureAddArtistTutorialColumn();
@@ -167,16 +177,6 @@ export const ProfileStore = {
         return result.rows.length > 0;
     },
 
-    getPendingUsers: async (): Promise<PendingUser[]> => {
-        const result = await pool.query(
-            `SELECT id, email, username, created_at as "createdAt"
-             FROM profiles
-             WHERE is_approved = false
-             ORDER BY created_at DESC`
-        );
-        return result.rows;
-    },
-
     getAllNotificationRecipientIds: async (): Promise<string[]> => {
         const result = await pool.query<{ id: string }>(
             `SELECT id
@@ -242,4 +242,5 @@ export const ProfileStore = {
             [userId]
         );
     },
+
 };

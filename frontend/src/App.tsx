@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
@@ -21,6 +21,21 @@ import { UserNotFound } from './components/UserNotFound';
 import { supabase } from './lib/supabase';
 import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 import { TutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
+import { ConfirmDialog, type ConfirmDialogVariant } from './components/ui';
+
+interface AppDialogState {
+    title: string;
+    message: ReactNode;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    variant?: ConfirmDialogVariant;
+    dimBackdrop?: boolean;
+    onConfirm: () => void | Promise<void>;
+}
+
+const getIsMobileLayout = () => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
+);
 
 function App() {
     const { username } = useParams<{ username?: string }>();
@@ -46,8 +61,17 @@ function App() {
     const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
     const [focusedArtist, setFocusedArtist] = useState<Artist | null>(null);
     const [isCopyingCollection, setIsCopyingCollection] = useState(false);
+    const [isMobileLayout, setIsMobileLayout] = useState(getIsMobileLayout);
+    const [artistPopupOpen, setArtistPopupOpen] = useState(false);
+    const [mainSearchResultsOpen, setMainSearchResultsOpen] = useState(false);
+    const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+    const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+    const [mainSearchCloseSignal, setMainSearchCloseSignal] = useState(0);
     const [tutorialStepIndex, setTutorialStepIndex] = useState<number | null>(null);
     const [isTutorialDismissed, setIsTutorialDismissed] = useState(false);
+    const [tutorialArtistHasImage, setTutorialArtistHasImage] = useState(false);
+    const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
+    const [appDialogLoading, setAppDialogLoading] = useState(false);
 
     // Featured mode from URL param
     const viewingFeatured = searchParams.get('view') === 'featured';
@@ -62,6 +86,15 @@ function App() {
 
     // Viewing another user's map
     const isViewingOther = !!username;
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 640px)');
+        const syncMobileLayout = () => setIsMobileLayout(mediaQuery.matches);
+
+        syncMobileLayout();
+        mediaQuery.addEventListener('change', syncMobileLayout);
+        return () => mediaQuery.removeEventListener('change', syncMobileLayout);
+    }, []);
 
     // Fetch featured artists when viewing featured mode
     const { data: featuredArtists } = useQuery({
@@ -139,9 +172,14 @@ function App() {
             if (currentStep === 1 && action === 'artistSelected') return 2;
             if (currentStep === 2 && action === 'originalLocationSet') return 3;
             if (currentStep === 3 && action === 'activeLocationSet') return 4;
+            if (currentStep === 6 && action === 'artistImageSet') return 7;
             return currentStep;
         });
     }, []);
+
+    const handleTutorialNext = useCallback((nextStepIndex: number) => {
+        setTutorialStepIndex(nextStepIndex === 6 && tutorialArtistHasImage ? 7 : nextStepIndex);
+    }, [tutorialArtistHasImage]);
 
     const handleStartSelection = (targetField: 'originalLocation' | 'activeLocation') => {
         setSelectionMode({ active: true, targetField });
@@ -162,6 +200,11 @@ function App() {
             return;
         }
         setEditingArtist(artist);
+        if (isMobileLayout) {
+            setShowArtistList(false);
+            setShowFeaturedList(false);
+            setMainSearchCloseSignal((signal) => signal + 1);
+        }
         setShowForm(true);
     };
 
@@ -169,10 +212,25 @@ function App() {
         setShowForm(false);
         setEditingArtist(null);
         setSelectionMode(null);
+        setTutorialArtistHasImage(false);
         if (tutorialStepIndex !== null && tutorialStepIndex > 0) {
             setTutorialStepIndex(0);
         }
     };
+
+    const showAppMessage = useCallback((
+        title: string,
+        message: ReactNode,
+        variant: ConfirmDialogVariant = 'default'
+    ) => {
+        setAppDialog({
+            title,
+            message,
+            variant,
+            confirmLabel: 'OK',
+            onConfirm: () => setAppDialog(null),
+        });
+    }, []);
 
     const handleDeleteArtist = async (artist: Artist) => {
         if (!user) {
@@ -180,17 +238,26 @@ function App() {
             return;
         }
 
-        if (!window.confirm(`Delete "${artist.name}"?`)) {
-            return;
-        }
-
-        try {
-            await deleteArtist(artist.id);
-            await queryClient.invalidateQueries({ queryKey: ['artists'] });
-        } catch (error) {
-            console.error('Failed to delete artist:', error);
-            alert('Failed to delete artist. Please try again.');
-        }
+        setAppDialog({
+            title: 'Delete artist?',
+            message: `Delete "${artist.name}" from your map? This cannot be undone.`,
+            variant: 'danger',
+            confirmLabel: 'Delete',
+            cancelLabel: 'Cancel',
+            onConfirm: async () => {
+                setAppDialogLoading(true);
+                try {
+                    await deleteArtist(artist.id);
+                    await queryClient.invalidateQueries({ queryKey: ['artists'] });
+                    setAppDialog(null);
+                } catch (error) {
+                    console.error('Failed to delete artist:', error);
+                    showAppMessage('Could not delete artist', 'Failed to delete artist. Please try again.', 'error');
+                } finally {
+                    setAppDialogLoading(false);
+                }
+            },
+        });
     };
 
     const handleAddArtistClick = () => {
@@ -198,7 +265,10 @@ function App() {
             setShowAuthModal(true);
         } else {
             setShowArtistList(false);
+            setShowFeaturedList(false);
+            setMainSearchCloseSignal((signal) => signal + 1);
             setShowForm(true);
+            setTutorialArtistHasImage(false);
             if (tutorialStepIndex === 0) {
                 setTutorialStepIndex(1);
             }
@@ -207,6 +277,7 @@ function App() {
 
     const handleViewArtistListClick = () => {
         setShowForm(false);
+        setMainSearchCloseSignal((signal) => signal + 1);
         setShowArtistList(true);
     };
 
@@ -217,32 +288,75 @@ function App() {
 
     const handleNavigateToArtist = (artist: Artist) => {
         setShowArtistList(false);
+        setShowFeaturedList(false);
         setFocusedArtist(artist);
     };
+
+    const handleArtistPopupOpenChange = useCallback((open: boolean) => {
+        setArtistPopupOpen(open);
+
+        if (!open || !isMobileLayout) return;
+        // Mobile keeps one foreground surface open at a time.
+        setShowForm(false);
+        setShowArtistList(false);
+        setShowFeaturedList(false);
+        setMainSearchCloseSignal((signal) => signal + 1);
+    }, [isMobileLayout]);
+
+    const handleMainSearchResultsOpenChange = useCallback((open: boolean) => {
+        setMainSearchResultsOpen(open);
+
+        if (!open || !isMobileLayout) return;
+        // Main search owns the mobile foreground while results are visible.
+        setShowForm(false);
+        setShowArtistList(false);
+        setShowFeaturedList(false);
+    }, [isMobileLayout]);
+
+    // Lock map gestures under panels, except during location-pick mode.
+    const mapInteractionsDisabled = (showForm && !selectionMode?.active)
+        || showArtistList
+        || showFeaturedList
+        || mainSearchResultsOpen
+        || notificationMenuOpen
+        || accountMenuOpen;
 
     const handleCopyArtistCollection = async (artistCount: number) => {
         if (!username || !user || !profile?.isApproved || isCopyingCollection) {
             return;
         }
 
-        const confirmed = window.confirm(
-            `Copy ${artistCount} artist${artistCount === 1 ? '' : 's'} from ${username}'s map to your map?\n\nArtists already on your map will be skipped.`
-        );
-        if (!confirmed) {
-            return;
-        }
-
-        setIsCopyingCollection(true);
-        try {
-            const result = await copyArtistCollectionByUsername(username);
-            await queryClient.invalidateQueries({ queryKey: ['artists'] });
-            alert(`Copied ${result.copied} artist${result.copied === 1 ? '' : 's'}. Skipped ${result.skipped}.`);
-        } catch (error) {
-            console.error('Failed to copy artist collection:', error);
-            alert('Failed to copy artist collection. Please try again.');
-        } finally {
-            setIsCopyingCollection(false);
-        }
+        setAppDialog({
+            title: 'Copy artist collection?',
+            message: (
+                <>
+                    <p>Copy {artistCount} artist{artistCount === 1 ? '' : 's'} from {username}'s map to your map?</p>
+                    <p className="mt-1">Artists already on your map will be skipped.</p>
+                </>
+            ),
+            variant: 'default',
+            confirmLabel: 'Copy',
+            cancelLabel: 'Cancel',
+            onConfirm: async () => {
+                setAppDialogLoading(true);
+                setIsCopyingCollection(true);
+                try {
+                    const result = await copyArtistCollectionByUsername(username);
+                    await queryClient.invalidateQueries({ queryKey: ['artists'] });
+                    showAppMessage(
+                        'Collection copied',
+                        `Copied ${result.copied} artist${result.copied === 1 ? '' : 's'}. Skipped ${result.skipped}.`,
+                        'success'
+                    );
+                } catch (error) {
+                    console.error('Failed to copy artist collection:', error);
+                    showAppMessage('Could not copy collection', 'Failed to copy artist collection. Please try again.', 'error');
+                } finally {
+                    setIsCopyingCollection(false);
+                    setAppDialogLoading(false);
+                }
+            },
+        });
     };
 
     // Show loading state while checking user access
@@ -270,6 +384,8 @@ function App() {
                                 <MainSearch
                                     mapUsername={username}
                                     onSelectArtist={handleNavigateToArtist}
+                                    closeSignal={mainSearchCloseSignal}
+                                    onResultsOpenChange={handleMainSearchResultsOpenChange}
                                 />
                             </div>
                             {viewingFeatured ? (
@@ -303,7 +419,7 @@ function App() {
                 </div>
                 <div className="flex shrink-0 items-center gap-2 pointer-events-auto">
                     <div className="z-[1250]">
-                        {user && <NotificationButton />}
+                        {user && <NotificationButton onOpenChange={setNotificationMenuOpen} />}
                     </div>
                     <div className="z-[1100]">
                         <AccountButton
@@ -311,6 +427,7 @@ function App() {
                             onOpenAuthModal={() => setShowAuthModal(true)}
                             onCloseAuthModal={() => setShowAuthModal(false)}
                             onOpenAdminDashboard={() => setShowAdminDashboard(true)}
+                            onMenuOpenChange={setAccountMenuOpen}
                         />
                     </div>
                 </div>
@@ -341,12 +458,14 @@ function App() {
                 }} />
             )}
 
-            {!showForm && !showArtistList && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
+            {!showForm && !showArtistList && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
                 <AddArtistButton onClick={handleAddArtistClick} />
             )}
-            {!showForm && !showArtistList && user && (!viewingFeatured || !showFeaturedList) && (
+            {!showForm && !showArtistList && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList) && (
                 <ViewArtistListButton onClick={() => {
                     if (viewingFeatured) {
+                        setShowForm(false);
+                        setMainSearchCloseSignal((signal) => signal + 1);
                         setShowFeaturedList(true);
                     } else {
                         handleViewArtistListClick();
@@ -364,6 +483,7 @@ function App() {
                         pendingCoordinates={pendingCoordinates}
                         onConsumePendingCoordinates={handleConsumeCoordinates}
                         onTutorialAction={handleTutorialAction}
+                        onTutorialImageStateChange={setTutorialArtistHasImage}
                         onTutorialComplete={() => {
                             if (tutorialStepIndex !== null) {
                                 void completeTutorial();
@@ -394,9 +514,24 @@ function App() {
                 <TutorialOverlay
                     steps={TutorialText}
                     stepIndex={tutorialStepIndex}
-                    onNext={setTutorialStepIndex}
+                    onNext={handleTutorialNext}
                     onSkip={completeTutorial}
                 />
+            )}
+            {appDialog && (
+                <ConfirmDialog
+                    open
+                    title={appDialog.title}
+                    variant={appDialog.variant}
+                    confirmLabel={appDialog.confirmLabel}
+                    cancelLabel={appDialog.cancelLabel}
+                    isLoading={appDialogLoading}
+                    dimBackdrop={appDialog.dimBackdrop}
+                    onCancel={() => setAppDialog(null)}
+                    onConfirm={() => { void appDialog.onConfirm(); }}
+                >
+                    {appDialog.message}
+                </ConfirmDialog>
             )}
             <MapView
                 username={username}
@@ -409,6 +544,9 @@ function App() {
                 focusedArtist={focusedArtist}
                 onFocusedArtistHandled={() => setFocusedArtist(null)}
                 isAuthenticated={!!user}
+                suppressArtistPopup={isMobileLayout && (showForm || showArtistList || showFeaturedList || mainSearchResultsOpen)}
+                onArtistPopupOpenChange={handleArtistPopupOpenChange}
+                interactionsDisabled={mapInteractionsDisabled}
             />
         </main>
     );

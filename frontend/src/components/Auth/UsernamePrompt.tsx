@@ -10,6 +10,49 @@ interface UsernamePromptProps {
     onComplete: () => void;
 }
 
+function UsernamePromptError({ message }: { message: string }) {
+    return (
+        <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error">
+            <svg
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 text-[#ef4444]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="m15 9-6 6" />
+                <path d="m9 9 6 6" />
+            </svg>
+            <span>{message}</span>
+        </div>
+    );
+}
+
+function UsernamePromptSuccess({ message }: { message: string }) {
+    return (
+        <div role="status" className="mt-1.5 flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-success">
+            <svg
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="m8.5 12.5 2.25 2.25L15.5 10" />
+            </svg>
+            <span>{message}</span>
+        </div>
+    );
+}
+
 export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
     const noop = useCallback(() => {}, []);
     const dialogRef = useDialogAccessibility(noop);
@@ -129,15 +172,14 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
     const isAvailable = !error && username.length >= 1 && availableUsername === username && !checking;
 
     return (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center">
-            <div aria-hidden="true" className="absolute inset-0 bg-black/50" />
+        <div className="fixed inset-0 z-[1200] pointer-events-none">
             <div
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="username-prompt-title"
                 tabIndex={-1}
-                className="relative bg-surface rounded-lg shadow-xl w-full max-w-sm mx-4 p-6 focus:outline-none"
+                className="absolute right-2 top-16 w-[calc(100vw-1rem)] max-w-[340px] rounded-lg bg-surface p-5 shadow-xl pointer-events-auto focus:outline-none"
             >
                 <h2 id="username-prompt-title" className="text-xl font-bold text-text mb-2">{t('auth.userNamePrompt.title')}</h2>
                 <p className="text-sm text-text-secondary mb-4">
@@ -146,11 +188,10 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                     {t('auth.userNamePrompt.subdescription')}
                 </p>
                 {profile?.isRejected && (
-                    <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2 mb-4">
+                    <p className="text-xs text-warning bg-warning/10 border border-warning/30 rounded-md px-3 py-2 mb-4">
                         {t('auth.userNamePrompt.notApprovedNotice')}
                     </p>
                 )}
-
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         {/* Plain text prevents label-click refocus. */}
@@ -194,9 +235,9 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                             }}
                             placeholder={t('auth.userNamePrompt.usernamePlaceholder')}
                             maxLength={16}
-                            error={error || undefined}
-                            helperText={isAvailable ? t('auth.userNamePrompt.usernameAvailable') : undefined}
                         />
+                        {error && <UsernamePromptError message={error} />}
+                        {isAvailable && <UsernamePromptSuccess message={t('auth.userNamePrompt.usernameAvailable')} />}
                     </div>
 
                     <Button

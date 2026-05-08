@@ -109,8 +109,10 @@
       "activeLocation": "活動拠点",
       "searchActiveLocation": "活動拠点を検索",
       "careerYears": "活動期間",
+      "debutYear": "デビュー年",
       "debut": "デビュー",
       "present": "現在",
+      "inactiveYear": "活動休止年",
       "inactive": "活動休止"
     },
     "alts": {
@@ -174,6 +176,7 @@
       "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してください。",
       "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効です。",
       "failedUploadImage": "画像をアップロードできませんでした。",
+      "imageRequirements": "JPG、PNG、WebP形式で、5 MB以下の画像を使用してください。",
       "failedSaveArtist": "アーティストを保存できませんでした。もう一度お試しください。"
     }
   }

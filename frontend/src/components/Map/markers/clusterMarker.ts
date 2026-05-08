@@ -67,6 +67,10 @@ export const createClusterMarkerElement = (
     element.setAttribute('aria-label', `${count} artists`);
     element.style.width = `${visualSize}px`;
     element.style.height = `${visualSize}px`;
+    element.ondblclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
 
     bubble.className = 'flex items-center justify-center rounded-full font-bold border-2 shadow-lg cursor-pointer text-white';
     bubble.style.width = `${visualSize}px`;

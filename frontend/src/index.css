@@ -26,9 +26,9 @@
   --color-border-strong: #d1d5db;
 
   /* Status colors */
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-success: #009E73;
+  --color-warning: #E69F00;
+  --color-error: #C0392B;
 
   /* Z-index scale */
   --z-index-dropdown: 100;
@@ -57,7 +57,7 @@ label[for].block {
 /* Artist marker focus */
 .custom-artist-marker.marker-focused,
 .custom-artist-marker:has(+ .maplibregl-popup) {
-  z-index: 10000 !important;
+  z-index: 1000 !important;
 }
 .custom-artist-marker.marker-focused > div,
 .custom-artist-marker:has(+ .maplibregl-popup) > div {
@@ -90,6 +90,15 @@ label[for].block {
 
 [data-tutorial-target="social-links"].tutorial-indicator {
   z-index: 60;
+}
+
+.artist-form-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.artist-form-scroll-content {
+  width: var(--artist-form-scroll-content-width, 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -32,6 +32,10 @@ export const createArtistMarkerElement = (artist: Artist) => {
     element.type = 'button';
     element.className = 'artist-maplibre-marker custom-artist-marker';
     element.setAttribute('aria-label', artist.name);
+    element.ondblclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
 
     frame.className = 'relative w-7 h-7 rounded-full border-2 border-white overflow-hidden bg-gray-200 group';
 

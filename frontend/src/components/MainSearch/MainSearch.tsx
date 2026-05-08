@@ -8,9 +8,11 @@ import type { Artist } from '../../types/artist';
 interface MainSearchProps {
     mapUsername?: string;
     onSelectArtist?: (artist: Artist) => void;
+    closeSignal?: number;
+    onResultsOpenChange?: (open: boolean) => void;
 }
 
-export function MainSearch({ mapUsername, onSelectArtist }: MainSearchProps) {
+export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onResultsOpenChange }: MainSearchProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -61,10 +63,28 @@ export function MainSearch({ mapUsername, onSelectArtist }: MainSearchProps) {
     const hasResults = results && results.totalCount > 0;
     const showDropdown = isOpen && query.length >= 2;
 
+    useEffect(() => {
+        onResultsOpenChange?.(showDropdown);
+    }, [onResultsOpenChange, showDropdown]);
+
+    useEffect(() => {
+        // Parent-owned close signal keeps mobile surfaces mutually exclusive.
+        if (closeSignal > 0) {
+            setIsOpen(false);
+        }
+    }, [closeSignal, setIsOpen]);
+
     return (
         <div ref={containerRef} className="relative w-full font-sans sm:w-80">
             {/* Search Input */}
-            <div className="relative">
+            <div
+                className="relative"
+                onPointerDown={(event) => {
+                    // Expand the focus target without stealing clear/search button clicks.
+                    if ((event.target as HTMLElement).closest('button')) return;
+                    inputRef.current?.focus();
+                }}
+            >
                 <input
                     ref={inputRef}
                     role="combobox"
@@ -77,18 +97,18 @@ export function MainSearch({ mapUsername, onSelectArtist }: MainSearchProps) {
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="Search artists, users..."
+                    placeholder="Search artists, users"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
-                    className="h-12 w-full min-w-0 pl-4 pr-20 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="h-12 w-full min-w-0 pl-3.5 pr-13 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:pl-5"
                 />
                 {query && (
                     <IconButton
                         aria-label="Clear search"
                         onClick={handleClear}
                         size="sm"
-                        className="absolute right-12 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
+                        className="absolute right-8 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
                     >
                         <CloseIcon className="w-4 h-4" />
                     </IconButton>
@@ -97,7 +117,7 @@ export function MainSearch({ mapUsername, onSelectArtist }: MainSearchProps) {
                     aria-label="Search!"
                     type="button"
                     onClick={() => inputRef.current?.focus()}
-                    className="absolute right-2 top-1/2 flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-md text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                    className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-md text-text-secondary hover:bg-primary hover:text-white transition-colors"
                 >
                     <SearchIcon className="w-5 h-5" />
                 </button>

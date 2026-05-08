@@ -86,6 +86,18 @@ const ArtistList = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        // On mobile the list behaves like a dismissible overlay.
+        const handlePointerDownOutside = (e: PointerEvent) => {
+            if (!window.matchMedia('(max-width: 639px)').matches) return;
+            if (listRef.current?.contains(e.target as Node)) return;
+            onClose();
+        };
+
+        document.addEventListener('pointerdown', handlePointerDownOutside);
+        return () => document.removeEventListener('pointerdown', handlePointerDownOutside);
+    }, [onClose]);
+
     const filteredArtists = useMemo(() => artists.filter((artist) => {
         const q = searchQuery.toLowerCase();
         return artist.name.toLowerCase().includes(q) ||
@@ -159,6 +171,28 @@ const ArtistList = ({
         setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
     };
 
+    const handleProfileCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!selectedArtist) return;
+
+        // ArtistProfile owns the overlay UI; the list owns edit/delete routing.
+        const target = e.target as HTMLElement;
+        const editButton = target.closest('[data-action="edit"]');
+        const deleteButton = target.closest('[data-action="delete"]');
+
+        if (editButton && onEditArtist) {
+            e.preventDefault();
+            e.stopPropagation();
+            onEditArtist(selectedArtist);
+            return;
+        }
+
+        if (deleteButton && onDeleteArtist) {
+            e.preventDefault();
+            e.stopPropagation();
+            onDeleteArtist(selectedArtist);
+        }
+    };
+
     return (
         <div ref={listRef} className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0">
             {/* Artist card - positioned to the left of the list */}
@@ -166,6 +200,7 @@ const ArtistList = ({
                 <div
                     className="absolute right-full mr-2 hidden sm:block"
                     style={{ top: cardPosition, transform: 'translateY(-50%)' }}
+                    onClick={handleProfileCardClick}
                 >
                     <ArtistProfile artist={selectedArtist} showActions={!!(onEditArtist || onDeleteArtist)} locationLanguage={locationLanguage} />
                 </div>
@@ -345,7 +380,7 @@ const ArtistList = ({
                                                     aria-label="Delete artist"
                                                     onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded hover:bg-error hover:text-white text-text-secondary"
+                                                    className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:text-white"
                                                     title="Delete"
                                                 >
                                                     <TrashIcon className="w-4 h-4" />

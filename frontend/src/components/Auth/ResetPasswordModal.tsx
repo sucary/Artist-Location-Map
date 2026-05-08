@@ -65,7 +65,7 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                 <CloseButton onClick={onClose} size="lg" className="absolute top-4 right-4" />
                 {success ? (
                     <div className="text-center">
-                        <svg aria-hidden="true" className="w-12 h-12 text-green-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg aria-hidden="true" className="w-12 h-12 text-success mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <h2 className="text-xl font-bold text-text mb-2">{t('auth.resetPassword.passwordUpdated')}</h2>
@@ -75,7 +75,7 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                     <>
                         <h2 id="reset-password-title" className="text-xl font-bold text-text mb-6">{t('auth.resetPassword.title')}</h2>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                             <div>
                                 <label htmlFor="reset-new-password" className="block text-sm font-medium text-text mb-1">{t('auth.fields.newPassword')}</label>
                                 <div className="relative">

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
 import { MapPinIcon } from '../icons/MapIcons';
 import { useLocationSearch } from '../../hooks/useLocationSearch';
-import { Spinner, Button } from '../ui';
+import { Alert, FieldStatusIcon, Spinner, Button, type FieldStatus } from '../ui';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { formatLocationLocalized } from '../../utils/locationUtils';
@@ -21,6 +21,8 @@ interface LocationSearchProps {
     pendingSearch?: { query: string; key: number } | null;
     syncKey?: number;
     tutorialInputTarget?: string;
+    status?: FieldStatus;
+    statusMessage?: string;
 }
 
 export const LocationSearch = ({
@@ -33,7 +35,9 @@ export const LocationSearch = ({
     onCoordinatesConsumed,
     pendingSearch,
     syncKey,
-    tutorialInputTarget
+    tutorialInputTarget,
+    status,
+    statusMessage
 }: LocationSearchProps) => {
     const {
         query,
@@ -152,13 +156,13 @@ export const LocationSearch = ({
                                 spellCheck={false}
                                 type="text"
                                 placeholder={placeholder || t('artistForm.locationSearch.placeholder')}
-                                className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${isLoading ? 'pr-14' : 'pr-9'}`}
+                                className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${(isLoading || queueSize > 0 || status) ? 'pr-20' : 'pr-9'}`}
                                 value={query !== null ? query : displayValue}
                                 onChange={handleInputChange}
                                 onFocus={handleInputFocus}
                                 onKeyDown={handleKeyDown}
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                                 {(isLoading || queueSize > 0) && (
                                     <div className="relative inline-flex items-center justify-center">
                                         {isLoading && <Spinner size="sm" className="text-text-muted" />}
@@ -169,6 +173,10 @@ export const LocationSearch = ({
                                         )}
                                     </div>
                                 )}
+                                <FieldStatusIcon
+                                    status={status}
+                                    label="Location selected"
+                                />
                                 <button
                                     aria-label={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
                                     onClick={(isLoading || queueSize > 0) ? handleCancel : handleSearch}
@@ -194,17 +202,23 @@ export const LocationSearch = ({
                 </div>
 
                 {error && (
-                    <div className="mt-1 text-error text-sm flex items-center justify-between">
+                    <Alert variant="error" header="Location search failed" className="mt-2">
                         <span>{error}</span>
                         {retryFn && (
                             <button
+                                type="button"
                                 onClick={handleRetry}
-                                className="ml-2 text-primary hover:underline"
+                                className="ml-2 font-medium text-primary hover:underline"
                             >
                                 {t('artistForm.locationSearch.retry')}
                             </button>
                         )}
-                    </div>
+                    </Alert>
+                )}
+                {status === 'warning' && statusMessage && !error && (
+                    <Alert variant="warning" className="mt-2" hideIcon>
+                        {statusMessage}
+                    </Alert>
                 )}
             </div>
 

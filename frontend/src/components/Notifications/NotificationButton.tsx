@@ -11,13 +11,7 @@ import {
 } from '../../services/api';
 import { CloseButton } from '../ui';
 import { NotificationContent } from './NotificationContent';
-
-interface PendingUser {
-    id: string;
-    email: string;
-    username: string | null;
-    createdAt: string;
-}
+import type { PendingUser } from '../../types/profile';
 
 type MenuNotification = Notification & {
     source: 'persisted' | 'synthetic';
@@ -56,9 +50,9 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
 function getNotificationColor(notification: MenuNotification) {
     if (notification.isHard) {
         if (notification.type.includes('error') || notification.type.includes('failed')) {
-            return 'bg-red-50 border-surface-secondary';
+            return 'bg-error/10 border-surface-secondary';
         }
-        return 'bg-yellow-50 border-surface-secondary';
+        return 'bg-warning/10 border-surface-secondary';
     }
 
     return 'bg-surface border-surface-secondary';
@@ -135,11 +129,16 @@ function NotificationItem({
     );
 }
 
-export function NotificationButton() {
+interface NotificationButtonProps {
+    onOpenChange?: (open: boolean) => void;
+}
+
+export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { profile } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const [usesHoverMenu, setUsesHoverMenu] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const { data: persistedNotifications = [] } = useQuery({
@@ -231,9 +230,25 @@ export function NotificationButton() {
     const canClear = notifications.some((notification) => !notification.isHard);
 
     useEffect(() => {
+        // Desktop opens on hover; mobile keeps tap-to-toggle behavior.
+        const mediaQuery = window.matchMedia('(min-width: 640px)');
+        const syncHoverMode = () => setUsesHoverMenu(mediaQuery.matches);
+
+        syncHoverMode();
+        mediaQuery.addEventListener('change', syncHoverMode);
+        return () => mediaQuery.removeEventListener('change', syncHoverMode);
+    }, []);
+
+    useEffect(() => {
+        onOpenChange?.(isOpen);
+    }, [isOpen, onOpenChange]);
+
+    useEffect(() => {
         if (!isOpen) return;
 
-        // Outside click closes menu without blocking other controls.
+        if (usesHoverMenu) return;
+
+        // Outside click closes the mobile tap menu without blocking other controls.
         const handlePointerDown = (event: PointerEvent) => {
             if (!containerRef.current?.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -279,18 +294,29 @@ export function NotificationButton() {
     };
 
     return (
-        <div ref={containerRef} className="relative">
+        <div
+            ref={containerRef}
+            className="relative"
+            onMouseEnter={() => {
+                if (usesHoverMenu) setIsOpen(true);
+            }}
+            onMouseLeave={() => {
+                if (usesHoverMenu) setIsOpen(false);
+            }}
+        >
             <button
                 aria-label={`Notifications (${notificationCount})`}
                 aria-expanded={isOpen}
-                onClick={() => setIsOpen((open) => !open)}
+                onClick={() => {
+                    if (!usesHoverMenu) setIsOpen((open) => !open);
+                }}
                 className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors text-text relative sm:h-13 sm:w-13"
             >
                 <BellIcon />
                 {notificationCount > 0 && (
                     <span
                         aria-hidden="true"
-                        className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
+                        className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-warning text-white text-xs rounded-full flex items-center justify-center font-medium"
                     >
                         {notificationCount}
                     </span>
@@ -311,7 +337,6 @@ export function NotificationButton() {
                                     Clear all
                                 </button>
                             )}
-                            <CloseButton onClick={() => setIsOpen(false)} size="md" />
                         </div>
                     </div>
                     <div className="max-h-96 overflow-y-auto">

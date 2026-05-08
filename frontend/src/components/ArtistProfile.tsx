@@ -1,3 +1,4 @@
+import { useState, type MouseEvent } from 'react';
 import type { Artist, LocationLanguage } from '../types/artist';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from './icons/SocialIcons';
 import { EditIcon, TrashIcon } from './icons/GeneralIcons';
@@ -28,14 +29,34 @@ const getPlaceholderUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=320&background=e5e7eb&color=9ca3af`;
 
 const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistProfileProps) => {
+    const [actionsVisible, setActionsVisible] = useState(false);
     // Use Cloudinary transformation for profile banner
     const backgroundImageUrl = getProfileUrl(artist.sourceImage, artist.profileCrop) || getPlaceholderUrl(artist.name);
+
+    const handleCoverClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (!showActions || actionsVisible) return;
+        if ((event.target as HTMLElement).closest('[data-action]')) return;
+
+        // First touch reveals actions without firing edit or delete.
+        event.preventDefault();
+        event.stopPropagation();
+        setActionsVisible(true);
+    };
     
     return (
         <div className="w-80 flex flex-col rounded-lg bg-surface shadow-lg overflow-hidden font-sans">
             <style>{`
-                .artist-cover:hover .artist-action-bar {
+                .artist-cover:hover .artist-action-bar,
+                .artist-cover.artist-actions-visible .artist-action-bar {
                     opacity: 1 !important;
+                }
+                @media (hover: hover) and (pointer: fine) {
+                    .artist-cover:hover .artist-action-bar {
+                        pointer-events: auto !important;
+                    }
+                }
+                .artist-cover.artist-actions-visible .artist-action-bar {
+                    pointer-events: auto !important;
                 }
                 .artist-action-edit:hover {
                     background-color: rgba(0, 0, 0, 0.65) !important;
@@ -46,17 +67,22 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
             `}</style>
             {/* Header with cover image */}
             <div
-                className="artist-cover relative w-full h-28 bg-surface-muted bg-cover bg-center"
+                className={`artist-cover relative w-full h-28 bg-surface-muted bg-cover bg-center ${actionsVisible ? 'artist-actions-visible' : ''}`}
                 style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+                onClick={handleCoverClick}
             >
                 {/* Bottom gradient for name readability */}
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 via-black/20 to-transparent pointer-events-none" />
 
-                {/* Action bar - shows on hover */}
+                {/* Action bar: hover on desktop, first tap on touch screens. */}
                 {showActions && (
                     <div
                         className="artist-action-bar absolute inset-0 flex"
-                        style={{ opacity: 0, transition: 'opacity 0.2s ease-in-out' }}
+                        style={{
+                            opacity: 0,
+                            pointerEvents: actionsVisible ? 'auto' : 'none',
+                            transition: 'opacity 0.2s ease-in-out'
+                        }}
                     >
                         {/* Edit */}
                         <div

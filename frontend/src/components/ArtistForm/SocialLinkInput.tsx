@@ -3,6 +3,7 @@ import type { ComponentType, SVGProps } from 'react';
 import type { SocialLinkKey } from '../../constants/artist';
 import { validateSocialUrl } from '../../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
+import { Alert } from '../ui';
 
 export interface SocialLinkField {
     key: SocialLinkKey;
@@ -60,7 +61,9 @@ const SocialLinkInput = ({ field, value, onChange }: SocialLinkInputProps) => {
             />
             <Icon aria-hidden="true" className={`absolute left-3 top-2.5 w-4 h-4 transition-colors ${isValid ? 'text-primary' : 'text-text-muted'}`} />
             {touched && error && (
-                <p role="alert" className="text-xs text-error mt-1">{error}</p>
+                <Alert variant="error" className="mt-2">
+                    {error}
+                </Alert>
             )}
         </div>
     );

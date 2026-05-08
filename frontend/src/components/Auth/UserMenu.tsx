@@ -6,14 +6,19 @@ import { UserIcon } from '../icons/GeneralIcons';
 
 interface UserMenuProps {
     onOpenAdminDashboard?: () => void;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function UserMenu({ onOpenAdminDashboard }: UserMenuProps) {
+export function UserMenu({ onOpenAdminDashboard, onOpenChange }: UserMenuProps) {
     const navigate = useNavigate();
     const { user, profile, signOut } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        onOpenChange?.(isOpen);
+    }, [isOpen, onOpenChange]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {

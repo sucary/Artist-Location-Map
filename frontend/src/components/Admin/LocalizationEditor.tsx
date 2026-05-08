@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Spinner, Alert, Button, Input } from '../ui';
+import { Spinner, Alert, Button, Input, ConfirmDialog } from '../ui';
 import { searchCities, getLocalizedNames, updateLocalizedNames, resetLocalizedNames } from '../../services/api';
 import type { SearchResult } from '../../services/api';
 import type { LocalizedChain, LocalizedNames } from '../../types/artist';
@@ -29,6 +29,7 @@ export function LocalizationEditor() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     const handleSearch = async () => {
         if (query.trim().length < 2) return;
@@ -95,7 +96,6 @@ export function LocalizationEditor() {
 
     const handleReset = async () => {
         if (!selectedLocation?.id) return;
-        if (!confirm('Reset to auto-fetched translations? Manual edits will be lost.')) return;
         setSaving(true);
         setMessage(null);
         try {
@@ -107,6 +107,7 @@ export function LocalizationEditor() {
             setMessage({ text: 'Failed to reset', type: 'error' });
         } finally {
             setSaving(false);
+            setShowResetConfirm(false);
         }
     };
 
@@ -143,7 +144,7 @@ export function LocalizationEditor() {
                 </Button>
             </div>
 
-            {searchError && <Alert variant="error" className="mb-3">{searchError}</Alert>}
+            {searchError && <Alert variant="error" header="Location search failed" className="mb-3">{searchError}</Alert>}
 
             {/* Search results */}
             {results.length > 0 && !selectedLocation && (
@@ -165,9 +166,9 @@ export function LocalizationEditor() {
                                         {r.province}{r.country ? `, ${r.country}` : ''}
                                     </span>
                                 </span>
-                                {missing > 0 && <span className="text-xs text-amber-500 shrink-0">{missing} missing</span>}
-                                {missing === 0 && lc && <span className="text-xs text-green-500 shrink-0">ok</span>}
-                                {!lc && <span className="text-xs text-red-400 shrink-0">none</span>}
+                                {missing > 0 && <span className="text-xs text-warning shrink-0">{missing} missing</span>}
+                                {missing === 0 && lc && <span className="text-xs text-success shrink-0">ok</span>}
+                                {!lc && <span className="text-xs text-error shrink-0">none</span>}
                             </button>
                         );
                     })}
@@ -211,7 +212,7 @@ export function LocalizationEditor() {
                             return (
                                 <div key={level} className="grid items-center gap-2" style={{ gridTemplateColumns: '6rem repeat(4, 1fr)' }}>
                                     <span className="text-sm text-text-secondary capitalize truncate" title={dbValue}>
-                                        {hasMissing && <span className="text-amber-500 mr-1">*</span>}
+                                        {hasMissing && <span className="text-warning mr-1">*</span>}
                                         {label}
                                     </span>
                                     {LANGS.map(({ key, label: langLabel }) => (
@@ -224,7 +225,7 @@ export function LocalizationEditor() {
                                             value={names?.[key] || ''}
                                             onChange={e => updateField(level, key, e.target.value)}
                                             placeholder={langLabel}
-                                            className={!names?.[key] ? 'border-amber-500/50' : ''}
+                                            className={!names?.[key] ? 'border-warning/50' : ''}
                                         />
                                     ))}
                                 </div>
@@ -237,16 +238,34 @@ export function LocalizationEditor() {
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? <Spinner size="sm" /> : 'Save'}
                         </Button>
-                        <Button onClick={handleReset} disabled={saving} className="bg-red-600 hover:bg-red-700">
+                        <Button onClick={() => setShowResetConfirm(true)} disabled={saving} className="bg-error hover:bg-error/90">
                             Reset
                         </Button>
-                        {message && (
-                            <span className={`text-sm ml-1 ${message.type === 'success' ? 'text-green-500' : 'text-red-400'}`}>
-                                {message.text}
-                            </span>
-                        )}
                     </div>
+                    {message && (
+                        <Alert
+                            variant={message.type === 'success' ? 'success' : 'error'}
+                            header={message.type === 'success' ? 'Translations saved' : 'Translation update failed'}
+                            className="mt-3"
+                        >
+                            {message.text}
+                        </Alert>
+                    )}
                 </div>
+            )}
+            {showResetConfirm && (
+                <ConfirmDialog
+                    open
+                    title="Reset translations?"
+                    variant="warning"
+                    confirmLabel="Reset"
+                    cancelLabel="Cancel"
+                    isLoading={saving}
+                    onCancel={() => setShowResetConfirm(false)}
+                    onConfirm={() => { void handleReset(); }}
+                >
+                    Manual edits will be lost and translations will be auto-fetched again on next use.
+                </ConfirmDialog>
             )}
         </div>
     );
