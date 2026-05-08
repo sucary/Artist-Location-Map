@@ -1,7 +1,7 @@
 services:
   db:
     image: postgis/postgis:15-3.3
-    container_name: artist_map_db
+    container_name: achizu_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-your_new_secure_password}

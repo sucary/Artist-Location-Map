@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: artist-map-api
+    name: achizu-api
     runtime: node
     nodeVersion: "20"
     plan: free
