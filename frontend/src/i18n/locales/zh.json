@@ -4,6 +4,7 @@
     "search": "搜索",
     "cancel": "取消",
     "save": "保存",
+    "saving": "保存中...",
     "close": "关闭",
     "loading": "加载中",
     "error": "错误",
@@ -223,6 +224,108 @@
       "moreArtists": "更多艺人",
       "onlineResults": "深度搜索结果",
       "searchFailedHeader": "深度搜索失败"
+    }
+  },
+  "banner": {
+    "featuredArtists": "今日艺人",
+    "viewingUser": "正在查看 <username>{{username}}</username> 的地图",
+    "backToMyMap": "返回我的地图"
+  },
+  "mainSearch": {
+    "placeholder": "搜索艺人与用户",
+    "clearSearch": "清除搜索",
+    "search": "搜索",
+    "results": "搜索结果",
+    "noResults": "未找到结果",
+    "artists": "艺人",
+    "users": "用户",
+    "viewMap": "查看地图"
+  },
+  "settings": {
+    "title": "设置",
+    "privacy": {
+      "title": "隐私",
+      "description": "向其他用户隐藏你的账号。",
+      "errorHeader": "无法更新隐私设置",
+      "makePublic": "将账号设为公开",
+      "makePrivate": "将账号设为私密"
+    },
+    "language": {
+      "title": "语言",
+      "locationName": "地点名称",
+      "locationNameLanguage": "地点名称语言",
+      "hint": "由于翻译缺失，部分地点可能会以其他语言显示。"
+    },
+    "username": {
+      "title": "用户名",
+      "changeUsername": "更改用户名",
+      "errorHeader": "无法更新用户名",
+      "saveUsername": "保存用户名"
+    },
+    "password": {
+      "title": "更改密码",
+      "errorHeader": "无法更新密码",
+      "success": "密码已成功更新。",
+      "changePassword": "更改密码"
+    },
+    "errors": {
+      "failedUpdateUsername": "用户名更新失败",
+      "unableUpdateUsername": "无法更新用户名，请重试。",
+      "newPasswordMin": "新密码必须至少包含 6 个字符",
+      "currentPasswordIncorrect": "当前密码不正确",
+      "unableUpdatePassword": "无法更新密码，请重试。",
+      "failedUpdatePrivacy": "隐私设置更新失败",
+      "unableUpdatePrivacy": "无法更新隐私设置，请重试。"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "buttonLabel": "通知（{{count}}）",
+    "dismiss": "关闭通知",
+    "less": "收起",
+    "more": "展开",
+    "pinned": "置顶",
+    "clearAll": "清除所有通知",
+    "accountPendingApprovalTitle": "账号待批准",
+    "accountPendingApprovalContent": "你的账号正在等待管理员批准。",
+    "pendingApprovals_one": "{{count}} 个账号待批准",
+    "pendingApprovals_other": "{{count}} 个账号待批准",
+    "pendingApprovalsContent": "有用户正在等待账号批准。",
+    "openAdmin": "打开管理后台"
+  },
+  "map": {
+    "achizu": "Achizu 艺人地图",
+    "manualLocationSelection": "在地图上点击以选择地点",
+    "cancel": "取消",
+    "attribution": {
+      "aboutAchizu": "关于 Achizu"
+    },
+    "markers": {
+      "clusterArtists": "{{count}} 位艺人"
+    },
+    "buttons": {
+      "addNewArtist": "添加新艺人",
+      "viewArtistList": "查看艺人列表",
+      "mapControls": {
+        "toggleLocationView": "切换地点视图",
+        "origin": "出身地",
+        "active": "活动地",
+        "toggleMapTheme": "切换地图主题",
+        "light": "浅色",
+        "dark": "深色",
+        "useDarkTiles": "使用深色地图",
+        "cannotUseDarkTiles": "此地图不支持深色模式",
+        "collapseAllClusters": "收起所有圈圈",
+        "expandAllClusters": "展开所有圈圈",
+        "resetMapDirection": "重置地图方向",
+        "locateMe": "显示你的位置",
+        "zoomIn": "放大",
+        "zoomOut": "缩小"
+      }
+    },
+    "error": {
+      "renderMapError": "此浏览器不支持地图渲染。请使用其他浏览器。",
+      "loadMapError": "地图加载失败。请刷新后重试。"
     }
   }
 }

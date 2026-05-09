@@ -4,6 +4,7 @@
     "search": "検索",
     "cancel": "キャンセル",
     "save": "保存",
+    "saving": "保存中...",
     "close": "閉じる",
     "loading": "読み込み中...",
     "error": "エラー",
@@ -223,6 +224,108 @@
       "moreArtists": "さらにアーティストを表示",
       "onlineResults": "ディープサーチ結果",
       "searchFailedHeader": "ディープサーチに失敗しました"
+    }
+  },
+  "banner": {
+    "featuredArtists": "今日の注目アーティスト",
+    "viewingUser": "<username>{{username}}</username> のマップを表示",
+    "backToMyMap": "自分のマップに戻る"
+  },
+  "mainSearch": {
+    "placeholder": "アーティストとユーザーを検索",
+    "clearSearch": "検索をクリア",
+    "search": "検索",
+    "results": "検索結果",
+    "noResults": "結果が見つかりません",
+    "artists": "アーティスト",
+    "users": "ユーザー",
+    "viewMap": "マップを表示"
+  },
+  "settings": {
+    "title": "設定",
+    "privacy": {
+      "title": "プライバシー",
+      "description": "他のユーザーからアカウントを非表示にします。",
+      "errorHeader": "プライバシー設定を更新できませんでした",
+      "makePublic": "アカウントを公開する",
+      "makePrivate": "アカウントを非公開にする"
+    },
+    "language": {
+      "title": "言語",
+      "locationName": "地名",
+      "locationNameLanguage": "地名の表示言語",
+      "hint": "一部の地名は別の言語で表示される場合があります。"
+    },
+    "username": {
+      "title": "ユーザー名",
+      "changeUsername": "ユーザー名を変更",
+      "errorHeader": "ユーザー名を更新できませんでした",
+      "saveUsername": "ユーザー名を保存"
+    },
+    "password": {
+      "title": "パスワードを変更",
+      "errorHeader": "パスワードを更新できませんでした",
+      "success": "パスワードを更新しました。",
+      "changePassword": "パスワードを変更"
+    },
+    "errors": {
+      "failedUpdateUsername": "ユーザー名の更新に失敗しました",
+      "unableUpdateUsername": "ユーザー名を更新できませんでした。もう一度お試しください。",
+      "newPasswordMin": "新しいパスワードは6文字以上にしてください",
+      "currentPasswordIncorrect": "現在のパスワードが正しくありません",
+      "unableUpdatePassword": "パスワードを更新できませんでした。もう一度お試しください。",
+      "failedUpdatePrivacy": "プライバシー設定の更新に失敗しました",
+      "unableUpdatePrivacy": "プライバシー設定を更新できませんでした。もう一度お試しください。"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "buttonLabel": "通知（{{count}}件）",
+    "dismiss": "通知を閉じる",
+    "less": "表示を減らす",
+    "more": "もっと見る",
+    "pinned": "固定",
+    "clearAll": "すべての通知をクリア",
+    "accountPendingApprovalTitle": "アカウント承認待ち",
+    "accountPendingApprovalContent": "アカウントは管理者の承認待ちです。",
+    "pendingApprovals_one": "{{count}} 件の承認待ち",
+    "pendingApprovals_other": "{{count}} 件の承認待ち",
+    "pendingApprovalsContent": "アカウント承認待ちのユーザーがいます。",
+    "openAdmin": "管理画面を開く"
+  },
+  "map": {
+    "achizu": "Achizu アーティストマップ",
+    "manualLocationSelection": "地図をクリックして場所を選択",
+    "cancel": "キャンセル",
+    "attribution": {
+      "aboutAchizu": "Achizu について"
+    },
+    "markers": {
+      "clusterArtists": "{{count}} 件のアーティスト"
+    },
+    "buttons": {
+      "addNewArtist": "新しいアーティストを追加",
+      "viewArtistList": "アーティスト一覧を表示",
+      "mapControls": {
+        "toggleLocationView": "表示する場所を切り替え",
+        "origin": "出身地",
+        "active": "活動地",
+        "toggleMapTheme": "地図テーマを切り替え",
+        "light": "ライト",
+        "dark": "ダーク",
+        "useDarkTiles": "ダーク表示を使用",
+        "cannotUseDarkTiles": "この地図ではダーク表示を使用できません",
+        "collapseAllClusters": "すべてのクラスターを閉じる",
+        "expandAllClusters": "すべてのクラスターを開く",
+        "resetMapDirection": "地図の向きをリセット",
+        "locateMe": "現在地へ移動",
+        "zoomIn": "拡大",
+        "zoomOut": "縮小"
+      }
+    },
+    "error": {
+      "renderMapError": "このブラウザでは地図の表示に対応していません。別のブラウザを使用してください。",
+      "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください。"
     }
   }
 }

@@ -3,6 +3,7 @@ import type { TouchEvent } from 'react';
 import type { LocationView } from '../../types/artist';
 import type { MapTileTheme } from './config/mapStyles';
 import { LocationIcon, NorthIcon, ExpandIcon, CollapseIcon } from '../icons/MapIcons';
+import { useTranslation } from 'react-i18next';
 
 interface MapControlsProps {
     view: LocationView;
@@ -51,6 +52,8 @@ export function MapControls({
     const [dragOffset, setDragOffset] = useState<number | null>(null);
     const mobileVisibleTipWidth = 3.8; // Visible portion of the map controls when closed on mobile view
     const mapButtonClass = 'bg-surface w-10 h-10 flex items-center justify-center hover:bg-surface-muted transition-colors text-text';
+
+    const { t } = useTranslation();
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(max-width: 639px)');
@@ -150,36 +153,36 @@ export function MapControls({
             <div className="flex gap-2 items-end">
                 <div className="relative flex flex-col gap-2 items-end">
                     {showViewToggle && (
-                        <div role="group" aria-label="Toggle Location View" className="flex bg-surface rounded-md overflow-hidden shadow-md">
+                        <div role="group" aria-label={t('map.buttons.mapControls.toggleLocationView')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
                             <button
                                 aria-pressed={view === 'original'}
                                 onClick={() => setView('original')}
                                 className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'original' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
                             >
-                                Origin
+                                {t('map.buttons.mapControls.origin')}
                             </button>
                             <button
                                 aria-pressed={view === 'active'}
                                 onClick={() => setView('active')}
                                 className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'active' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
                             >
-                                Active
+                                {t('map.buttons.mapControls.active')}
                             </button>
                         </div>
                     )}
 
-                    <div role="group" aria-label="Toggle Map Theme" className="flex bg-surface rounded-md overflow-hidden shadow-md">
+                    <div role="group" aria-label={t('map.buttons.mapControls.toggleMapTheme')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
                         <button
                             aria-pressed={tileTheme === 'light'}
                             onClick={() => setTileTheme('light')}
                             className={`w-16 py-2 text-sm font-medium transition-colors ${tileTheme === 'light' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
                         >
-                            Light
+                            {t('map.buttons.mapControls.light')}
                         </button>
                         <button
                             aria-pressed={tileTheme === 'dark'}
                             disabled={!canUseDarkTiles}
-                            title={canUseDarkTiles ? 'Use dark map tiles' : 'Dark mode is not available for this map'}
+                            title={canUseDarkTiles ? t('map.buttons.mapControls.useDarkTiles') : t('map.buttons.mapControls.cannotUseDarkTiles')}
                             onClick={() => {
                                 if (canUseDarkTiles) setTileTheme('dark');
                             }}
@@ -187,40 +190,40 @@ export function MapControls({
                                 tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted disabled:hover:bg-transparent'
                             }`}
                         >
-                            Dark
+                            {t('map.buttons.mapControls.dark')}
                         </button>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-2 items-end">
                     <button
-                        aria-label={hasExpandedClusters ? 'Collapse All Clusters' : 'Expand All Clusters'}
+                        aria-label={hasExpandedClusters ? t('map.buttons.mapControls.collapseAllClusters') : t('map.buttons.mapControls.expandAllClusters')}
                         onClick={onToggleClusters}
                         className={`${mapButtonClass} rounded-md shadow-md`}
-                        title={hasExpandedClusters ? 'Collapse All Clusters' : 'Expand All Clusters'}
+                        title={hasExpandedClusters ? t('map.buttons.mapControls.collapseAllClusters') : t('map.buttons.mapControls.expandAllClusters')}
                     >
                         {hasExpandedClusters ? <CollapseIcon className="w-5 h-5" /> : <ExpandIcon className="w-5 h-5" />}
                     </button>
 
                     <button
-                        aria-label="Reset Map Direction"
+                        aria-label={t('map.buttons.mapControls.resetMapDirection')}
                         onClick={onResetMapView}
                         disabled={!canResetMapView}
                         className={`${mapButtonClass} rounded-md shadow-md disabled:cursor-default`}
-                        title="Reset Map Direction"
+                        title={t('map.buttons.mapControls.resetMapDirection')}
                     >
                         <NorthIcon />
                     </button>
 
-                    <button aria-label="Locate Me" onClick={onLocate} className={`${mapButtonClass} rounded-md shadow-md`} title="Locate Me">
+                    <button aria-label={t('map.buttons.mapControls.locateMe')} onClick={onLocate} className={`${mapButtonClass} rounded-md shadow-md`} title={t('map.buttons.mapControls.locateMe')}>
                         <LocationIcon />
                     </button>
 
                     <div className="flex flex-col rounded-md shadow-md overflow-hidden">
-                        <button aria-label="Zoom In" onClick={onZoomIn} className={`${mapButtonClass} border-b border-border`} title="Zoom In">
+                        <button aria-label={t('map.buttons.mapControls.zoomIn')} onClick={onZoomIn} className={`${mapButtonClass} border-b border-border`} title={t('map.buttons.mapControls.zoomIn')}>
                             <span className="text-lg font-medium">+</span>
                         </button>
-                        <button aria-label="Zoom Out" onClick={onZoomOut} className={mapButtonClass} title="Zoom Out">
+                        <button aria-label={t('map.buttons.mapControls.zoomOut')} onClick={onZoomOut} className={mapButtonClass} title={t('map.buttons.mapControls.zoomOut')}>
                             <span className="text-lg font-medium">-</span>
                         </button>
                     </div>

@@ -4,6 +4,7 @@ import { SearchResultRow } from './SearchResultRow';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
 import { IconButton, Spinner } from '../ui';
 import type { Artist } from '../../types/artist';
+import { useTranslation } from 'react-i18next';
 
 interface MainSearchProps {
     mapUsername?: string;
@@ -15,6 +16,7 @@ interface MainSearchProps {
 export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onResultsOpenChange }: MainSearchProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
 
     const {
         query,
@@ -88,7 +90,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                 <input
                     ref={inputRef}
                     role="combobox"
-                    aria-label="Search artists and users"
+                    aria-label={t('mainSearch.placeholder')}
                     aria-expanded={showDropdown}
                     aria-controls="search-results"
                     aria-autocomplete="list"
@@ -99,7 +101,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="Search artists, users"
+                    placeholder={t('mainSearch.placeholder')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
@@ -107,7 +109,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                 />
                 {query && (
                     <IconButton
-                        aria-label="Clear search"
+                        aria-label={t('mainSearch.clearSearch')}
                         onClick={handleClear}
                         size="sm"
                         className="absolute right-8 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
@@ -116,7 +118,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     </IconButton>
                 )}
                 <button
-                    aria-label="Search!"
+                    aria-label={t('mainSearch.search')}
                     type="button"
                     onClick={() => inputRef.current?.focus()}
                     className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-md text-text-secondary hover:bg-primary hover:text-white transition-colors"
@@ -131,7 +133,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     aria-live="polite"
                     id="search-results" 
                     role="listbox"
-                    aria-label="Search results"
+                    aria-label={t('mainSearch.results')}
                     className="fixed top-16 left-2 right-2 z-[1260] bg-surface border border-border rounded-md shadow-md overflow-hidden max-h-[calc(100vh-5rem)] overflow-y-auto sm:absolute sm:top-full sm:left-0 sm:right-auto sm:mt-1 sm:w-full sm:max-h-96"
                 >
                     {isLoading ? (
@@ -140,15 +142,15 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                         </div>
                     ) : !hasResults ? (
                         <div className="text-center py-8 text-text-secondary text-sm">
-                            No results found
+                            {t('mainSearch.noResults')}
                         </div>
                     ) : (
                         <>
                             {/* Artists */}
                             {results.artists.length > 0 && (
                                 <div>
-                                    <div role="group" aria-label="Artists" className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
-                                        Artists
+                                    <div role="group" aria-label={t('mainSearch.artists')} className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
+                                        {t('mainSearch.artists')}
                                     </div>
                                     {results.artists.map((artistResult) => (
                                         <SearchResultRow
@@ -163,8 +165,8 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                             {/* Users */}
                             {results.users.length > 0 && (
                                 <div>
-                                    <div role="group" aria-label="Users" className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
-                                        Users
+                                    <div role="group" aria-label={t('mainSearch.users')} className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
+                                        {t('mainSearch.users')}
                                     </div>
                                     {results.users.map((user) => (
                                         <SearchResultRow

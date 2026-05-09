@@ -4,6 +4,7 @@
     "search": "Search",
     "cancel": "Cancel",
     "save": "Save",
+    "saving": "Saving...",
     "close": "Close",
     "loading": "Loading",
     "error": "Something went wrong",
@@ -223,6 +224,108 @@
       "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB.",
       "saveArtistFailedHeader": "Could not save artist",
       "failedSaveArtist": "Failed to save artist. Please try again."
+    }
+  },
+  "banner": {
+    "featuredArtists": "Featured Artists",
+    "viewingUser": "Viewing <username>{{username}}</username>'s map",
+    "backToMyMap": "Back to my map"
+  },
+  "mainSearch": {
+    "placeholder": "Search artists & users",
+    "clearSearch": "Clear search",
+    "search": "Search",
+    "results": "Search results",
+    "noResults": "No results found",
+    "artists": "Artists",
+    "users": "Users",
+    "viewMap": "View map"
+  },
+  "settings": {
+    "title": "Settings",
+    "privacy": {
+      "title": "Privacy",
+      "description": "Hide your account from other users.",
+      "errorHeader": "Could not update privacy",
+      "makePublic": "Make account public",
+      "makePrivate": "Make account private"
+    },
+    "language": {
+      "title": "Language",
+      "locationName": "Location name",
+      "locationNameLanguage": "Location name language",
+      "hint": "Some locations may display in a different language due to lack of translation."
+    },
+    "username": {
+      "title": "Username",
+      "changeUsername": "Change username",
+      "errorHeader": "Could not update username",
+      "saveUsername": "Save username"
+    },
+    "password": {
+      "title": "Change Password",
+      "errorHeader": "Could not update password",
+      "success": "Password updated successfully.",
+      "changePassword": "Change password"
+    },
+    "errors": {
+      "failedUpdateUsername": "Failed to update username",
+      "unableUpdateUsername": "Unable to update username. Please try again.",
+      "newPasswordMin": "New password must be at least 6 characters",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "unableUpdatePassword": "Unable to update password. Please try again.",
+      "failedUpdatePrivacy": "Failed to update privacy setting",
+      "unableUpdatePrivacy": "Unable to update privacy setting. Please try again."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "buttonLabel": "Notifications ({{count}})",
+    "dismiss": "Dismiss notification",
+    "less": "Show less",
+    "more": "Show more",
+    "pinned": "Pinned",
+    "clearAll": "Clear all notifications",
+    "accountPendingApprovalTitle": "Account pending approval",
+    "accountPendingApprovalContent": "Your account is awaiting admin approval.",
+    "pendingApprovals_one": "{{count}} pending approval",
+    "pendingApprovals_other": "{{count}} pending approvals",
+    "pendingApprovalsContent": "Users are waiting for account approval.",
+    "openAdmin": "Open admin"
+  },
+  "map": {
+    "achizu": "Achizu, the artist map",
+    "manualLocationSelection": "Click on the map to select a location",
+    "cancel": "Cancel",
+    "attribution": {
+      "aboutAchizu": "About Achizu"
+    },
+    "markers": {
+      "clusterArtists": "{{count}} artists"
+    },
+    "buttons":{
+      "addNewArtist": "Add new artist",
+      "viewArtistList": "View artist list",
+      "mapControls": {
+        "toggleLocationView": "Toggle location view",
+        "origin": "Origin",
+        "active": "Active",
+        "toggleMapTheme": "Toggle map theme",
+        "light": "Light",
+        "dark": "Dark",
+        "useDarkTiles": "Use dark tiles",
+        "cannotUseDarkTiles": "Dark mode is not available for this map",
+        "collapseAllClusters": "Collapse all clusters",
+        "expandAllClusters": "Expand all clusters",
+        "resetMapDirection": "Reset map direction",
+        "locateMe": "Locate me",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out"
+      }
+    },
+    "error": {
+      "renderMapError": "Map rendering is not supported in this browser. Please use a different browser.",
+      "loadMapError": "Failed to load map. Please refresh and try again."
     }
   }
 }

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Banner, HomeIcon } from './Banner';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface ViewingUserBannerProps {
     username: string;
@@ -7,11 +8,20 @@ interface ViewingUserBannerProps {
 
 export function ViewingUserBanner({ username }: ViewingUserBannerProps) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
         <Banner
-            content={<>Viewing <span className="font-semibold text-primary">{username}</span>'s map</>}
-            action={{ type: 'icon', icon: <HomeIcon />, onClick: () => navigate('/'), title: 'Back to my map' }}
+            content={
+                <Trans
+                    i18nKey="banner.viewingUser"
+                    values={{ username }}
+                    components={{
+                        username: <span className="font-semibold text-primary" />,
+                    }}
+                />
+            }
+            action={{ type: 'icon', icon: <HomeIcon />, onClick: () => navigate('/'), title: t('banner.backToMyMap') }}
         />
     );
 }

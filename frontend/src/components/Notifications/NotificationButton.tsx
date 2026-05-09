@@ -12,6 +12,7 @@ import {
 import { CloseButton } from '../ui';
 import { NotificationContent } from './NotificationContent';
 import type { PendingUser } from '../../types/profile';
+import { useTranslation } from 'react-i18next';
 
 type MenuNotification = Notification & {
     source: 'persisted' | 'synthetic';
@@ -70,6 +71,7 @@ function NotificationItem({
     const [expanded, setExpanded] = useState(false);
     const canExpand = notification.content.length > 72;
     const contentId = `notification-content-${notification.id}`;
+    const { t } = useTranslation();
 
     return (
         <div
@@ -84,7 +86,7 @@ function NotificationItem({
                             <CloseButton
                                 size="sm"
                                 onClick={() => onClose(notification.id)}
-                                aria-label="Close notification"
+                                aria-label={t('notifications.dismiss')}
                                 className="-mr-1 -mt-1"
                             />
                         )}
@@ -112,7 +114,7 @@ function NotificationItem({
                                     className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary"
                                     onClick={() => setExpanded((current) => !current)}
                                 >
-                                    {expanded ? 'Less' : 'More'}
+                                    {expanded ? t('notifications.less') : t('notifications.more')}
                                     <ChevronIcon expanded={expanded} />
                                 </button>
                             )}
@@ -144,6 +146,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [usesHoverMenu, setUsesHoverMenu] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     const { data: persistedNotifications = [] } = useQuery({
         queryKey: ['notifications'],
@@ -181,8 +184,8 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 id: 'account-pending-approval',
                 userId: profile.id,
                 type: 'account_pending_approval',
-                title: 'Account pending approval',
-                content: 'Your account is awaiting admin approval.',
+                title: t('notifications.accountPendingApprovalTitle'),
+                content: t('notifications.accountPendingApprovalContent'),
                 isRead: false,
                 isHard: true,
                 linkLabel: null,
@@ -200,11 +203,11 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 id: 'admin-pending-users',
                 userId: profile.id,
                 type: 'registration_pending',
-                title: `${pendingUsers.length} pending approval${pendingUsers.length > 1 ? 's' : ''}`,
-                content: 'Users are waiting for account approval.',
+                title: t('notifications.pendingApprovals', { count: pendingUsers.length }),
+                content: t('notifications.pendingApprovalsContent'),
                 isRead: false,
                 isHard: true,
-                linkLabel: 'Open admin',
+                linkLabel: t('notifications.openAdmin'),
                 linkUrl: 'admin:dashboard',
                 metadata: { count: pendingUsers.length },
                 aggregationKey: 'admin_pending_users',
@@ -215,7 +218,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
         }
 
         return notifications;
-    }, [pendingUsers, profile]);
+    }, [pendingUsers, profile, t]);
 
     const notifications: MenuNotification[] = useMemo(() => {
         const persisted = persistedNotifications.map((notification) => ({
@@ -310,7 +313,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
             }}
         >
             <button
-                aria-label={`Notifications (${notificationCount})`}
+                aria-label={t('notifications.buttonLabel', { count: notificationCount })}
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? menuId : undefined}
                 aria-haspopup="dialog"
@@ -332,7 +335,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
             {isOpen && (
                 <div id={menuId} role="dialog" aria-modal="false" aria-labelledby="notifications-title" className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                        <h3 id="notifications-title" className="text-lg font-semibold text-text">Notifications</h3>
+                        <h3 id="notifications-title" className="text-lg font-semibold text-text">{t('notifications.title')}</h3>
                         <div className="flex items-center gap-1">
                             {canClear && (
                                 <button
@@ -341,14 +344,14 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                                     disabled={clearMutation.isPending}
                                     onClick={() => clearMutation.mutate()}
                                 >
-                                    Clear all
+                                    {t('notifications.clearAll')}
                                 </button>
                             )}
                         </div>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                        {renderSection('Pinned', hardNotifications)}
-                        {renderSection('Notifications', normalNotifications)}
+                        {renderSection(t('notifications.pinned'), hardNotifications)}
+                        {renderSection(t('notifications.title'), normalNotifications)}
                     </div>
                 </div>
             )}

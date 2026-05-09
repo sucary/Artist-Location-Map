@@ -6,10 +6,12 @@ import { supabase } from '../../lib/supabase';
 import { API_URL } from '../../services/api';
 import { Alert, PageLayout, PageSection } from '../ui';
 import type { LocationLanguage } from '../../types/artist';
+import { useTranslation } from 'react-i18next';
 
 export function SettingsPage() {
     const queryClient = useQueryClient();
     const { user, profile } = useAuth();
+    const { t } = useTranslation();
 
     // Username state
     const [username, setUsername] = useState(profile?.username || '');
@@ -65,14 +67,14 @@ export function SettingsPage() {
 
             if (!res.ok) {
                 const data = await res.json();
-                setUsernameError(data.error || 'Failed to update username');
+                setUsernameError(data.error || t('settings.errors.failedUpdateUsername'));
                 return;
             }
 
             // Refresh profile in context
             window.location.reload();
         } catch {
-            setUsernameError('Unable to update username. Please try again.');
+            setUsernameError(t('settings.errors.unableUpdateUsername'));
         } finally {
             setUsernameSaving(false);
         }
@@ -83,12 +85,12 @@ export function SettingsPage() {
         setPasswordError(null);
 
         if (newPassword.length < 6) {
-            setPasswordError('New password must be at least 6 characters');
+            setPasswordError(t('settings.errors.newPasswordMin'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setPasswordError('Passwords do not match');
+            setPasswordError(t('auth.errors.passwordsMatch'));
             return;
         }
 
@@ -102,7 +104,7 @@ export function SettingsPage() {
             });
 
             if (signInError) {
-                setPasswordError('Current password is incorrect');
+                setPasswordError(t('settings.errors.currentPasswordIncorrect'));
                 setPasswordSaving(false);
                 return;
             }
@@ -122,7 +124,7 @@ export function SettingsPage() {
             setNewPassword('');
             setConfirmPassword('');
         } catch {
-            setPasswordError('Unable to update password. Please try again.');
+            setPasswordError(t('settings.errors.unableUpdatePassword'));
         } finally {
             setPasswordSaving(false);
         }
@@ -146,7 +148,7 @@ export function SettingsPage() {
 
             if (!res.ok) {
                 const data = await res.json();
-                setPrivacyError(data.error || 'Failed to update privacy setting');
+                setPrivacyError(data.error || t('settings.errors.failedUpdatePrivacy'));
                 return;
             }
 
@@ -154,7 +156,7 @@ export function SettingsPage() {
             // Invalidate profile cache so it reflects the new setting
             queryClient.invalidateQueries({ queryKey: ['profile'] });
         } catch {
-            setPrivacyError('Unable to update privacy setting. Please try again.');
+            setPrivacyError(t('settings.errors.unableUpdatePrivacy'));
         } finally {
             setPrivacySaving(false);
         }
@@ -163,22 +165,22 @@ export function SettingsPage() {
     const inputClass = 'w-full px-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary';
 
     return (
-        <PageLayout title="Settings">
+        <PageLayout title={t('settings.title')}>
             {/* Privacy */}
-            <PageSection title="Privacy">
+            <PageSection title={t('settings.privacy.title')}>
                 <div className="flex items-center justify-between gap-5">
                     <div>
                         <p className="text-sm text-text-secondary">
-                            Hide your account from other users.
+                            {t('settings.privacy.description')}
                         </p>
                         {privacyError && (
-                            <Alert variant="error" header="Could not update privacy" className="mt-2">
+                            <Alert variant="error" header={t('settings.privacy.errorHeader')} className="mt-2">
                                 {privacyError}
                             </Alert>
                         )}
                     </div>
                     <button
-                        aria-label={isPrivate ? "Make account public" : "Make account private"}
+                        aria-label={isPrivate ? t('settings.privacy.makePublic') : t('settings.privacy.makePrivate')}
                         type="button"
                         role="switch"
                         aria-checked={isPrivate}
@@ -192,12 +194,12 @@ export function SettingsPage() {
             </PageSection>
 
             {/* Location Language */}
-            <PageSection title="Language">
+            <PageSection title={t('settings.language.title')}>
                 <div>
                     <p className="text-sm text-text-secondary mb-2">
-                        Location name
+                        {t('settings.language.locationName')}
                     </p>
-                    <div role="radiogroup" aria-label="Location name language" className="flex flex-wrap gap-2">
+                    <div role="radiogroup" aria-label={t('settings.language.locationNameLanguage')} className="flex flex-wrap gap-2">
                         {([
                             { value: 'en', label: 'English' },
                             { value: 'zhHans', label: '简体中文' },
@@ -222,20 +224,20 @@ export function SettingsPage() {
                         ))}
                     </div>
                     <p className="text-xs text-text-muted mt-1">
-                        Some location may display in different language.
+                        {t('settings.language.hint')}
                     </p>
                 </div>
             </PageSection>
 
             {/* Username */}
-            <PageSection title="Username">
+            <PageSection title={t('settings.username.title')}>
                 <form onSubmit={handleUsernameSubmit} className="space-y-3">
                     <div>
                         <label 
                             htmlFor="username" 
                             className="block text-sm font-medium text-text-secondary mb-1"
                         >
-                            Change username
+                            {t('settings.username.changeUsername')}
                         </label>
                         <input
                             id="username"
@@ -255,7 +257,7 @@ export function SettingsPage() {
                         />
                         {usernameError && (
                             <div id="username-error">
-                                <Alert variant="error" header="Could not update username" className="mt-2">
+                                <Alert variant="error" header={t('settings.username.errorHeader')} className="mt-2">
                                     {usernameError}
                                 </Alert>
                             </div>
@@ -267,17 +269,17 @@ export function SettingsPage() {
                             disabled={usernameSaving || username === profile.username || username.length < 3}
                             className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {usernameSaving ? 'Saving...' : 'Save username'}
+                            {usernameSaving ? t('common.saving') : t('settings.username.saveUsername')}
                         </button>
                     </div>
                 </form>
             </PageSection>
 
             {hasPasswordIdentity && (
-                <PageSection title="Change Password">
+                <PageSection title={t('settings.password.title')}>
                     <form onSubmit={handlePasswordSubmit} className="space-y-3" noValidate>
                         <div>
-                            <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary mb-1">Current password</label>
+                            <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary mb-1">{t('auth.fields.currentPassword')}</label>
                             <div className="relative">
                                 <input
                                     id="currentPassword"
@@ -288,13 +290,13 @@ export function SettingsPage() {
                                     onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
                                     className={`${inputClass} pr-10`}
                                 />
-                                <button aria-label={showCurrentPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
+                                <button aria-label={showCurrentPassword ? t('auth.buttons.hidePassword') : t('auth.buttons.showPassword')} type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
                                     <EyeIcon open={showCurrentPassword} />
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="newPassword" className="block text-sm font-medium text-text-secondary mb-1">New password</label>
+                            <label htmlFor="newPassword" className="block text-sm font-medium text-text-secondary mb-1">{t('auth.fields.newPassword')}</label>
                             <div className="relative">
                                 <input
                                     id="newPassword"
@@ -306,13 +308,13 @@ export function SettingsPage() {
                                     className={`${inputClass} pr-10`}
                                     minLength={6}
                                 />
-                                <button aria-label={showNewPassword ? "Hide password" : "Show password"} type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
+                                <button aria-label={showNewPassword ? t('auth.buttons.hidePassword') : t('auth.buttons.showPassword')} type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
                                     <EyeIcon open={showNewPassword} />
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1">Confirm new password</label>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1">{t('auth.fields.confirmNewPassword')}</label>
                             <input
                                 id="confirmPassword"
                                 name="confirm-new-password"
@@ -325,13 +327,13 @@ export function SettingsPage() {
                             />
                         </div>
                         {passwordError && (
-                            <Alert variant="error" header="Could not update password">
+                            <Alert variant="error" header={t('settings.password.errorHeader')}>
                                 {passwordError}
                             </Alert>
                         )}
                         {passwordSuccess && (
-                            <Alert variant="success" header="Password updated">
-                                Password updated successfully.
+                            <Alert variant="success" header={t('auth.resetPassword.passwordUpdated')}>
+                                {t('settings.password.success')}
                             </Alert>
                         )}
                         <div className="flex justify-end">
@@ -340,7 +342,7 @@ export function SettingsPage() {
                                 disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
                                 className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {passwordSaving ? 'Updating...' : 'Change password'}
+                                {passwordSaving ? t('auth.resetPassword.updating') : t('settings.password.changePassword')}
                             </button>
                         </div>
                     </form>

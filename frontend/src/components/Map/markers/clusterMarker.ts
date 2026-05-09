@@ -1,6 +1,7 @@
 import type maplibregl from 'maplibre-gl';
 import type Supercluster from 'supercluster';
 import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
+import i18n from '../../../i18n';
 import type { ArtistPointProperties, ClusterPoint, ClusterProperties, ClusterVisual } from '../types';
 
 const generateHue = (lng: number, lat: number) => {
@@ -64,7 +65,7 @@ export const createClusterMarkerElement = (
 
     element.type = 'button';
     element.className = 'artist-maplibre-cluster custom-cluster-marker';
-    element.setAttribute('aria-label', `${count} artists`);
+    element.setAttribute('aria-label', i18n.t('map.markers.clusterArtists', { count }));
     element.style.width = `${visualSize}px`;
     element.style.height = `${visualSize}px`;
     element.ondblclick = (event) => {

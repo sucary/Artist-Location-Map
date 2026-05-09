@@ -25,6 +25,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import type { LocationView } from '../../types/artist';
 import type { ArtistPopupLifecycleState, MapViewProps } from './types';
+import { useTranslation } from 'react-i18next';
 
 type MarkerWithUpdate = maplibregl.Marker & {
     // Reach MapLibre's private updater to follow inertial tile movement.
@@ -81,6 +82,7 @@ export default function MapView({
     const [attributionOpen, setAttributionOpen] = useState(false);
     const [mobileControlsOpen, setMobileControlsOpen] = useState(true);
     const [canResetMapView, setCanResetMapView] = useState(false);
+    const { t } = useTranslation();
 
     const isArtistPopupActive = useCallback(() => {
         const lifecycle = artistPopupLifecycleRef.current;
@@ -264,7 +266,7 @@ export default function MapView({
 
         const supported = (maplibregl as unknown as { supported?: () => boolean }).supported;
         if (supported && !supported()) {
-            setMapError('Map rendering is not supported in this browser.');
+            setMapError(t('map.error.renderMapError'));
             return;
         }
 
@@ -284,7 +286,7 @@ export default function MapView({
         map.scrollZoom.setZoomRate(trackpadZoomRate);
         const attributionControl = new maplibregl.AttributionControl({
             compact: true,
-            customAttribution: '<a class="achizu-attribution-link" href="/about">About Achizu</a>',
+            customAttribution: `<a class="achizu-attribution-link" href="/about">${t('map.attribution.aboutAchizu')}</a>`,
         });
         map.addControl(attributionControl, 'bottom-left');
         const compactAttributionControl = attributionControl as unknown as { _updateCompactMinimize?: () => void };
@@ -331,7 +333,7 @@ export default function MapView({
             const pendingStyleUrl = pendingStyleUrlRef.current;
 
             if (!lastGoodStyleUrl || !pendingStyleUrl) {
-                setMapError('Map failed to load. Please refresh and try again.');
+                setMapError(t('map.error.loadMapError'));
                 return;
             }
 
@@ -632,7 +634,7 @@ export default function MapView({
     }, [activeCanUseDarkTiles, tileTheme]);
 
     return (
-        <div role="application" aria-label="Achizu, Artist Map" className="relative h-full w-full overflow-hidden">
+        <div role="application" aria-label={t('map.achizu')} className="relative h-full w-full overflow-hidden">
             <div ref={containerRef} className="h-full w-full" />
             {/* Blocks canvas and marker input while higher-priority panels are open. */}
             {interactionsDisabled && <div aria-hidden="true" className="absolute inset-0 z-[1040]" />}

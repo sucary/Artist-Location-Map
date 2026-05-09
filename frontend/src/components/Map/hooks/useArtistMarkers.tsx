@@ -26,7 +26,7 @@ const clusterCollapseAfterPopupCloseGraceMs = 800;
 const markerAnimations = new WeakMap<maplibregl.Marker, number>();
 
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
-// Wrap longitude deltas across the dateline.
+// Use the shortest path when longitude crosses the dateline
 const getWrappedLngDelta = (from: number, to: number) => ((((to - from) + 540) % 360) - 180);
 
 const getMarkerCoordinates = (marker: maplibregl.Marker): [number, number] => {
@@ -42,7 +42,7 @@ const replaceMarkerElementContents = (target: HTMLElement, source: HTMLElement) 
 };
 
 const setClusterElementExpandedHidden = (element: HTMLElement, hidden: boolean) => {
-    // Hide with visibility because MapLibre marker updates can rewrite opacity.
+    // MapLibre marker updates can rewrite opacity
     element.style.opacity = hidden ? '0' : '1';
     element.style.visibility = hidden ? 'hidden' : '';
     element.style.pointerEvents = hidden ? 'none' : '';
@@ -69,7 +69,7 @@ const getClusterLeafKey = (leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointPro
         .join('|')
 );
 
-// Rebuild the spatial index only when artist positions or view mode change.
+// Include only fields that change Supercluster output
 const getArtistIndexSignature = (artists: Artist[], view: LocationView) => (
     `${view}|${artists.map((artist) => {
         const active = artist.activeLocation.coordinates;
@@ -112,19 +112,25 @@ export const useArtistMarkers = ({
     onArtistPopupOpenChange,
     artistPopupLifecycleRef,
 }: UseArtistMarkersOptions) => {
+    // Marker sets owned by this hook
     const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
     const expandedRef = useRef<Map<string, ExpandedClusterState>>(new Map());
     const collapsingClusterHidesRef = useRef<Map<string, Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>>>(new Map());
     const visibleClustersRef = useRef<ClusterPoint[]>([]);
+
+    // Current map data and popup handles
     const clusterIndexRef = useRef<Supercluster<ArtistPointProperties, ClusterProperties> | null>(null);
     const artistsByIdRef = useRef<Map<string, Artist>>(new Map());
     const activePopupRef = useRef<maplibregl.Popup | null>(null);
+
+    // Previous render state used to compare map changes
     const lastClusterZoomRef = useRef<number | null>(null);
     const lastMapZoomRef = useRef<number | null>(null);
     const clusterIndexSignatureRef = useRef<string | null>(null);
+
+    // Merge timing and delayed cluster inserts
     const mergeHoldUntilRef = useRef(0);
     const mergeHoldTokenRef = useRef(0);
-    // Invalidate delayed cluster adds after newer zoom or expansion work.
     const mergeHoldTargetKeysRef = useRef<Set<string>>(new Set());
     const pendingMergeTimersRef = useRef<Set<number>>(new Set());
     const clusterTransitionUntilRef = useRef(0);
@@ -166,16 +172,19 @@ export const useArtistMarkers = ({
     ) => {
         const map = mapRef.current;
         if (!map) {
+            // Finish immediately after map cleanup
             marker.setLngLat(target);
             onDone?.();
             return;
         }
 
+        // One active animation per marker
         const previousFrame = markerAnimations.get(marker);
         if (previousFrame !== undefined) {
             window.cancelAnimationFrame(previousFrame);
         }
 
+        // Longitude may wrap around the dateline
         const start = getMarkerCoordinates(marker);
         const lngDelta = getWrappedLngDelta(start[0], target[0]);
         const latDelta = target[1] - start[1];
@@ -194,6 +203,7 @@ export const useArtistMarkers = ({
                 return;
             }
 
+            // End on the exact target coordinate
             markerAnimations.delete(marker);
             marker.setLngLat(target);
             onDone?.();
@@ -208,6 +218,7 @@ export const useArtistMarkers = ({
         to: GeoJSON.FeatureCollection<GeoJSON.LineString>
     ) => {
         const map = mapRef.current;
+        // Each source line needs a matching target line
         if (!map || from.features.length !== to.features.length) return;
 
         const source = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
@@ -215,6 +226,7 @@ export const useArtistMarkers = ({
 
         const startedAt = performance.now();
         const tick = (now: number) => {
+            // Move all connector endpoints on the same clock
             const progress = Math.min(1, (now - startedAt) / markerMoveDuration);
             const eased = easeOutCubic(progress);
 
@@ -248,13 +260,13 @@ export const useArtistMarkers = ({
         window.requestAnimationFrame(tick);
     }, [mapRef]);
 
-    // Keep marker event handlers synced with the latest artist records.
+    // Marker callbacks read the latest artist records
     useEffect(() => {
         artistsByIdRef.current = new Map(displayArtists.map((artist) => [artist.id, artist]));
     }, [displayArtists]);
 
     const removeMarkerEntry = useCallback((entry: MarkerEntry, destination?: [number, number], onDone?: () => void) => {
-        // Preserve the open popup when its marker leaves the rendered viewport.
+        // Active popup can outlive its marker while panning
         if (entry.popup && entry.popup !== activePopupRef.current) {
             entry.popup.remove();
         }
@@ -288,6 +300,7 @@ export const useArtistMarkers = ({
 
     const setArtistPopupLifecycle = useCallback((open: boolean) => {
         if (artistPopupLifecycleRef?.current) {
+            // Close time protects cluster expansion during popup rebuilds
             artistPopupLifecycleRef.current.open = open;
             artistPopupLifecycleRef.current.closedAt = open ? 0 : performance.now();
         }
@@ -300,7 +313,7 @@ export const useArtistMarkers = ({
             return;
         }
 
-        // Fallback for popup DOM left behind after MapLibre ref churn.
+        // MapLibre can leave popup DOM after ref changes
         const popupElements = mapRef.current?.getContainer().querySelectorAll('.artist-popup');
         if (!popupElements?.length) return;
 
@@ -309,7 +322,7 @@ export const useArtistMarkers = ({
     }, [mapRef, setArtistPopupLifecycle]);
 
     const isClusterSourceHidden = useCallback((key: string, leafKey: string) => {
-        // Match by leaves because cluster ids can change across zoom levels.
+        // Supercluster ids can change while leaf membership stays the same
         const matches = (state: Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>) => (
             state.hiddenClusterKey === key || state.hiddenClusterLeafKey === leafKey
         );
@@ -318,7 +331,7 @@ export const useArtistMarkers = ({
             || Array.from(collapsingClusterHidesRef.current.values()).some(matches);
     }, []);
 
-    // Keep expanded clusters through popup close/rebuild races.
+    // Keep expanded clusters during popup close and marker rebuild overlap
     const shouldKeepExpandedClusters = useCallback(() => (
         !!artistPopupLifecycleRef?.current?.open
         || (
@@ -327,12 +340,12 @@ export const useArtistMarkers = ({
         )
     ), [artistPopupLifecycleRef]);
 
-    // Remove temporary expansion layers before rerendering marker state.
+    // Remove expanded-cluster markers and connector lines
     const removeExpandedClusterArtifacts = useCallback((animate = true) => {
         const map = mapRef.current;
         if (!map) return;
 
-        // Expanded clusters add temporary markers and line layers outside the normal marker set.
+        // Expanded markers are not part of the normal marker map
         expandedRef.current.forEach((state, clusterKey) => {
             collapsingClusterHidesRef.current.set(clusterKey, {
                 hiddenClusterKey: state.hiddenClusterKey,
@@ -354,7 +367,7 @@ export const useArtistMarkers = ({
             state.markers.forEach((marker) => {
                 marker.getElement().style.pointerEvents = 'none';
                 if (!animate) {
-                    // Zoom cleanup removes stale expansion markers without merge animation.
+                    // Zoom cleanup removes expanded markers immediately
                     marker.remove();
                     remainingMarkers -= 1;
                     if (remainingMarkers === 0) {
@@ -381,7 +394,7 @@ export const useArtistMarkers = ({
         setHasExpandedClusters(false);
     }, [removeExpandedClusterArtifacts]);
 
-    // Open one React-rendered artist popup and wire its embedded actions.
+    // Show ArtistProfile in a MapLibre popup
     const openArtistPopup = useCallback((artist: Artist, marker: maplibregl.Marker) => {
         const map = mapRef.current;
         if (!map) return;
@@ -394,14 +407,14 @@ export const useArtistMarkers = ({
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
         const showActions = !!(onEditArtist || onDeleteArtist);
-        // Render the React profile into a MapLibre popup container.
+        // React renders the content, MapLibre places the popup
         root.render(
             <ArtistProfile artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
         );
 
         const popup = new maplibregl.Popup({
             closeButton: false,
-            // MapView owns outside-click behavior so clusters can stay expanded.
+            // MapView handles outside clicks together with cluster state
             closeOnClick: false,
             className: 'artist-popup',
             maxWidth: '320px',
@@ -434,6 +447,7 @@ export const useArtistMarkers = ({
 
         popupContainer.addEventListener('click', handleClick);
         popup.on('close', () => {
+            // Remove listeners and React state owned by this popup
             popupContainer.removeEventListener('click', handleClick);
             marker.getElement().classList.remove('marker-focused');
             root.unmount();
@@ -453,6 +467,7 @@ export const useArtistMarkers = ({
         const key = `artist-${artist.id}`;
         const entry = markersRef.current.get(key);
         if (entry) {
+            // Replace the previous popup handle for this marker
             entry.popup?.remove();
             entry.root?.unmount();
             entry.popup = popup;
@@ -460,7 +475,7 @@ export const useArtistMarkers = ({
         }
     }, [locationLanguage, mapRef, onDeleteArtist, onEditArtist, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId, view]);
 
-    // Fan out a cluster into temporary artist markers around the cluster center.
+    // Open a cluster into separate artist markers
     const expandCluster = useCallback((feature: ClusterPoint, sourceElement?: HTMLElement) => {
         const map = mapRef.current;
         const index = clusterIndexRef.current;
@@ -477,11 +492,12 @@ export const useArtistMarkers = ({
         const leaves = index.getLeaves(clusterId, Infinity);
         const expandedLeafKey = getClusterLeafKey(leaves);
         const clusterMarkerKey = `cluster-${clusterId}`;
-        // Reject clicks while split and merge animations are still reconciling.
+        // Ignore clicks while zoom or merge work is still changing markers
         if (map.isZooming() || clusterTransitionUntilRef.current > performance.now()) {
             return;
         }
 
+        // Manual expansion cancels delayed merge work
         mergeHoldUntilRef.current = 0;
         mergeHoldTokenRef.current += 1;
         mergeHoldTargetKeysRef.current.clear();
@@ -491,6 +507,7 @@ export const useArtistMarkers = ({
         if (sourceElement) {
             setClusterElementExpandedHidden(sourceElement, true);
         }
+        // Hide rendered clusters that represent the same leaves
         markersRef.current.forEach((entry, key) => {
             if (entry.kind !== 'cluster') return;
             if (key !== clusterMarkerKey && entry.leafKey !== expandedLeafKey) return;
@@ -500,6 +517,7 @@ export const useArtistMarkers = ({
         const [clusterLng, clusterLat] = feature.geometry.coordinates;
         const clusterCenter: [number, number] = [clusterLng, clusterLat];
         const clusterPixel = map.project([clusterLng, clusterLat]);
+        // Space expanded markers in screen pixels
         const rawOffsets = leaves.map((leaf) => {
             const [lng, lat] = leaf.geometry.coordinates;
             const pixel = map.project([lng, lat]);
@@ -509,7 +527,7 @@ export const useArtistMarkers = ({
         const markerSpacing = CLUSTER_CONFIG.gridSpacing;
         const positions = rawOffsets.map((offset) => ({ ...offset }));
 
-        // Relax expanded markers apart to keep overlapping artists tappable.
+        // Separate markers that would overlap on screen
         for (let pass = 0; pass < 10; pass++) {
             for (let i = 0; i < positions.length; i++) {
                 for (let j = 0; j < positions.length; j++) {
@@ -530,17 +548,22 @@ export const useArtistMarkers = ({
             }
         }
 
+        // Expanded marker and connector collections
         const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
         const collapsedLines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
         const expandedMarkers: maplibregl.Marker[] = [];
 
+        // Build markers and connector lines in the same order
         leaves.forEach((leaf, index) => {
             const artist = artistsByIdRef.current.get(leaf.properties.artistId);
             if (!artist) return;
 
+            // Convert screen position back to map coordinates
             const position = positions[index];
             const expandedLngLat = map.unproject([clusterPixel.x + position.x, clusterPixel.y + position.y]);
             const originalLngLat = leaf.geometry.coordinates as [number, number];
+
+            // Start at the cluster center before moving outward
             const marker = new maplibregl.Marker({
                 element: createArtistMarkerElement(artist),
                 anchor: 'center',
@@ -556,6 +579,7 @@ export const useArtistMarkers = ({
                 openArtistPopup(artist, marker);
             });
 
+            // Expanded line connects the display marker to the real location
             lines.push({
                 type: 'Feature',
                 geometry: {
@@ -564,6 +588,7 @@ export const useArtistMarkers = ({
                 },
                 properties: {},
             });
+            // Collapsed line starts from the cluster center
             collapsedLines.push({
                 type: 'Feature',
                 geometry: {
@@ -579,6 +604,7 @@ export const useArtistMarkers = ({
         const layerId = `expanded-cluster-lines-${clusterId}`;
         if (map.getLayer(layerId)) map.removeLayer(layerId);
         if (map.getSource(sourceId)) map.removeSource(sourceId);
+        // Draw connector lines from the collapsed state first
         map.addSource(sourceId, {
             type: 'geojson',
             data: {
@@ -618,13 +644,13 @@ export const useArtistMarkers = ({
         setHasExpandedClusters(true);
     }, [animateLineSource, animateMarkerTo, clearPendingMergeTimers, collapseExpandedClusters, mapRef, openArtistPopup]);
 
-    // Render the current viewport from Supercluster output into MapLibre markers.
+    // Sync visible Supercluster features with DOM markers
     const renderVisibleMarkers = useCallback(() => {
         const map = mapRef.current;
         const index = clusterIndexRef.current;
         if (!map || !index || !mapReady) return;
 
-        // Reconcile MapLibre DOM markers against the visible cluster set.
+        // Query only the visible map bounds
         const bounds = map.getBounds();
         const mapZoom = map.getZoom();
         const zoom = getSuperclusterZoom(mapZoom);
@@ -632,20 +658,27 @@ export const useArtistMarkers = ({
             [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
             zoom
         ) as ClusterFeature[];
+
+        // Counts and zooms from the previous render
         const nextMarkerKeys = new Set<string>();
         const previousMarkerCount = markersRef.current.size;
         const nextMarkerCount = clusters.length;
         const previousClusterZoom = lastClusterZoomRef.current;
         const previousMapZoom = lastMapZoomRef.current;
+
+        // Compare Supercluster zoom and MapLibre zoom separately
         const isZoomSplit = previousClusterZoom !== null && zoom > previousClusterZoom;
         const isZoomMerge = previousClusterZoom !== null && zoom < previousClusterZoom;
         const isMapZoomIn = previousMapZoom !== null && mapZoom > previousMapZoom + 0.01;
         const isMapZoomChange = previousMapZoom !== null && Math.abs(mapZoom - previousMapZoom) > 0.01;
         lastClusterZoomRef.current = zoom;
         lastMapZoomRef.current = mapZoom;
+
+        // Transition timing for split and merge animations
         const now = performance.now();
         const hasActiveMergeHold = mergeHoldUntilRef.current > now;
-        // Link marker motion only for zoom-driven split or merge changes.
+
+        // Only zoom changes link old marker positions to new ones
         const isMergeStart = isZoomMerge || (isMapZoomChange && nextMarkerCount < previousMarkerCount);
         const isSplit = !hasActiveMergeHold && (isMapZoomIn || isZoomSplit || (isMapZoomChange && nextMarkerCount > previousMarkerCount));
         const isMerge = hasActiveMergeHold || isMergeStart;
@@ -661,6 +694,7 @@ export const useArtistMarkers = ({
             mergeHoldTokenRef.current += 1;
             mergeHoldTargetKeysRef.current.clear();
         } else if (isMergeStart) {
+            // Wait before showing clusters created by a merge
             mergeHoldUntilRef.current = Math.max(mergeHoldUntilRef.current, now + mergedClusterAppearDelay);
             mergeHoldTokenRef.current += 1;
         }
@@ -669,6 +703,8 @@ export const useArtistMarkers = ({
         if (!shouldDelayMergedClusters) {
             mergeHoldTargetKeysRef.current.clear();
         }
+
+        // Clusters waiting for merge animation to finish
         const pendingMergeAdds: Array<{
             key: string;
             element: HTMLElement;
@@ -681,8 +717,10 @@ export const useArtistMarkers = ({
         let pendingMergeFinalized = false;
         let pendingMergeTimer: number | null = null;
         const addPendingMergedClusters = () => {
-            // Wait for outgoing markers to finish flying into the merged cluster.
+            // Outgoing markers must finish moving first
             if (pendingMergeFinalized || pendingMergeRemovalCount > 0) return;
+
+            // Merge hold keeps the new cluster hidden briefly
             const remainingHold = mergeHoldUntilRef.current - performance.now();
             if (remainingHold > 0) {
                 if (pendingMergeTimer === null) {
@@ -695,6 +733,8 @@ export const useArtistMarkers = ({
                 }
                 return;
             }
+
+            // Ignore inserts from older merge cycles
             pendingMergeFinalized = true;
             pendingMergeAdds.forEach(({ key, element, center, feature, leafKey, token }) => {
                 if (mergeHoldTokenRef.current !== token || markersRef.current.has(key)) {
@@ -707,6 +747,7 @@ export const useArtistMarkers = ({
                 mergeHoldTargetKeysRef.current.delete(key);
             });
         };
+        // Count removals that a delayed cluster is waiting on
         const trackMergeRemoval = (remove: (onDone: () => void) => void) => {
             pendingMergeRemovalCount += 1;
             remove(() => {
@@ -715,11 +756,14 @@ export const useArtistMarkers = ({
             });
         };
         const isInsideCurrentBounds = (position: [number, number]) => bounds.contains(position);
+
+        // Coordinates used to choose animation start and end points
         const previousPositions = Array.from(markersRef.current.values())
             .map((entry) => getMarkerCoordinates(entry.marker))
             .filter(isInsideCurrentBounds);
         const nextPositions = new Map<string, [number, number]>();
 
+        // Split renders artists directly, so old cluster markers are removed
         if (isSplit) {
             markersRef.current.forEach((entry, key) => {
                 if (entry.kind !== 'cluster') return;
@@ -732,7 +776,7 @@ export const useArtistMarkers = ({
         const clusterRadii = new Map<number, number>();
         const clusterPixels = new Map<number, ReturnType<maplibregl.Map['project']>>();
 
-        // Cap neighboring cluster radii to prevent visual overlap.
+        // Measure cluster sizes before applying collision limits
         visibleClusters.forEach((cluster) => {
             const clusterId = cluster.properties.cluster_id;
             const radius = getClusterVisualRadius(cluster, index, map);
@@ -740,6 +784,7 @@ export const useArtistMarkers = ({
             clusterPixels.set(clusterId, map.project(cluster.geometry.coordinates as [number, number]));
         });
 
+        // Reduce cluster sizes that would overlap on screen
         visibleClusters.forEach((cluster) => {
             const clusterId = cluster.properties.cluster_id;
             const clusterPixel = clusterPixels.get(clusterId);
@@ -765,6 +810,7 @@ export const useArtistMarkers = ({
         });
 
         visibleClustersRef.current = visibleClusters;
+        // Store next marker positions before removing stale markers
         clusters.forEach((feature) => {
             const [lng, lat] = feature.geometry.coordinates;
             const key = isClusterFeature(feature)
@@ -776,6 +822,7 @@ export const useArtistMarkers = ({
         const mergeTargetKeys = new Set<string>();
         const staleMarkerDestinations = new Map<string, [number, number]>();
         if (shouldDelayMergedClusters) {
+            // Send outgoing markers toward the nearest incoming cluster
             markersRef.current.forEach((entry, key) => {
                 if (nextPositions.has(key)) return;
                 const currentPosition = getMarkerCoordinates(entry.marker);
@@ -808,6 +855,7 @@ export const useArtistMarkers = ({
             const [lng, lat] = feature.geometry.coordinates;
 
             if (isClusterFeature(feature)) {
+                // Load images for artists inside this cluster
                 const { element, center } = createClusterMarkerElement(
                     feature,
                     index,
@@ -826,6 +874,7 @@ export const useArtistMarkers = ({
                 const isExpandedSourceCluster = isClusterSourceHidden(key, leafKey);
 
                 if (shouldDelayMergedClusters && (mergeTargetKeys.has(key) || mergeHoldTargetKeysRef.current.has(key))) {
+                    // Add merged clusters after outgoing markers arrive
                     if (existingEntry) {
                         trackMergeRemoval((onDone) => removeMarkerEntry(existingEntry, center, onDone));
                         markersRef.current.delete(key);
@@ -843,6 +892,7 @@ export const useArtistMarkers = ({
                 }
 
                 if (canReuseClusterEntry) {
+                    // Keep the marker instance when leaf membership is unchanged
                     const existingElement = existingEntry.marker.getElement();
                     replaceMarkerElementContents(existingElement, element);
                     setClusterElementExpandedHidden(existingElement, isExpandedSourceCluster);
@@ -851,6 +901,7 @@ export const useArtistMarkers = ({
                     nextMarkerKeys.add(key);
                     return;
                 } else if (existingEntry?.kind === 'cluster') {
+                    // Same cluster id can refer to different leaves after zoom changes
                     removeMarkerEntry(existingEntry, isMerge ? center : undefined);
                     markersRef.current.delete(key);
                 }
@@ -871,6 +922,7 @@ export const useArtistMarkers = ({
                 return;
             }
 
+            // Reuse artist markers so popup state can stay attached
             const artist = artistsByIdRef.current.get(feature.properties.artistId);
             if (!artist) return;
             const key = `artist-${artist.id}`;
@@ -907,6 +959,7 @@ export const useArtistMarkers = ({
             nextMarkerKeys.add(key);
         });
 
+        // Remove markers missing from the current Supercluster result
         markersRef.current.forEach((entry, key) => {
             if (nextMarkerKeys.has(key)) return;
             const currentPosition = getMarkerCoordinates(entry.marker);
@@ -931,15 +984,17 @@ export const useArtistMarkers = ({
     }, [animateMarkerTo, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, removeMarkerEntry]);
 
     useEffect(() => {
+        // Compare only fields used by the spatial index
         const nextSignature = getArtistIndexSignature(displayArtists, view);
         if (clusterIndexSignatureRef.current === nextSignature) {
+            // Same index inputs keep expanded clusters intact
             renderVisibleMarkers();
             return;
         }
 
-        // UI-only rerenders should not reset expansion state.
+        // New index inputs need a new Supercluster instance
         clusterIndexSignatureRef.current = nextSignature;
-        // Rebuild the spatial index whenever artist coordinates or map view mode changes.
+
         lastClusterZoomRef.current = null;
         lastMapZoomRef.current = null;
         mergeHoldUntilRef.current = 0;
@@ -950,14 +1005,17 @@ export const useArtistMarkers = ({
             radius: CLUSTER_CONFIG.maxClusterRadius,
             maxZoom: CLUSTER_CONFIG.disableClusteringAtZoomLevel - 1,
         }).load(displayArtists.map((artist) => makeArtistPoint(artist, view)));
+
+        // Popup close can happen just before this rebuild
         if (!shouldKeepExpandedClusters()) {
             removeExpandedClusterArtifacts();
             window.setTimeout(() => setHasExpandedClusters(false), 0);
         }
+
         renderVisibleMarkers();
     }, [clearPendingMergeTimers, displayArtists, removeExpandedClusterArtifacts, renderVisibleMarkers, shouldKeepExpandedClusters, view]);
 
-    // Expand every currently visible cluster from the toolbar action.
+    // Toolbar action for visible clusters
     const expandAllVisibleClusters = useCallback(() => {
         visibleClustersRef.current.forEach((cluster) => expandCluster(cluster));
     }, [expandCluster]);
