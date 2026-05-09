@@ -5,8 +5,11 @@ import { Spinner, Alert, Button, CloseButton, ConfirmDialog, type ConfirmDialogV
 import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import {
     API_URL,
+    deleteAdminPinnedNotification,
+    getAdminPinnedNotifications,
     postAdminNotification,
     searchNotificationRecipients,
+    type AdminPinnedNotification,
     type NotificationRecipient
 } from '../../services/api';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
@@ -43,11 +46,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { user, profile } = useAuth();
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
     const [pendingMediaReviews, setPendingMediaReviews] = useState<PendingMediaReview[]>([]);
+    const [pinnedNotifications, setPinnedNotifications] = useState<AdminPinnedNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [approvalsOpen, setApprovalsOpen] = useState(true);
     const [mediaReviewsOpen, setMediaReviewsOpen] = useState(true);
     const [postNotificationOpen, setPostNotificationOpen] = useState(false);
+    const [pinnedNotificationsOpen, setPinnedNotificationsOpen] = useState(false);
     const [translationsOpen, setTranslationsOpen] = useState(false);
     const [statusTemplateOpen, setStatusTemplateOpen] = useState(false);
     const [notificationAudience, setNotificationAudience] = useState<'all' | 'user'>('all');
@@ -59,6 +64,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [selectedRecipient, setSelectedRecipient] = useState<NotificationRecipient | null>(null);
     const [recipientSearchLoading, setRecipientSearchLoading] = useState(false);
     const [notificationPosting, setNotificationPosting] = useState(false);
+    const [pinnedNotificationDeletingId, setPinnedNotificationDeletingId] = useState<string | null>(null);
     const [notificationPostError, setNotificationPostError] = useState<string | null>(null);
     const [notificationPostSuccess, setNotificationPostSuccess] = useState<string | null>(null);
     const [adminDialog, setAdminDialog] = useState<AdminDialogState | null>(null);
@@ -69,6 +75,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         approvals: 'admin-pending-approvals',
         mediaReviews: 'admin-media-reviews',
         postNotification: 'admin-post-notification',
+        pinnedNotifications: 'admin-pinned-notifications',
         translations: 'admin-location-translations',
         statusTemplate: 'admin-status-palette-template',
         recipients: 'admin-notification-recipients'
@@ -138,9 +145,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         setError(null);
         try {
             const headers = await getAuthHeaders();
-            const [usersResponse, mediaResponse] = await Promise.all([
+            const [usersResponse, mediaResponse, pinned] = await Promise.all([
                 fetch(`${API_URL}/auth/admin/pending-users`, { headers }),
                 fetch(`${API_URL}/upload/admin/media-reviews`, { headers }),
+                getAdminPinnedNotifications(),
             ]);
 
             if (!usersResponse.ok) {
@@ -152,6 +160,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
             setPendingUsers(await usersResponse.json());
             setPendingMediaReviews(await mediaResponse.json());
+            setPinnedNotifications(pinned);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load admin data');
         } finally {
@@ -308,6 +317,36 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         } finally {
             setNotificationPosting(false);
         }
+    };
+
+    const handleDeletePinnedNotification = (notification: AdminPinnedNotification) => {
+        setAdminDialog({
+            title: 'Remove pinned notification?',
+            message: (
+                <>
+                    <p>This removes the pinned notification for {notification.recipientCount} user{notification.recipientCount === 1 ? '' : 's'}.</p>
+                    <p className="mt-2 font-medium text-text">{notification.title}</p>
+                </>
+            ),
+            variant: 'danger',
+            confirmLabel: 'Remove',
+            cancelLabel: 'Cancel',
+            onConfirm: async () => {
+                setAdminDialogLoading(true);
+                setPinnedNotificationDeletingId(notification.id);
+                try {
+                    const result = await deleteAdminPinnedNotification(notification.id);
+                    setPinnedNotifications(prev => prev.filter(item => item.id !== notification.id));
+                    setAdminDialog(null);
+                    showAdminMessage('Pinned notification removed', `Removed ${result.deleted} notification${result.deleted === 1 ? '' : 's'}.`, 'success');
+                } catch (err) {
+                    showAdminMessage('Could not remove pinned notification', err instanceof Error ? err.message : 'Failed to remove pinned notification.', 'error');
+                } finally {
+                    setAdminDialogLoading(false);
+                    setPinnedNotificationDeletingId(null);
+                }
+            },
+        });
     };
 
     // Check if user is admin
@@ -646,6 +685,68 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                     </Button>
                                 </div>
                             </form>
+                        )}
+                    </div>
+
+                    {/* Pinned Notifications */}
+                    <div className="border-t border-border pt-4 mb-4">
+                        <button
+                            onClick={() => setPinnedNotificationsOpen(!pinnedNotificationsOpen)}
+                            aria-expanded={pinnedNotificationsOpen}
+                            aria-controls={sectionIds.pinnedNotifications}
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
+                        >
+                            <h2 className="text-xl font-semibold text-text">
+                                Pinned Notifications ({pinnedNotifications.length})
+                            </h2>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${pinnedNotificationsOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+
+                        {pinnedNotificationsOpen && (
+                            <div id={sectionIds.pinnedNotifications} className="mt-2 px-3 pb-3">
+                                {loading && (
+                                    <div className="text-center py-6">
+                                        <Spinner size="md" className="mx-auto text-primary" />
+                                        <p className="text-text-secondary mt-2">Loading...</p>
+                                    </div>
+                                )}
+
+                                {!loading && pinnedNotifications.length === 0 && (
+                                    <div className="text-center py-6 text-text-secondary">
+                                        <CheckCircleIcon className="w-10 h-10 mx-auto mb-2 text-text-muted" />
+                                        <p>No pinned notifications</p>
+                                    </div>
+                                )}
+
+                                {!loading && pinnedNotifications.length > 0 && (
+                                    <div className="divide-y divide-border">
+                                        {pinnedNotifications.map((notification) => (
+                                            <div key={notification.id} className="py-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-semibold text-text">{notification.title}</p>
+                                                        <p className="mt-1 max-h-10 overflow-hidden text-sm text-text-secondary">{notification.content}</p>
+                                                        <p className="mt-2 text-xs text-text-muted">
+                                                            {notification.recipientCount} recipient{notification.recipientCount === 1 ? '' : 's'} · {new Date(notification.createdAt).toLocaleDateString('fi-FI')}
+                                                        </p>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => handleDeletePinnedNotification(notification)}
+                                                        isLoading={pinnedNotificationDeletingId === notification.id}
+                                                        className="shrink-0 bg-[rgb(220,38,38)] hover:bg-[rgb(185,28,28)]"
+                                                    >
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
 

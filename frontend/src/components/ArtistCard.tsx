@@ -4,8 +4,9 @@ import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from './icons/
 import { EditIcon, TrashIcon } from './icons/GeneralIcons';
 import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
+import { useTranslation } from 'react-i18next';
 
-interface ArtistProfileProps {
+interface ArtistCardProps {
     artist: Artist;
     showActions?: boolean;
     locationLanguage?: LocationLanguage;
@@ -28,7 +29,8 @@ const safeUrl = (url: string): string => {
 const getPlaceholderUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=320&background=e5e7eb&color=9ca3af`;
 
-const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistProfileProps) => {
+const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistCardProps) => {
+    const { t } = useTranslation();
     const [actionsVisible, setActionsVisible] = useState(false);
     // Use Cloudinary transformation for profile banner
     const backgroundImageUrl = getProfileUrl(artist.sourceImage, artist.profileCrop) || getPlaceholderUrl(artist.name);
@@ -90,6 +92,8 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
                             style={{ width: '80%', backgroundColor: 'rgba(0, 0, 0, 0.5)', transition: 'background-color 0.15s' }}
                             data-action="edit"
                             data-artist-id={artist.id}
+                            aria-label={t('artistCard.actions.edit')}
+                            title={t('artistCard.actions.edit')}
                         >
                             <EditIcon className="w-6 h-6 text-white" />
                         </div>
@@ -99,6 +103,8 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
                             style={{ width: '20%', backgroundColor: 'rgba(239, 68, 68, 0.85)', transition: 'background-color 0.15s' }}
                             data-action="delete"
                             data-artist-id={artist.id}
+                            aria-label={t('artistCard.actions.delete')}
+                            title={t('artistCard.actions.delete')}
                         >
                             <TrashIcon className="w-5 h-5 text-white" />
                         </div>
@@ -106,32 +112,39 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
                 )}
 
                 {/* Artist Name */}
-                <h3
-                    className="absolute bottom-3 left-4 text-lg font-semibold text-white z-10 select-text cursor-text leading-none"
+                <div
+                    className="absolute bottom-3 left-4 right-4 z-10 select-text cursor-text"
                     style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
                 >
-                    {artist.name}
-                </h3>
+                    <h3 className="truncate text-lg font-semibold leading-none text-white">
+                        {artist.name}
+                    </h3>
+                    {artist.romanizedName && artist.romanizedName !== artist.name && (
+                        <p className="mt-1 truncate text-xs font-medium leading-none text-white/90">
+                            {artist.romanizedName}
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Content section */}
             <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
                 {/* Origin row */}
-                <div className="flex items-center gap-4">
-                    <span className="px-1 py-0.5 text-xs font-semibold bg-primary-light text-white border border-primary-light rounded">
-                        Origin
+                <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
+                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-semibold leading-tight bg-primary-light text-white border border-primary-light rounded">
+                        {t('artistCard.fields.origin')}
                     </span>
-                    <span className="text-sm text-text-secondary">
+                    <span className="min-w-0 text-sm text-text-secondary">
                         {formatLocationLocalized(artist.originalLocation, locationLanguage)}
                     </span>
                 </div>
 
                 {/* Active row */}
-                <div className="flex items-center gap-4">
-                    <span className="px-1 py-0.5 text-xs font-bold bg-primary-light text-white border border-primary-light rounded">
-                        Active
+                <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
+                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-bold leading-tight bg-primary-light text-white border border-primary-light rounded">
+                        {t('artistCard.fields.active')}
                     </span>
-                    <span className="text-sm text-text-secondary">
+                    <span className="min-w-0 text-sm text-text-secondary">
                         {formatLocationLocalized(artist.activeLocation, locationLanguage)}
                     </span>
                 </div>
@@ -149,34 +162,34 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
                                 <polyline points="9 18 15 12 9 6" />
                             </svg>
                             <span className="px-3 py-1 text-sm font-medium text-text-secondary bg-surface-muted rounded-full">
-                                {artist.inactiveYear || 'Present'}
+                                {artist.inactiveYear || t('artistCard.years.present')}
                             </span>
                         </div>
                     )}
                     {/* Social icons */}
                     <div className="flex gap-3">
                         {artist.socialLinks?.website && (
-                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <HomeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.appleMusic && (
-                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.appleMusic')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <MusicIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.youtube && (
-                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.youtube')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <YoutubeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.instagram && (
-                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.instagram')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <InstagramIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.twitter && (
-                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.twitter')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <XIcon className="w-5 h-5" />
                             </a>
                         )}
@@ -187,4 +200,4 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
     );
 };
 
-export default ArtistProfile;
+export default ArtistCard;

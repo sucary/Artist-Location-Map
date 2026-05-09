@@ -24,6 +24,18 @@ type SeedArtist = {
     lifeSpanEnd?: string | null;
     ended?: boolean | null;
     disambiguation?: string | null;
+    aliases?: Array<{
+        name?: string;
+        sortName?: string | null;
+        'sort-name'?: string | null;
+        locale?: string | null;
+        type?: string | null;
+        primary?: boolean | null;
+        ended?: boolean | null;
+        begin?: string | null;
+        end?: string | null;
+    }>;
+    aliasNames?: string[];
     aliasCount?: number;
     genreCount?: number;
     tagCount?: number;
@@ -46,6 +58,17 @@ type SeedArtist = {
     popularity?: PopularityRecord;
 };
 
+type CatalogAlias = {
+    name: string;
+    sortName: string | null;
+    locale: string | null;
+    type: string | null;
+    primary: boolean | null;
+    ended: boolean | null;
+    begin: string | null;
+    end: string | null;
+};
+
 type ArtistRow = {
     mbid: string;
     name: string;
@@ -60,6 +83,9 @@ type ArtistRow = {
     lifeSpanEnd: string | null;
     ended: boolean | null;
     disambiguation: string | null;
+    aliases: CatalogAlias[];
+    aliasNames: string[];
+    aliasSearchText: string;
     aliasCount: number;
     genreCount: number;
     tagCount: number;
@@ -154,6 +180,39 @@ function nullableText(value: string | null | undefined) {
     return trimmed || null;
 }
 
+function uniqueTexts(values: Array<string | null | undefined>) {
+    return [...new Set(values.map((value) => value?.trim()).filter((value): value is string => !!value))];
+}
+
+function getAliases(record: SeedArtist): CatalogAlias[] {
+    return (record.aliases || [])
+        .map((alias) => {
+            const name = alias.name?.trim();
+            if (!name) return null;
+
+            return {
+                name,
+                sortName: alias.sortName || alias['sort-name'] || null,
+                locale: alias.locale || null,
+                type: alias.type || null,
+                primary: typeof alias.primary === 'boolean' ? alias.primary : null,
+                ended: typeof alias.ended === 'boolean' ? alias.ended : null,
+                begin: alias.begin || null,
+                end: alias.end || null,
+            };
+        })
+        .filter((alias): alias is CatalogAlias => !!alias);
+}
+
+function getAliasNames(record: SeedArtist) {
+    const aliasNames = getAliases(record).flatMap((alias) => [
+        alias.name,
+        alias.sortName
+    ]);
+
+    return uniqueTexts([...(record.aliasNames || []), ...aliasNames]);
+}
+
 function normalizeCountry(value: string | null | undefined) {
     const trimmed = value?.trim().toUpperCase();
     return trimmed || null;
@@ -243,6 +302,8 @@ function transformSeedRecord(record: SeedArtist): { artist: ArtistRow; links: Li
 
     const popularity = record.popularity || null;
     const regionalRanks = Array.isArray(popularity?.regionalRanks) ? popularity.regionalRanks : [];
+    const aliases = getAliases(record);
+    const aliasNames = getAliasNames(record);
     const links = new Map<string, LinkRow>();
     const primary = primaryUrls(record);
 
@@ -284,7 +345,10 @@ function transformSeedRecord(record: SeedArtist): { artist: ArtistRow; links: Li
             lifeSpanEnd: nullableText(record.lifeSpanEnd),
             ended: record.ended ?? null,
             disambiguation: nullableText(record.disambiguation),
-            aliasCount: record.aliasCount || 0,
+            aliases,
+            aliasNames,
+            aliasSearchText: aliasNames.join(' '),
+            aliasCount: record.aliasCount || aliasNames.length,
             genreCount: record.genreCount || 0,
             tagCount: record.tagCount || 0,
             relationCount: record.relationCount || 0,
@@ -322,6 +386,9 @@ function artistValues(row: ArtistRow) {
         row.lifeSpanEnd,
         row.ended,
         row.disambiguation,
+        JSON.stringify(row.aliases),
+        row.aliasNames,
+        row.aliasSearchText,
         row.aliasCount,
         row.genreCount,
         row.tagCount,
@@ -360,6 +427,9 @@ async function upsertArtists(rows: ArtistRow[]) {
         'life_span_end',
         'ended',
         'disambiguation',
+        'aliases',
+        'alias_names',
+        'alias_search_text',
         'alias_count',
         'genre_count',
         'tag_count',
@@ -402,6 +472,8 @@ async function upsertArtists(rows: ArtistRow[]) {
             life_span_end = EXCLUDED.life_span_end,
             ended = EXCLUDED.ended,
             disambiguation = EXCLUDED.disambiguation,
+            alias_names = EXCLUDED.alias_names,
+            alias_search_text = EXCLUDED.alias_search_text,
             alias_count = EXCLUDED.alias_count,
             genre_count = EXCLUDED.genre_count,
             tag_count = EXCLUDED.tag_count,

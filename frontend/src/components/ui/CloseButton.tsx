@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 const closeButtonVariants = cva(
     `rounded text-text-muted hover:text-primary
@@ -31,10 +32,12 @@ export interface CloseButtonProps
         VariantProps<typeof closeButtonVariants> {}
 
 export function CloseButton({ size = 'md', className, ...props }: CloseButtonProps) {
+    const { t } = useTranslation();
+
     return (
         <button
             type="button"
-            aria-label="close"
+            aria-label={props['aria-label'] ?? t('common.close')}
             className={cn(closeButtonVariants({ size }), className)}
             {...props}
         >

@@ -20,8 +20,9 @@ import { ViewingUserBanner, AnonymousUserBanner, FeaturedArtistsBanner } from '.
 import { UserNotFound } from './components/UserNotFound';
 import { supabase } from './lib/supabase';
 import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
-import { TutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
+import { useTutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
 import { ConfirmDialog, type ConfirmDialogVariant } from './components/ui';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface AppDialogState {
     title: string;
@@ -42,6 +43,7 @@ function App() {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryClient = useQueryClient();
     const { user, profile } = useAuth();
+    const { t } = useTranslation();
 
     const [showForm, setShowForm] = useState(false);
     const [showArtistList, setShowArtistList] = useState(false);
@@ -72,6 +74,7 @@ function App() {
     const [tutorialArtistHasImage, setTutorialArtistHasImage] = useState(false);
     const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
     const [appDialogLoading, setAppDialogLoading] = useState(false);
+    const tutorialSteps = useTutorialText();
 
     // Featured mode from URL param
     const viewingFeatured = searchParams.get('view') === 'featured';
@@ -227,10 +230,10 @@ function App() {
             title,
             message,
             variant,
-            confirmLabel: 'OK',
+            confirmLabel: t('common.ok'),
             onConfirm: () => setAppDialog(null),
         });
-    }, []);
+    }, [t]);
 
     const handleDeleteArtist = async (artist: Artist) => {
         if (!user) {
@@ -239,11 +242,17 @@ function App() {
         }
 
         setAppDialog({
-            title: 'Delete artist?',
-            message: `Delete "${artist.name}" from your map? This cannot be undone.`,
+            title: t('app.dialogs.deleteArtist.title'),
+            message: (
+                <Trans
+                    i18nKey="app.dialogs.deleteArtist.message"
+                    values={{ name: artist.name }}
+                    components={{ strong: <strong className="font-semibold text-[rgb(220,38,38)]" /> }}
+                />
+            ),
             variant: 'danger',
-            confirmLabel: 'Delete',
-            cancelLabel: 'Cancel',
+            confirmLabel: t('common.delete'),
+            cancelLabel: t('common.cancel'),
             onConfirm: async () => {
                 setAppDialogLoading(true);
                 try {
@@ -252,7 +261,11 @@ function App() {
                     setAppDialog(null);
                 } catch (error) {
                     console.error('Failed to delete artist:', error);
-                    showAppMessage('Could not delete artist', 'Failed to delete artist. Please try again.', 'error');
+                    showAppMessage(
+                        t('app.dialogs.deleteArtist.errorTitle'),
+                        t('app.dialogs.deleteArtist.errorMessage'),
+                        'error'
+                    );
                 } finally {
                     setAppDialogLoading(false);
                 }
@@ -315,8 +328,8 @@ function App() {
 
     // Lock map gestures under panels, except during location-pick mode.
     const mapInteractionsDisabled = (showForm && !selectionMode?.active)
-        || showArtistList
-        || showFeaturedList
+        || (isMobileLayout && showArtistList)
+        || (isMobileLayout && showFeaturedList)
         || mainSearchResultsOpen
         || notificationMenuOpen
         || accountMenuOpen;
@@ -327,16 +340,25 @@ function App() {
         }
 
         setAppDialog({
-            title: 'Copy artist collection?',
+            title: t('app.dialogs.copyCollection.title'),
             message: (
                 <>
-                    <p>Copy {artistCount} artist{artistCount === 1 ? '' : 's'} from {username}'s map to your map?</p>
-                    <p className="mt-1">Artists already on your map will be skipped.</p>
+                    <p>
+                        <Trans
+                            i18nKey="app.dialogs.copyCollection.message"
+                            values={{ count: artistCount, username }}
+                            components={{
+                                count: <strong className="font-semibold text-primary" />,
+                                username: <strong className="font-semibold text-primary" />,
+                            }}
+                        />
+                    </p>
+                    <p className="mt-1">{t('app.dialogs.copyCollection.skipExisting')}</p>
                 </>
             ),
             variant: 'default',
-            confirmLabel: 'Copy',
-            cancelLabel: 'Cancel',
+            confirmLabel: t('common.copy'),
+            cancelLabel: t('common.cancel'),
             onConfirm: async () => {
                 setAppDialogLoading(true);
                 setIsCopyingCollection(true);
@@ -344,13 +366,17 @@ function App() {
                     const result = await copyArtistCollectionByUsername(username);
                     await queryClient.invalidateQueries({ queryKey: ['artists'] });
                     showAppMessage(
-                        'Collection copied',
-                        `Copied ${result.copied} artist${result.copied === 1 ? '' : 's'}. Skipped ${result.skipped}.`,
+                        t('app.dialogs.copyCollection.successTitle'),
+                        t('app.dialogs.copyCollection.successMessage', { copied: result.copied, skipped: result.skipped }),
                         'success'
                     );
                 } catch (error) {
                     console.error('Failed to copy artist collection:', error);
-                    showAppMessage('Could not copy collection', 'Failed to copy artist collection. Please try again.', 'error');
+                    showAppMessage(
+                        t('app.dialogs.copyCollection.errorTitle'),
+                        t('app.dialogs.copyCollection.errorMessage'),
+                        'error'
+                    );
                 } finally {
                     setIsCopyingCollection(false);
                     setAppDialogLoading(false);
@@ -390,10 +416,10 @@ function App() {
                             </div>
                             {viewingFeatured ? (
                                 <button
-                                    aria-label="Back to my map"
+                                    aria-label={t('banner.backToMyMap')}
                                     onClick={() => setViewingFeatured(false)}
                                     className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors"
-                                    title="Back to my map"
+                                    title={t('banner.backToMyMap')}
                                 >
                                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -402,10 +428,10 @@ function App() {
                                 </button>
                             ) : (
                                 <button
-                                    aria-label="View featured artists"
+                                    aria-label={t('banner.viewCommunityArtists')}
                                     onClick={() => setViewingFeatured(true)}
                                     className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors"
-                                    title="View featured artists"
+                                    title={t('banner.viewCommunityArtists')}
                                 >
                                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                         <polygon points="7.5,1.5 9,6 13.5,7.5 9,9 7.5,13.5 6,9 1.5,7.5 6,6" />
@@ -458,10 +484,10 @@ function App() {
                 }} />
             )}
 
-            {!showForm && !showArtistList && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
+            {!showForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
                 <AddArtistButton onClick={handleAddArtistClick} />
             )}
-            {!showForm && !showArtistList && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList) && (
+            {!showForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
                 <ViewArtistListButton onClick={() => {
                     if (viewingFeatured) {
                         setShowForm(false);
@@ -512,7 +538,7 @@ function App() {
             )}
             {tutorialStepIndex !== null && (
                 <TutorialOverlay
-                    steps={TutorialText}
+                    steps={tutorialSteps}
                     stepIndex={tutorialStepIndex}
                     onNext={handleTutorialNext}
                     onSkip={completeTutorial}

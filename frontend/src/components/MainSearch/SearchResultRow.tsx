@@ -31,6 +31,9 @@ function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect:
             />
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-text truncate">{artist.name}</p>
+                {artist.romanizedName && artist.romanizedName !== artist.name && (
+                    <p className="text-xs text-text-secondary truncate">{artist.romanizedName}</p>
+                )}
                 <p className="text-xs text-text-secondary truncate">
                     {formatLocationLocalized(artist.activeLocation, locationLanguage)}
                 </p>

@@ -28,6 +28,15 @@ export interface NotificationInput {
     aggregationKey?: string | null;
 }
 
+export interface AdminPinnedNotification {
+    id: string;
+    title: string;
+    content: string;
+    type: string;
+    recipientCount: number;
+    createdAt: Date;
+}
+
 const notificationSelect = `
     id,
     user_id as "userId",
@@ -147,5 +156,78 @@ export const NotificationStore = {
             deleted: deleteResult.rowCount ?? 0,
             keptHard: Number(keptHardResult.rows[0]?.count ?? 0)
         };
+    },
+
+    listPinnedForAdmin: async (): Promise<AdminPinnedNotification[]> => {
+        const result = await pool.query<AdminPinnedNotification>(`
+            SELECT
+                (array_agg(id ORDER BY created_at DESC))[1]::text AS id,
+                title,
+                content,
+                type,
+                COUNT(*)::int AS "recipientCount",
+                MIN(created_at) AS "createdAt"
+            FROM notifications
+            WHERE is_hard = TRUE
+            GROUP BY
+                COALESCE(metadata->>'adminNotificationId', ''),
+                type,
+                title,
+                content,
+                COALESCE(link_label, ''),
+                COALESCE(link_url, '')
+            ORDER BY MIN(created_at) DESC
+        `);
+
+        return result.rows;
+    },
+
+    deletePinnedForAdmin: async (notificationId: string): Promise<number> => {
+        const existing = await pool.query<{
+            type: string;
+            title: string;
+            content: string;
+            link_label: string | null;
+            link_url: string | null;
+            admin_notification_id: string | null;
+        }>(`
+            SELECT
+                type,
+                title,
+                content,
+                link_label,
+                link_url,
+                metadata->>'adminNotificationId' AS admin_notification_id
+            FROM notifications
+            WHERE id = $1
+              AND is_hard = TRUE
+        `, [notificationId]);
+
+        const notification = existing.rows[0];
+        if (!notification) return 0;
+
+        const result = notification.admin_notification_id
+            ? await pool.query(`
+                DELETE FROM notifications
+                WHERE is_hard = TRUE
+                  AND metadata->>'adminNotificationId' = $1
+            `, [notification.admin_notification_id])
+            : await pool.query(`
+                DELETE FROM notifications
+                WHERE is_hard = TRUE
+                  AND type = $1
+                  AND title = $2
+                  AND content = $3
+                  AND COALESCE(link_label, '') = COALESCE($4, '')
+                  AND COALESCE(link_url, '') = COALESCE($5, '')
+            `, [
+                notification.type,
+                notification.title,
+                notification.content,
+                notification.link_label,
+                notification.link_url
+            ]);
+
+        return result.rowCount ?? 0;
     }
 };

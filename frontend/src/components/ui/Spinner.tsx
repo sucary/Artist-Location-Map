@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 const spinnerVariants = cva(
     'animate-spin',
@@ -22,10 +23,12 @@ export interface SpinnerProps extends VariantProps<typeof spinnerVariants> {
 }
 
 export function Spinner({ size, className }: SpinnerProps) {
+    const { t } = useTranslation();
+
     return (
         <svg
             role="status"
-            aria-label="Loading"
+            aria-label={t('common.loading')}
             className={cn(spinnerVariants({ size }), className)}
             fill="none"
             viewBox="0 0 24 24"

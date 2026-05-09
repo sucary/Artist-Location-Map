@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { randomUUID } from 'crypto';
 import { asyncHandler } from '../middleware/errorHandler';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { NotificationStore } from '../models/notificationStore';
@@ -127,6 +128,21 @@ export const searchNotificationRecipients = asyncHandler(async (req: Authenticat
     res.json(recipients);
 });
 
+export const listAdminPinnedNotifications = asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const notifications = await NotificationStore.listPinnedForAdmin();
+    res.json(notifications);
+});
+
+export const deleteAdminPinnedNotification = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const deleted = await NotificationStore.deletePinnedForAdmin(req.params.id);
+    if (deleted === 0) {
+        res.status(404).json({ error: 'Pinned notification not found' });
+        return;
+    }
+
+    res.json({ deleted });
+});
+
 export const postAdminNotification = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const validation = validateAdminNotificationInput(req.body as AdminNotificationRequestBody);
     if (!validation.ok) {
@@ -135,6 +151,7 @@ export const postAdminNotification = asyncHandler(async (req: AuthenticatedReque
     }
 
     const { audience, userId, title, content, isHard } = validation.value;
+    const adminNotificationId = randomUUID();
     const input = {
         type: ADMIN_NOTIFICATION_TYPE,
         title,
@@ -143,8 +160,10 @@ export const postAdminNotification = asyncHandler(async (req: AuthenticatedReque
         linkLabel: null,
         linkUrl: null,
         metadata: {
-            createdByAdminId: req.user!.id
-        }
+            createdByAdminId: req.user!.id,
+            adminNotificationId
+        },
+        aggregationKey: `admin_message:${adminNotificationId}`
     };
 
     if (audience === 'user') {

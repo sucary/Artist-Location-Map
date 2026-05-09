@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 const alertVariants = cva(
     'rounded-lg px-3 py-2',
@@ -66,6 +67,7 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement>, VariantProps
 
 export function Alert({ variant, header, children, className, hideIcon = false, onClose, ...props }: AlertProps) {
     const activeVariant = variant ?? 'info';
+    const { t } = useTranslation();
 
     return (
         <div
@@ -107,7 +109,7 @@ export function Alert({ variant, header, children, className, hideIcon = false, 
                     type="button"
                     onClick={onClose}
                     className="shrink-0 text-text-muted opacity-70 transition-opacity hover:opacity-100"
-                    aria-label="Dismiss"
+                    aria-label={t('common.dismiss')}
                 >
                     <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

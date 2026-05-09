@@ -12,6 +12,7 @@ type MusicBrainzCandidate = {
     mbid: string;
     name: string;
     sort_name: string | null;
+    aliases: unknown;
     type: string | null;
     country: string | null;
     area_name: string | null;
@@ -23,6 +24,14 @@ type MusicBrainzCandidate = {
     twitter_url: string | null;
     youtube_url: string | null;
     apple_music_url: string | null;
+};
+
+type CatalogAlias = {
+    name: string;
+    sortName: string | null;
+    locale: string | null;
+    type: string | null;
+    primary: boolean | null;
 };
 
 type MatchResult =
@@ -86,6 +95,66 @@ function formatCandidate(candidate: MusicBrainzCandidate): string {
     return `${candidate.name}${candidate.sort_name && candidate.sort_name !== candidate.name ? ` / ${candidate.sort_name}` : ''} (${meta}) ${candidate.mbid}`;
 }
 
+function normalizeAliases(aliases: unknown): CatalogAlias[] {
+    if (!Array.isArray(aliases)) return [];
+
+    return aliases
+        .map((alias) => {
+            const value = alias as { name?: string; sortName?: string | null; locale?: string | null; type?: string | null; primary?: boolean | null };
+            const name = value.name?.trim();
+            if (!name) return null;
+
+            return {
+                name,
+                sortName: value.sortName || null,
+                locale: value.locale || null,
+                type: value.type || null,
+                primary: typeof value.primary === 'boolean' ? value.primary : null,
+            };
+        })
+        .filter((alias): alias is CatalogAlias => !!alias);
+}
+
+function cleanSortName(sortName?: string | null) {
+    const value = sortName?.trim();
+    if (!value) return null;
+
+    const parts = value.split(',').map((part) => part.trim()).filter(Boolean);
+    if (parts.length === 2) return `${parts[1]} ${parts[0]}`;
+    return value;
+}
+
+function hasCjk(value: string) {
+    return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(value);
+}
+
+const romanizedNameOverrides = new Map<string, string>([
+    ['らそんぶる', 'rassemble'],
+]);
+
+function getRomanizedNameOverride(name: string) {
+    return romanizedNameOverrides.get(name.trim().toLowerCase()) || null;
+}
+
+function isDisplayRomanizedAlias(alias: CatalogAlias) {
+    return !alias.name.includes(',') && !hasCjk(alias.name) && /[A-Za-z]/.test(alias.name);
+}
+
+function getRomanizedName(candidate: MusicBrainzCandidate) {
+    const override = getRomanizedNameOverride(candidate.name);
+    if (override) return override;
+
+    const aliases = normalizeAliases(candidate.aliases);
+    const artistAliases = aliases.filter((alias) => alias.type === 'Artist name' || !alias.type);
+    const englishPrimary = artistAliases.find((alias) => alias.locale === 'en' && alias.primary === true && isDisplayRomanizedAlias(alias));
+    const english = englishPrimary || artistAliases.find((alias) => alias.locale === 'en' && isDisplayRomanizedAlias(alias));
+    const latin = english || artistAliases.find(isDisplayRomanizedAlias);
+    const fallback = cleanSortName(candidate.sort_name);
+    const romanizedName = latin?.name || fallback;
+
+    return romanizedName && romanizedName !== candidate.name ? romanizedName : null;
+}
+
 async function getExistingArtists(limit?: number): Promise<AppArtist[]> {
     const values: unknown[] = [];
     const limitClause = limit ? 'LIMIT $1' : '';
@@ -129,7 +198,7 @@ async function getLinkedArtistsMissingLinks(limit?: number): Promise<AppArtist[]
 async function getCandidateByMbid(mbid: string): Promise<MusicBrainzCandidate | null> {
     const result = await pool.query<MusicBrainzCandidate>(`
         SELECT
-            mbid, name, sort_name, type, country, area_name, begin_area_name,
+            mbid, name, sort_name, aliases, type, country, area_name, begin_area_name,
             relation_count, global_rank, website_url, instagram_url, twitter_url,
             youtube_url, apple_music_url
         FROM musicbrainz_artists
@@ -142,7 +211,7 @@ async function getCandidateByMbid(mbid: string): Promise<MusicBrainzCandidate | 
 async function findCandidates(name: string): Promise<MusicBrainzCandidate[]> {
     const result = await pool.query<MusicBrainzCandidate>(`
         SELECT
-            mbid, name, sort_name, type, country, area_name, begin_area_name,
+            mbid, name, sort_name, aliases, type, country, area_name, begin_area_name,
             relation_count, global_rank, website_url, instagram_url, twitter_url,
             youtube_url, apple_music_url
         FROM musicbrainz_artists
@@ -185,16 +254,16 @@ function chooseMatch(artist: AppArtist, candidates: MusicBrainzCandidate[]): Mat
 }
 
 async function applyMatch(match: Extract<MatchResult, { status: 'matched' }>) {
-    const romanizedName =
-        match.candidate.sort_name && match.candidate.sort_name !== match.candidate.name
-            ? match.candidate.sort_name
-            : null;
+    const romanizedName = getRomanizedName(match.candidate);
 
     await pool.query(`
         UPDATE artists
         SET
             musicbrainz_mbid = COALESCE(musicbrainz_mbid, $1),
-            romanized_name = COALESCE(romanized_name, $2),
+            romanized_name = CASE
+                WHEN romanized_name IS NULL OR romanized_name = $9 OR $10 = TRUE THEN $2
+                ELSE romanized_name
+            END,
             website_url = COALESCE(website_url, $3),
             instagram_url = COALESCE(instagram_url, $4),
             twitter_url = COALESCE(twitter_url, $5),
@@ -209,7 +278,9 @@ async function applyMatch(match: Extract<MatchResult, { status: 'matched' }>) {
         match.candidate.twitter_url,
         match.candidate.youtube_url,
         match.candidate.apple_music_url,
-        match.artist.id
+        match.artist.id,
+        match.candidate.sort_name,
+        getRomanizedNameOverride(match.candidate.name) === romanizedName
     ]);
 }
 

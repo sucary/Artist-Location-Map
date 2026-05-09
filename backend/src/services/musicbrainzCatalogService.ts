@@ -10,7 +10,7 @@ type MusicBrainzRemoteArtist = {
     'begin-area'?: { id?: string; name?: string };
     'life-span'?: { begin?: string; end?: string; ended?: boolean };
     disambiguation?: string;
-    aliases?: unknown[];
+    aliases?: MusicBrainzAlias[];
     genres?: unknown[];
     tags?: unknown[];
     relations?: Array<{
@@ -18,6 +18,29 @@ type MusicBrainzRemoteArtist = {
         'target-type'?: string;
         url?: { resource?: string };
     }>;
+};
+
+type MusicBrainzAlias = {
+    name?: string;
+    sortName?: string | null;
+    'sort-name'?: string | null;
+    locale?: string | null;
+    type?: string | null;
+    primary?: boolean | null;
+    ended?: boolean | null;
+    begin?: string | null;
+    end?: string | null;
+};
+
+type CatalogAlias = {
+    name: string;
+    sortName: string | null;
+    locale: string | null;
+    type: string | null;
+    primary: boolean | null;
+    ended: boolean | null;
+    begin: string | null;
+    end: string | null;
 };
 
 type MusicBrainzRemoteSearchResponse = {
@@ -42,6 +65,9 @@ type CatalogArtistRow = {
     life_span_end: string | null;
     ended: boolean | null;
     disambiguation: string | null;
+    aliases: unknown;
+    alias_names: string[];
+    alias_search_text: string;
     alias_count: number;
     genre_count: number;
     tag_count: number;
@@ -96,10 +122,75 @@ function scheduleMusicBrainzRequest<T>(task: () => Promise<T>): Promise<T> {
     return result;
 }
 
+function normalizeAliases(aliases: unknown): CatalogAlias[] {
+    if (!Array.isArray(aliases)) return [];
+
+    return aliases
+        .map((alias) => {
+            const value = alias as MusicBrainzAlias;
+            const name = value.name?.trim();
+            if (!name) return null;
+
+            return {
+                name,
+                sortName: value.sortName || value['sort-name'] || null,
+                locale: value.locale || null,
+                type: value.type || null,
+                primary: typeof value.primary === 'boolean' ? value.primary : null,
+                ended: typeof value.ended === 'boolean' ? value.ended : null,
+                begin: value.begin || null,
+                end: value.end || null,
+            };
+        })
+        .filter((alias): alias is CatalogAlias => !!alias);
+}
+
+function cleanSortName(sortName?: string | null) {
+    const value = sortName?.trim();
+    if (!value) return null;
+
+    const parts = value.split(',').map((part) => part.trim()).filter(Boolean);
+    if (parts.length === 2) return `${parts[1]} ${parts[0]}`;
+    return value;
+}
+
+function hasCjk(value: string) {
+    return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(value);
+}
+
+const romanizedNameOverrides = new Map<string, string>([
+    ['らそんぶる', 'rassemble'],
+]);
+
+function getRomanizedNameOverride(name: string) {
+    return romanizedNameOverrides.get(name.trim().toLowerCase()) || null;
+}
+
+function isDisplayRomanizedAlias(alias: CatalogAlias) {
+    return !alias.name.includes(',') && !hasCjk(alias.name) && /[A-Za-z]/.test(alias.name);
+}
+
+function findRomanizedName(aliases: CatalogAlias[], name: string, sortName?: string | null) {
+    const override = getRomanizedNameOverride(name);
+    if (override) return override;
+
+    const artistAliases = aliases.filter((alias) => alias.type === 'Artist name' || !alias.type);
+    const englishPrimary = artistAliases.find((alias) => alias.locale === 'en' && alias.primary === true && isDisplayRomanizedAlias(alias));
+    const english = englishPrimary || artistAliases.find((alias) => alias.locale === 'en' && isDisplayRomanizedAlias(alias));
+    const latin = english || artistAliases.find(isDisplayRomanizedAlias);
+    const fallback = cleanSortName(sortName);
+
+    return latin?.name || (fallback && fallback !== name ? fallback : null);
+}
+
 function rowToArtist(row: CatalogArtistRow) {
+    const aliases = normalizeAliases(row.aliases);
+
     return {
         mbid: row.mbid,
         name: row.name,
+        nativeName: row.name,
+        romanizedName: findRomanizedName(aliases, row.name, row.sort_name),
         sortName: row.sort_name,
         type: row.type,
         country: row.country,
@@ -111,6 +202,8 @@ function rowToArtist(row: CatalogArtistRow) {
         lifeSpanEnd: row.life_span_end,
         ended: row.ended,
         disambiguation: row.disambiguation,
+        aliases,
+        aliasNames: row.alias_names || [],
         aliasCount: row.alias_count,
         genreCount: row.genre_count,
         tagCount: row.tag_count,
@@ -138,6 +231,42 @@ function queryTokens(value: string) {
         .split(/\s+/)
         .map((token) => token.trim())
         .filter(Boolean);
+}
+
+function uniqueTexts(values: Array<string | null | undefined>) {
+    return [...new Set(values.map((value) => value?.trim()).filter((value): value is string => !!value))];
+}
+
+function extractAliases(artist: MusicBrainzRemoteArtist, extraAliases: string[] = []) {
+    const aliases = normalizeAliases(artist.aliases || []);
+    const existingNames = new Set(aliases.map((alias) => alias.name));
+
+    for (const alias of extraAliases) {
+        const name = alias.trim();
+        if (!name || existingNames.has(name)) continue;
+        aliases.push({
+            name,
+            sortName: null,
+            locale: null,
+            type: 'Search hint',
+            primary: null,
+            ended: null,
+            begin: null,
+            end: null
+        });
+        existingNames.add(name);
+    }
+
+    return aliases;
+}
+
+function extractAliasNames(artist: MusicBrainzRemoteArtist, extraAliases: string[] = []) {
+    const aliasNames = extractAliases(artist, extraAliases).flatMap((alias) => [alias.name, alias.sortName]);
+    return uniqueTexts([...aliasNames, ...extraAliases]);
+}
+
+function toAliasSearchText(aliasNames: string[]) {
+    return aliasNames.join(' ');
 }
 
 function hostFor(url: string) {
@@ -279,22 +408,24 @@ async function fetchMusicBrainzJson<T>(url: string): Promise<T> {
     });
 }
 
-async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist) {
+async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist, extraAliases: string[] = []) {
     const links = extractLinks(remoteArtist);
+    const aliases = extractAliases(remoteArtist, extraAliases);
+    const aliasNames = extractAliasNames(remoteArtist, extraAliases);
     const artistResult = await pool.query(`
         INSERT INTO public.musicbrainz_artists (
             mbid, name, sort_name, type, country, area_name, area_mbid,
             begin_area_name, begin_area_mbid, life_span_begin, life_span_end, ended,
-            disambiguation, alias_count, genre_count, tag_count, relation_count,
+            disambiguation, aliases, alias_names, alias_search_text, alias_count, genre_count, tag_count, relation_count,
             website_url, wikidata_url, instagram_url, twitter_url, tiktok_url,
             youtube_url, spotify_url, apple_music_url, bandcamp_url, soundcloud_url,
             seed_sources
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7,
             $8, $9, $10, $11, $12,
-            $13, $14, $15, $16, $17,
-            $18, $19, $20, $21, $22,
-            $23, $24, $25, $26, $27,
+            $13, $14, $15, $16, $17, $18, $19, $20,
+            $21, $22, $23, $24, $25,
+            $26, $27, $28, $29, $30,
             ARRAY['musicbrainz-api']
         )
         ON CONFLICT (mbid) DO UPDATE SET
@@ -310,6 +441,13 @@ async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist) {
             life_span_end = EXCLUDED.life_span_end,
             ended = EXCLUDED.ended,
             disambiguation = EXCLUDED.disambiguation,
+            aliases = EXCLUDED.aliases,
+            alias_names = (
+                SELECT ARRAY(SELECT DISTINCT unnest(public.musicbrainz_artists.alias_names || EXCLUDED.alias_names))
+            ),
+            alias_search_text = (
+                SELECT array_to_string(ARRAY(SELECT DISTINCT unnest(public.musicbrainz_artists.alias_names || EXCLUDED.alias_names)), ' ')
+            ),
             alias_count = EXCLUDED.alias_count,
             genre_count = EXCLUDED.genre_count,
             tag_count = EXCLUDED.tag_count,
@@ -342,6 +480,9 @@ async function upsertRemoteArtist(remoteArtist: MusicBrainzRemoteArtist) {
         remoteArtist['life-span']?.end || null,
         remoteArtist['life-span']?.ended ?? null,
         remoteArtist.disambiguation || null,
+        JSON.stringify(aliases),
+        aliasNames,
+        toAliasSearchText(aliasNames),
         Array.isArray(remoteArtist.aliases) ? remoteArtist.aliases.length : 0,
         Array.isArray(remoteArtist.genres) ? remoteArtist.genres.length : 0,
         Array.isArray(remoteArtist.tags) ? remoteArtist.tags.length : 0,
@@ -389,6 +530,7 @@ export const MusicBrainzCatalogService = {
                 `disambiguation ILIKE $${paramIndex}`,
                 `area_name ILIKE $${paramIndex}`,
                 `begin_area_name ILIKE $${paramIndex}`,
+                `alias_search_text ILIKE $${paramIndex}`,
             ];
 
             where.push(`(${clauses.join(' OR ')})`);
@@ -453,10 +595,10 @@ export const MusicBrainzCatalogService = {
         };
     },
 
-    fetchAndCacheByMbid: async (mbid: string) => {
+    fetchAndCacheByMbid: async (mbid: string, extraAlias?: string) => {
         const url = `${musicBrainzBaseUrl}/artist/${encodeURIComponent(mbid)}?fmt=json&inc=url-rels+aliases+tags+genres`;
         const remoteArtist = await fetchMusicBrainzJson<MusicBrainzRemoteArtist>(url);
-        return await upsertRemoteArtist(remoteArtist);
+        return await upsertRemoteArtist(remoteArtist, extraAlias ? [extraAlias] : []);
     },
 
     searchRemote: async (query: string, options: { limit?: number; offset?: number } = {}) => {
@@ -472,39 +614,48 @@ export const MusicBrainzCatalogService = {
         const response = await fetchMusicBrainzJson<MusicBrainzRemoteSearchResponse>(`${musicBrainzBaseUrl}/artist?${params.toString()}`);
         const results = (response.artists || [])
             .filter((artist) => artist.id && artist.name)
-            .map((artist) => ({
-                mbid: artist.id,
-                name: artist.name || '',
-                sortName: artist['sort-name'] || null,
-                type: artist.type || null,
-                country: artist.country || null,
-                areaName: artist.area?.name || null,
-                areaMbid: artist.area?.id || null,
-                beginAreaName: artist['begin-area']?.name || null,
-                beginAreaMbid: artist['begin-area']?.id || null,
-                lifeSpanBegin: artist['life-span']?.begin || null,
-                lifeSpanEnd: artist['life-span']?.end || null,
-                ended: artist['life-span']?.ended ?? null,
-                disambiguation: artist.disambiguation || null,
-                aliasCount: Array.isArray(artist.aliases) ? artist.aliases.length : 0,
-                genreCount: 0,
-                tagCount: 0,
-                relationCount: 0,
-                websiteUrl: null,
-                wikidataUrl: null,
-                instagramUrl: null,
-                twitterUrl: null,
-                tiktokUrl: null,
-                youtubeUrl: null,
-                spotifyUrl: null,
-                appleMusicUrl: null,
-                bandcampUrl: null,
-                soundcloudUrl: null,
-                seedSources: ['musicbrainz-api-search'],
-                popularity: null,
-                globalRank: null,
-                regionalRanks: []
-            }));
+            .map((artist) => {
+                const aliases = extractAliases(artist);
+                const name = artist.name || '';
+
+                return {
+                    mbid: artist.id,
+                    name,
+                    nativeName: name,
+                    romanizedName: findRomanizedName(aliases, name, artist['sort-name']),
+                    sortName: artist['sort-name'] || null,
+                    type: artist.type || null,
+                    country: artist.country || null,
+                    areaName: artist.area?.name || null,
+                    areaMbid: artist.area?.id || null,
+                    beginAreaName: artist['begin-area']?.name || null,
+                    beginAreaMbid: artist['begin-area']?.id || null,
+                    lifeSpanBegin: artist['life-span']?.begin || null,
+                    lifeSpanEnd: artist['life-span']?.end || null,
+                    ended: artist['life-span']?.ended ?? null,
+                    disambiguation: artist.disambiguation || null,
+                    aliases,
+                    aliasNames: extractAliasNames(artist),
+                    aliasCount: Array.isArray(artist.aliases) ? artist.aliases.length : 0,
+                    genreCount: 0,
+                    tagCount: 0,
+                    relationCount: 0,
+                    websiteUrl: null,
+                    wikidataUrl: null,
+                    instagramUrl: null,
+                    twitterUrl: null,
+                    tiktokUrl: null,
+                    youtubeUrl: null,
+                    spotifyUrl: null,
+                    appleMusicUrl: null,
+                    bandcampUrl: null,
+                    soundcloudUrl: null,
+                    seedSources: ['musicbrainz-api-search'],
+                    popularity: null,
+                    globalRank: null,
+                    regionalRanks: []
+                };
+            });
 
         const count = response.count || offset + results.length;
         return {
@@ -520,6 +671,6 @@ export const MusicBrainzCatalogService = {
         const response = await MusicBrainzCatalogService.searchRemote(query, { limit: 1 });
         const remoteArtist = response.results[0];
         if (!remoteArtist?.mbid) return null;
-        return await MusicBrainzCatalogService.fetchAndCacheByMbid(remoteArtist.mbid);
+        return await MusicBrainzCatalogService.fetchAndCacheByMbid(remoteArtist.mbid, query);
     }
 };

@@ -3,12 +3,17 @@
     "appName": "Achizu",
     "search": "Search",
     "cancel": "Cancel",
+    "ok": "OK",
     "save": "Save",
-    "saving": "Saving...",
+    "saving": "Saving",
     "close": "Close",
+    "dismiss": "Dismiss",
     "loading": "Loading",
     "error": "Something went wrong",
-    "redirectToMap": "Redirecting to the map"
+    "redirectToMap": "Redirecting to the map",
+    "backToMap": "Back to map",
+    "delete": "Delete",
+    "copy": "Copy"
   },
   "auth": {
     "fields": {
@@ -178,7 +183,7 @@
     },
     "mediaReview": {
       "requiresReviewTitle": "Image requires review",
-      "replaceSharedTitle": "Replace shared image?",
+      "replaceSharedTitle": "Replace shared image",
       "requiresReviewDescription": "This artist already has a shared image. Your upload will be submitted for admin review before it becomes visible to everyone.",
       "replaceSharedDescription": "This artist already has a shared image. As an admin, continuing can replace the image shown to everyone.",
       "currentImage": "Current image",
@@ -216,7 +221,7 @@
       "nameRequired": "Artist name is required",
       "originalLocationRequired": "Original location is required",
       "activeLocationRequired": "Active location is required",
-      "invalidWebsiteUrl": "Enter a valid URL (https://)",
+      "invalidWebsiteUrl": "Enter a valid URL (https://...)",
       "invalidSocialProfileUrl": "Enter a valid {{platform}} URL",
       "invalidSocialLinkUrl": "Invalid social link URL",
       "imageUploadFailed": "Image upload failed",
@@ -227,9 +232,10 @@
     }
   },
   "banner": {
-    "featuredArtists": "Featured Artists",
+    "featuredArtists": "Artists from the Community",
     "viewingUser": "Viewing <username>{{username}}</username>'s map",
-    "backToMyMap": "Back to my map"
+    "backToMyMap": "Back to my map",
+    "viewCommunityArtists": "View artists from the community"
   },
   "mainSearch": {
     "placeholder": "Search artists & users",
@@ -254,7 +260,8 @@
       "title": "Language",
       "locationName": "Location name",
       "locationNameLanguage": "Location name language",
-      "hint": "Some locations may display in a different language due to lack of translation."
+      "hint": "Some locations may display in a different language due to lack of translation.",
+      "native": "Native"
     },
     "username": {
       "title": "Username",
@@ -276,6 +283,75 @@
       "unableUpdatePassword": "Unable to update password. Please try again.",
       "failedUpdatePrivacy": "Failed to update privacy setting",
       "unableUpdatePrivacy": "Unable to update privacy setting. Please try again."
+    },
+    "uiLanguage": {
+      "title": "UI Language",
+      "description": "Choose the language used by the app interface.",
+      "language": "UI language"
+    }
+  },
+  "tutorial": {
+    "progress": "Step {{current}}/{{total}}",
+    "skip": "Skip tutorial",
+    "next": "Next",
+    "steps": {
+      "addArtist": {
+        "title": "Add your first artist",
+        "body": "Start by pressing this button."
+      },
+      "searchArtist": {
+        "title": "Search the artist",
+        "body": {
+          "search": "Enter the artist name, then press Enter or the search button.",
+          "deepSearch": "If the artist is not found, switch on <strong>Deep search</strong> and retry."
+        }
+      },
+      "origin": {
+        "title": "Set the origin",
+        "body": "Search the artist origin, usually a <strong>city</strong> or <strong>province</strong>. You can also manually pick a location on the map."
+      },
+      "activeLocation": {
+        "title": "Set the active location",
+        "body": {
+          "search": "Repeat the location search for where the artist is active now.",
+          "copy": "If it is the same as the origin, you can copy it with the arrow button."
+        }
+      },
+      "careerYears": {
+        "title": "Set career years",
+        "body": "Select the debut year. Add an inactive year too if the artist is no longer active."
+      },
+      "externalLinks": {
+        "title": "Add external links",
+        "body": "External links such as social media and official pages are optional."
+      },
+      "artistImage": {
+        "title": "Upload an artist image",
+        "body": "Add an image for the artist. The image will be applied to both avatar and banner."
+      },
+      "saveArtist": {
+        "title": "Save the artist",
+        "body": "Once everything is set, save your artist to the map!"
+      }
+    }
+  },
+  "about": {
+    "title": "About",
+    "project": {
+      "description": "An open-source project for mapping your favorite artists around the world.",
+      "viewOnGithub": "View on GitHub"
+    },
+    "credits": {
+      "title": "APIs & Libraries",
+      "openStreetMap": {
+        "description": "Map data and geocoding services via Nominatim and Overpass API."
+      },
+      "mapLibre": {
+        "description": "Interactive vector map rendering."
+      },
+      "carto": {
+        "description": "Base map styles and tiles."
+      }
     }
   },
   "notifications": {
@@ -303,7 +379,7 @@
     "markers": {
       "clusterArtists": "{{count}} artists"
     },
-    "buttons":{
+    "buttons": {
       "addNewArtist": "Add new artist",
       "viewArtistList": "View artist list",
       "mapControls": {
@@ -326,6 +402,99 @@
     "error": {
       "renderMapError": "Map rendering is not supported in this browser. Please use a different browser.",
       "loadMapError": "Failed to load map. Please refresh and try again."
+    }
+  },
+  "artistList": {
+    "aria": {
+      "region": "Artist list"
+    },
+    "title": {
+      "default": "Artists",
+      "featured": "Artists from the Community"
+    },
+    "search": {
+      "ariaLabel": "Search artists or locations",
+      "placeholder": "Search artists or locations"
+    },
+    "sort": {
+      "label": "Sort by",
+      "ariaLabel": "Sort artists",
+      "optionsLabel": "Artist sort options",
+      "ascending": "Sort ascending",
+      "descending": "Sort descending",
+      "ascendingShort": "Ascending",
+      "descendingShort": "Descending",
+      "options": {
+        "dateAdded": "Date added",
+        "recentlyUpdated": "Recently updated",
+        "name": "Name",
+        "activeLocation": "Active location",
+        "originLocation": "Origin location",
+        "debutYear": "Debut year"
+      }
+    },
+    "empty": {
+      "noResults": "No artists found",
+      "noneAdded": "No artists added yet"
+    },
+    "actions": {
+      "copyAll": "Copy all artists to my map",
+      "goToLocation": "Go to location",
+      "edit": "Edit artist",
+      "editShort": "Edit",
+      "delete": "Delete artist",
+      "deleteShort": "Delete"
+    }
+  },
+  "userNotFound": {
+    "title": "Can't find {{username}} ;_;",
+    "reasonsIntro": "This could be because:",
+    "reasons": {
+      "doesNotExist": "The user doesn't exist",
+      "private": "The profile is private",
+      "deleted": "The account has been deleted"
+    },
+    "goBack": "Go Back"
+  },
+  "artistCard": {
+    "fields": {
+      "origin": "Origin",
+      "active": "Active"
+    },
+    "years": {
+      "present": "Present"
+    },
+    "actions": {
+      "edit": "Edit artist",
+      "delete": "Delete artist"
+    },
+    "social": {
+      "website": "Artist website",
+      "appleMusic": "Artist music link",
+      "youtube": "Artist YouTube",
+      "instagram": "Artist Instagram",
+      "twitter": "Artist X profile"
+    }
+  },
+  "app": {
+    "dialogs": {
+      "deleteArtist": {
+        "title": "Delete artist",
+        "errorTitle": "Could not delete artist",
+        "errorMessage": "Failed to delete artist. Please try again.",
+        "message": "Delete <strong>{{name}}</strong> from your map? This cannot be undone."
+      },
+      "copyCollection": {
+        "title": "Copy artist collection",
+        "message_one": "Copy <count>{{count}} artist</count> from <username>{{username}}</username>'s map to your map?",
+        "message_other": "Copy <count>{{count}} artists</count> from <username>{{username}}</username>'s map to your map?",
+        "skipExisting": "Artists already on your map will be skipped.",
+        "successTitle": "Collection copied",
+        "successMessage_one": "Copied {{copied}} artist. Skipped {{skipped}}.",
+        "successMessage_other": "Copied {{copied}} artists. Skipped {{skipped}}.",
+        "errorTitle": "Could not copy collection",
+        "errorMessage": "Failed to copy artist collection. Please try again."
+      }
     }
   }
 }

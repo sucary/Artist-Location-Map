@@ -17,7 +17,9 @@
     "db:backfill-localizations": "ts-node src/scripts/backfill-multilingual-locations.ts",
     "media:cleanup-stale": "ts-node src/scripts/cleanup-stale-media-uploads.ts",
     "mb:import-seed": "ts-node src/scripts/import-musicbrainz-seed.ts",
+    "mb:backfill-aliases": "ts-node src/scripts/backfill-musicbrainz-aliases.ts",
     "mb:backfill-artists": "ts-node src/scripts/backfill-artist-musicbrainz.ts",
+    "mb:backfill-romanized": "ts-node src/scripts/backfill-artist-romanized-names.ts",
     "inspect:db": "ts-node src/tests/inspect-db.ts",
     "build": "tsc",
     "start": "node dist/server.js"

@@ -1,14 +1,19 @@
 {
   "common": {
-    "appName": "アチズ",
+    "appName": "Achizu",
     "search": "検索",
     "cancel": "キャンセル",
+    "ok": "OK",
     "save": "保存",
-    "saving": "保存中...",
+    "saving": "保存中",
     "close": "閉じる",
-    "loading": "読み込み中...",
+    "dismiss": "閉じる",
+    "loading": "読み込み中",
     "error": "エラー",
-    "redirectToMap": "地図に移動しています..."
+    "redirectToMap": "地図へ移動しています",
+    "backToMap": "地図に戻る",
+    "delete": "削除",
+    "copy": "コピー"
   },
   "auth": {
     "fields": {
@@ -45,8 +50,8 @@
     "resetPassword": {
       "title": "パスワードをリセット",
       "description": "メールアドレスを入力してください。パスワードリセットリンクをお送りします。",
-      "authSessionExpired": "セッションが期限切れです。新しいリセットリンクをリクエストしてください。",
-      "updating": "パスワードを更新しています...",
+      "authSessionExpired": "セッションの有効期限が切れました。新しいリセットリンクをリクエストしてください。",
+      "updating": "パスワードを更新しています",
       "passwordUpdated": "パスワードを更新しました。"
     },
     "emailCheck": {
@@ -59,8 +64,8 @@
     },
     "userNamePrompt": {
       "title": "ユーザー名を作成",
-      "description": "他のユーザーはあなたのユーザー名であなたを見つけられます。",
-      "subdescription": "ユーザー名と公開設定は後で設定から変更できます。",
+      "description": "他のユーザーは、ユーザー名であなたを見つけられます。",
+      "subdescription": "ユーザー名と公開設定は、あとから設定で変更できます。",
       "usernameLabel": "ユーザー名",
       "usernamePlaceholder": "ユーザー名を入力してください",
       "usernameAvailable": "このユーザー名は使用できます",
@@ -72,14 +77,14 @@
       "validEmail": "正しいメールアドレスを入力してください。",
       "emailExists": "このメールアドレスはすでに登録されています。以前使用した方法でログインしてください。",
       "passwordRequired": "パスワードを入力してください。",
-      "passwordMin": "パスワードは6文字以上である必要があります。",
+      "passwordMin": "パスワードは6文字以上にしてください。",
       "confirmPasswordRequired": "パスワードを確認してください。",
       "passwordsMatch": "パスワードが一致しません。",
       "incorrectCredentials": "メールアドレスまたはパスワードが間違っています。",
       "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
       "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか、サポートにお問い合わせください。",
-      "userNameMin": "ユーザー名は1文字以上で入力してください。",
-      "userNameMax": "ユーザー名は16文字以内で入力してください。",
+      "userNameMin": "ユーザー名は1文字以上にしてください。",
+      "userNameMax": "ユーザー名は16文字以内にしてください。",
       "userNamePattern": "ユーザー名には英字、数字、アンダースコアのみ使用できます。",
       "userNameTaken": "そのユーザー名は既に登録されています。新しいユーザー名を入力してください。",
       "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。",
@@ -102,21 +107,21 @@
     "accountMenu": "アカウントメニュー"
   },
   "location": {
-    "searchPlaceholder": "場所を検索..."
+    "searchPlaceholder": "場所を検索"
   },
   "artistForm": {
     "fields": {
       "name": "アーティスト名",
       "originalLocation": "出身地",
       "searchOriginalLocation": "出身地を検索",
-      "activeLocation": "活動拠点",
-      "searchActiveLocation": "活動拠点を検索",
+      "activeLocation": "活動地",
+      "searchActiveLocation": "活動地を検索",
       "careerYears": "活動期間",
       "debutYear": "デビュー年",
       "debut": "デビュー",
       "present": "現在",
-      "inactiveYear": "活動休止年",
-      "inactive": "活動休止"
+      "inactiveYear": "活動終了年",
+      "inactive": "活動終了"
     },
     "alts": {
       "avatar": "アーティスト画像"
@@ -130,9 +135,9 @@
       "uploadAvatar": "画像をアップロード",
       "save": "保存",
       "cancel": "キャンセル",
-      "copyOriginalToActive": "出身地を活動拠点にコピー",
-      "setInactive": "活動休止に設定",
-      "setActive": "活動中に設定",
+      "copyOriginalToActive": "出身地を活動地にコピー",
+      "setInactive": "活動終了にする",
+      "setActive": "活動中にする",
       "confirm": "確認",
       "continue": "続行"
     },
@@ -141,7 +146,7 @@
       "website": "公式サイトURL",
       "instagram": "Instagram URL",
       "twitter": "Twitter/X URL",
-      "appleMusic": "音楽配信URL",
+      "appleMusic": "音楽リンクURL",
       "youtube": "YouTube URL"
     },
     "cropper": {
@@ -159,8 +164,8 @@
       "searchLocation": "場所を検索",
       "manualSelect": "地図上で場所を選択",
       "retry": "再試行",
-      "searching": "場所を検索しています...",
-      "searchMore": "さらに検索...",
+      "searching": "場所を検索しています",
+      "searchMore": "さらに結果を検索",
       "noResults": "結果が見つかりません",
       "errors": {
         "searchTimedOut": "検索がタイムアウトしました。もう一度お試しください。",
@@ -169,7 +174,7 @@
         "noLocationsAtPoint": "この地点では場所が見つかりませんでした。別の地点を試してください。"
       },
       "failedHeader": "場所の検索に失敗しました",
-      "locationSelected": "場所を選択済み",
+      "locationSelected": "場所を選択しました",
       "detailedLocationRecommended": "より詳しい場所の選択をおすすめします"
     },
     "yearSelect": {
@@ -179,9 +184,9 @@
     "errors": {
       "nameRequired": "アーティスト名を入力してください。",
       "originalLocationRequired": "出身地を入力してください。",
-      "activeLocationRequired": "活動拠点を入力してください。",
-      "invalidWebsiteUrl": "正しいURLを入力してください（https://...）",
-      "invalidSocialProfileUrl": "正しい{{platform}}プロフィールURLを入力してください。",
+      "activeLocationRequired": "活動地を入力してください。",
+      "invalidWebsiteUrl": "有効なURLを入力してください（https://...）",
+      "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してください。",
       "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効です。",
       "failedUploadImage": "画像をアップロードできませんでした。",
       "imageRequirements": "JPG、PNG、WebP形式で、5 MB以下の画像を使用してください。",
@@ -195,41 +200,42 @@
       "requiresReviewDescription": "このアーティストにはすでに共有画像があります。アップロードした画像は、全員に表示される前に管理者レビューへ送信されます。",
       "replaceSharedDescription": "このアーティストにはすでに共有画像があります。続行すると、全員に表示される画像を置き換えます。",
       "currentImage": "現在の画像",
-      "currentSharedArtistAlt": "現在の共有画像",
+      "currentSharedArtistAlt": "現在の共有アーティスト画像",
       "artistImageExistsTitle": "アーティスト画像はすでに存在します",
-      "sharedImageRecommendation": "ストレージ制限があるため、共有画像の使用を強くおすすめします。",
+      "sharedImageRecommendation": "ストレージ容量に限りがあるため、共有アーティスト画像の使用をおすすめします。",
       "submitForReviewDescription": "アップロードした画像のほうがアーティストをよく表している場合は、レビューに送信できます。",
       "chooseImage": "画像を選択",
       "sharedImage": "共有画像",
       "yourUpload": "アップロード画像",
-      "yourUploadedArtistAlt": "アップロードした画像"
+      "yourUploadedArtistAlt": "アップロードしたアーティスト画像"
     },
     "musicBrainz": {
       "artistLabel": "アーティスト",
-      "deepSearch": "ディープサーチ",
+      "deepSearch": "詳細検索",
       "searchArtist": "アーティストを検索",
-      "artistSelected": "確認済みアーティストを選択済み",
-      "artistNotLinked": "確認済みアーティストにリンクされていません",
-      "searchMusicBrainz": "ディープサーチ中",
+      "artistSelected": "確認済みアーティストを選択しました",
+      "artistNotLinked": "アーティストはMusicBrainzにリンクされていません",
+      "searchMusicBrainz": "詳細検索中",
       "searchSavedArtists": "保存済みアーティストを検索",
       "processingArtist": "アーティストを処理中",
       "linked": "リンク済み",
-      "onlineSearchFailed": "ディープサーチに失敗しました",
+      "onlineSearchFailed": "詳細検索に失敗しました",
       "useExistingRecommendation": "検索結果から確認済みのアーティストを選択することをおすすめします",
       "resultsLabel": "アーティスト検索結果",
       "searchingArtists": "アーティストを検索中",
       "artists": "アーティスト",
-      "noArtistFoundTry": "アーティストが見つかりません。",
+      "noArtistFoundTry": "アーティストが見つかりません。試す:",
       "noArtistFound": "アーティストが見つかりません",
       "moreArtists": "さらにアーティストを表示",
-      "onlineResults": "ディープサーチ結果",
-      "searchFailedHeader": "ディープサーチに失敗しました"
+      "onlineResults": "詳細検索結果",
+      "searchFailedHeader": "詳細検索に失敗しました"
     }
   },
   "banner": {
-    "featuredArtists": "今日の注目アーティスト",
-    "viewingUser": "<username>{{username}}</username> のマップを表示",
-    "backToMyMap": "自分のマップに戻る"
+    "featuredArtists": "コミュニティのアーティスト",
+    "viewingUser": "<username>{{username}}</username> の地図を表示中",
+    "backToMyMap": "自分の地図に戻る",
+    "viewCommunityArtists": "コミュニティのアーティストを表示"
   },
   "mainSearch": {
     "placeholder": "アーティストとユーザーを検索",
@@ -239,7 +245,7 @@
     "noResults": "結果が見つかりません",
     "artists": "アーティスト",
     "users": "ユーザー",
-    "viewMap": "マップを表示"
+    "viewMap": "地図を表示"
   },
   "settings": {
     "title": "設定",
@@ -254,7 +260,8 @@
       "title": "言語",
       "locationName": "地名",
       "locationNameLanguage": "地名の表示言語",
-      "hint": "一部の地名は別の言語で表示される場合があります。"
+      "hint": "翻訳がない場所は別の言語で表示される場合があります。",
+      "native": "現地語"
     },
     "username": {
       "title": "ユーザー名",
@@ -276,32 +283,101 @@
       "unableUpdatePassword": "パスワードを更新できませんでした。もう一度お試しください。",
       "failedUpdatePrivacy": "プライバシー設定の更新に失敗しました",
       "unableUpdatePrivacy": "プライバシー設定を更新できませんでした。もう一度お試しください。"
+    },
+    "uiLanguage": {
+      "title": "表示言語",
+      "description": "アプリ画面で使う言語を選択します。",
+      "language": "表示言語"
+    }
+  },
+  "tutorial": {
+    "progress": "{{current}} / {{total}}",
+    "skip": "チュートリアルをスキップ",
+    "next": "次へ",
+    "steps": {
+      "addArtist": {
+        "title": "最初のアーティストを追加",
+        "body": "まずこのボタンを押します。"
+      },
+      "searchArtist": {
+        "title": "アーティストを検索",
+        "body": {
+          "search": "アーティスト名を入力し、Enter キーまたは検索ボタンで検索します。",
+          "deepSearch": "見つからない場合は、<strong>詳細検索</strong>をオンにしてもう一度検索します。"
+        }
+      },
+      "origin": {
+        "title": "出身地を設定",
+        "body": "アーティストの出身地を検索します。通常は<strong>市区町村</strong>や<strong>都道府県</strong>です。地図上で手動選択することもできます。"
+      },
+      "activeLocation": {
+        "title": "活動地を設定",
+        "body": {
+          "search": "アーティストが現在活動している場所も同じように検索します。",
+          "copy": "出身地と同じ場合は、矢印ボタンでコピーできます。"
+        }
+      },
+      "careerYears": {
+        "title": "活動年を設定",
+        "body": "デビュー年を選択します。アーティストが活動を終了している場合は、終了年も追加します。"
+      },
+      "externalLinks": {
+        "title": "外部リンクを追加",
+        "body": "SNS や公式ページなどの外部リンクは任意です。"
+      },
+      "artistImage": {
+        "title": "アーティスト画像をアップロード",
+        "body": "アーティストの画像を追加します。この画像はアバターとバナーの両方に使用されます。"
+      },
+      "saveArtist": {
+        "title": "アーティストを保存",
+        "body": "すべて設定できたら、アーティストを地図に保存します。"
+      }
+    }
+  },
+  "about": {
+    "title": "Achizuについて",
+    "project": {
+      "description": "世界中のお気に入りのアーティストを地図に記録するためのオープンソースプロジェクトです。",
+      "viewOnGithub": "GitHub"
+    },
+    "credits": {
+      "title": "API とライブラリ",
+      "openStreetMap": {
+        "description": "Nominatim と Overpass API による地図データとジオコーディングサービス。"
+      },
+      "mapLibre": {
+        "description": "インタラクティブなベクター地図の描画。"
+      },
+      "carto": {
+        "description": "ベース地図のスタイルとタイル。"
+      }
     }
   },
   "notifications": {
     "title": "通知",
     "buttonLabel": "通知（{{count}}件）",
     "dismiss": "通知を閉じる",
-    "less": "表示を減らす",
-    "more": "もっと見る",
+    "less": "少なく表示",
+    "more": "もっと表示",
     "pinned": "固定",
-    "clearAll": "すべての通知をクリア",
+    "clearAll": "すべての通知を消去",
     "accountPendingApprovalTitle": "アカウント承認待ち",
     "accountPendingApprovalContent": "アカウントは管理者の承認待ちです。",
-    "pendingApprovals_one": "{{count}} 件の承認待ち",
-    "pendingApprovals_other": "{{count}} 件の承認待ち",
-    "pendingApprovalsContent": "アカウント承認待ちのユーザーがいます。",
+    "pendingApprovals_one": "{{count}}件の承認待ち",
+    "pendingApprovals_other": "{{count}}件の承認待ち",
+    "pendingApprovalsContent": "承認待ちのユーザーがいます。",
     "openAdmin": "管理画面を開く"
   },
   "map": {
-    "achizu": "Achizu アーティストマップ",
+    "achizu": "Achizu アーティスト地図",
     "manualLocationSelection": "地図をクリックして場所を選択",
     "cancel": "キャンセル",
     "attribution": {
-      "aboutAchizu": "Achizu について"
+      "aboutAchizu": "Achizuについて"
     },
     "markers": {
-      "clusterArtists": "{{count}} 件のアーティスト"
+      "clusterArtists": "{{count}}組のアーティスト"
     },
     "buttons": {
       "addNewArtist": "新しいアーティストを追加",
@@ -313,7 +389,7 @@
         "toggleMapTheme": "地図テーマを切り替え",
         "light": "ライト",
         "dark": "ダーク",
-        "useDarkTiles": "ダーク表示を使用",
+        "useDarkTiles": "ダーク地図を使用",
         "cannotUseDarkTiles": "この地図ではダーク表示を使用できません",
         "collapseAllClusters": "すべてのクラスターを閉じる",
         "expandAllClusters": "すべてのクラスターを開く",
@@ -326,6 +402,97 @@
     "error": {
       "renderMapError": "このブラウザでは地図の表示に対応していません。別のブラウザを使用してください。",
       "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください。"
+    }
+  },
+  "artistList": {
+    "aria": {
+      "region": "アーティスト一覧"
+    },
+    "title": {
+      "default": "アーティスト",
+      "featured": "コミュニティのアーティスト"
+    },
+    "search": {
+      "ariaLabel": "アーティストまたは場所を検索",
+      "placeholder": "アーティストまたは場所を検索..."
+    },
+    "sort": {
+      "label": "並べ替え",
+      "ariaLabel": "アーティストを並べ替え",
+      "optionsLabel": "アーティストの並べ替えオプション",
+      "ascending": "昇順で並べ替え",
+      "descending": "降順で並べ替え",
+      "ascendingShort": "昇順",
+      "descendingShort": "降順",
+      "options": {
+        "dateAdded": "追加日",
+        "recentlyUpdated": "最近更新",
+        "name": "名前",
+        "activeLocation": "活動地",
+        "originLocation": "出身地",
+        "debutYear": "デビュー年"
+      }
+    },
+    "empty": {
+      "noResults": "アーティストが見つかりません",
+      "noneAdded": "まだアーティストが追加されていません"
+    },
+    "actions": {
+      "copyAll": "すべてのアーティストを自分の地図にコピー",
+      "goToLocation": "場所へ移動",
+      "edit": "アーティストを編集",
+      "editShort": "編集",
+      "delete": "アーティストを削除",
+      "deleteShort": "削除"
+    }
+  },
+  "userNotFound": {
+    "title": "{{username}} が見つかりません ;_;",
+    "reasonsIntro": "次の理由が考えられます:",
+    "reasons": {
+      "doesNotExist": "ユーザーが存在しない",
+      "private": "プロフィールが非公開になっている",
+      "deleted": "アカウントが削除されている"
+    },
+    "goBack": "戻る"
+  },
+  "artistCard": {
+    "fields": {
+      "origin": "出身地",
+      "active": "活動地"
+    },
+    "years": {
+      "present": "活動中"
+    },
+    "actions": {
+      "edit": "アーティストを編集",
+      "delete": "アーティストを削除"
+    },
+    "social": {
+      "website": "アーティストのウェブサイト",
+      "appleMusic": "アーティストの音楽リンク",
+      "youtube": "アーティストの YouTube",
+      "instagram": "アーティストの Instagram",
+      "twitter": "アーティストのXプロフィール"
+    }
+  },
+  "app": {
+    "dialogs": {
+      "deleteArtist": {
+        "title": "アーティストを削除しますか？",
+        "errorTitle": "アーティストを削除できませんでした",
+        "errorMessage": "アーティストの削除に失敗しました。もう一度お試しください。",
+        "message": "<strong>{{name}}</strong>をあなたの地図から削除しますか？この操作は元に戻せません。"
+      },
+      "copyCollection": {
+        "title": "アーティストコレクションをコピーしますか？",
+        "message": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーしますか？",
+        "skipExisting": "すでにあなたの地図にあるアーティストはスキップされます。",
+        "successTitle": "コレクションをコピーしました",
+        "successMessage": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
+        "errorTitle": "コレクションをコピーできませんでした",
+        "errorMessage": "アーティストコレクションのコピーに失敗しました。もう一度お試しください。"
+      }
     }
   }
 }

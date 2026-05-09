@@ -6,9 +6,10 @@ import { MapPinIcon } from './icons/MapIcons';
 import { getAvatarUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized, getSearchableLocationText } from '../utils/locationUtils';
 import { Input, IconButton, Spinner, CloseButton } from './ui';
-import ArtistProfile from './ArtistProfile';
+import ArtistCard from './ArtistCard';
 import type { Artist } from '../types/artist';
 import { useLocationLanguage } from '../context/LocationLanguageContext';
+import { useTranslation } from 'react-i18next';
 
 interface ArtistListProps {
     username?: string;
@@ -27,13 +28,13 @@ const getPlaceholderUrl = (name: string) =>
 type SortKey = 'dateAdded' | 'recentlyUpdated' | 'name' | 'activeLocation' | 'originLocation' | 'debutYear';
 type SortDirection = 'asc' | 'desc';
 
-const sortOptions: Array<{ value: SortKey; label: string; togglable: boolean }> = [
-    { value: 'dateAdded', label: 'Date added', togglable: true },
-    { value: 'recentlyUpdated', label: 'Recently updated', togglable: true },
-    { value: 'name', label: 'Name', togglable: true },
-    { value: 'activeLocation', label: 'Active location', togglable: true },
-    { value: 'originLocation', label: 'Origin location', togglable: true },
-    { value: 'debutYear', label: 'Debut year', togglable: true },
+const sortOptions: Array<{ value: SortKey; labelKey: string; togglable: boolean }> = [
+    { value: 'dateAdded', labelKey: 'artistList.sort.options.dateAdded', togglable: true },
+    { value: 'recentlyUpdated', labelKey: 'artistList.sort.options.recentlyUpdated', togglable: true },
+    { value: 'name', labelKey: 'artistList.sort.options.name', togglable: true },
+    { value: 'activeLocation', labelKey: 'artistList.sort.options.activeLocation', togglable: true },
+    { value: 'originLocation', labelKey: 'artistList.sort.options.originLocation', togglable: true },
+    { value: 'debutYear', labelKey: 'artistList.sort.options.debutYear', togglable: true },
 ];
 
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
@@ -54,6 +55,7 @@ const ArtistList = ({
     onCopyCollection,
     isCopyingCollection = false
 }: ArtistListProps) => {
+    const { t } = useTranslation();
     const { locationLanguage } = useLocationLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [sortKey, setSortKey] = useState<SortKey>('dateAdded');
@@ -146,7 +148,7 @@ const ArtistList = ({
         });
     }, [filteredArtists, locationLanguage, sortDirection, sortKey]);
 
-    const positionProfileCard = (rowElement: HTMLElement) => {
+    const positionArtistCard = (rowElement: HTMLElement) => {
         // Get the row's position relative to the wrapper
         const rowRect = rowElement.getBoundingClientRect();
         const wrapperRect = listRef.current?.getBoundingClientRect();
@@ -158,7 +160,7 @@ const ArtistList = ({
     };
 
     const handleRowClick = (artist: Artist, e: React.MouseEvent<HTMLElement>) => {
-        positionProfileCard(e.currentTarget);
+        positionArtistCard(e.currentTarget);
         setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
     };
 
@@ -168,14 +170,14 @@ const ArtistList = ({
         }
 
         e.preventDefault();
-        positionProfileCard(e.currentTarget);
+        positionArtistCard(e.currentTarget);
         setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
     };
 
-    const handleProfileCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleArtistCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!selectedArtist) return;
 
-        // ArtistProfile owns the overlay UI; the list owns edit/delete routing.
+        // ArtistCard owns the overlay UI; the list owns edit/delete routing.
         const target = e.target as HTMLElement;
         const editButton = target.closest('[data-action="edit"]');
         const deleteButton = target.closest('[data-action="delete"]');
@@ -201,26 +203,28 @@ const ArtistList = ({
                 <div
                     className="absolute right-full mr-2 hidden sm:block"
                     style={{ top: cardPosition, transform: 'translateY(-50%)' }}
-                    onClick={handleProfileCardClick}
+                    onClick={handleArtistCardClick}
                 >
-                    <ArtistProfile artist={selectedArtist} showActions={!!(onEditArtist || onDeleteArtist)} locationLanguage={locationLanguage} />
+                    <ArtistCard artist={selectedArtist} showActions={!!(onEditArtist || onDeleteArtist)} locationLanguage={locationLanguage} />
                 </div>
             )}
 
             {/* Main list panel */}
             <div 
                 role="region" 
-                aria-label="artist list"
+                aria-label={t('artistList.aria.region')}
                 className="w-full bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)]">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h2 className="text-lg font-semibold text-text">{viewingFeatured ? 'Featured Artists' : 'Artists'} ({artists.length})</h2>
+                <h2 className="text-lg font-semibold text-text">
+                    {viewingFeatured ? t('artistList.title.featured') : t('artistList.title.default')} ({artists.length})
+                </h2>
                 <div className="flex items-center gap-2">
                     {onCopyCollection && (
                         <button
                             type="button"
-                            aria-label="Copy all artists to my map"
-                            title="Copy all artists to my map"
+                            aria-label={t('artistList.actions.copyAll')}
+                            title={t('artistList.actions.copyAll')}
                             disabled={isLoading || artists.length === 0}
                             onClick={() => onCopyCollection(artists.length)}
                             className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
@@ -239,37 +243,39 @@ const ArtistList = ({
             {/* Search */}
             <div className="px-4 py-2">
                 <Input
-                    aria-label="Search artists or locations"
+                    aria-label={t('artistList.search.ariaLabel')}
                     type="text"
                     name="artist-list-search"
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="Search artists or locations..."
+                    placeholder={t('artistList.search.placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     rightIcon={<SearchIcon className="w-4 h-4" />}
                 />
                 <div className="mt-2 flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-sm font-medium text-text-secondary">Sort by</span>
+                    <span className="shrink-0 text-sm font-medium text-text-secondary">{t('artistList.sort.label')}</span>
                     <div ref={sortRef} className="relative min-w-0 flex-1">
                         <button
                             type="button"
-                            aria-label="Sort artists"
+                            aria-label={t('artistList.sort.ariaLabel')}
                             aria-haspopup="listbox"
                             aria-expanded={isSortOpen}
                             aria-controls={isSortOpen ? sortListboxId : undefined}
                             onClick={() => setIsSortOpen((open) => !open)}
                             className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                         >
-                            <span className="block truncate">{selectedSortOption?.label || 'Date added'}</span>
+                            <span className="block truncate">
+                                {selectedSortOption ? t(selectedSortOption.labelKey) : t('artistList.sort.options.dateAdded')}
+                            </span>
                             <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {isSortOpen && (
                             <div
                                 id={sortListboxId}
                                 role="listbox"
-                                aria-label="Artist sort options"
+                                aria-label={t('artistList.sort.optionsLabel')}
                                 className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
                             >
                                 {sortOptions.map((option) => (
@@ -286,7 +292,7 @@ const ArtistList = ({
                                             option.value === sortKey ? 'bg-primary/5 text-primary font-medium' : 'text-text'
                                         }`}
                                     >
-                                        {option.label}
+                                        {t(option.labelKey)}
                                     </button>
                                 ))}
                             </div>
@@ -295,8 +301,8 @@ const ArtistList = ({
                     {selectedSortOption?.togglable && (
                         <button
                             type="button"
-                            aria-label={sortDirection === 'asc' ? 'Sort ascending' : 'Sort descending'}
-                            title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                            aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
+                            title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
                             onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
                             className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary p-2"
                         >
@@ -318,7 +324,7 @@ const ArtistList = ({
                         </div>
                     ) : sortedArtists.length === 0 ? (
                         <div className="text-center py-8 text-text-secondary">
-                            {searchQuery ? 'No artists found' : 'No artists added yet'}
+                            {searchQuery ? t('artistList.empty.noResults') : t('artistList.empty.noneAdded')}
                         </div>
                     ) : (
                         <ul className="divide-y divide-border">
@@ -349,6 +355,14 @@ const ArtistList = ({
                                             >
                                                 {artist.name}
                                             </p>
+                                            {artist.romanizedName && artist.romanizedName !== artist.name && (
+                                                <p
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
+                                                >
+                                                    {artist.romanizedName}
+                                                </p>
+                                            )}
                                             <p
                                                 onClick={(e) => e.stopPropagation()}
                                                 className="truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
@@ -360,33 +374,33 @@ const ArtistList = ({
                                         <div className={`${isActive ? 'flex' : 'hidden'} group-hover:flex group-focus-within:flex gap-1 shrink-0`}>
                                             {onNavigateToArtist && (
                                                 <IconButton
-                                                    aria-label="Go to location"
+                                                    aria-label={t('artistList.actions.goToLocation')}
                                                     onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                     size="sm"
                                                     className="rounded hover:bg-primary hover:text-white text-text-secondary"
-                                                    title="Go to location"
+                                                    title={t('artistList.actions.goToLocation')}
                                                 >
                                                     <MapPinIcon className="w-4 h-4" />
                                                 </IconButton>
                                             )}
                                             {onEditArtist && (
                                                 <IconButton
-                                                    aria-label="Edit artist"
+                                                    aria-label={t('artistList.actions.edit')}
                                                     onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
                                                     size="sm"
                                                     className="rounded hover:bg-primary hover:text-white text-text-secondary"
-                                                    title="Edit"
+                                                    title={t('artistList.actions.editShort')}
                                                 >
                                                     <EditIcon className="w-4 h-4" />
                                                 </IconButton>
                                             )}
                                             {onDeleteArtist && (
                                                 <IconButton
-                                                    aria-label="Delete artist"
+                                                    aria-label={t('artistList.actions.delete')}
                                                     onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
                                                     size="sm"
                                                     className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:text-white"
-                                                    title="Delete"
+                                                    title={t('artistList.actions.deleteShort')}
                                                 >
                                                     <TrashIcon className="w-4 h-4" />
                                                 </IconButton>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type RefObject
 import { createRoot } from 'react-dom/client';
 import maplibregl from 'maplibre-gl';
 import Supercluster from 'supercluster';
-import ArtistProfile from '../../ArtistProfile';
+import ArtistCard from '../../ArtistCard';
 import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
 import type { Artist, LocationLanguage, LocationView } from '../../../types/artist';
 import { makeArtistPoint, getSuperclusterZoom, isClusterFeature } from '../clusters/clusterIndex';
@@ -394,7 +394,7 @@ export const useArtistMarkers = ({
         setHasExpandedClusters(false);
     }, [removeExpandedClusterArtifacts]);
 
-    // Show ArtistProfile in a MapLibre popup
+    // Show ArtistCard in a MapLibre popup
     const openArtistPopup = useCallback((artist: Artist, marker: maplibregl.Marker) => {
         const map = mapRef.current;
         if (!map) return;
@@ -409,7 +409,7 @@ export const useArtistMarkers = ({
         const showActions = !!(onEditArtist || onDeleteArtist);
         // React renders the content, MapLibre places the popup
         root.render(
-            <ArtistProfile artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
+            <ArtistCard artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
         );
 
         const popup = new maplibregl.Popup({

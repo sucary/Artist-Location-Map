@@ -37,6 +37,13 @@ function formatMeta(artist: MusicBrainzCatalogArtist, showMbid: boolean) {
     return artist.disambiguation || 'Artist';
 }
 
+function formatArtistName(artist: MusicBrainzCatalogArtist) {
+    const nativeName = artist.nativeName || artist.name;
+    return artist.romanizedName && artist.romanizedName !== nativeName
+        ? `${nativeName} / ${artist.romanizedName}`
+        : nativeName;
+}
+
 export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onSelect }: MusicBrainzArtistPickerProps) {
     const { profile } = useAuth();
     const { t } = useTranslation();
@@ -198,11 +205,11 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
             // Online hits are only lightweight MusicBrainz search rows. Cache first, then fetch
             // the full catalog detail so location/social autofill uses the same shape as DB hits.
             const cached = source === 'online'
-                ? await cacheMusicBrainzCatalogArtist({ mbid: artist.mbid })
+                ? await cacheMusicBrainzCatalogArtist({ mbid: artist.mbid, query: normalizedQuery })
                 : artist;
             const detail = await getMusicBrainzCatalogArtist(cached.mbid).catch(() => cached);
             await onSelect(detail);
-            setQuery(detail.name);
+            setQuery(detail.nativeName || detail.name);
         } finally {
             setIsSelectingArtist(false);
         }
@@ -212,6 +219,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         if (!enabled || isOnlineSearching) return;
 
         restoreScrollTopRef.current = scrollRef.current?.scrollTop ?? null;
+        setIsOpen(false);
         setIsOnlineSearching(true);
         setOnlineError(null);
         try {
@@ -242,10 +250,17 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         }
     };
 
-    const showDropdown = isOpen && enabled;
     const isSearching = isCatalogDebouncing || isCatalogSearching || isOnlineSearching;
-    const showUnlinkedWarning = hasBlurredName && normalizedQuery.length > 0 && !selectedMbid;
+    const showDropdown = isOpen && enabled && !isSearching;
+    const showUnlinkedWarning = hasBlurredName && normalizedQuery.length > 0 && !selectedMbid && !isDeepSearch && !isSearching;
     const fieldStatus = selectedMbid && normalizedQuery.length > 0 ? 'success' : showUnlinkedWarning ? 'warning' : undefined;
+
+    const handleDeepSearchFromEmpty = () => {
+        if (!enabled || isOnlineSearching) return;
+        setIsDeepSearch(true);
+        setResultMode('online');
+        void handleSearchOnline();
+    };
 
     const handleSearchCatalog = async () => {
         if (!enabled || isDeepSearch || isCatalogSearching) return;
@@ -259,7 +274,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         setIsCatalogDebouncing(false);
         setIsCatalogSearching(true);
         setResultMode('catalog');
-        setIsOpen(true);
+        setIsOpen(false);
         try {
             const response = await searchMusicBrainzCatalogPage({
                 q: normalizedQuery,
@@ -270,11 +285,13 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
             setLocalResults(response.results);
             setLocalOffset(response.offset + response.results.length);
             setLocalHasMore(response.hasMore);
+            setIsOpen(true);
         } catch {
             setHasCatalogSearched(true);
             setLocalResults([]);
             setLocalOffset(0);
             setLocalHasMore(false);
+            setIsOpen(true);
         } finally {
             setIsCatalogSearching(false);
         }
@@ -412,7 +429,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         </span>
                     ) : (
                         <>
-                            {t('artistForm.musicBrainz.linked')}: <span className="font-medium text-text">{selectedArtist?.name || selectedMbid}</span>
+                            {t('artistForm.musicBrainz.linked')}: <span className="font-medium text-text">{selectedArtist ? formatArtistName(selectedArtist) : selectedMbid}</span>
                         </>
                     )}
                 </div>
@@ -424,7 +441,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 </Alert>
             )}
 
-            {showUnlinkedWarning && (
+            {showUnlinkedWarning && !showDropdown && !isSearching && (
                 <Alert variant="warning" className="mt-2" hideIcon>
                     {t('artistForm.musicBrainz.useExistingRecommendation')}
                 </Alert>
@@ -446,7 +463,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 >
                     <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: dropdownPosition.maxHeight }}>
                         {resultMode === 'catalog' && ((isCatalogDebouncing || isCatalogSearching) && localResults.length === 0 ? (
-                            <div className="px-3 py-2 text-sm text-text-secondary">{t('artistForm.musicBrainz.searchingArtists')}</div>
+                            null
                         ) : localResults.length > 0 ? (
                             <>
                                 <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-surface-secondary">
@@ -461,14 +478,22 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                         onClick={() => void handleSelect(artist, 'local')}
                                         className={`w-full px-3 py-2 text-left hover:bg-surface-muted transition-colors border-b border-border last:border-b-0 ${artist.mbid === selectedMbid ? 'bg-surface-muted' : ''}`}
                                     >
-                                        <div className="text-sm font-semibold text-text truncate">{artist.name}</div>
+                                        <div className="text-sm font-semibold text-text truncate">{formatArtistName(artist)}</div>
                                         <div className="text-xs text-text-secondary truncate">{formatMeta(artist, !!profile?.isAdmin)}</div>
                                     </button>
                                 ))}
                             </>
                         ) : hasCatalogSearched ? (
                             <div className="px-3 py-2 text-sm text-text-secondary">
-                                {t('artistForm.musicBrainz.noArtistFoundTry')} <b>{t('artistForm.musicBrainz.deepSearch')}</b>
+                                {t('artistForm.musicBrainz.noArtistFoundTry')}{' '}
+                                <button
+                                    type="button"
+                                    onClick={handleDeepSearchFromEmpty}
+                                    disabled={isOnlineSearching}
+                                    className="font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                                >
+                                    {t('artistForm.musicBrainz.deepSearch')}
+                                </button>
                             </div>
                         ) : (
                             null
@@ -501,7 +526,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                         onClick={() => void handleSelect(artist, 'online')}
                                         className={`w-full px-3 py-2 text-left hover:bg-surface-muted transition-colors border-b border-border last:border-b-0 ${artist.mbid === selectedMbid ? 'bg-surface-muted' : ''}`}
                                     >
-                                        <div className="text-sm font-semibold text-text truncate">{artist.name}</div>
+                                        <div className="text-sm font-semibold text-text truncate">{formatArtistName(artist)}</div>
                                         <div className="text-xs text-text-secondary truncate">{formatMeta(artist, !!profile?.isAdmin)}</div>
                                     </button>
                                 ))}
@@ -518,10 +543,6 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                     </Button>
                                 )}
                             </>
-                        )}
-
-                        {resultMode === 'online' && isOnlineSearching && onlineResults.length === 0 && (
-                            <div className="px-3 py-2 text-sm text-text-secondary">{t('artistForm.musicBrainz.searchingArtists')}</div>
                         )}
 
                         {resultMode === 'online' && hasOnlineSearched && onlineResults.length === 0 && !isOnlineSearching && (

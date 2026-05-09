@@ -8,10 +8,25 @@ import { Alert, PageLayout, PageSection } from '../ui';
 import type { LocationLanguage } from '../../types/artist';
 import { useTranslation } from 'react-i18next';
 
+type UiLanguage = 'en' | 'zh' | 'zh-Hant' | 'ja';
+
+const getUiLanguage = (language: string): UiLanguage => {
+    if (language === 'zh-Hant' || language.startsWith('zh-Hant-') || ['zh-TW', 'zh-HK', 'zh-MO'].includes(language)) {
+        return 'zh-Hant';
+    }
+    if (language === 'zh' || language.startsWith('zh-')) {
+        return 'zh';
+    }
+    if (language === 'ja' || language.startsWith('ja-')) {
+        return 'ja';
+    }
+    return 'en';
+};
+
 export function SettingsPage() {
     const queryClient = useQueryClient();
     const { user, profile } = useAuth();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     // Username state
     const [username, setUsername] = useState(profile?.username || '');
@@ -35,6 +50,20 @@ export function SettingsPage() {
 
     // Location language
     const { locationLanguage, setLocationLanguage } = useLocationLanguage();
+    const uiLanguage = getUiLanguage(i18n.resolvedLanguage || i18n.language || 'en');
+    const uiLanguageOptions: { value: UiLanguage; label: string }[] = [
+        { value: 'en', label: 'English' },
+        { value: 'zh', label: '\u7b80\u4f53\u4e2d\u6587' },
+        { value: 'zh-Hant', label: '\u7e41\u9ad4\u4e2d\u6587' },
+        { value: 'ja', label: '\u65e5\u672c\u8a9e' },
+    ];
+    const locationLanguageOptions: { value: LocationLanguage; label: string }[] = [
+        { value: 'en', label: 'English' },
+        { value: 'zhHans', label: '\u7b80\u4f53\u4e2d\u6587' },
+        { value: 'zhHant', label: '\u7e41\u9ad4\u4e2d\u6587' },
+        { value: 'ja', label: '\u65e5\u672c\u8a9e' },
+        { value: 'native', label: t('settings.language.native') },
+    ];
 
     // Sync isPrivate with profile when it changes
     useEffect(() => {
@@ -193,39 +222,59 @@ export function SettingsPage() {
                 </div>
             </PageSection>
 
-            {/* Location Language */}
+            {/* Language */}
             <PageSection title={t('settings.language.title')}>
-                <div>
-                    <p className="text-sm text-text-secondary mb-2">
-                        {t('settings.language.locationName')}
-                    </p>
-                    <div role="radiogroup" aria-label={t('settings.language.locationNameLanguage')} className="flex flex-wrap gap-2">
-                        {([
-                            { value: 'en', label: 'English' },
-                            { value: 'zhHans', label: '简体中文' },
-                            { value: 'zhHant', label: '繁體中文' },
-                            { value: 'ja', label: '日本語' },
-                            { value: 'native', label: 'Local' },
-                        ] as { value: LocationLanguage; label: string }[]).map(({ value, label }) => (
-                            <button
-                                key={value}
-                                type="button"
-                                role="radio"
-                                aria-checked={locationLanguage === value}
-                                onClick={() => setLocationLanguage(value)}
-                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                    locationLanguage === value
-                                        ? 'bg-primary text-white border-primary'
-                                        : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
-                                }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
+                <div className="space-y-5">
+                    <div>
+                        <p className="text-sm text-text-secondary mb-2">
+                            {t('settings.uiLanguage.language')}
+                        </p>
+                        <div role="radiogroup" aria-label={t('settings.uiLanguage.language')} className="flex flex-wrap gap-2">
+                            {uiLanguageOptions.map(({ value, label }) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={uiLanguage === value}
+                                    onClick={() => void i18n.changeLanguage(value)}
+                                    className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                        uiLanguage === value
+                                            ? 'bg-primary text-white border-primary'
+                                            : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <p className="text-xs text-text-muted mt-1">
-                        {t('settings.language.hint')}
-                    </p>
+
+                    <div>
+                        <p className="text-sm text-text-secondary mb-2">
+                            {t('settings.language.locationName')}
+                        </p>
+                        <div role="radiogroup" aria-label={t('settings.language.locationNameLanguage')} className="flex flex-wrap gap-2">
+                            {locationLanguageOptions.map(({ value, label }) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={locationLanguage === value}
+                                    onClick={() => setLocationLanguage(value)}
+                                    className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                        locationLanguage === value
+                                            ? 'bg-primary text-white border-primary'
+                                            : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-xs text-text-muted mt-1">
+                            {t('settings.language.hint')}
+                        </p>
+                    </div>
                 </div>
             </PageSection>
 

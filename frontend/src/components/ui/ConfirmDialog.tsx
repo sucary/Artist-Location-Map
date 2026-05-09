@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import { cn } from '../../lib/utils';
 import { Button } from './Button';
+import { useTranslation } from 'react-i18next';
 
 export type ConfirmDialogVariant = 'default' | 'danger' | 'warning' | 'success' | 'error';
 
@@ -28,17 +29,17 @@ const variantLabelClasses: Record<ConfirmDialogVariant, string> = {
 
 const confirmButtonClasses: Record<ConfirmDialogVariant, string> = {
     default: 'bg-primary hover:bg-primary-hover',
-    danger: 'bg-[rgb(220,38,38)] hover:bg-[rgb(185,28,28)]',
+    danger: '!bg-[rgb(220,38,38)] hover:!bg-[rgb(185,28,28)]',
     warning: 'bg-warning hover:bg-warning/90',
     success: 'bg-success hover:bg-success/90',
-    error: 'bg-[rgb(220,38,38)] hover:bg-[rgb(185,28,28)]',
+    error: '!bg-[rgb(220,38,38)] hover:!bg-[rgb(185,28,28)]',
 };
 
 export function ConfirmDialog({
     open,
     title,
     children,
-    confirmLabel = 'OK',
+    confirmLabel,
     cancelLabel,
     variant = 'default',
     isLoading = false,
@@ -46,7 +47,9 @@ export function ConfirmDialog({
     onConfirm,
     onCancel,
 }: ConfirmDialogProps) {
+    const { t } = useTranslation();
     const dialogRef = useDialogAccessibility(onCancel || onConfirm);
+    const effectiveConfirmLabel = confirmLabel ?? t('common.ok');
 
     if (!open) return null;
 
@@ -89,7 +92,7 @@ export function ConfirmDialog({
                         isLoading={isLoading}
                         onClick={onConfirm}
                     >
-                        {confirmLabel}
+                        {effectiveConfirmLabel}
                     </Button>
                 </div>
             </section>

@@ -144,6 +144,15 @@ export interface AdminNotificationInput {
     isHard: boolean;
 }
 
+export interface AdminPinnedNotification {
+    id: string;
+    title: string;
+    content: string;
+    type: string;
+    recipientCount: number;
+    createdAt: string;
+}
+
 export const getNotifications = async (): Promise<Notification[]> => {
     const response = await api.get<Notification[]>('/notifications');
     return response.data;
@@ -161,6 +170,16 @@ export const deleteNotification = async (id: string): Promise<{ deleted: number 
 
 export const clearNotifications = async (): Promise<{ deleted: number; keptHard: number }> => {
     const response = await api.delete<{ deleted: number; keptHard: number }>('/notifications');
+    return response.data;
+};
+
+export const getAdminPinnedNotifications = async (): Promise<AdminPinnedNotification[]> => {
+    const response = await api.get<AdminPinnedNotification[]>('/notifications/admin/pinned');
+    return response.data;
+};
+
+export const deleteAdminPinnedNotification = async (id: string): Promise<{ deleted: number }> => {
+    const response = await api.delete<{ deleted: number }>(`/notifications/admin/pinned/${id}`);
     return response.data;
 };
 
@@ -184,6 +203,8 @@ export const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 
 export interface MusicBrainzCatalogArtist {
     mbid: string;
     name: string;
+    nativeName?: string | null;
+    romanizedName?: string | null;
     sortName?: string | null;
     type?: string | null;
     country?: string | null;
@@ -195,6 +216,8 @@ export interface MusicBrainzCatalogArtist {
     lifeSpanEnd?: string | null;
     ended?: boolean | null;
     disambiguation?: string | null;
+    aliases?: MusicBrainzCatalogAlias[];
+    aliasNames?: string[];
     aliasCount: number;
     genreCount: number;
     tagCount: number;
@@ -213,6 +236,17 @@ export interface MusicBrainzCatalogArtist {
     popularity?: unknown;
     globalRank?: number | null;
     regionalRanks?: unknown;
+}
+
+export interface MusicBrainzCatalogAlias {
+    name: string;
+    sortName?: string | null;
+    locale?: string | null;
+    type?: string | null;
+    primary?: boolean | null;
+    ended?: boolean | null;
+    begin?: string | null;
+    end?: string | null;
 }
 
 export interface MusicBrainzCatalogLink {
@@ -271,7 +305,7 @@ export const getMusicBrainzCatalogArtist = async (mbid: string): Promise<MusicBr
 };
 
 export const cacheMusicBrainzCatalogArtist = async (
-    input: { mbid: string } | { query: string }
+    input: { mbid: string; query?: string } | { query: string }
 ): Promise<MusicBrainzCatalogArtist> => {
     const response = await api.post<MusicBrainzCatalogArtist>('/musicbrainz-catalog/cache', input);
     return response.data;

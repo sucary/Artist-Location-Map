@@ -80,7 +80,7 @@ router.get('/:mbid', asyncHandler(async (req, res) => {
 router.post('/cache', requireAuth, requireApproval, remoteCacheLimiter, asyncHandler(async (req, res) => {
     const data = CacheRequestSchema.parse(req.body);
     const artist = data.mbid
-        ? await MusicBrainzCatalogService.fetchAndCacheByMbid(data.mbid)
+        ? await MusicBrainzCatalogService.fetchAndCacheByMbid(data.mbid, data.query)
         : await MusicBrainzCatalogService.searchRemoteAndCacheFirst(data.query!);
 
     if (!artist) {

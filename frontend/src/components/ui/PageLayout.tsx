@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface PageLayoutProps {
     title: string;
@@ -8,6 +9,7 @@ interface PageLayoutProps {
 
 export function PageLayout({ title, children }: PageLayoutProps) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
         <div className="min-h-screen bg-background">
@@ -20,7 +22,7 @@ export function PageLayout({ title, children }: PageLayoutProps) {
                         <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        <span>Back to map</span>
+                        <span>{t('common.backToMap')}</span>
                     </button>
                     <span className="text-border-strong">|</span>
                     <h1 className="text-lg font-bold text-text">{title}</h1>

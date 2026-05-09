@@ -1,14 +1,19 @@
 {
   "common": {
-    "appName": "Achizu - 音乐人地图",
+    "appName": "Achizu -音乐人地图",
     "search": "搜索",
     "cancel": "取消",
+    "ok": "确定",
     "save": "保存",
-    "saving": "保存中...",
+    "saving": "保存中",
     "close": "关闭",
+    "dismiss": "关闭",
     "loading": "加载中",
     "error": "错误",
-    "redirectToMap": "正在跳转到地图"
+    "redirectToMap": "正在跳转到地图",
+    "backToMap": "返回地图",
+    "delete": "删除",
+    "copy": "复制"
   },
   "auth": {
     "fields": {
@@ -51,7 +56,7 @@
     },
     "emailCheck": {
       "title": "请检查邮箱",
-      "message": "我们已向 {{email}} 发送了确认链接。请检查你的收件箱并点击链接以继续。"
+      "message": "我们已向{{email}}发送了确认链接。请检查你的收件箱并点击链接以继续。"
     },
     "messages": {
       "checkEmailConfirmation": "请检查邮箱以确认。",
@@ -77,7 +82,7 @@
       "passwordsMatch": "密码不匹配，请检查密码是否输入正确",
       "incorrectCredentials": "邮箱或密码错误",
       "unexpectedError": "发生意外错误，请重试",
-      "unableToSignIn": "无法使用 {{provider}} 登录。请尝试其他登录方法。",
+      "unableToSignIn": "无法使用{{provider}}登录。请尝试其他登录方法。",
       "userNameMin": "用户名必须至少1个字符",
       "userNameMax": "用户名必须少于16个字符",
       "userNamePattern": "用户名只能包含字母、数字和下划线",
@@ -184,7 +189,7 @@
       "invalidSocialProfileUrl": "请输入有效的{{platform}}链接",
       "invalidSocialLinkUrl": "请输入有效的社媒链接",
       "failedUploadImage": "无法上传图片，请重试。",
-      "imageRequirements": "请使用不超过 5 MB 的 JPG、PNG 或 WebP 图片。",
+      "imageRequirements": "请使用不超过5 MB的JPG、PNG或WebP图片。",
       "failedSaveArtist": "无法保存艺人，请重试。",
       "imageUploadFailed": "图片上传失败",
       "saveArtistFailedHeader": "无法保存艺人"
@@ -205,9 +210,9 @@
       "yourUploadedArtistAlt": "你上传的艺人图片"
     },
     "musicBrainz": {
-      "artistLabel": "艺人",
+      "artistLabel": "艺人名",
       "deepSearch": "深度搜索",
-      "searchArtist": "搜索艺人",
+      "searchArtist": "填入艺人名后搜索",
       "artistSelected": "已选定认证艺人",
       "artistNotLinked": "尚未关联认证艺人",
       "searchMusicBrainz": "深度搜索",
@@ -227,9 +232,10 @@
     }
   },
   "banner": {
-    "featuredArtists": "今日艺人",
-    "viewingUser": "正在查看 <username>{{username}}</username> 的地图",
-    "backToMyMap": "返回我的地图"
+    "featuredArtists": "全站艺人",
+    "viewingUser": "正在查看<username>{{username}}</username>的地图",
+    "backToMyMap": "返回我的地图",
+    "viewCommunityArtists": "查看全站艺人"
   },
   "mainSearch": {
     "placeholder": "搜索艺人与用户",
@@ -254,7 +260,8 @@
       "title": "语言",
       "locationName": "地点名称",
       "locationNameLanguage": "地点名称语言",
-      "hint": "由于翻译缺失，部分地点可能会以其他语言显示。"
+      "hint": "部分地点可能因为缺少翻译而显示为其他语言。",
+      "native": "当地"
     },
     "username": {
       "title": "用户名",
@@ -271,11 +278,80 @@
     "errors": {
       "failedUpdateUsername": "用户名更新失败",
       "unableUpdateUsername": "无法更新用户名，请重试。",
-      "newPasswordMin": "新密码必须至少包含 6 个字符",
+      "newPasswordMin": "新密码必须至少包含6个字符",
       "currentPasswordIncorrect": "当前密码不正确",
       "unableUpdatePassword": "无法更新密码，请重试。",
       "failedUpdatePrivacy": "隐私设置更新失败",
       "unableUpdatePrivacy": "无法更新隐私设置，请重试。"
+    },
+    "uiLanguage": {
+      "title": "界面语言",
+      "description": "选择应用界面使用的语言。",
+      "language": "界面语言"
+    }
+  },
+  "tutorial": {
+    "progress": "第{{current}}/{{total}}步",
+    "skip": "跳过教程",
+    "next": "下一步",
+    "steps": {
+      "addArtist": {
+        "title": "添加你的第一个艺人",
+        "body": "点击添加艺人按钮。"
+      },
+      "searchArtist": {
+        "title": "搜索艺人",
+        "body": {
+          "search": "输入艺人名称，然后按Enter或点击搜索按钮。",
+          "deepSearch": "如果找不到艺人，可以尝试<strong>深度搜索</strong>。"
+        }
+      },
+      "origin": {
+        "title": "设置出身地",
+        "body": "搜索艺人的出身地。出身地通常是<strong>城市</strong>或<strong>省份</strong>。你也可以在地图上手动选择地点。"
+      },
+      "activeLocation": {
+        "title": "设置活动地",
+        "body": {
+          "search": "搜索艺人主要活动地点。",
+          "copy": "如果与出身地相同，可以用箭头按钮复制。"
+        }
+      },
+      "careerYears": {
+        "title": "设置活动年份",
+        "body": "选择出道年份。如果艺人已停止活动，也可以添加停止活动年份。"
+      },
+      "externalLinks": {
+        "title": "添加外部链接",
+        "body": "例如社交媒体和官方网站等（可选）。"
+      },
+      "artistImage": {
+        "title": "上传艺人图片",
+        "body": "为艺人添加图片。该图片会同时用于头像和横幅。"
+      },
+      "saveArtist": {
+        "title": "保存艺人",
+        "body": "所有内容设置完成后，把艺人保存到地图吧！"
+      }
+    }
+  },
+  "about": {
+    "title": "关于",
+    "project": {
+      "description": "Achizu是一个开源项目，用户可在地图上标记喜欢的艺人。",
+      "viewOnGithub": "GitHub"
+    },
+    "credits": {
+      "title": "API",
+      "openStreetMap": {
+        "description": "地图数据与地理编码：Nominatim和Overpass API "
+      },
+      "mapLibre": {
+        "description": "地图渲染"
+      },
+      "carto": {
+        "description": "基础地图样式"
+      }
     }
   },
   "notifications": {
@@ -288,20 +364,20 @@
     "clearAll": "清除所有通知",
     "accountPendingApprovalTitle": "账号待批准",
     "accountPendingApprovalContent": "你的账号正在等待管理员批准。",
-    "pendingApprovals_one": "{{count}} 个账号待批准",
-    "pendingApprovals_other": "{{count}} 个账号待批准",
+    "pendingApprovals_one": "{{count}}个账号待批准",
+    "pendingApprovals_other": "{{count}}个账号待批准",
     "pendingApprovalsContent": "有用户正在等待账号批准。",
     "openAdmin": "打开管理后台"
   },
   "map": {
-    "achizu": "Achizu 艺人地图",
+    "achizu": "Achizu艺人地图",
     "manualLocationSelection": "在地图上点击以选择地点",
     "cancel": "取消",
     "attribution": {
-      "aboutAchizu": "关于 Achizu"
+      "aboutAchizu": "关于Achizu"
     },
     "markers": {
-      "clusterArtists": "{{count}} 位艺人"
+      "clusterArtists": "{{count}}位艺人"
     },
     "buttons": {
       "addNewArtist": "添加新艺人",
@@ -326,6 +402,97 @@
     "error": {
       "renderMapError": "此浏览器不支持地图渲染。请使用其他浏览器。",
       "loadMapError": "地图加载失败。请刷新后重试。"
+    }
+  },
+  "artistList": {
+    "aria": {
+      "region": "艺人列表"
+    },
+    "title": {
+      "default": "艺人",
+      "featured": "全站艺人"
+    },
+    "search": {
+      "ariaLabel": "搜索艺人或地点",
+      "placeholder": "搜索艺人或地点"
+    },
+    "sort": {
+      "label": "排序",
+      "ariaLabel": "艺人排序",
+      "optionsLabel": "艺人排序选项",
+      "ascending": "按升序排序",
+      "descending": "按降序排序",
+      "ascendingShort": "升序",
+      "descendingShort": "降序",
+      "options": {
+        "dateAdded": "添加时间",
+        "recentlyUpdated": "最近更新",
+        "name": "名称",
+        "activeLocation": "活动地",
+        "originLocation": "出身地",
+        "debutYear": "出道年份"
+      }
+    },
+    "empty": {
+      "noResults": "未找到艺人",
+      "noneAdded": "尚未添加艺人"
+    },
+    "actions": {
+      "copyAll": "将所有艺人复制到我的地图",
+      "goToLocation": "前往地点",
+      "edit": "编辑艺人",
+      "editShort": "编辑",
+      "delete": "删除艺人",
+      "deleteShort": "删除"
+    }
+  },
+  "userNotFound": {
+    "title": "找不到{{username}} ;_;",
+    "reasonsIntro": "可能因为:",
+    "reasons": {
+      "doesNotExist": "该用户不存在",
+      "private": "个人资料已设为私密",
+      "deleted": "该用户已被删除"
+    },
+    "goBack": "返回"
+  },
+  "artistCard": {
+    "fields": {
+      "origin": "出身",
+      "active": "活动"
+    },
+    "years": {
+      "present": "活跃中"
+    },
+    "actions": {
+      "edit": "编辑艺人",
+      "delete": "删除艺人"
+    },
+    "social": {
+      "website": "艺人网站",
+      "appleMusic": "艺人音乐链接",
+      "youtube": "艺人YouTube",
+      "instagram": "艺人Instagram",
+      "twitter": "艺人X主页"
+    }
+  },
+  "app": {
+    "dialogs": {
+      "deleteArtist": {
+        "title": "删除艺人",
+        "errorTitle": "无法删除艺人",
+        "errorMessage": "删除艺人失败。请重试。",
+        "message": "确认删除<strong>{{name}}</strong>？该操作无法撤销。"
+      },
+      "copyCollection": {
+        "title": "复制艺人合集",
+        "message": "要将<username>{{username}}</username>地图中的<count>{{count}}位艺人</count>复制到你的地图吗？",
+        "skipExisting": "已拥有的艺人将被跳过。",
+        "successTitle": "艺人集已复制",
+        "successMessage": "已复制{{copied}}位艺人，跳过{{skipped}}位。",
+        "errorTitle": "无法复制合集",
+        "errorMessage": "复制艺人合集失败。请重试。"
+      }
     }
   }
 }

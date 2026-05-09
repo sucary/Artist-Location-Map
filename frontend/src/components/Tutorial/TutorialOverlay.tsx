@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 export interface TutorialStep {
     target: string;
     title: string;
     body: React.ReactNode;
-    actionLabel?: string;
     waitForTarget?: boolean;
     nextStepIndex?: number;
     hideIndicator?: boolean;
@@ -128,6 +128,7 @@ function getPanelPosition(box: TargetBox | null, panelHeight: number) {
 }
 
 export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOverlayProps) {
+    const { t } = useTranslation();
     const step = steps[stepIndex];
     const panelRef = useRef<HTMLElement>(null);
     const [targetBox, setTargetBox] = useState<TargetBox | null>(null);
@@ -197,7 +198,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
                 aria-live="polite"
             >
                 <div className="mb-2 text-xs font-semibold uppercase text-text-muted">
-                    Step {stepIndex + 1} of {steps.length}
+                    {t('tutorial.progress', { current: stepIndex + 1, total: steps.length })}
                 </div>
                 <h2 id="tutorial-title" className="text-base font-semibold text-text">{step.title}</h2>
                 {bodyParagraphs ? (
@@ -219,7 +220,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
                         onClick={onSkip}
                         className="rounded-md px-2 py-1.5 text-sm font-medium text-text-muted hover:bg-surface-muted hover:text-text-secondary"
                     >
-                        Skip tutorial
+                        {t('tutorial.skip')}
                     </button>
                     {step.nextStepIndex !== undefined && onNext && (
                         <button
@@ -227,7 +228,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
                             onClick={() => onNext(step.nextStepIndex!)}
                             className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover"
                         >
-                            Next
+                            {t('tutorial.next')}
                         </button>
                     )}
                 </div>

@@ -224,6 +224,20 @@ export const useArtistForm = ({
         return `${first}, ${second}`;
     }, []);
 
+    const cleanSortName = useCallback((sortName?: string | null) => {
+        const value = sortName?.trim();
+        if (!value) return undefined;
+
+        const parts = value.split(',').map((part) => part.trim()).filter(Boolean);
+        return parts.length === 2 ? `${parts[1]} ${parts[0]}` : value;
+    }, []);
+
+    const getCatalogRomanizedName = useCallback((artist: MusicBrainzCatalogArtist) => {
+        const nativeName = artist.nativeName || artist.name;
+        const romanizedName = artist.romanizedName || cleanSortName(artist.sortName);
+        return romanizedName && romanizedName !== nativeName ? romanizedName : undefined;
+    }, [cleanSortName]);
+
     const applyMusicBrainzArtist = useCallback(async (
         artist: MusicBrainzCatalogArtist,
         options?: { useSharedImage?: boolean }
@@ -256,8 +270,8 @@ export const useArtistForm = ({
         setFormData(prev => ({
             ...prev,
             musicbrainzMbid: artist.mbid,
-            name: artist.name,
-            romanizedName: artist.sortName && artist.sortName !== artist.name ? artist.sortName : undefined,
+            name: artist.nativeName || artist.name,
+            romanizedName: getCatalogRomanizedName(artist),
             debutYear,
             inactiveYear,
             socialLinks,
@@ -295,6 +309,7 @@ export const useArtistForm = ({
         setMusicBrainzLocationStatus('Career years and social media links auto-filled. Choose locations from the search results.');
     }, [
         buildLocationQuery,
+        getCatalogRomanizedName,
         formData.musicbrainzMbid,
         formData.sourceImage,
         getMusicBrainzSocialLinks,
