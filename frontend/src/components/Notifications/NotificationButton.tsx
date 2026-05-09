@@ -69,6 +69,7 @@ function NotificationItem({
 }) {
     const [expanded, setExpanded] = useState(false);
     const canExpand = notification.content.length > 72;
+    const contentId = `notification-content-${notification.id}`;
 
     return (
         <div
@@ -89,6 +90,7 @@ function NotificationItem({
                         )}
                     </div>
                     <p
+                        id={contentId}
                         className="text-xs text-text-secondary mt-1 leading-relaxed overflow-hidden"
                         // Collapse long content by default.
                         style={expanded ? undefined : {
@@ -105,6 +107,8 @@ function NotificationItem({
                             {canExpand && (
                                 <button
                                     type="button"
+                                    aria-expanded={expanded}
+                                    aria-controls={contentId}
                                     className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary"
                                     onClick={() => setExpanded((current) => !current)}
                                 >
@@ -228,6 +232,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
     const normalNotifications = notifications.filter((notification) => !notification.isHard);
     const notificationCount = notifications.length;
     const canClear = notifications.some((notification) => !notification.isHard);
+    const menuId = 'notifications-menu';
 
     useEffect(() => {
         // Desktop opens on hover; mobile keeps tap-to-toggle behavior.
@@ -257,7 +262,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
 
         document.addEventListener('pointerdown', handlePointerDown);
         return () => document.removeEventListener('pointerdown', handlePointerDown);
-    }, [isOpen]);
+    }, [isOpen, usesHoverMenu]);
 
     if (notifications.length === 0) {
         return null;
@@ -307,6 +312,8 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
             <button
                 aria-label={`Notifications (${notificationCount})`}
                 aria-expanded={isOpen}
+                aria-controls={isOpen ? menuId : undefined}
+                aria-haspopup="dialog"
                 onClick={() => {
                     if (!usesHoverMenu) setIsOpen((open) => !open);
                 }}
@@ -323,9 +330,9 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 )}
             </button>
             {isOpen && (
-                <div className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
+                <div id={menuId} role="dialog" aria-modal="false" aria-labelledby="notifications-title" className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                        <h3 className="text-lg font-semibold text-text">Notifications</h3>
+                        <h3 id="notifications-title" className="text-lg font-semibold text-text">Notifications</h3>
                         <div className="flex items-center gap-1">
                             {canClear && (
                                 <button

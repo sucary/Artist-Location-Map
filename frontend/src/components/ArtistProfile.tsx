@@ -145,7 +145,7 @@ const ArtistProfile = ({ artist, showActions = true, locationLanguage = 'en' }: 
                     {artist.debutYear && (
                         <div className="flex items-center gap-0.5 text-sm text-text-secondary font-sans">
                             <span className="font-medium">{artist.debutYear}</span>
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg aria-hidden="true" focusable="false" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="9 18 15 12 9 6" />
                             </svg>
                             <span className="px-3 py-1 text-sm font-medium text-text-secondary bg-surface-muted rounded-full">

@@ -189,6 +189,9 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
         <div className="fixed inset-0 z-[1400] pointer-events-none">
             <section
                 ref={panelRef}
+                role="dialog"
+                aria-modal="false"
+                aria-labelledby="tutorial-title"
                 className="absolute pointer-events-auto rounded-lg border border-border bg-surface p-4 shadow-xl"
                 style={panelPosition}
                 aria-live="polite"
@@ -196,7 +199,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
                 <div className="mb-2 text-xs font-semibold uppercase text-text-muted">
                     Step {stepIndex + 1} of {steps.length}
                 </div>
-                <h2 className="text-base font-semibold text-text">{step.title}</h2>
+                <h2 id="tutorial-title" className="text-base font-semibold text-text">{step.title}</h2>
                 {bodyParagraphs ? (
                     <div className="mt-2 space-y-1.5 text-sm leading-5 text-text-secondary [&_strong]:font-semibold [&_strong]:text-text">
                         {bodyParagraphs.map((paragraph, index) => (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
     cacheMusicBrainzCatalogArtist,
@@ -56,6 +56,8 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     const [resultMode, setResultMode] = useState<'catalog' | 'online'>('catalog');
     const [isDeepSearch, setIsDeepSearch] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const inputId = useId();
+    const listboxId = `${inputId}-results`;
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 320 });
     const inputWrapRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -336,6 +338,12 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
             <div ref={inputWrapRef} className="relative">
                 <input
                     id="musicbrainz-artist-search"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-controls={showDropdown ? listboxId : undefined}
+                    aria-expanded={showDropdown}
+                    aria-haspopup="listbox"
+                    aria-busy={isSearching || isSelectingArtist}
                     name="musicbrainz-artist-search"
                     autoComplete="off"
                     autoCorrect="off"
@@ -422,6 +430,9 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
 
             {showDropdown && createPortal(
                 <div
+                    id={listboxId}
+                    role="listbox"
+                    aria-label="Artist search results"
                     ref={dropdownRef}
                     className="fixed z-[9999] overflow-hidden rounded-md border border-border bg-surface shadow-lg"
                     style={{
@@ -442,6 +453,8 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                 {localResults.map((artist) => (
                                     <button
                                         key={`local-${artist.mbid}`}
+                                        role="option"
+                                        aria-selected={artist.mbid === selectedMbid}
                                         type="button"
                                         onClick={() => void handleSelect(artist, 'local')}
                                         className={`w-full px-3 py-2 text-left hover:bg-surface-muted transition-colors border-b border-border last:border-b-0 ${artist.mbid === selectedMbid ? 'bg-surface-muted' : ''}`}
@@ -478,6 +491,8 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                 {onlineResults.map((artist) => (
                                     <button
                                         key={`online-${artist.mbid}`}
+                                        role="option"
+                                        aria-selected={artist.mbid === selectedMbid}
                                         type="button"
                                         onClick={() => void handleSelect(artist, 'online')}
                                         className={`w-full px-3 py-2 text-left hover:bg-surface-muted transition-colors border-b border-border last:border-b-0 ${artist.mbid === selectedMbid ? 'bg-surface-muted' : ''}`}

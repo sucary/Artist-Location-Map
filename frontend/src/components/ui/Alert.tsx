@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
@@ -56,7 +56,7 @@ const alertIcons = {
     ),
 } as const;
 
-export interface AlertProps extends VariantProps<typeof alertVariants> {
+export interface AlertProps extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
     children: ReactNode;
     className?: string;
     header?: ReactNode;
@@ -64,12 +64,13 @@ export interface AlertProps extends VariantProps<typeof alertVariants> {
     onClose?: () => void;
 }
 
-export function Alert({ variant, header, children, className, hideIcon = false, onClose }: AlertProps) {
+export function Alert({ variant, header, children, className, hideIcon = false, onClose, ...props }: AlertProps) {
     const activeVariant = variant ?? 'info';
 
     return (
         <div
             role={activeVariant === 'success' ? 'status' : 'alert'}
+            {...props}
             className={cn(
                 alertVariants({ variant: activeVariant }),
                 'flex items-start gap-2 text-[12.5px] font-medium leading-[1.4]',
@@ -108,7 +109,7 @@ export function Alert({ variant, header, children, className, hideIcon = false, 
                     className="shrink-0 text-text-muted opacity-70 transition-opacity hover:opacity-100"
                     aria-label="Dismiss"
                 >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>

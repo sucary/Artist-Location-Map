@@ -63,6 +63,7 @@ const ArtistList = ({
     const [cardPosition, setCardPosition] = useState<number>(0);
     const listRef = useRef<HTMLDivElement>(null);
     const sortRef = useRef<HTMLDivElement>(null);
+    const sortListboxId = 'artist-list-sort-options';
 
     const { data: artists = [], isLoading } = useQuery({
         queryKey: ['artists', username, viewingFeatured],
@@ -257,6 +258,7 @@ const ArtistList = ({
                             aria-label="Sort artists"
                             aria-haspopup="listbox"
                             aria-expanded={isSortOpen}
+                            aria-controls={isSortOpen ? sortListboxId : undefined}
                             onClick={() => setIsSortOpen((open) => !open)}
                             className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                         >
@@ -265,7 +267,9 @@ const ArtistList = ({
                         </button>
                         {isSortOpen && (
                             <div
+                                id={sortListboxId}
                                 role="listbox"
+                                aria-label="Artist sort options"
                                 className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
                             >
                                 {sortOptions.map((option) => (
@@ -325,6 +329,7 @@ const ArtistList = ({
                                 <li key={artist.id} className="group">
                                     <div
                                         role="button"
+                                        aria-current={isActive ? 'true' : undefined}
                                         tabIndex={0}
                                         onClick={(e) => handleRowClick(artist, e)}
                                         onKeyDown={(e) => handleRowKeyDown(artist, e)}

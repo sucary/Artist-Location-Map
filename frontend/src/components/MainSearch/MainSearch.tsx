@@ -92,6 +92,8 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     aria-expanded={showDropdown}
                     aria-controls="search-results"
                     aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    aria-busy={isLoading}
                     type="text"
                     name="main-search"
                     autoComplete="off"
@@ -129,6 +131,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     aria-live="polite"
                     id="search-results" 
                     role="listbox"
+                    aria-label="Search results"
                     className="fixed top-16 left-2 right-2 z-[1260] bg-surface border border-border rounded-md shadow-md overflow-hidden max-h-[calc(100vh-5rem)] overflow-y-auto sm:absolute sm:top-full sm:left-0 sm:right-auto sm:mt-1 sm:w-full sm:max-h-96"
                 >
                     {isLoading ? (

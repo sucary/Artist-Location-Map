@@ -69,6 +69,8 @@ export const LocationSearch = ({
     const { profile } = useAuth();
     const { locationLanguage } = useLocationLanguage();
     const inputId = useId();
+    const listboxId = `${inputId}-results`;
+    const statusId = status === 'warning' && statusMessage && !error ? `${inputId}-status` : undefined;
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 320 });
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLDivElement>(null);
@@ -150,6 +152,13 @@ export const LocationSearch = ({
                         <div className="relative" ref={controlsRef}>
                             <input
                                 id={inputId}
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-controls={isOpen ? listboxId : undefined}
+                                aria-expanded={isOpen}
+                                aria-haspopup="listbox"
+                                aria-busy={isLoading || queueSize > 0}
+                                aria-describedby={statusId}
                                 name={tutorialInputTarget ? `${tutorialInputTarget}-search` : 'location-search'}
                                 autoComplete="off"
                                 autoCorrect="off"
@@ -216,7 +225,7 @@ export const LocationSearch = ({
                     </Alert>
                 )}
                 {status === 'warning' && statusMessage && !error && (
-                    <Alert variant="warning" className="mt-2" hideIcon>
+                    <Alert id={statusId} variant="warning" className="mt-2" hideIcon>
                         {statusMessage}
                     </Alert>
                 )}
@@ -233,10 +242,11 @@ export const LocationSearch = ({
                         maxHeight: `${dropdownPosition.maxHeight}px`
                     }}
                 >
-                    <div role="listbox" className="overflow-y-auto" style={{ maxHeight: `${dropdownPosition.maxHeight - 2}px` }}>
+                    <div id={listboxId} role="listbox" aria-label={label || t('artistForm.locationSearch.placeholder')} className="overflow-y-auto" style={{ maxHeight: `${dropdownPosition.maxHeight - 2}px` }}>
                         {results.map((result, index) => (
                             <button
                                 role="option"
+                                aria-selected="false"
                                 key={`${result.osmId}-${index}`}
                                 onClick={() => handleSelect(result)}
                                 type="button"

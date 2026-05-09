@@ -23,6 +23,7 @@ const YearSelect = ({
     tutorialTarget
 }: YearSelectProps) => {
     const inputId = useId();
+    const listboxId = `${inputId}-years`;
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState(value?.toString() || '');
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -152,6 +153,11 @@ const YearSelect = ({
                 <input
                     id={inputId}
                     ref={inputRef}
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-controls={isOpen ? listboxId : undefined}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
                     type="text"
                     name={tutorialTarget ? `${tutorialTarget}-year` : 'artist-year'}
                     autoComplete="off"
@@ -169,6 +175,9 @@ const YearSelect = ({
                 />
                 <button
                     aria-label={t('artistForm.yearSelect.label')}
+                    aria-controls={isOpen ? listboxId : undefined}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
                     type="button"
                     onMouseDown={(e) => {
                         e.preventDefault();
@@ -182,7 +191,9 @@ const YearSelect = ({
 
             {isOpen && years.length > 0 && createPortal(
                 <div
+                    id={listboxId}
                     role="listbox"
+                    aria-label={label || t('artistForm.yearSelect.label')}
                     ref={dropdownRef}
                     className="fixed z-9999 bg-surface border border-border-strong rounded-md shadow-lg max-h-48 overflow-y-auto"
                     style={{
@@ -201,6 +212,7 @@ const YearSelect = ({
                                 data-year={year}
                                 type="button"
                                 role="option"
+                                aria-selected={isSelected}
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => handleSelect(year)}
                                 className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${

@@ -18,6 +18,7 @@ function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect:
     return (
         <button
             role="option"
+            aria-selected="false"
             onClick={onSelect}
             className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
         >
@@ -40,6 +41,7 @@ function UserRow({ result, onSelect }: { result: UserSearchResult; onSelect: () 
     return (
         <button
             role="option"
+            aria-selected="false"
             onClick={onSelect}
             className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
         >

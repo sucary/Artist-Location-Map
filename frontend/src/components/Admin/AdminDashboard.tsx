@@ -65,6 +65,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [adminDialogLoading, setAdminDialogLoading] = useState(false);
 
     const dialogRef = useDialogAccessibility(onClose);
+    const sectionIds = {
+        approvals: 'admin-pending-approvals',
+        mediaReviews: 'admin-media-reviews',
+        postNotification: 'admin-post-notification',
+        translations: 'admin-location-translations',
+        statusTemplate: 'admin-status-palette-template',
+        recipients: 'admin-notification-recipients'
+    };
 
     useEffect(() => {
         // Search recipients only after the admin chooses a specific-user audience.
@@ -338,6 +346,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="mb-4">
                         <button
                             onClick={() => setApprovalsOpen(!approvalsOpen)}
+                            aria-expanded={approvalsOpen}
+                            aria-controls={sectionIds.approvals}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
                             <h2 className="text-xl font-semibold text-text">
@@ -350,7 +360,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         </button>
 
                         {approvalsOpen && (
-                            <div className="mt-2">
+                            <div id={sectionIds.approvals} className="mt-2">
                                 {loading && (
                                     <div className="text-center py-8">
                                         <Spinner size="lg" className="mx-auto text-primary" />
@@ -402,6 +412,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4 mb-4">
                         <button
                             onClick={() => setMediaReviewsOpen(!mediaReviewsOpen)}
+                            aria-expanded={mediaReviewsOpen}
+                            aria-controls={sectionIds.mediaReviews}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
                             <h2 className="text-xl font-semibold text-text">
@@ -414,7 +426,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         </button>
 
                         {mediaReviewsOpen && (
-                            <div className="mt-2">
+                            <div id={sectionIds.mediaReviews} className="mt-2">
                                 {loading && (
                                     <div className="text-center py-8">
                                         <Spinner size="lg" className="mx-auto text-primary" />
@@ -495,6 +507,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4 mb-4">
                         <button
                             onClick={() => setPostNotificationOpen(!postNotificationOpen)}
+                            aria-expanded={postNotificationOpen}
+                            aria-controls={sectionIds.postNotification}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
                             <h2 className="text-xl font-semibold text-text">Post Notification</h2>
@@ -505,7 +519,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         </button>
 
                         {postNotificationOpen && (
-                            <form className="mt-2 border border-border rounded-lg p-4 space-y-4" onSubmit={handlePostNotification}>
+                            <form id={sectionIds.postNotification} className="mt-2 border border-border rounded-lg p-4 space-y-4" onSubmit={handlePostNotification}>
                                 {notificationPostError && (
                                     <Alert variant="error" header="Could not post notification" onClose={() => setNotificationPostError(null)}>{notificationPostError}</Alert>
                                 )}
@@ -515,9 +529,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2">Audience</label>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div role="radiogroup" aria-label="Notification audience" className="flex flex-wrap gap-2">
                                         <button
                                             type="button"
+                                            role="radio"
+                                            aria-checked={notificationAudience === 'all'}
                                             onClick={() => {
                                                 setNotificationAudience('all');
                                                 setSelectedRecipient(null);
@@ -528,6 +544,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                         </button>
                                         <button
                                             type="button"
+                                            role="radio"
+                                            aria-checked={notificationAudience === 'user'}
                                             onClick={() => setNotificationAudience('user')}
                                             className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary text-white border-primary' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
                                         >
@@ -543,6 +561,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                         </label>
                                         <input
                                             id="notification-recipient"
+                                            role="combobox"
+                                            aria-autocomplete="list"
+                                            aria-controls={recipientResults.length > 0 ? sectionIds.recipients : undefined}
+                                            aria-expanded={recipientResults.length > 0}
+                                            aria-haspopup="listbox"
+                                            aria-busy={recipientSearchLoading}
                                             type="text"
                                             value={selectedRecipient ? selectedRecipient.username || selectedRecipient.email : recipientQuery}
                                             onChange={(event) => {
@@ -556,10 +580,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                             <p className="text-xs text-text-secondary mt-1">Searching...</p>
                                         )}
                                         {!recipientSearchLoading && recipientResults.length > 0 && (
-                                            <div className="mt-2 border border-border rounded-md overflow-hidden">
+                                            <div id={sectionIds.recipients} role="listbox" aria-label="Notification recipient results" className="mt-2 border border-border rounded-md overflow-hidden">
                                                 {recipientResults.map((recipient) => (
                                                     <button
                                                         key={recipient.id}
+                                                        role="option"
+                                                        aria-selected={selectedRecipient?.id === recipient.id}
                                                         type="button"
                                                         onClick={() => {
                                                             setSelectedRecipient(recipient);
@@ -627,6 +653,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setTranslationsOpen(!translationsOpen)}
+                            aria-expanded={translationsOpen}
+                            aria-controls={sectionIds.translations}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
                             <h2 className="text-xl font-semibold text-text">Location Translations</h2>
@@ -637,7 +665,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         </button>
 
                         {translationsOpen && (
-                            <div className="mt-2">
+                            <div id={sectionIds.translations} className="mt-2">
                                 <LocalizationEditor />
                             </div>
                         )}
@@ -647,6 +675,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setStatusTemplateOpen(!statusTemplateOpen)}
+                            aria-expanded={statusTemplateOpen}
+                            aria-controls={sectionIds.statusTemplate}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
                             <h2 className="text-xl font-semibold text-text">Status Palette Template</h2>
@@ -657,7 +687,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         </button>
 
                         {statusTemplateOpen && (
-                            <div className="mt-2 space-y-4 rounded-lg border border-border p-4">
+                            <div id={sectionIds.statusTemplate} className="mt-2 space-y-4 rounded-lg border border-border p-4">
                                 <div className="flex flex-wrap gap-1.5">
                                     {dialogTestVariants.map((variant) => (
                                         <button
