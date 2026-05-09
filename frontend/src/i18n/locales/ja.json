@@ -13,10 +13,10 @@
     "fields": {
       "email": "メールアドレス",
       "password": "パスワード",
-      "confirmPassword": "パスワードを確認",
+      "confirmPassword": "パスワード確認",
       "currentPassword": "現在のパスワード",
       "newPassword": "新しいパスワード",
-      "confirmNewPassword": "新しいパスワードを確認"
+      "confirmNewPassword": "新しいパスワード確認"
     },
     "buttons": {
       "signIn": "ログイン",
@@ -33,7 +33,7 @@
     "signIn": {
       "title": "ログイン",
       "forgotPassword": "パスワードをお忘れですか？",
-      "dontHaveAccount": "アカウントをお持ちでないですか？",
+      "dontHaveAccount": "アカウントをお持ちではありませんか？",
       "rejectedAccountHint": "登録が拒否された場合、このアカウントではログインできません。管理者に連絡するか、再登録してください。",
       "or": "または"
     },
@@ -50,10 +50,10 @@
     },
     "emailCheck": {
       "title": "メールを確認してください",
-      "message": "{{email}}に確認リンクを送信しました。受信トレイを確認し、リンクをクリックして続行してください。"
+      "message": "{{email}} に確認リンクを送信しました。メールをご確認のうえ、リンクをクリックして続行してください。"
     },
     "messages": {
-      "checkEmailConfirmation": "確認のためにメールを確認してください。",
+      "checkEmailConfirmation": "確認メールをご確認ください。",
       "resetLinkSent": "パスワード再設定用のリンクを送信しました。"
     },
     "userNamePrompt": {
@@ -68,7 +68,7 @@
     },
     "errors": {
       "emailRequired": "メールアドレスを入力してください。",
-      "validEmail": "有効なメールアドレスを入力してください。",
+      "validEmail": "正しいメールアドレスを入力してください。",
       "emailExists": "このメールアドレスはすでに登録されています。以前使用した方法でログインしてください。",
       "passwordRequired": "パスワードを入力してください。",
       "passwordMin": "パスワードは6文字以上である必要があります。",
@@ -76,19 +76,20 @@
       "passwordsMatch": "パスワードが一致しません。",
       "incorrectCredentials": "メールアドレスまたはパスワードが間違っています。",
       "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
-      "unableToSignIn": "{{provider}}でサインインできません。別の方法を試すか、サポートにお問い合わせください。",
+      "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか、サポートにお問い合わせください。",
       "userNameMin": "ユーザー名は1文字以上で入力してください。",
       "userNameMax": "ユーザー名は16文字以内で入力してください。",
       "userNamePattern": "ユーザー名には英字、数字、アンダースコアのみ使用できます。",
       "userNameTaken": "そのユーザー名は既に登録されています。新しいユーザー名を入力してください。",
-      "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。"
+      "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。",
+      "resendEmailFailed": "メールを再送信できませんでした。もう一度お試しください。"
     }
   },
   "approval": {
     "title": "アカウント承認待ち",
-    "description": "あなたのアカウントは管理者の承認を待っています。",
-    "pending": "あなたのアカウントは承認待ちです。",
-    "approved": "あなたのアカウントは承認されました。今すぐログインできます。",
+    "description": "アカウントは管理者の承認待ちです。",
+    "pending": "アカウントは承認待ちです。",
+    "approved": "アカウントが承認されました。ログインできます。",
     "rejected": "アカウント申請は承認されませんでした。"
   },
   "userMenu": {
@@ -96,14 +97,15 @@
     "adminDashboard": {
       "title": "管理ダッシュボード"
     },
-    "signOut": "ログアウト"
+    "signOut": "ログアウト",
+    "accountMenu": "アカウントメニュー"
   },
   "location": {
     "searchPlaceholder": "場所を検索..."
   },
   "artistForm": {
     "fields": {
-      "name": "名前",
+      "name": "アーティスト名",
       "originalLocation": "出身地",
       "searchOriginalLocation": "出身地を検索",
       "activeLocation": "活動拠点",
@@ -116,7 +118,7 @@
       "inactive": "活動休止"
     },
     "alts": {
-      "avatar": "アーティストのアバター"
+      "avatar": "アーティスト画像"
     },
     "defaults": {
       "newArtist": "新しいアーティスト"
@@ -128,8 +130,10 @@
       "save": "保存",
       "cancel": "キャンセル",
       "copyOriginalToActive": "出身地を活動拠点にコピー",
-      "setInactive": "活動休止として設定",
-      "setActive": "現在も活動中として設定"
+      "setInactive": "活動休止に設定",
+      "setActive": "活動中に設定",
+      "confirm": "確認",
+      "continue": "続行"
     },
     "socialMedia": {
       "title": "ソーシャルメディア",
@@ -162,7 +166,10 @@
         "failedSearch": "場所を検索できませんでした。もう一度お試しください。",
         "failedMore": "追加の検索結果を取得できませんでした。",
         "noLocationsAtPoint": "この地点では場所が見つかりませんでした。別の地点を試してください。"
-      }
+      },
+      "failedHeader": "場所の検索に失敗しました",
+      "locationSelected": "場所を選択済み",
+      "detailedLocationRecommended": "より詳しい場所の選択をおすすめします"
     },
     "yearSelect": {
       "placeholder": "年",
@@ -172,12 +179,50 @@
       "nameRequired": "アーティスト名を入力してください。",
       "originalLocationRequired": "出身地を入力してください。",
       "activeLocationRequired": "活動拠点を入力してください。",
-      "invalidWebsiteUrl": "有効なURLを入力してください（https://...）",
-      "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してください。",
+      "invalidWebsiteUrl": "正しいURLを入力してください（https://...）",
+      "invalidSocialProfileUrl": "正しい{{platform}}プロフィールURLを入力してください。",
       "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効です。",
       "failedUploadImage": "画像をアップロードできませんでした。",
       "imageRequirements": "JPG、PNG、WebP形式で、5 MB以下の画像を使用してください。",
-      "failedSaveArtist": "アーティストを保存できませんでした。もう一度お試しください。"
+      "failedSaveArtist": "アーティストを保存できませんでした。もう一度お試しください。",
+      "imageUploadFailed": "画像のアップロードに失敗しました",
+      "saveArtistFailedHeader": "アーティストを保存できませんでした"
+    },
+    "mediaReview": {
+      "requiresReviewTitle": "画像の確認が必要です",
+      "replaceSharedTitle": "共有画像を置き換えますか？",
+      "requiresReviewDescription": "このアーティストにはすでに共有画像があります。アップロードした画像は、全員に表示される前に管理者レビューへ送信されます。",
+      "replaceSharedDescription": "このアーティストにはすでに共有画像があります。続行すると、全員に表示される画像を置き換えます。",
+      "currentImage": "現在の画像",
+      "currentSharedArtistAlt": "現在の共有画像",
+      "artistImageExistsTitle": "アーティスト画像はすでに存在します",
+      "sharedImageRecommendation": "ストレージ制限があるため、共有画像の使用を強くおすすめします。",
+      "submitForReviewDescription": "アップロードした画像のほうがアーティストをよく表している場合は、レビューに送信できます。",
+      "chooseImage": "画像を選択",
+      "sharedImage": "共有画像",
+      "yourUpload": "アップロード画像",
+      "yourUploadedArtistAlt": "アップロードした画像"
+    },
+    "musicBrainz": {
+      "artistLabel": "アーティスト",
+      "deepSearch": "ディープサーチ",
+      "searchArtist": "アーティストを検索",
+      "artistSelected": "確認済みアーティストを選択済み",
+      "artistNotLinked": "確認済みアーティストにリンクされていません",
+      "searchMusicBrainz": "ディープサーチ中",
+      "searchSavedArtists": "保存済みアーティストを検索",
+      "processingArtist": "アーティストを処理中",
+      "linked": "リンク済み",
+      "onlineSearchFailed": "ディープサーチに失敗しました",
+      "useExistingRecommendation": "検索結果から確認済みのアーティストを選択することをおすすめします",
+      "resultsLabel": "アーティスト検索結果",
+      "searchingArtists": "アーティストを検索中",
+      "artists": "アーティスト",
+      "noArtistFoundTry": "アーティストが見つかりません。",
+      "noArtistFound": "アーティストが見つかりません",
+      "moreArtists": "さらにアーティストを表示",
+      "onlineResults": "ディープサーチ結果",
+      "searchFailedHeader": "ディープサーチに失敗しました"
     }
   }
 }

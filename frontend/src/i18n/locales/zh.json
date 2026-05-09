@@ -5,9 +5,9 @@
     "cancel": "取消",
     "save": "保存",
     "close": "关闭",
-    "loading": "加载中...",
+    "loading": "加载中",
     "error": "错误",
-    "redirectToMap": "正在跳转到地图..."
+    "redirectToMap": "正在跳转到地图"
   },
   "auth": {
     "fields": {
@@ -45,7 +45,7 @@
       "title": "重置密码",
       "description": "请输入邮箱，我们将发送重置密码链接。",
       "authSessionExpired": "当前请求已超时。请重新请求重置链接。",
-      "updating": "正在更新密码...",
+      "updating": "正在更新密码",
       "passwordUpdated": "密码已更新。"
     },
     "emailCheck": {
@@ -81,7 +81,8 @@
       "userNameMax": "用户名必须少于16个字符",
       "userNamePattern": "用户名只能包含字母、数字和下划线",
       "userNameTaken": "该用户名已被注册，请输入新的用户名",
-      "unableToSaveUsername": "无法保存用户名。请重试。"
+      "unableToSaveUsername": "无法保存用户名。请重试。",
+      "resendEmailFailed": "无法重新发送邮件"
     }
   },
   "approval": {
@@ -96,10 +97,11 @@
     "adminDashboard": {
       "title": "管理面板"
     },
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "accountMenu": "账户菜单"
   },
   "location": {
-    "searchPlaceholder": "搜索位置..."
+    "searchPlaceholder": "正在搜索地点"
   },
   "artistForm": {
     "fields": {
@@ -109,10 +111,10 @@
       "activeLocation": "活跃地点",
       "searchActiveLocation": "搜索活跃地点",
       "careerYears": "生涯年份",
-      "debutYear": "出道年",
+      "debutYear": "出道年份",
       "debut": "出道",
       "present": "活跃中",
-      "inactiveYear": "停止活动年",
+      "inactiveYear": "停止活动年份",
       "inactive": "停止活动"
     },
     "alts": {
@@ -125,11 +127,13 @@
       "editBanner": "编辑横幅",
       "editName": "编辑名字",
       "uploadAvatar": "上传头像",
-      "save": "保存",
+      "save": "保存艺人",
       "cancel": "取消",
       "copyOriginalToActive": "复制起出身地点到活跃地点",
       "setInactive": "设为停止活动",
-      "setActive": "设为活跃中"
+      "setActive": "设为活跃中",
+      "confirm": "确认",
+      "continue": "继续"
     },
     "socialMedia": {
       "title": "社交媒体",
@@ -153,7 +157,7 @@
       "label": "选择年份"
     },
     "locationSearch": {
-      "placeholder": "搜索地点...",
+      "placeholder": "搜索地点",
       "cancelSearch": "取消搜索",
       "searchLocation": "搜索地点",
       "manualSelect": "手动选择地点",
@@ -166,7 +170,10 @@
         "failedSearch": "搜索地点失败，请重试。",
         "failedMore": "搜索更多地点失败。",
         "noLocationsAtPoint": "该坐标未发现有效地点，请尝试其他位置。"
-      }
+      },
+      "failedHeader": "地点搜索失败",
+      "locationSelected": "已选择地点",
+      "detailedLocationRecommended": "建议选择更详细的地点"
     },
     "errors": {
       "nameRequired": "需填入艺人名字",
@@ -177,7 +184,45 @@
       "invalidSocialLinkUrl": "请输入有效的社媒链接",
       "failedUploadImage": "无法上传图片，请重试。",
       "imageRequirements": "请使用不超过 5 MB 的 JPG、PNG 或 WebP 图片。",
-      "failedSaveArtist": "无法保存艺人，请重试。"
+      "failedSaveArtist": "无法保存艺人，请重试。",
+      "imageUploadFailed": "图片上传失败",
+      "saveArtistFailedHeader": "无法保存艺人"
+    },
+    "mediaReview": {
+      "requiresReviewTitle": "图片需要审核",
+      "replaceSharedTitle": "是否替换共享图片？",
+      "requiresReviewDescription": "该艺人已有共享图片。本次上传将会经过审核，审核通过后才会对所有人可见。",
+      "replaceSharedDescription": "该艺人已有共享图片。（管理员）继续操作会替换所有人看到的图片。",
+      "currentImage": "当前图片",
+      "currentSharedArtistAlt": "当前共享艺人图片",
+      "artistImageExistsTitle": "艺人图片已存在",
+      "sharedImageRecommendation": "由于网站存储空间有限，强烈建议使用共享艺人图片。",
+      "submitForReviewDescription": "如果你认为新图片更能代表该艺人，可以提交审核。",
+      "chooseImage": "选择图片",
+      "sharedImage": "共享图片",
+      "yourUpload": "你上传的图片",
+      "yourUploadedArtistAlt": "你上传的艺人图片"
+    },
+    "musicBrainz": {
+      "artistLabel": "艺人",
+      "deepSearch": "深度搜索",
+      "searchArtist": "搜索艺人",
+      "artistSelected": "已选定认证艺人",
+      "artistNotLinked": "尚未关联认证艺人",
+      "searchMusicBrainz": "深度搜索",
+      "searchSavedArtists": "搜索艺人",
+      "processingArtist": "正在处理艺人",
+      "linked": "已关联",
+      "onlineSearchFailed": "深度搜索失败",
+      "useExistingRecommendation": "建议优先从搜索结果中选择认证艺人，无合适结果后再跳过搜索。",
+      "resultsLabel": "艺人搜索结果",
+      "searchingArtists": "正在搜索艺人",
+      "artists": "艺人",
+      "noArtistFoundTry": "未找到艺人。试试",
+      "noArtistFound": "未找到艺人",
+      "moreArtists": "更多艺人",
+      "onlineResults": "深度搜索结果",
+      "searchFailedHeader": "深度搜索失败"
     }
   }
 }

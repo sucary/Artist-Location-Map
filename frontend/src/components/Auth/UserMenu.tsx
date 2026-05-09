@@ -44,7 +44,7 @@ export function UserMenu({ onOpenAdminDashboard, onOpenChange }: UserMenuProps) 
             <button
                 aria-expanded={isOpen}
                 aria-haspopup="true"
-                aria-label="Account menu"
+                aria-label={t('userMenu.accountMenu')}
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex h-12 w-12 items-center justify-center gap-2 bg-surface shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors sm:h-auto sm:w-48 sm:justify-between sm:px-4 sm:py-2 ${isOpen ? 'rounded-lg sm:rounded-t-lg sm:rounded-b-none' : 'rounded-lg'}`}
             >

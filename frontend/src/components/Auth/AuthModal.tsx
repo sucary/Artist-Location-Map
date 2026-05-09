@@ -291,7 +291,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <div className="text-center">
                         <h2 id="auth-title" className="text-xl font-bold text-text mb-2">{t('auth.emailCheck.title')}</h2>
                         <p className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
-                        {error && <Alert variant="error" header="Could not resend email" onClose={() => setError(null)} className="mb-4">{error}</Alert>}
+                        {error && <Alert variant="error" header={t('auth.errors.resendEmailFailed')} onClose={() => setError(null)} className="mb-4">{error}</Alert>}
                         <div className="flex gap-3">
                             <Button onClick={handleResendEmail} variant="secondary" isLoading={resendLoading} className="flex-1">{t('auth.buttons.resend')}</Button>
                             <Button onClick={handleClose} className="flex-1">{t('auth.buttons.done')}</Button>

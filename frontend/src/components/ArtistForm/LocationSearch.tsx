@@ -184,7 +184,7 @@ export const LocationSearch = ({
                                 )}
                                 <FieldStatusIcon
                                     status={status}
-                                    label="Location selected"
+                                    label={t('artistForm.locationSearch.locationSelected')}
                                 />
                                 <button
                                     aria-label={(isLoading || queueSize > 0) ? t('artistForm.locationSearch.cancelSearch') : t('artistForm.locationSearch.searchLocation')}
@@ -211,7 +211,7 @@ export const LocationSearch = ({
                 </div>
 
                 {error && (
-                    <Alert variant="error" header="Location search failed" className="mt-2">
+                    <Alert variant="error" header={t('artistForm.locationSearch.failedHeader')} className="mt-2">
                         <span>{error}</span>
                         {retryFn && (
                             <button

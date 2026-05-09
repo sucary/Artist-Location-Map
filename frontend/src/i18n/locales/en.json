@@ -5,9 +5,9 @@
     "cancel": "Cancel",
     "save": "Save",
     "close": "Close",
-    "loading": "Loading...",
+    "loading": "Loading",
     "error": "Something went wrong",
-    "redirectToMap": "Redirecting to the map..."
+    "redirectToMap": "Redirecting to the map"
   },
   "auth": {
     "fields": {
@@ -46,7 +46,7 @@
       "description": "Enter your email and we'll send you a link to reset your password.",
       "authSessionExpired": "Session expired. Please request a new reset link.",
       "passwordUpdated": "Password updated",
-      "updating": "Updating password..."
+      "updating": "Updating password"
     },
     "emailCheck": {
       "title": "Check your email",
@@ -77,6 +77,7 @@
       "incorrectCredentials": "Incorrect email or password",
       "unexpectedError": "An unexpected error occurred, please try again",
       "unableToSignIn": "Unable to sign in with {{provider}}. Please try another method or contact support.",
+      "resendEmailFailed": "Could not resend email, please try again.",
       "userNameMin": "Username must be at least 1 character",
       "userNameMax": "Username must not exceed 16 characters",
       "userNamePattern": "Username can only contain letters, numbers, and underscores",
@@ -92,6 +93,7 @@
     "rejected": "Your account application was rejected."
   },
   "userMenu": {
+    "accountMenu": "Account menu",
     "settings": "Settings",
     "adminDashboard": {
       "title": "Admin Dashboard"
@@ -99,7 +101,7 @@
     "signOut": "Sign Out"
   },
   "location": {
-    "searchPlaceholder": "Search locations..."
+    "searchPlaceholder": "Search locations"
   },
   "artistForm": {
     "fields": {
@@ -127,6 +129,8 @@
       "uploadAvatar": "Upload Image",
       "save": "Save",
       "cancel": "Cancel",
+      "confirm": "Confirm",
+      "continue": "Continue",
       "copyOriginalToActive": "Copy original location to active location",
       "setInactive": "Set artist as inactive",
       "setActive": "Set artist as active"
@@ -153,13 +157,16 @@
       "label": "Select year"
     },
     "locationSearch": {
-      "placeholder": "Search location...",
+      "placeholder": "Search location",
       "cancelSearch": "Cancel location search",
       "searchLocation": "Search location",
       "manualSelect": "Select location on map",
+      "failedHeader": "Location search failed",
+      "locationSelected": "Location selected",
+      "detailedLocationRecommended": "A more detailed location is recommended",
       "retry": "Retry",
-      "searching": "Searching for location...",
-      "searchMore": "Search for more results...",
+      "searching": "Searching for location",
+      "searchMore": "Search for more results",
       "noResults": "No results found",
       "errors": {
         "searchTimedOut": "Search timed out. Please try again.",
@@ -168,15 +175,53 @@
         "noLocationsAtPoint": "No locations found at this point. Try another spot."
       }
     },
+    "mediaReview": {
+      "requiresReviewTitle": "Image requires review",
+      "replaceSharedTitle": "Replace shared image?",
+      "requiresReviewDescription": "This artist already has a shared image. Your upload will be submitted for admin review before it becomes visible to everyone.",
+      "replaceSharedDescription": "This artist already has a shared image. As an admin, continuing can replace the image shown to everyone.",
+      "currentImage": "Current image",
+      "currentSharedArtistAlt": "Current shared artist",
+      "artistImageExistsTitle": "Artist image already exists",
+      "sharedImageRecommendation": "We highly recommend using shared artist image due to storage limits.",
+      "submitForReviewDescription": "If you think your image represents the artist better, you can submit it for review.",
+      "chooseImage": "Choose an image",
+      "sharedImage": "Shared image",
+      "yourUpload": "Your upload",
+      "yourUploadedArtistAlt": "Your uploaded artist"
+    },
+    "musicBrainz": {
+      "artistLabel": "Artist",
+      "deepSearch": "Deep search",
+      "searchArtist": "Search artist",
+      "artistSelected": "Verified artist selected",
+      "artistNotLinked": "Artist is not linked to MusicBrainz",
+      "searchMusicBrainz": "Deepsearching",
+      "searchSavedArtists": "Searching artists",
+      "processingArtist": "Processing artist",
+      "linked": "Linked",
+      "onlineSearchFailed": "Deepsearch failed",
+      "useExistingRecommendation": "We recommend using a verified artist from search results",
+      "resultsLabel": "Artist search results",
+      "searchingArtists": "Searching artists",
+      "artists": "Artists",
+      "noArtistFoundTry": "No artist found. Try",
+      "noArtistFound": "No artist found",
+      "moreArtists": "More artists",
+      "onlineResults": "Deepsearch results",
+      "searchFailedHeader": "Deepsearch failed"
+    },
     "errors": {
       "nameRequired": "Artist name is required",
       "originalLocationRequired": "Original location is required",
       "activeLocationRequired": "Active location is required",
-      "invalidWebsiteUrl": "Enter a valid URL (https://...)",
+      "invalidWebsiteUrl": "Enter a valid URL (https://)",
       "invalidSocialProfileUrl": "Enter a valid {{platform}} URL",
       "invalidSocialLinkUrl": "Invalid social link URL",
+      "imageUploadFailed": "Image upload failed",
       "failedUploadImage": "Failed to upload image. Please try again.",
       "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB.",
+      "saveArtistFailedHeader": "Could not save artist",
       "failedSaveArtist": "Failed to save artist. Please try again."
     }
   }

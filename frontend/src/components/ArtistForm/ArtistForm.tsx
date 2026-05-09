@@ -386,19 +386,19 @@ const ArtistForm = ({
             <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
                 <div className="w-full max-w-sm rounded-lg bg-surface p-4 shadow-xl border border-border">
                     <h2 className="text-base font-semibold text-text">
-                        {mediaWarning.status.requiresReview ? 'Image requires review' : 'Replace shared image?'}
+                        {mediaWarning.status.requiresReview ? t('artistForm.mediaReview.requiresReviewTitle') : t('artistForm.mediaReview.replaceSharedTitle')}
                     </h2>
                     <p className="mt-2 text-sm text-text-secondary">
                         {mediaWarning.status.requiresReview
-                            ? 'This artist already has a shared image. Your upload will be submitted for admin review before it becomes visible to everyone.'
-                            : 'This artist already has a shared image. As an admin, continuing can replace the image shown to everyone.'}
+                            ? t('artistForm.mediaReview.requiresReviewDescription')
+                            : t('artistForm.mediaReview.replaceSharedDescription')}
                     </p>
                     {mediaWarning.status.sourceImage && (
                         <div className="mt-3">
-                            <p className="mb-1 text-xs font-medium text-text-secondary">Current image</p>
+                            <p className="mb-1 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.currentImage')}</p>
                             <img
                                 src={mediaWarning.status.sourceImage}
-                                alt="Current shared artist"
+                                alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
                                 className="w-full aspect-video rounded border border-border object-cover bg-surface-muted"
                             />
                         </div>
@@ -410,14 +410,14 @@ const ArtistForm = ({
                             className="flex-1"
                             onClick={() => setMediaWarning(null)}
                         >
-                            Cancel
+                            {t('artistForm.buttons.cancel')}
                         </Button>
                         <Button
                             type="button"
                             className="flex-1"
                             onClick={continueAfterMediaWarning}
                         >
-                            Continue
+                            {t('artistForm.buttons.continue')}
                         </Button>
                     </div>
                 </div>
@@ -427,14 +427,14 @@ const ArtistForm = ({
         {preUploadSelectionWarning && (
             <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
                 <div className="w-full max-w-md rounded-lg bg-surface p-4 shadow-xl border border-border">
-                    <h2 className="text-base font-semibold text-text">Artist image already exists</h2>
+                    <h2 className="text-base font-semibold text-text">{t('artistForm.mediaReview.artistImageExistsTitle')}</h2>
                     <p className="mt-2 text-sm text-text-secondary">
-                        We highly recommend using shared artist image due to storage limits.
+                        {t('artistForm.mediaReview.sharedImageRecommendation')}
                     </p>
                     <p className="mt-1 text-sm text-text-secondary">
-                        If you think your image represents the artist better, you can submit it for review.
+                        {t('artistForm.mediaReview.submitForReviewDescription')}
                     </p>
-                    <p className="mt-4 text-xs font-medium text-text-secondary">Choose an image</p>
+                    <p className="mt-4 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.chooseImage')}</p>
                     <div className="mt-4 space-y-3">
                         <div>
                             <button
@@ -451,7 +451,7 @@ const ArtistForm = ({
                                         preUploadSelectionWarning.status.sourceImage || undefined,
                                         preUploadSelectionWarning.status.profileCrop || undefined
                                     )}
-                                    alt="Current shared artist"
+                                    alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
                                     className="block w-full aspect-[3/1] object-cover bg-surface-muted"
                                 />
                                 {preUploadImageChoice === 'shared' && (
@@ -462,7 +462,7 @@ const ArtistForm = ({
                                 <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
                                     preUploadImageChoice === 'shared' ? 'bg-text-secondary' : 'bg-text/60'
                                 }`}>
-                                    Shared image
+                                    {t('artistForm.mediaReview.sharedImage')}
                                 </span>
                             </button>
                         </div>
@@ -478,7 +478,7 @@ const ArtistForm = ({
                             >
                                 <img
                                     src={getProfileUrl(formData.sourceImage, formData.profileCrop)}
-                                    alt="Your uploaded artist"
+                                    alt={t('artistForm.mediaReview.yourUploadedArtistAlt')}
                                     className="block w-full aspect-[3/1] object-cover bg-surface-muted"
                                 />
                                 {preUploadImageChoice === 'upload' && (
@@ -489,7 +489,7 @@ const ArtistForm = ({
                                 <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
                                     preUploadImageChoice === 'upload' ? 'bg-text-secondary' : 'bg-text/60'
                                 }`}>
-                                    Your upload
+                                    {t('artistForm.mediaReview.yourUpload')}
                                 </span>
                             </button>
                         </div>
@@ -500,7 +500,7 @@ const ArtistForm = ({
                             className="w-full"
                             onClick={confirmPreUploadImageChoice}
                         >
-                            Confirm
+                            {t('artistForm.buttons.confirm')}
                         </Button>
                     </div>
                 </div>
@@ -525,7 +525,7 @@ const ArtistForm = ({
                     <div className="mt-10 px-4 pb-4 flex flex-col gap-4">
                     {/* Upload error */}
                     {uploadError && (
-                        <Alert variant="error" header="Image upload failed">
+                        <Alert variant="error" header={t('artistForm.errors.imageUploadFailed')}>
                             <span className="block">{uploadError}</span>
                             <span className="mt-1 block text-xs">{t('artistForm.errors.imageRequirements')}</span>
                         </Alert>
@@ -557,7 +557,7 @@ const ArtistForm = ({
                             pendingSearch={musicBrainzLocationSearches.originalLocation}
                             syncKey={locationInputSyncKeys.originalLocation}
                             status={getLocationFieldStatus(formData.originalLocation)}
-                            statusMessage="A more detailed location is recommended"
+                            statusMessage={t('artistForm.locationSearch.detailedLocationRecommended')}
                         />
 
                         <div className="flex justify-center -my-2 relative z-50">
@@ -586,7 +586,7 @@ const ArtistForm = ({
                             pendingSearch={musicBrainzLocationSearches.activeLocation}
                             syncKey={locationInputSyncKeys.activeLocation}
                             status={getLocationFieldStatus(formData.activeLocation)}
-                            statusMessage="A more detailed location is recommended"
+                            statusMessage={t('artistForm.locationSearch.detailedLocationRecommended')}
                         />
                     </div>
 
@@ -648,7 +648,7 @@ const ArtistForm = ({
             {/* Footer with error and buttons */}
             <div className="p-4 border-border bg-surface">
                 {error && (
-                    <Alert variant="error" header="Could not save artist" className="mb-3">{error}</Alert>
+                    <Alert variant="error" header={t('artistForm.errors.saveArtistFailedHeader')} className="mb-3">{error}</Alert>
                 )}
                 <div className="flex gap-3">
                     <Button

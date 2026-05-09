@@ -10,6 +10,7 @@ import type { MusicBrainzCatalogArtist } from '../../services/api';
 import { Alert, Button, FieldStatusIcon, Spinner } from '../ui';
 import { useAuth } from '../../context/AuthContext';
 import { SearchIcon } from '../icons/GeneralIcons';
+import { useTranslation } from 'react-i18next';
 
 interface MusicBrainzArtistPickerProps {
     value?: string;
@@ -38,6 +39,7 @@ function formatMeta(artist: MusicBrainzCatalogArtist, showMbid: boolean) {
 
 export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onSelect }: MusicBrainzArtistPickerProps) {
     const { profile } = useAuth();
+    const { t } = useTranslation();
     const [query, setQuery] = useState(value || '');
     const [localResults, setLocalResults] = useState<MusicBrainzCatalogArtist[]>([]);
     const [localOffset, setLocalOffset] = useState(0);
@@ -232,7 +234,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
             setResultMode('online');
             setIsOpen(true);
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'MusicBrainz online search failed';
+            const message = error instanceof Error ? error.message : t('artistForm.musicBrainz.onlineSearchFailed');
             setHasOnlineSearched(true);
             setOnlineError(message);
         } finally {
@@ -308,12 +310,12 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         <div data-tutorial-target="artist-search" className="rounded-md p-1">
             <div className="mb-1 flex items-center justify-between gap-3">
                 <label className="block text-sm font-bold text-text" htmlFor="musicbrainz-artist-search">
-                    Artist
+                    {t('artistForm.musicBrainz.artistLabel')}
                 </label>
                 <div className="inline-flex -translate-y-0.5 items-center gap-2 text-xs leading-none text-text-secondary">
-                    <span>Deep search</span>
+                    <span>{t('artistForm.musicBrainz.deepSearch')}</span>
                     <label className="inline-flex items-center">
-                        <span className="sr-only">Deep search</span>
+                        <span className="sr-only">{t('artistForm.musicBrainz.deepSearch')}</span>
                         <input
                             type="checkbox"
                             role="switch"
@@ -373,17 +375,17 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                             void handleSearchCatalog();
                         }
                     }}
-                    placeholder="Search artist"
+                    placeholder={t('artistForm.musicBrainz.searchArtist')}
                     className="w-full px-3 py-2 pr-20 text-sm border border-border-strong rounded-md bg-surface text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                     {isSearching && <Spinner size="sm" className="text-text-muted" />}
                     <FieldStatusIcon
                         status={fieldStatus}
-                        label={selectedMbid ? 'MusicBrainz artist selected' : 'Artist is not linked to MusicBrainz'}
+                        label={selectedMbid ? t('artistForm.musicBrainz.artistSelected') : t('artistForm.musicBrainz.artistNotLinked')}
                     />
                     <button
-                        aria-label={isDeepSearch ? 'Search MusicBrainz' : 'Search saved artists'}
+                        aria-label={isDeepSearch ? t('artistForm.musicBrainz.searchMusicBrainz') : t('artistForm.musicBrainz.searchSavedArtists')}
                         onClick={() => {
                             if (isDeepSearch) {
                                 void handleSearchOnline();
@@ -394,7 +396,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         type="button"
                         disabled={!enabled || (isDeepSearch ? isOnlineSearching : isCatalogSearching)}
                         className="p-1 rounded text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary transition-colors"
-                        title={isDeepSearch ? 'Search MusicBrainz' : 'Search saved artists'}
+                        title={isDeepSearch ? t('artistForm.musicBrainz.searchMusicBrainz') : t('artistForm.musicBrainz.searchSavedArtists')}
                     >
                         <SearchIcon className="w-4 h-4" />
                     </button>
@@ -406,25 +408,25 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                     {isSelectingArtist ? (
                         <span className="inline-flex items-center gap-1.5">
                             <Spinner size="sm" className="text-text-muted" />
-                            Processing artist...
+                            {t('artistForm.musicBrainz.processingArtist')}
                         </span>
                     ) : (
                         <>
-                            Linked: <span className="font-medium text-text">{selectedArtist?.name || selectedMbid}</span>
+                            {t('artistForm.musicBrainz.linked')}: <span className="font-medium text-text">{selectedArtist?.name || selectedMbid}</span>
                         </>
                     )}
                 </div>
             )}
 
             {onlineError && (
-                <Alert variant="error" header="MusicBrainz search failed" className="mt-2">
+                <Alert variant="error" header={t('artistForm.musicBrainz.searchFailedHeader')} className="mt-2">
                     {onlineError}
                 </Alert>
             )}
 
             {showUnlinkedWarning && (
                 <Alert variant="warning" className="mt-2" hideIcon>
-                    Using an existing artist entry from search is recommended
+                    {t('artistForm.musicBrainz.useExistingRecommendation')}
                 </Alert>
             )}
 
@@ -432,7 +434,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 <div
                     id={listboxId}
                     role="listbox"
-                    aria-label="Artist search results"
+                    aria-label={t('artistForm.musicBrainz.resultsLabel')}
                     ref={dropdownRef}
                     className="fixed z-[9999] overflow-hidden rounded-md border border-border bg-surface shadow-lg"
                     style={{
@@ -444,11 +446,11 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                 >
                     <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: dropdownPosition.maxHeight }}>
                         {resultMode === 'catalog' && ((isCatalogDebouncing || isCatalogSearching) && localResults.length === 0 ? (
-                            <div className="px-3 py-2 text-sm text-text-secondary">Searching artists...</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">{t('artistForm.musicBrainz.searchingArtists')}</div>
                         ) : localResults.length > 0 ? (
                             <>
                                 <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-surface-secondary">
-                                    Artists
+                                    {t('artistForm.musicBrainz.artists')}
                                 </div>
                                 {localResults.map((artist) => (
                                     <button
@@ -465,7 +467,9 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                 ))}
                             </>
                         ) : hasCatalogSearched ? (
-                            <div className="px-3 py-2 text-sm text-text-secondary">No artist found. Try <b>deep search</b></div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">
+                                {t('artistForm.musicBrainz.noArtistFoundTry')} <b>{t('artistForm.musicBrainz.deepSearch')}</b>
+                            </div>
                         ) : (
                             null
                         ))}
@@ -479,14 +483,14 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                 isLoading={isCatalogSearching}
                                 className="w-full rounded-none border-t border-border"
                             >
-                                More artists
+                                {t('artistForm.musicBrainz.moreArtists')}
                             </Button>
                         )}
 
                         {resultMode === 'online' && onlineResults.length > 0 && (
                             <>
                                 <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-surface-secondary border-t border-border">
-                                    MusicBrainz online
+                                    {t('artistForm.musicBrainz.onlineResults')}
                                 </div>
                                 {onlineResults.map((artist) => (
                                     <button
@@ -510,18 +514,18 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                         isLoading={isOnlineSearching}
                                         className="w-full rounded-none border-t border-border"
                                     >
-                                        More artists
+                                        {t('artistForm.musicBrainz.moreArtists')}
                                     </Button>
                                 )}
                             </>
                         )}
 
                         {resultMode === 'online' && isOnlineSearching && onlineResults.length === 0 && (
-                            <div className="px-3 py-2 text-sm text-text-secondary">Searching artists...</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">{t('artistForm.musicBrainz.searchingArtists')}</div>
                         )}
 
                         {resultMode === 'online' && hasOnlineSearched && onlineResults.length === 0 && !isOnlineSearching && (
-                            <div className="px-3 py-2 text-sm text-text-secondary">No artist found</div>
+                            <div className="px-3 py-2 text-sm text-text-secondary">{t('artistForm.musicBrainz.noArtistFound')}</div>
                         )}
                     </div>
                 </div>,
