@@ -175,12 +175,10 @@ export const LocationLocalizationService = {
 // ─── LocationIQ ─────────────────────────────────────────────────────────
 
 function osmIdsParam(osmId: number, osmType: string): string | null {
-    const prefix =
-        osmType === 'relation' ? 'R' :
-        osmType === 'way'      ? 'W' :
-        osmType === 'node'     ? 'N' : null;
-    if (!prefix) return null;
-    return `${prefix}${osmId}`;
+    if (osmType === 'relation') return `R${osmId}`;
+    if (osmType === 'way') return `W${osmId}`;
+    if (osmType === 'node') return `N${osmId}`;
+    return null;
 }
 
 /**

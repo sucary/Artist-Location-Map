@@ -7,6 +7,8 @@ import pool from '../config/database';
 import { MediaCleanupService } from '../services/mediaCleanupService';
 import { NotificationService } from '../services/notificationService';
 
+// Signed media upload routes and shared artist image review actions
+
 const router = Router();
 const NORMAL_USER_DAILY_UPLOAD_LIMIT = 25;
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
@@ -16,6 +18,37 @@ const PORTRAIT_MAX_WIDTH = 1080;
 const PORTRAIT_MAX_HEIGHT = 1920;
 const SQUARE_MAX_DIMENSION = 1080;
 const ALLOWED_IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'webp']);
+
+function isExpectedCloudinaryUrl(secureUrl: string, publicId: string): boolean {
+    try {
+        const url = new URL(secureUrl);
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        if (!cloudName || url.protocol !== 'https:' || url.hostname !== 'res.cloudinary.com') {
+            return false;
+        }
+
+        const pathParts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+        const uploadIndex = pathParts.indexOf('upload');
+        if (
+            pathParts[0] !== cloudName ||
+            pathParts[1] !== 'image' ||
+            uploadIndex === -1
+        ) {
+            return false;
+        }
+
+        const assetPath = pathParts
+            .slice(uploadIndex + 1)
+            .filter((part) => !/^v\d+$/.test(part))
+            .join('/');
+        // Compare Cloudinary public IDs without the delivery extension
+        const assetPathWithoutExtension = assetPath.replace(/\.[a-z0-9]+$/i, '');
+
+        return assetPathWithoutExtension === publicId;
+    } catch {
+        return false;
+    }
+}
 
 function isAllowedImageResolution(width?: number, height?: number): boolean {
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
@@ -55,7 +88,6 @@ router.get(
     requireAuth,
     requireApproval,
     asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-        const userId = req.user!.id;
         const isAdmin = req.profile?.isAdmin ?? false;
         const result = await pool.query<{
             source_image: string;
@@ -70,7 +102,6 @@ router.get(
         `, [req.params.mbid]);
 
         const asset = result.rows[0];
-        const isOriginalUploader = (asset?.original_uploaded_by || asset?.uploaded_by) === userId;
         const hasAsset = Boolean(asset);
         const canUseSharedMedia = isAdmin;
 
@@ -179,6 +210,11 @@ router.post(
         const expectedPrefix = `artist_uploads/${userId}/`;
         if (!publicId.startsWith(expectedPrefix)) {
             res.status(403).json({ error: 'Invalid upload owner' });
+            return;
+        }
+
+        if (!isExpectedCloudinaryUrl(secureUrl, publicId)) {
+            res.status(400).json({ error: 'Upload URL does not match the signed Cloudinary public ID' });
             return;
         }
 

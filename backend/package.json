@@ -21,6 +21,8 @@
     "mb:backfill-artists": "ts-node src/scripts/backfill-artist-musicbrainz.ts",
     "mb:backfill-romanized": "ts-node src/scripts/backfill-artist-romanized-names.ts",
     "inspect:db": "ts-node src/tests/inspect-db.ts",
+    "db:migrate": "node dist/db/migrate.js",
+    "db:migrate:src": "ts-node src/db/migrate.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },

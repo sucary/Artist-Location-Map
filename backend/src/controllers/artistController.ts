@@ -21,7 +21,7 @@ async function getFeaturedArtists(): Promise<Artist[]> {
         return featuredArtistsCache.artists;
     }
 
-    const artists = await ArtistStore.getFeaturedArtists(50, 20);   // max count, max distance in km
+    const artists = await ArtistStore.getFeaturedArtists();
     featuredArtistsCache = { artists, timestamp: now };
     return artists;
 }
@@ -46,7 +46,7 @@ interface UserByUsername {
 
 async function getUserByUsername(username: string): Promise<UserByUsername | null> {
     const result = await pool.query(
-        `SELECT id, is_private as "isPrivate" FROM profiles WHERE username = $1`,
+        `SELECT id, is_private as "isPrivate" FROM profiles WHERE lower(username) = lower($1)`,
         [username]
     );
     return result.rows[0] || null;

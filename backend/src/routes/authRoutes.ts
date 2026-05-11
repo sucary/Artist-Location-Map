@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { requireAuth, requireAdmin, AuthenticatedRequest } from '../middleware/authMiddleware';
 import {
     checkUsernameAvailability,
@@ -12,13 +13,38 @@ import {
 import { ProfileStore } from '../models/profileStore';
 import pool from '../config/database';
 import { asyncHandler } from '../middleware/errorHandler';
+import { isValidUsername, normalizeUsername, usernameValidationMessage } from '../utils/username';
 
 const router = Router();
 
+const usernameAvailabilityLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    message: 'Too many username checks, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const emailAvailabilityLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: 'Too many email checks, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const passwordResetLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: 'Too many password reset requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Public routes
-router.get('/check-username', checkUsernameAvailability);
-router.get('/check-email', checkEmailAvailability);
-router.post('/password-reset', requestPasswordReset);
+router.get('/check-username', usernameAvailabilityLimiter, checkUsernameAvailability);
+router.get('/check-email', emailAvailabilityLimiter, checkEmailAvailability);
+router.post('/password-reset', passwordResetLimiter, requestPasswordReset);
 
 // Protected routes
 router.get('/profile', requireAuth, getProfile);
@@ -30,12 +56,12 @@ router.post('/admin/reject/:userId', requireAuth, requireAdmin, rejectUser);
 
 // POST /api/auth/set-username
 router.post('/set-username', requireAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { username } = req.body;
+    const username = normalizeUsername(req.body.username);
     const userId = req.user!.id;
 
     // Validate username format
-    if (!username || username.length < 1 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-        res.status(400).json({ error: 'Username must contain letters, numbers, or underscores only' });
+    if (!isValidUsername(username)) {
+        res.status(400).json({ error: usernameValidationMessage() });
         return;
     }
 
@@ -55,18 +81,21 @@ router.post('/set-username', requireAuth, asyncHandler(async (req: Authenticated
 router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user!.id;
     const { username, isPrivate, locationLanguage, tutorialCompleted } = req.body;
+    let normalizedUsername: string | undefined;
 
     // Validate username if provided
     if (username !== undefined) {
-        if (!username || username.length < 1 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-            res.status(400).json({ error: 'Username must contain letters, numbers, or underscores only' });
+        const nextUsername = normalizeUsername(username);
+        if (!isValidUsername(nextUsername)) {
+            res.status(400).json({ error: usernameValidationMessage() });
             return;
         }
+        normalizedUsername = nextUsername;
 
         // Check if username changed and is available
         const currentProfile = await ProfileStore.getByUserId(userId);
-        if (currentProfile?.username !== username) {
-            const available = await ProfileStore.checkUsernameAvailable(username);
+        if (currentProfile?.username !== normalizedUsername) {
+            const available = await ProfileStore.checkUsernameAvailable(normalizedUsername);
             if (!available) {
                 res.status(409).json({ error: 'Username already taken' });
                 return;
@@ -87,7 +116,7 @@ router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedReques
     }
 
     // Update profile
-    await ProfileStore.updateProfile(userId, { username, isPrivate, locationLanguage, tutorialCompleted });
+    await ProfileStore.updateProfile(userId, { username: normalizedUsername, isPrivate, locationLanguage, tutorialCompleted });
 
     // Return updated profile
     const updatedProfile = await ProfileStore.getByUserId(userId);

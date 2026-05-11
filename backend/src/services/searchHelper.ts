@@ -109,7 +109,7 @@ export const TextSearch = {
         const acceptLang = lang ? LANG_TO_ACCEPT_LANGUAGE[lang] : null;
 
         let results = await SearchCacheService.get(query, acceptLang ?? undefined);
-        let fromCache = results !== null;
+        const fromCache = results !== null;
 
         if (!results) {
             console.log(`[SEARCH] Cache miss for: "${query}"${acceptLang ? ` (lang: ${acceptLang})` : ''} - calling geocoding API`);
@@ -287,7 +287,7 @@ export const ReverseSearch = {
     async search(lat: number, lng: number, limit: number, source: 'auto' | 'nominatim'): Promise<SearchResponse> {
         // Get local results (from DB) and Overpass results (all admin boundaries) in parallel
         const [localResults, overpassResults] = await Promise.all([
-            this.getLocalResults(lat, lng, limit),
+            source === 'nominatim' ? Promise.resolve([]) : this.getLocalResults(lat, lng, limit),
             this.getOverpassResults(lat, lng)
         ]);
 

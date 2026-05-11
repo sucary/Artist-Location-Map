@@ -480,77 +480,77 @@ export const ArtistStore = {
     },
 
     /**
-     * Get featured artists for anonymous users.
-     * Returns up to 50 random artists from non-private users with avatars,
-     * spread out geographically using active location.
+     * Get community artists for anonymous/featured views.
+     * Returns one public, MusicBrainz-linked artist per MBID with an image and start year.
+     * Duplicate copies prefer admin-owned rows, then rows whose saved location matches
+     * MusicBrainz's high-level area data and has more detailed location fields.
      */
-    getFeaturedArtists: async (limit: number = 50, minDistanceKm: number = 50): Promise<Artist[]> => {
+    getFeaturedArtists: async (): Promise<Artist[]> => {
         try {
-            // Get all eligible artists (non-private users, has avatar)
-            const candidatesResult = await pool.query(`
-                SELECT ${ARTIST_SELECT_COLUMNS},
-                    ST_Y(a.active_display_coordinates::geometry) as sort_lat,
-                    ST_X(a.active_display_coordinates::geometry) as sort_lng
-                FROM artists a
-                LEFT JOIN locations ol ON a.original_city_id = ol.id
-                LEFT JOIN locations al ON a.active_city_id = al.id
-                JOIN profiles p ON a.user_id = p.id
-                WHERE p.is_private = false
-                  AND a.source_image IS NOT NULL
-                  AND a.musicbrainz_mbid IS NOT NULL
-                  AND a.active_display_coordinates IS NOT NULL
-                ORDER BY RANDOM()
+            const result = await pool.query(`
+                WITH ranked AS (
+                    SELECT ${ARTIST_SELECT_COLUMNS},
+                        ROW_NUMBER() OVER (
+                            PARTITION BY a.musicbrainz_mbid
+                            ORDER BY
+                                p.is_admin DESC,
+                                (
+                                    CASE
+                                        WHEN mba.country IS NOT NULL AND (
+                                            UPPER(COALESCE(a.original_country, '')) = UPPER(mba.country)
+                                            OR UPPER(COALESCE(a.active_country, '')) = UPPER(mba.country)
+                                        ) THEN 1 ELSE 0
+                                    END
+                                    + CASE
+                                        WHEN mba.begin_area_name IS NOT NULL AND (
+                                            a.original_city ILIKE mba.begin_area_name
+                                            OR a.original_province ILIKE mba.begin_area_name
+                                            OR COALESCE(a.original_display_name, '') ILIKE '%' || mba.begin_area_name || '%'
+                                        ) THEN 2 ELSE 0
+                                    END
+                                    + CASE
+                                        WHEN mba.area_name IS NOT NULL AND (
+                                            a.active_city ILIKE mba.area_name
+                                            OR a.active_province ILIKE mba.area_name
+                                            OR COALESCE(a.active_display_name, '') ILIKE '%' || mba.area_name || '%'
+                                            OR COALESCE(a.original_display_name, '') ILIKE '%' || mba.area_name || '%'
+                                        ) THEN 1 ELSE 0
+                                    END
+                                ) DESC,
+                                (
+                                    CASE WHEN a.original_display_name IS NOT NULL THEN 1 ELSE 0 END
+                                    + CASE WHEN a.active_display_name IS NOT NULL THEN 1 ELSE 0 END
+                                    + CASE WHEN a.original_city_id IS NOT NULL THEN 1 ELSE 0 END
+                                    + CASE WHEN a.active_city_id IS NOT NULL THEN 1 ELSE 0 END
+                                    + CASE WHEN a.original_country IS NOT NULL THEN 1 ELSE 0 END
+                                    + CASE WHEN a.active_country IS NOT NULL THEN 1 ELSE 0 END
+                                ) DESC,
+                                a.updated_at DESC,
+                                a.created_at DESC
+                        ) AS duplicate_rank
+                    FROM artists a
+                    LEFT JOIN locations ol ON a.original_city_id = ol.id
+                    LEFT JOIN locations al ON a.active_city_id = al.id
+                    JOIN profiles p ON a.user_id = p.id
+                    JOIN musicbrainz_artists mba ON a.musicbrainz_mbid = mba.mbid
+                    WHERE p.is_private = false
+                      AND a.musicbrainz_mbid IS NOT NULL
+                      AND NULLIF(TRIM(a.source_image), '') IS NOT NULL
+                      AND a.debut_year IS NOT NULL
+                      AND (
+                          LOWER(COALESCE(mba.type, '')) <> 'person'
+                          OR mba.life_span_begin IS NULL
+                          OR mba.life_span_begin !~ '^\\d{4}'
+                          OR a.debut_year > SUBSTRING(mba.life_span_begin FROM 1 FOR 4)::int
+                      )
+                )
+                SELECT *
+                FROM ranked
+                WHERE duplicate_rank = 1
+                ORDER BY name ASC
             `);
 
-            if (candidatesResult.rows.length === 0) {
-                return [];
-            }
-
-            // Greedy selection: pick artists maintaining minimum distance and unique names
-            const selected: typeof candidatesResult.rows = [];
-            const selectedNames = new Set<string>();
-            const minDistanceMeters = minDistanceKm * 1000;
-
-            for (const candidate of candidatesResult.rows) {
-                if (selected.length >= limit) break;
-
-                // Check for duplicate name (case-insensitive)
-                const normalizedName = candidate.name.toLowerCase().trim();
-                if (selectedNames.has(normalizedName)) {
-                    continue;
-                }
-
-                const candidateLat = parseFloat(candidate.sort_lat);
-                const candidateLng = parseFloat(candidate.sort_lng);
-
-                // Check distance from all already-selected artists
-                let tooClose = false;
-                for (const s of selected) {
-                    const sLat = parseFloat(s.sort_lat);
-                    const sLng = parseFloat(s.sort_lng);
-
-                    // Haversine approximation for speed
-                    const dLat = (candidateLat - sLat) * Math.PI / 180;
-                    const dLng = (candidateLng - sLng) * Math.PI / 180;
-                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                              Math.cos(sLat * Math.PI / 180) * Math.cos(candidateLat * Math.PI / 180) *
-                              Math.sin(dLng/2) * Math.sin(dLng/2);
-                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                    const distance = 6371000 * c; // Earth radius in meters
-
-                    if (distance < minDistanceMeters) {
-                        tooClose = true;
-                        break;
-                    }
-                }
-
-                if (!tooClose) {
-                    selected.push(candidate);
-                    selectedNames.add(normalizedName);
-                }
-            }
-
-            return selected.map(rowToArtist);
+            return result.rows.map(rowToArtist);
         } catch (error) {
             console.error('Error getting featured artists:', error);
             throw error;

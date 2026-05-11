@@ -22,7 +22,7 @@ async function resolveMapUserId(req: AuthenticatedRequest): Promise<string | und
     }
 
     const result = await pool.query(
-        `SELECT id, is_private FROM profiles WHERE username = $1`,
+        `SELECT id, is_private FROM profiles WHERE lower(username) = lower($1)`,
         [mapUsername]
     );
     const targetUser = result.rows[0];

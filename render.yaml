@@ -5,7 +5,7 @@ services:
     nodeVersion: "20"
     plan: free
     buildCommand: cd backend && npm install --include=dev && npm run build
-    startCommand: cd backend && npm run start
+    startCommand: cd backend && npm run db:migrate && npm run start
     envVars:
       - key: NODE_ENV
         value: production

@@ -4,12 +4,38 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { ProfileStore } from '../models/profileStore';
 import { NotificationService } from '../services/notificationService';
 import { supabaseAdmin } from '../config/supabase';
+import { isValidUsername, normalizeUsername, usernameValidationMessage } from '../utils/username';
+
+// Authentication profile and password reset handlers
+
+function getAllowedRedirectOrigins(): Set<string> {
+    const configuredOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+    return new Set(
+        configuredOrigin
+            .split(',')
+            .map((origin) => origin.trim())
+            .filter(Boolean)
+    );
+}
+
+function normalizePasswordResetRedirect(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+
+    try {
+        // Limit password reset redirects to configured frontend origins
+        const url = new URL(value);
+        if (!getAllowedRedirectOrigins().has(url.origin)) return undefined;
+        return url.toString();
+    } catch {
+        return undefined;
+    }
+}
 
 export const checkUsernameAvailability = asyncHandler(async (req: Request, res: Response) => {
-    const { username } = req.query;
+    const username = normalizeUsername(req.query.username);
 
-    if (!username || typeof username !== 'string') {
-        res.status(400).json({ error: 'Username required' });
+    if (!isValidUsername(username)) {
+        res.status(400).json({ error: usernameValidationMessage() });
         return;
     }
 
@@ -37,11 +63,17 @@ export const requestPasswordReset = asyncHandler(async (req: Request, res: Respo
         return;
     }
 
+    const safeRedirectTo = normalizePasswordResetRedirect(redirectTo);
+    if (redirectTo !== undefined && !safeRedirectTo) {
+        res.status(400).json({ error: 'Invalid password reset redirect URL' });
+        return;
+    }
+
     const hasPasswordIdentity = await ProfileStore.emailHasPasswordIdentity(email);
 
     if (hasPasswordIdentity) {
         const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-            redirectTo: typeof redirectTo === 'string' ? redirectTo : undefined,
+            redirectTo: safeRedirectTo,
         });
 
         if (error) {

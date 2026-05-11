@@ -24,11 +24,11 @@ async function searchUsers(query: string, limit: number, excludeUsername?: strin
     let excludeClause = '';
 
     if (excludeUsername) {
-        excludeClause = 'AND username != $3';
+        excludeClause = 'AND lower(username) <> lower($3)';
         params.push(excludeUsername);
     }
 
-    const result = await pool.query(
+    const result = await pool.query<{ id: string; username: string }>(
         `SELECT id, username FROM profiles
          WHERE username IS NOT NULL
            AND is_private = false
@@ -38,7 +38,7 @@ async function searchUsers(query: string, limit: number, excludeUsername?: strin
          LIMIT $2`,
         params
     );
-    return result.rows.map((row: any) => ({
+    return result.rows.map((row) => ({
         type: 'user' as const,
         id: row.id,
         username: row.username,

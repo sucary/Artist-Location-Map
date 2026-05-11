@@ -7,6 +7,28 @@ const GEOCODING_API_BASE = 'https://us1.locationiq.com/v1';
 const GEOCODING_API_KEY = process.env.LOCATIONIQ_API_KEY;
 const NOMINATIM_HEADERS = { 'User-Agent': 'ArtistLocationMap/1.0' };
 
+interface CityRow {
+    id: string;
+    name: string;
+    province: string;
+    country: string | null;
+    display_name?: string | null;
+    osm_id: string | number;
+    osm_type: string;
+    type?: string;
+    class?: string;
+    importance?: string | number | null;
+    boundary?: City['boundary'] | null;
+    raw_boundary?: City['rawBoundary'] | null;
+    lat: string | number;
+    lng: string | number;
+    cb_lat?: string | number | null;
+    cb_lng?: string | number | null;
+    localized_names?: LocalizedChain | string | null;
+    last_updated?: Date | string;
+    needs_refresh?: boolean;
+}
+
 /**
  * Get display type for a location
  */
@@ -56,28 +78,28 @@ function getDisplayType(type: string, addresstype?: string, address?: Record<str
 /**
  * Parse localized_names which may be stored as a JSON string or object
  */
-export function parseLocalizedNames(raw: any): any {
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+export function parseLocalizedNames<T = unknown>(raw: string | T | null | undefined): T | null {
+    return typeof raw === 'string' ? JSON.parse(raw) as T : raw ?? null;
 }
 
 /**
  * Map a database row to a City object
  */
-function rowToCity(row: any): City {
+function rowToCity(row: CityRow): City {
     return {
         id: row.id,
         name: row.name,
         province: row.province,
         country: row.country,
-        displayName: row.display_name,
-        center: { lat: parseFloat(row.lat), lng: parseFloat(row.lng) },
-        osmId: parseInt(row.osm_id),
+        displayName: row.display_name ?? undefined,
+        center: { lat: parseFloat(String(row.lat)), lng: parseFloat(String(row.lng)) },
+        osmId: parseInt(String(row.osm_id), 10),
         osmType: row.osm_type,
         type: row.type,
         class: row.class,
-        importance: row.importance,
-        ...(row.boundary !== undefined ? { boundary: row.boundary } : {}),
-        ...(row.raw_boundary !== undefined ? { rawBoundary: row.raw_boundary } : {}),
+        importance: row.importance === null || row.importance === undefined ? undefined : Number(row.importance),
+        ...(row.boundary ? { boundary: row.boundary } : {}),
+        ...(row.raw_boundary ? { rawBoundary: row.raw_boundary } : {}),
         ...(row.last_updated !== undefined ? { lastUpdated: row.last_updated } : {}),
         ...(row.needs_refresh !== undefined ? { needsRefresh: row.needs_refresh } : {}),
     };
@@ -86,8 +108,8 @@ function rowToCity(row: any): City {
 /**
  * Query a single location with full details
  */
-async function queryOneLocation(whereClause: string, params: any[]): Promise<City | null> {
-    const result = await pool.query(`
+async function queryOneLocation(whereClause: string, params: unknown[]): Promise<City | null> {
+    const result = await pool.query<CityRow>(`
         SELECT
             id, name, province, country,
             display_name, osm_id, osm_type, type, class, importance,
@@ -110,7 +132,7 @@ export const CityService = {
      * Search cities in local DB with fuzzy matching
      */
     searchLocal: async (query: string, limit: number = 20): Promise<City[]> => {
-        const result = await pool.query(`
+        const result = await pool.query<CityRow>(`
             SELECT
                 id, name, province, country, display_name,
                 osm_id, osm_type, type, class, importance,
@@ -145,8 +167,8 @@ export const CityService = {
             LIMIT $3
         `, [`%${query}%`, query, limit]);
 
-        return result.rows.map((row: any) => {
-            const ln = parseLocalizedNames(row.localized_names);
+        return result.rows.map((row) => {
+            const ln = parseLocalizedNames<LocalizedChain>(row.localized_names);
             return {
                 ...rowToCity(row),
                 ...(ln?.city ? { localizedChain: ln } : {}),
@@ -158,7 +180,7 @@ export const CityService = {
      * Get priority locations for a query
      */
     getPriorityLocations: async (query: string): Promise<City[]> => {
-        const result = await pool.query(`
+        const result = await pool.query<CityRow>(`
             SELECT
                 cb.id,
                 pl.name,
@@ -182,12 +204,12 @@ export const CityService = {
             ORDER BY pl.rank ASC
         `, [query]);
 
-        return result.rows.map((row: any) => {
-            const ln = parseLocalizedNames(row.localized_names);
+        return result.rows.map((row) => {
+            const ln = parseLocalizedNames<LocalizedChain>(row.localized_names);
             // Use locations center if available, otherwise fall back to priority_locations coords
-            const center = row.cb_lat != null
-                ? { lat: parseFloat(row.cb_lat), lng: parseFloat(row.cb_lng) }
-                : { lat: parseFloat(row.lat), lng: parseFloat(row.lng) };
+            const center = row.cb_lat !== null && row.cb_lat !== undefined && row.cb_lng !== null && row.cb_lng !== undefined
+                ? { lat: parseFloat(String(row.cb_lat)), lng: parseFloat(String(row.cb_lng)) }
+                : { lat: parseFloat(String(row.lat)), lng: parseFloat(String(row.lng)) };
             return {
                 ...rowToCity(row),
                 center,
@@ -265,8 +287,9 @@ export const CityService = {
                             console.log(`[GEOCODING] Lookup result for ${item.name}: ${fullData ? 'found' : 'not found'}${fullData?.geojson ? ' (with geojson)' : ''}`);
                             if (fullData) await CityService.saveFromNominatim(fullData);
                         }
-                    } catch (err: any) {
-                        console.error(`[GEOCODING] Background save failed for ${item.name} (${item.osm_type}/${item.osm_id}):`, err.message);
+                    } catch (err: unknown) {
+                        const message = err instanceof Error ? err.message : String(err);
+                        console.error(`[GEOCODING] Background save failed for ${item.name} (${item.osm_type}/${item.osm_id}):`, message);
                     }
                 }
             })();
@@ -304,19 +327,24 @@ export const CityService = {
     /**
      * Check which OSM IDs already exist in local DB (for cross-referencing Nominatim results)
      */
-    getExistingOsmIds: async (osmPairs: Array<{ osmId: number; osmType: string }>): Promise<Map<string, { id: string; localizedNames: any }>> => {
+    getExistingOsmIds: async (osmPairs: Array<{ osmId: number; osmType: string }>): Promise<Map<string, { id: string; localizedNames: LocalizedChain | null }>> => {
         if (osmPairs.length === 0) return new Map();
 
         const conditions = osmPairs.map((_, i) => `(osm_id = $${i * 2 + 1} AND osm_type = $${i * 2 + 2})`).join(' OR ');
         const params = osmPairs.flatMap(p => [String(p.osmId), p.osmType]);
 
-        const result = await pool.query(`
+        const result = await pool.query<{
+            osm_id: string | number;
+            osm_type: string;
+            id: string;
+            localized_names: LocalizedChain | string | null;
+        }>(`
             SELECT osm_id, osm_type, id, localized_names FROM locations WHERE ${conditions}
         `, params);
 
-        const map = new Map<string, { id: string; localizedNames: any }>();
+        const map = new Map<string, { id: string; localizedNames: LocalizedChain | null }>();
         for (const row of result.rows) {
-            map.set(`${String(row.osm_id)}:${row.osm_type}`, { id: row.id, localizedNames: parseLocalizedNames(row.localized_names) });
+            map.set(`${String(row.osm_id)}:${row.osm_type}`, { id: row.id, localizedNames: parseLocalizedNames<LocalizedChain>(row.localized_names) });
         }
         return map;
     },

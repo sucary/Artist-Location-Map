@@ -5,7 +5,7 @@ import { TextSearch, ReverseSearch, VALID_LANGS, type LocationLanguage } from '.
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CoordinatesSchema } from '../schemas/artistValidation';
 import { requireAuth, requireAdmin } from '../middleware/authMiddleware';
-import { LocalizedChain, LocalizedNames } from '../types/city';
+import { LocalizedChain } from '../types/city';
 
 const router = Router();
 

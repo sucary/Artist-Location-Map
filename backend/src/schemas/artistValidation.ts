@@ -1,5 +1,23 @@
 import { z } from 'zod';
 
+const OPTIONAL_URL = z.string()
+    .trim()
+    .url()
+    .refine((value) => value.startsWith('https://') || value.startsWith('http://'), {
+        message: 'URL must use http or https',
+    });
+
+const optionalUrlField = OPTIONAL_URL.optional().or(z.literal(''));
+
+const hostMatches = (value: string, hosts: string[]) => {
+    try {
+        const hostname = new URL(value).hostname.replace(/^www\./, '').toLowerCase();
+        return hosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+    } catch {
+        return false;
+    }
+};
+
 export const CoordinatesSchema = z.object({
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
@@ -17,11 +35,19 @@ export const LocationSchema = z.object({
 });
 
 export const SocialLinksSchema = z.object({
-    instagram: z.string().optional().or(z.literal('')),
-    twitter: z.string().optional().or(z.literal('')),
-    appleMusic: z.string().optional().or(z.literal('')),
-    website: z.string().optional().or(z.literal('')),
-    youtube: z.string().optional().or(z.literal('')),
+    instagram: optionalUrlField.refine((value) => !value || hostMatches(value, ['instagram.com']), {
+        message: 'Instagram URL must be an instagram.com URL',
+    }),
+    twitter: optionalUrlField.refine((value) => !value || hostMatches(value, ['twitter.com', 'x.com']), {
+        message: 'Twitter/X URL must be a twitter.com or x.com URL',
+    }),
+    appleMusic: optionalUrlField.refine((value) => !value || hostMatches(value, ['music.apple.com', 'itunes.apple.com']), {
+        message: 'Apple Music URL must be an Apple Music URL',
+    }),
+    website: optionalUrlField,
+    youtube: optionalUrlField.refine((value) => !value || hostMatches(value, ['youtube.com', 'youtu.be']), {
+        message: 'YouTube URL must be a youtube.com or youtu.be URL',
+    }),
 });
 
 export const CropAreaSchema = z.object({
@@ -35,7 +61,7 @@ export const ArtistInputSchema = z.object({
     musicbrainzMbid: z.string().uuid().optional().nullable().transform(val => val ?? undefined),
     name: z.string().min(1, "Name is required"),
     romanizedName: z.string().optional().nullable().transform(val => val?.trim() || undefined),
-    sourceImage: z.string().optional().nullable().transform(val => val ?? undefined),
+    sourceImage: OPTIONAL_URL.optional().nullable().transform(val => val ?? undefined),
     avatarCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),
     profileCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),
     originalLocation: LocationSchema,

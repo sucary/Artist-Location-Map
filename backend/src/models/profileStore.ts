@@ -134,9 +134,10 @@ export const ProfileStore = {
     },
 
     checkUsernameAvailable: async (username: string): Promise<boolean> => {
+        const normalizedUsername = username.trim().toLowerCase();
         const result = await pool.query(
-            `SELECT 1 FROM profiles WHERE username = $1`,
-            [username]
+            `SELECT 1 FROM profiles WHERE lower(username) = $1`,
+            [normalizedUsername]
         );
         return result.rows.length === 0;
     },

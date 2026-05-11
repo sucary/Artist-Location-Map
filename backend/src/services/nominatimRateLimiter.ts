@@ -4,14 +4,14 @@
  * This ensures we don't exceed their rate limit even with multiple concurrent users
  */
 
-interface QueuedRequest {
-    execute: () => Promise<any>;
-    resolve: (value: any) => void;
-    reject: (error: any) => void;
+interface QueuedRequest<T> {
+    execute: () => Promise<T>;
+    resolve: (value: T) => void;
+    reject: (error: unknown) => void;
 }
 
 class GeocodingRateLimiter {
-    private queue: QueuedRequest[] = [];
+    private queue: QueuedRequest<unknown>[] = [];
     private processing = false;
     private lastRequestTime = 0;
     private readonly MIN_INTERVAL_MS = 500; // 500ms between requests (2 req/sec)
@@ -23,8 +23,8 @@ class GeocodingRateLimiter {
     async enqueue<T>(requestFn: () => Promise<T>): Promise<T> {
         return new Promise((resolve, reject) => {
             this.queue.push({
-                execute: requestFn,
-                resolve,
+                execute: requestFn as () => Promise<unknown>,
+                resolve: resolve as (value: unknown) => void,
                 reject
             });
 
