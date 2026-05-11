@@ -177,7 +177,7 @@ export const LocationSearch = ({
                                         {isLoading && <Spinner size="sm" className="text-text-muted" />}
                                         {queueSize > 0 && (
                                             <div className={`${isLoading ? 'absolute inset-0' : ''} flex items-center justify-center`}>
-                                                <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary'}`}>{queueSize}</span>
+                                                <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary-contrast'}`}>{queueSize}</span>
                                             </div>
                                         )}
                                     </div>
@@ -203,7 +203,7 @@ export const LocationSearch = ({
                         aria-label={t('artistForm.locationSearch.manualSelect')}
                         onClick={onManualPin}
                         type="button"
-                        className="mb-1 p-2 rounded text-text-muted hover:bg-primary hover:text-white transition-colors"
+                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded text-text-muted hover:bg-primary hover:text-white transition-colors"
                         title={t('artistForm.locationSearch.manualSelect')}
                     >
                         <MapPinIcon className="w-5 h-5" />
@@ -217,7 +217,7 @@ export const LocationSearch = ({
                             <button
                                 type="button"
                                 onClick={handleRetry}
-                                className="ml-2 font-medium text-primary hover:underline"
+                                className="ml-2 font-medium text-primary-contrast hover:underline"
                             >
                                 {t('artistForm.locationSearch.retry')}
                             </button>

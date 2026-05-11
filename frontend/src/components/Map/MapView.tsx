@@ -105,7 +105,7 @@ export default function MapView({
         storeTileTheme(tileTheme);
     }, [tileTheme]);
 
-    const { data: artists } = useQuery({
+    const { data: artists, isError: artistsError } = useQuery({
         queryKey: ['artists', username, viewingFeatured],
         queryFn: () => {
             if (viewingFeatured) return getFeaturedArtists();
@@ -660,7 +660,9 @@ export default function MapView({
             />
 
             {selectionMode?.active && <SelectionPrompt onCancel={onLocationPick} />}
-            {mapError && <MapErrorOverlay message={mapError} />}
+            {(mapError || artistsError) && (
+                <MapErrorOverlay message={mapError || t('map.error.loadArtistsError')} />
+            )}
         </div>
     );
 }

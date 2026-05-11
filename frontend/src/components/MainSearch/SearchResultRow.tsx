@@ -8,21 +8,26 @@ import { useTranslation } from 'react-i18next';
 interface SearchResultRowProps {
     result: SearchResult;
     onSelect: () => void;
+    id?: string;
+    isActive?: boolean;
+    onActive?: () => void;
 }
 
 const getPlaceholderUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=e5e7eb&color=9ca3af`;
 
-function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect: () => void }) {
+function ArtistRow({ result, onSelect, id, isActive = false, onActive }: SearchResultRowProps & { result: ArtistSearchResult }) {
     const { locationLanguage } = useLocationLanguage();
     const artist = result.artist;
 
     return (
         <button
+            id={id}
             role="option"
-            aria-selected="false"
+            aria-selected={isActive}
             onClick={onSelect}
-            className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
+            onMouseEnter={onActive}
+            className={`flex w-full text-left items-center gap-3 px-4 py-3 transition-colors cursor-pointer ${isActive ? 'bg-surface-muted' : 'hover:bg-surface-muted'}`}
         >
             <img
                 src={getAvatarUrl(artist.sourceImage, artist.avatarCrop) || getPlaceholderUrl(artist.name)}
@@ -42,14 +47,16 @@ function ArtistRow({ result, onSelect }: { result: ArtistSearchResult; onSelect:
     );
 }
 
-function UserRow({ result, onSelect }: { result: UserSearchResult; onSelect: () => void }) {
+function UserRow({ result, onSelect, id, isActive = false, onActive }: SearchResultRowProps & { result: UserSearchResult }) {
     const { t } = useTranslation();
     return (
         <button
+            id={id}
             role="option"
-            aria-selected="false"
+            aria-selected={isActive}
             onClick={onSelect}
-            className="flex w-full text-left items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors cursor-pointer"
+            onMouseEnter={onActive}
+            className={`flex w-full text-left items-center gap-3 px-4 py-3 transition-colors cursor-pointer ${isActive ? 'bg-surface-muted' : 'hover:bg-surface-muted'}`}
         >
             <div className="w-8 h-10 flex items-center justify-center">
                 <UserIcon className="w-5 h-5 text-text-secondary" />
@@ -62,11 +69,11 @@ function UserRow({ result, onSelect }: { result: UserSearchResult; onSelect: () 
     );
 }
 
-export function SearchResultRow({ result, onSelect }: SearchResultRowProps) {
+export function SearchResultRow({ result, onSelect, id, isActive, onActive }: SearchResultRowProps) {
     switch (result.type) {
         case 'artist':
-            return <ArtistRow result={result} onSelect={onSelect} />;
+            return <ArtistRow result={result} onSelect={onSelect} id={id} isActive={isActive} onActive={onActive} />;
         case 'user':
-            return <UserRow result={result} onSelect={onSelect} />;
+            return <UserRow result={result} onSelect={onSelect} id={id} isActive={isActive} onActive={onActive} />;
     }
 }

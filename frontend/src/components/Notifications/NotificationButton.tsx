@@ -111,7 +111,7 @@ function NotificationItem({
                                     type="button"
                                     aria-expanded={expanded}
                                     aria-controls={contentId}
-                                    className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary"
+                                    className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary-contrast"
                                     onClick={() => setExpanded((current) => !current)}
                                 >
                                     {expanded ? t('notifications.less') : t('notifications.more')}
@@ -121,7 +121,7 @@ function NotificationItem({
                             {notification.linkLabel && notification.linkUrl && (
                                 <button
                                     type="button"
-                                    className="text-xs font-medium text-primary hover:text-primary-hover"
+                                    className="text-xs font-medium text-primary-contrast hover:text-primary-contrast-hover"
                                     onClick={() => onNavigate(notification.linkUrl!)}
                                 >
                                     {notification.linkLabel}
@@ -340,7 +340,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                             {canClear && (
                                 <button
                                     type="button"
-                                    className="text-xs font-medium text-text-secondary hover:text-primary disabled:opacity-50"
+                                    className="text-xs font-medium text-text-secondary hover:text-primary-contrast disabled:opacity-50"
                                     disabled={clearMutation.isPending}
                                     onClick={() => clearMutation.mutate()}
                                 >

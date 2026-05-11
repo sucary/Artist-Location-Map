@@ -250,7 +250,8 @@ export const useArtistForm = ({
             artist.areaName || artist.beginAreaName,
             artist.country
         );
-        const debutYear = parseYear(artist.lifeSpanBegin);
+        const canUseMusicBrainzBeginAsDebut = artist.type?.toLowerCase() !== 'person';
+        const debutYear = canUseMusicBrainzBeginAsDebut ? parseYear(artist.lifeSpanBegin) : undefined;
         const inactiveYear = artist.ended ? parseYear(artist.lifeSpanEnd) : undefined;
         const socialLinks = getMusicBrainzSocialLinks(artist);
 

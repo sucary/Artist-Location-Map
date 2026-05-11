@@ -326,9 +326,8 @@ function App() {
         setShowFeaturedList(false);
     }, [isMobileLayout]);
 
-    // Lock map gestures under panels, except during location-pick mode.
-    const mapInteractionsDisabled = (showForm && !selectionMode?.active)
-        || (isMobileLayout && showArtistList)
+    // Lock map gestures under modal-like mobile panels and open menus.
+    const mapInteractionsDisabled = (isMobileLayout && showArtistList)
         || (isMobileLayout && showFeaturedList)
         || mainSearchResultsOpen
         || notificationMenuOpen
@@ -348,8 +347,8 @@ function App() {
                             i18nKey="app.dialogs.copyCollection.message"
                             values={{ count: artistCount, username }}
                             components={{
-                                count: <strong className="font-semibold text-primary" />,
-                                username: <strong className="font-semibold text-primary" />,
+                                count: <strong className="font-semibold text-primary-contrast" />,
+                                username: <strong className="font-semibold text-primary-contrast" />,
                             }}
                         />
                     </p>
@@ -487,7 +486,7 @@ function App() {
             {!showForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
                 <AddArtistButton onClick={handleAddArtistClick} />
             )}
-            {!showForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
+            {(!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
                 <ViewArtistListButton onClick={() => {
                     if (viewingFeatured) {
                         setShowForm(false);

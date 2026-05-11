@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getArtists } from '../../services/api';
 import { Banner } from './Banner';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface AnonymousUserBannerProps {
     onSignInClick: () => void;
@@ -18,7 +18,16 @@ export function AnonymousUserBanner({ onSignInClick }: AnonymousUserBannerProps)
 
     return (
         <Banner
-            content={<><span className="font-semibold text-primary">{artistCount}</span> {t('banner.featuredArtists')}</>}
+            label={t('banner.featuredArtistsLabel')}
+            content={
+                <Trans
+                    i18nKey="banner.featuredArtists"
+                    values={{ count: artistCount }}
+                    components={{
+                        count: <span className="font-semibold text-primary-contrast" />,
+                    }}
+                />
+            }
             action={{ type: 'text', label: t('auth.buttons.signIn'), onClick: onSignInClick }}
         />
     );

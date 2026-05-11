@@ -131,7 +131,7 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                             <button
                                 type="submit"
                                 disabled={loading || !password || !confirmPassword}
-                                className="w-full py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+                                className="w-full py-2.5 bg-primary-contrast text-white rounded-lg hover:bg-primary-contrast-hover transition-colors disabled:opacity-50"
                             >
                                 {loading ? t('auth.resetPassword.updating') : t('auth.buttons.resetPassword')}
                             </button>

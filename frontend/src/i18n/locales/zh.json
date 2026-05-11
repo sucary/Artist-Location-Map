@@ -83,9 +83,9 @@
       "incorrectCredentials": "邮箱或密码错误",
       "unexpectedError": "发生意外错误，请重试",
       "unableToSignIn": "无法使用{{provider}}登录。请尝试其他登录方法。",
-      "userNameMin": "用户名必须至少1个字符",
-      "userNameMax": "用户名必须少于16个字符",
-      "userNamePattern": "用户名只能包含字母、数字和下划线",
+      "userNameMin": "用户名必须至少3个字符",
+      "userNameMax": "用户名不能超过32个字符",
+      "userNamePattern": "用户名只能包含小写字母、数字和下划线",
       "userNameTaken": "该用户名已被注册，请输入新的用户名",
       "unableToSaveUsername": "无法保存用户名。请重试。",
       "resendEmailFailed": "无法重新发送邮件"
@@ -232,7 +232,8 @@
     }
   },
   "banner": {
-    "featuredArtists": "全站艺人",
+    "featuredArtists": "Achizu地图共收集了<count>{{count}}</count>位艺人",
+    "featuredArtistsLabel": "全站艺人",
     "viewingUser": "正在查看<username>{{username}}</username>的地图",
     "backToMyMap": "返回我的地图",
     "viewCommunityArtists": "查看全站艺人"
@@ -401,7 +402,8 @@
     },
     "error": {
       "renderMapError": "此浏览器不支持地图渲染。请使用其他浏览器。",
-      "loadMapError": "地图加载失败。请刷新后重试。"
+      "loadMapError": "地图加载失败。请刷新后重试。",
+      "loadArtistsError": "艺术家加载失败。请刷新后重试。"
     }
   },
   "artistList": {

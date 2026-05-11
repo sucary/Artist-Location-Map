@@ -24,7 +24,7 @@ const alertAccentClasses = {
     error: 'text-[rgb(220,38,38)]',
     success: 'text-success',
     warning: 'text-warning',
-    info: 'text-primary',
+    info: 'text-primary-contrast',
 } as const;
 
 const alertIcons = {

@@ -1,10 +1,13 @@
-import { useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useMainSearch } from './useMainSearch';
 import { SearchResultRow } from './SearchResultRow';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
 import { IconButton, Spinner } from '../ui';
 import type { Artist } from '../../types/artist';
+import type { SearchResult } from '../../types/search';
 import { useTranslation } from 'react-i18next';
+
+// Global artist and user search box with keyboard navigation
 
 interface MainSearchProps {
     mapUsername?: string;
@@ -16,6 +19,7 @@ interface MainSearchProps {
 export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onResultsOpenChange }: MainSearchProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [activeIndex, setActiveIndex] = useState(-1);
     const { t } = useTranslation();
 
     const {
@@ -33,7 +37,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
         onSelectArtist,
     });
 
-    // Close on click outside
+    // Close on outside click
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -47,7 +51,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
 
     // Handle keyboard shortcuts
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
+        const handleKeyDown = (e: globalThis.KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
                 inputRef.current?.focus();
@@ -64,13 +68,55 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
 
     const hasResults = results && results.totalCount > 0;
     const showDropdown = isOpen && query.length >= 2;
+    // Keep keyboard indexes aligned with the rendered option order
+    const flatResults: SearchResult[] = useMemo(() => (
+        results ? [...results.artists, ...results.users] : []
+    ), [results]);
+
+    const hasActiveResult = activeIndex >= 0 && activeIndex < flatResults.length;
+
+    const selectResult = (result: SearchResult) => {
+        if (result.type === 'artist') {
+            handleSelectArtist(result);
+            return;
+        }
+
+        handleSelectUser(result);
+    };
+
+    const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Escape' && showDropdown) {
+            event.preventDefault();
+            setIsOpen(false);
+            return;
+        }
+
+        if (!showDropdown || flatResults.length === 0) return;
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setActiveIndex((current) => (current + 1) % flatResults.length);
+            return;
+        }
+
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setActiveIndex((current) => (current <= 0 ? flatResults.length - 1 : current - 1));
+            return;
+        }
+
+        if (event.key === 'Enter' && hasActiveResult) {
+            event.preventDefault();
+            selectResult(flatResults[activeIndex]);
+        }
+    };
 
     useEffect(() => {
         onResultsOpenChange?.(showDropdown);
     }, [onResultsOpenChange, showDropdown]);
 
     useEffect(() => {
-        // Parent-owned close signal keeps mobile surfaces mutually exclusive.
+        // Keep mobile surfaces mutually exclusive from the parent signal
         if (closeSignal > 0) {
             setIsOpen(false);
         }
@@ -82,7 +128,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
             <div
                 className="relative"
                 onPointerDown={(event) => {
-                    // Expand the focus target without stealing clear/search button clicks.
+                    // Expand the focus target without stealing clear/search button clicks
                     if ((event.target as HTMLElement).closest('button')) return;
                     inputRef.current?.focus();
                 }}
@@ -96,6 +142,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     aria-autocomplete="list"
                     aria-haspopup="listbox"
                     aria-busy={isLoading}
+                    aria-activedescendant={hasActiveResult ? `main-search-option-${activeIndex}` : undefined}
                     type="text"
                     name="main-search"
                     autoComplete="off"
@@ -103,9 +150,13 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     spellCheck={false}
                     placeholder={t('mainSearch.placeholder')}
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                        setQuery(e.target.value);
+                        setActiveIndex(-1);
+                    }}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
-                    className="h-12 w-full min-w-0 pl-3.5 pr-13 text-base bg-surface border border-border rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:pl-5"
+                    onKeyDown={handleInputKeyDown}
+                    className="h-12 w-full min-w-0 pl-3.5 pr-13 text-base bg-surface border border-border rounded-lg shadow-md focus:outline-none focus:border-primary focus:ring-[1.5px] focus:ring-inset focus:ring-primary sm:pl-5"
                 />
                 {query && (
                     <IconButton
@@ -121,7 +172,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                     aria-label={t('mainSearch.search')}
                     type="button"
                     onClick={() => inputRef.current?.focus()}
-                    className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-md text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                    className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-lg text-text-secondary hover:bg-primary hover:text-white transition-colors"
                 >
                     <SearchIcon className="w-5 h-5" />
                 </button>
@@ -152,10 +203,13 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                                     <div role="group" aria-label={t('mainSearch.artists')} className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
                                         {t('mainSearch.artists')}
                                     </div>
-                                    {results.artists.map((artistResult) => (
+                                    {results.artists.map((artistResult, index) => (
                                         <SearchResultRow
                                             key={artistResult.artist.id}
                                             result={artistResult}
+                                            id={`main-search-option-${index}`}
+                                            isActive={activeIndex === index}
+                                            onActive={() => setActiveIndex(index)}
                                             onSelect={() => handleSelectArtist(artistResult)}
                                         />
                                     ))}
@@ -168,13 +222,19 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
                                     <div role="group" aria-label={t('mainSearch.users')} className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-muted">
                                         {t('mainSearch.users')}
                                     </div>
-                                    {results.users.map((user) => (
-                                        <SearchResultRow
-                                            key={user.id}
-                                            result={user}
-                                            onSelect={() => handleSelectUser(user)}
-                                        />
-                                    ))}
+                                    {results.users.map((user, index) => {
+                                        const resultIndex = results.artists.length + index;
+                                        return (
+                                            <SearchResultRow
+                                                key={user.id}
+                                                result={user}
+                                                id={`main-search-option-${resultIndex}`}
+                                                isActive={activeIndex === resultIndex}
+                                                onActive={() => setActiveIndex(resultIndex)}
+                                                onSelect={() => handleSelectUser(user)}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             )}
                         </>

@@ -289,7 +289,7 @@ const ArtistList = ({
                                             setIsSortOpen(false);
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
-                                            option.value === sortKey ? 'bg-primary/5 text-primary font-medium' : 'text-text'
+                                            option.value === sortKey ? 'bg-primary/5 text-primary-contrast font-medium' : 'text-text'
                                         }`}
                                     >
                                         {t(option.labelKey)}

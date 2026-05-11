@@ -226,7 +226,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
                         <button
                             type="button"
                             onClick={() => onNext(step.nextStepIndex!)}
-                            className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover"
+                            className="rounded-md bg-primary-contrast px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-contrast-hover"
                         >
                             {t('tutorial.next')}
                         </button>

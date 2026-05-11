@@ -4,7 +4,7 @@ import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
 
 const closeButtonVariants = cva(
-    `rounded text-text-muted hover:text-primary
+    `rounded text-text-muted hover:text-primary-contrast
     hover:bg-surface-muted transition-colors
     focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary`,
     {

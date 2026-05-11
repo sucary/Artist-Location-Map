@@ -326,7 +326,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 <button
                                     type="button"
                                     onClick={() => { setIsForgotPassword(false); clearMessages(); }}
-                                    className="text-primary hover:underline font-medium"
+                                    className="text-primary-contrast hover:underline font-medium"
                                 >
                                     {t('auth.buttons.backToSignIn')}
                                 </button>
@@ -420,7 +420,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         )}
 
                         {!isSignUp && (
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <label className="flex items-center cursor-pointer group">
                                     <input
                                         name="remember-me"
@@ -438,7 +438,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 <button
                                     type="button"
                                     onClick={() => { setIsForgotPassword(true); setForgotPasswordEmail(email); clearMessages(); }}
-                                    className="text-sm text-text-secondary hover:underline"
+                                    className="self-start text-sm text-text-secondary hover:underline sm:self-auto sm:text-right"
                                 >
                                     {t('auth.signIn.forgotPassword')}
                                 </button>
@@ -455,7 +455,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {isSignUp ? t('auth.signUp.haveAccount') : t('auth.signIn.dontHaveAccount')}{' '}
                         <button
                             onClick={() => { setIsSignUp(!isSignUp); clearMessages(); }}
-                            className="text-primary hover:underline font-medium"
+                            className="text-primary-contrast hover:underline font-medium"
                         >
                             {isSignUp ? t('auth.buttons.signIn') : t('auth.buttons.signUp')}
                         </button>

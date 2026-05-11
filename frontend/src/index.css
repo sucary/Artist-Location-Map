@@ -6,6 +6,8 @@
 
   /* Brand colors */
   --color-primary: #FA233B;
+  --color-primary-contrast: #E72035;
+  --color-primary-contrast-hover: #C91C2E;
   --color-primary-hover: #E11D38;
   --color-primary-ring: #FA233B;
   --color-primary-light:#FF4E6B;

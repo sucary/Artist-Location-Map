@@ -263,6 +263,7 @@ export const useArtistMarkers = ({
     // Marker callbacks read the latest artist records
     useEffect(() => {
         artistsByIdRef.current = new Map(displayArtists.map((artist) => [artist.id, artist]));
+        preloadArtistMarkerImages(displayArtists);
     }, [displayArtists]);
 
     const removeMarkerEntry = useCallback((entry: MarkerEntry, destination?: [number, number], onDone?: () => void) => {

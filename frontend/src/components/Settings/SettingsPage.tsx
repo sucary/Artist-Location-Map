@@ -9,6 +9,12 @@ import type { LocationLanguage } from '../../types/artist';
 import { useTranslation } from 'react-i18next';
 
 type UiLanguage = 'en' | 'zh' | 'zh-Hant' | 'ja';
+const normalizeUsername = (value: string) => value.trim().toLowerCase();
+const isValidUsername = (value: string) => (
+    value.length >= 3 &&
+    value.length <= 32 &&
+    /^[a-z0-9_]+$/.test(value)
+);
 
 const getUiLanguage = (language: string): UiLanguage => {
     if (language === 'zh-Hant' || language.startsWith('zh-Hant-') || ['zh-TW', 'zh-HK', 'zh-MO'].includes(language)) {
@@ -78,7 +84,20 @@ export function SettingsPage() {
 
     const handleUsernameSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (username === profile.username) return;
+        const normalizedUsername = normalizeUsername(username);
+        if (normalizedUsername === profile.username) return;
+        if (normalizedUsername.length < 3) {
+            setUsernameError(t('auth.errors.userNameMin'));
+            return;
+        }
+        if (normalizedUsername.length > 32) {
+            setUsernameError(t('auth.errors.userNameMax'));
+            return;
+        }
+        if (!isValidUsername(normalizedUsername)) {
+            setUsernameError(t('auth.errors.userNamePattern'));
+            return;
+        }
 
         setUsernameSaving(true);
         setUsernameError(null);
@@ -91,7 +110,7 @@ export function SettingsPage() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ username }),
+                body: JSON.stringify({ username: normalizedUsername }),
             });
 
             if (!res.ok) {
@@ -239,7 +258,7 @@ export function SettingsPage() {
                                     onClick={() => void i18n.changeLanguage(value)}
                                     className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
                                         uiLanguage === value
-                                            ? 'bg-primary text-white border-primary'
+                                            ? 'bg-primary-contrast text-white border-primary-contrast'
                                             : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
                                     }`}
                                 >
@@ -263,7 +282,7 @@ export function SettingsPage() {
                                     onClick={() => setLocationLanguage(value)}
                                     className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
                                         locationLanguage === value
-                                            ? 'bg-primary text-white border-primary'
+                                            ? 'bg-primary-contrast text-white border-primary-contrast'
                                             : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
                                     }`}
                                 >
@@ -299,9 +318,10 @@ export function SettingsPage() {
                             type="text"
                             value={username}
                             onChange={(e) => {
-                                setUsername(e.target.value);
+                                setUsername(normalizeUsername(e.target.value));
                                 setUsernameError(null);
                             }}
+                            maxLength={32}
                             className={inputClass}
                         />
                         {usernameError && (
@@ -315,8 +335,8 @@ export function SettingsPage() {
                     <div className="flex justify-end">
                         <button
                             type="submit"
-                            disabled={usernameSaving || username === profile.username || username.length < 3}
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={usernameSaving || normalizeUsername(username) === profile.username || !isValidUsername(normalizeUsername(username))}
+                            className="px-4 py-2 text-sm font-medium text-white bg-primary-contrast rounded-md hover:bg-primary-contrast-hover disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {usernameSaving ? t('common.saving') : t('settings.username.saveUsername')}
                         </button>
@@ -389,7 +409,7 @@ export function SettingsPage() {
                             <button
                                 type="submit"
                                 disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-                                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 text-sm font-medium text-white bg-primary-contrast rounded-md hover:bg-primary-contrast-hover disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {passwordSaving ? t('auth.resetPassword.updating') : t('settings.password.changePassword')}
                             </button>

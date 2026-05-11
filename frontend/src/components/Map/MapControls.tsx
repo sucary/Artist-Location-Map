@@ -157,14 +157,14 @@ export function MapControls({
                             <button
                                 aria-pressed={view === 'original'}
                                 onClick={() => setView('original')}
-                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'original' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
+                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'original' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted'}`}
                             >
                                 {t('map.buttons.mapControls.origin')}
                             </button>
                             <button
                                 aria-pressed={view === 'active'}
                                 onClick={() => setView('active')}
-                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'active' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
+                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'active' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted'}`}
                             >
                                 {t('map.buttons.mapControls.active')}
                             </button>
@@ -175,7 +175,7 @@ export function MapControls({
                         <button
                             aria-pressed={tileTheme === 'light'}
                             onClick={() => setTileTheme('light')}
-                            className={`w-16 py-2 text-sm font-medium transition-colors ${tileTheme === 'light' ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted'}`}
+                            className={`w-16 py-2 text-sm font-medium transition-colors ${tileTheme === 'light' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted'}`}
                         >
                             {t('map.buttons.mapControls.light')}
                         </button>
@@ -187,7 +187,7 @@ export function MapControls({
                                 if (canUseDarkTiles) setTileTheme('dark');
                             }}
                             className={`w-16 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                                tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary text-white' : 'text-text hover:bg-surface-muted disabled:hover:bg-transparent'
+                                tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted disabled:hover:bg-transparent'
                             }`}
                         >
                             {t('map.buttons.mapControls.dark')}

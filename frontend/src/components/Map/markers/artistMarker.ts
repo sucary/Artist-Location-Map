@@ -43,6 +43,7 @@ export const createArtistMarkerElement = (artist: Artist) => {
     image.className = 'w-full h-full object-cover object-center';
     image.alt = artist.name;
     image.decoding = 'async';
+    image.loading = 'eager';
 
     frame.appendChild(image);
     element.appendChild(frame);

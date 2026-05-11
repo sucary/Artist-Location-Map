@@ -20,7 +20,7 @@ interface ConfirmDialogProps {
 }
 
 const variantLabelClasses: Record<ConfirmDialogVariant, string> = {
-    default: 'text-primary',
+    default: 'text-primary-contrast',
     danger: 'text-[rgb(220,38,38)]',
     warning: 'text-warning',
     success: 'text-success',
@@ -28,7 +28,7 @@ const variantLabelClasses: Record<ConfirmDialogVariant, string> = {
 };
 
 const confirmButtonClasses: Record<ConfirmDialogVariant, string> = {
-    default: 'bg-primary hover:bg-primary-hover',
+    default: 'bg-primary-contrast hover:bg-primary-contrast-hover',
     danger: '!bg-[rgb(220,38,38)] hover:!bg-[rgb(185,28,28)]',
     warning: 'bg-warning hover:bg-warning/90',
     success: 'bg-success hover:bg-success/90',

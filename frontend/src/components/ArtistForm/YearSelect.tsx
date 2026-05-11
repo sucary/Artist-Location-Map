@@ -216,7 +216,7 @@ const YearSelect = ({
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => handleSelect(year)}
                                 className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
-                                    isSelected ? 'bg-primary/5 text-primary font-medium' :
+                                    isSelected ? 'bg-primary/5 text-primary-contrast font-medium' :
                                     isFocused ? 'bg-surface-muted' : 'text-text'
                                 }`}
                             >

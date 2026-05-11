@@ -67,28 +67,29 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
     const availabilityCacheRef = useRef<Map<string, boolean>>(new Map());
     const availabilityRequestRef = useRef(0);
     const usernameRef = useRef(username);
+    const normalizeUsername = (value: string) => value.trim().toLowerCase();
 
     useEffect(() => {
         usernameRef.current = username;
     }, [username]);
 
-    // Validate on blur/submit; do not mutate user input while typing.
+    // Usernames are canonical lowercase profile slugs.
     const hasValidUsernameFormat = (value: string): boolean => (
-        value.length >= 1 &&
-        value.length <= 16 &&
-        /^[a-zA-Z0-9_]+$/.test(value)
+        value.length >= 3 &&
+        value.length <= 32 &&
+        /^[a-z0-9_]+$/.test(value)
     );
 
     const validateUsername = (value: string): boolean => {
-        if (value.length < 1) {
+        if (value.length < 3) {
             setError(t('auth.errors.userNameMin'));
             return false;
         }
-        if (value.length > 16) {
+        if (value.length > 32) {
             setError(t('auth.errors.userNameMax'));
             return false;
         }
-        if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+        if (!/^[a-z0-9_]+$/.test(value)) {
             setError(t('auth.errors.userNamePattern'));
             return false;
         }
@@ -101,7 +102,7 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
         // Prevent availability helper flicker on repeated blur.
         if (availableUsername === value) return;
 
-        const normalizedValue = value.toLowerCase();
+        const normalizedValue = normalizeUsername(value);
         const cachedAvailability = availabilityCacheRef.current.get(normalizedValue);
         if (cachedAvailability !== undefined) {
             if (!cachedAvailability) {
@@ -116,7 +117,7 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
         const requestId = ++availabilityRequestRef.current;
         setChecking(true);
         try {
-            const res = await fetch(`${API_URL}/auth/check-username?username=${encodeURIComponent(value)}`);
+            const res = await fetch(`${API_URL}/auth/check-username?username=${encodeURIComponent(normalizedValue)}`);
             const data = await res.json();
             if (requestId !== availabilityRequestRef.current || value !== usernameRef.current) return;
 
@@ -136,7 +137,8 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validateUsername(username) || checking) return;
+        const normalizedUsername = normalizeUsername(username);
+        if (!validateUsername(normalizedUsername) || checking) return;
 
         setLoading(true);
         try {
@@ -146,7 +148,7 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
                 },
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ username: normalizedUsername })
             });
 
             if (!res.ok) {
@@ -208,7 +210,7 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                             value={username}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                setUsername(value);
+                                setUsername(normalizeUsername(value));
                                 setError(null);
                                 if (availableUsername && availableUsername !== value) {
                                     setAvailableUsername(null);
@@ -234,7 +236,7 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
                                 }
                             }}
                             placeholder={t('auth.userNamePrompt.usernamePlaceholder')}
-                            maxLength={16}
+                            maxLength={32}
                         />
                         {error && <UsernamePromptError message={error} />}
                         {isAvailable && <UsernamePromptSuccess message={t('auth.userNamePrompt.usernameAvailable')} />}

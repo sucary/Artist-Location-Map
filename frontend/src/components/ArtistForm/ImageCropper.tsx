@@ -145,7 +145,7 @@ const ImageCropper = ({
                         onClick={() => switchMode('avatar')}
                         className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                             mode === 'avatar'
-                                ? 'text-primary border-b-2 border-primary -mb-px'
+                                ? 'text-primary-contrast border-b-2 border-primary -mb-px'
                                 : 'text-text-secondary hover:text-text'
                         }`}
                     >
@@ -157,7 +157,7 @@ const ImageCropper = ({
                         onClick={() => switchMode('profile')}
                         className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                             mode === 'profile'
-                                ? 'text-primary border-b-2 border-primary -mb-px'
+                                ? 'text-primary-contrast border-b-2 border-primary -mb-px'
                                 : 'text-text-secondary hover:text-text'
                         }`}
                     >
@@ -250,7 +250,7 @@ const ImageCropper = ({
                     <button
                         onClick={handleSave}
                         disabled={!hasChanges}
-                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-contrast border border-transparent rounded-md hover:bg-primary-contrast-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         type="button"
                     >
                         {t('artistForm.buttons.save')}

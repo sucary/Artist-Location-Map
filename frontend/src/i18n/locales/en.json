@@ -84,9 +84,9 @@
       "unexpectedError": "An unexpected error occurred, please try again",
       "unableToSignIn": "Unable to sign in with {{provider}}. Please try another method or contact support.",
       "resendEmailFailed": "Could not resend email, please try again.",
-      "userNameMin": "Username must be at least 1 character",
-      "userNameMax": "Username must not exceed 16 characters",
-      "userNamePattern": "Username can only contain letters, numbers, and underscores",
+      "userNameMin": "Username must be at least 3 characters",
+      "userNameMax": "Username must not exceed 32 characters",
+      "userNamePattern": "Username can only contain lowercase letters, numbers, and underscores",
       "userNameTaken": "This username is already registered, please enter a new username",
       "unableToSaveUsername": "Unable to save username. Please try again."
     }
@@ -232,7 +232,8 @@
     }
   },
   "banner": {
-    "featuredArtists": "Artists from the Community",
+    "featuredArtists": "The Achizu map has collected <count>{{count}}</count> artists",
+    "featuredArtistsLabel": "Featured artists",
     "viewingUser": "Viewing <username>{{username}}</username>'s map",
     "backToMyMap": "Back to my map",
     "viewCommunityArtists": "View artists from the community"
@@ -401,7 +402,8 @@
     },
     "error": {
       "renderMapError": "Map rendering is not supported in this browser. Please use a different browser.",
-      "loadMapError": "Failed to load map. Please refresh and try again."
+      "loadMapError": "Failed to load map. Please refresh and try again.",
+      "loadArtistsError": "Failed to load artists. Please refresh and try again."
     }
   },
   "artistList": {

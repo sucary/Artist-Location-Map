@@ -5,34 +5,46 @@ type BannerAction =
     | { type: 'icon'; icon: ReactNode; onClick: () => void; title: string };
 
 interface BannerProps {
+    label?: ReactNode;
     content: ReactNode;
     action: BannerAction;
 }
 
-export function Banner({ content, action }: BannerProps) {
+export function Banner({ label, content, action }: BannerProps) {
     return (
-        <div role="status" className="flex h-10 max-w-full items-center overflow-hidden bg-surface border-2 border-primary rounded-lg shadow-md font-sans">
-            <span className="min-w-0 flex-1 truncate whitespace-nowrap px-4 text-sm text-text">
-                {content}
-            </span>
-            <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
-            {action.type === 'text' ? (
-                <button
-                    onClick={action.onClick}
-                    className="h-full shrink-0 px-3 text-sm text-text hover:bg-surface-muted transition-colors rounded-r-lg font-medium"
-                >
-                    {action.label}
-                </button>
-            ) : (
-                <button
-                    aria-label={action.title}
-                    onClick={action.onClick}
-                    className="h-full shrink-0 px-3 text-text-secondary hover:bg-surface-muted hover:text-text transition-colors rounded-r-lg"
-                    title={action.title}
-                >
-                    {action.icon}
-                </button>
+        <div className={`relative max-w-full font-sans ${label ? 'pt-[22px]' : ''}`}>
+            {label && (
+                <div className="absolute left-1/2 top-0 z-20 max-w-[70%] -translate-x-1/2">
+                    <span className="block truncate rounded-t-lg border-2 border-b-0 border-primary-contrast bg-primary-contrast px-4 py-1 text-center text-sm font-medium leading-none text-white">
+                        {label}
+                    </span>
+                </div>
             )}
+            <div role="status" className="relative z-10 flex min-h-10 max-w-full items-stretch overflow-hidden bg-surface border-2 border-[var(--color-primary)] rounded-lg shadow-md">
+                <div className="min-w-0 flex-1 p-2">
+                    <span className="block truncate whitespace-nowrap text-sm text-text">
+                        {content}
+                    </span>
+                </div>
+                <div aria-hidden="true" className="h-6 w-px shrink-0 self-center bg-border" />
+                {action.type === 'text' ? (
+                    <button
+                        onClick={action.onClick}
+                        className="flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted"
+                    >
+                        {action.label}
+                    </button>
+                ) : (
+                    <button
+                        aria-label={action.title}
+                        onClick={action.onClick}
+                        className="flex w-10 shrink-0 items-center justify-center py-2 text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                        title={action.title}
+                    >
+                        {action.icon}
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

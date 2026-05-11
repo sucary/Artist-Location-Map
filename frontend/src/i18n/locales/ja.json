@@ -83,9 +83,9 @@
       "incorrectCredentials": "メールアドレスまたはパスワードが間違っています。",
       "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
       "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか、サポートにお問い合わせください。",
-      "userNameMin": "ユーザー名は1文字以上にしてください。",
-      "userNameMax": "ユーザー名は16文字以内にしてください。",
-      "userNamePattern": "ユーザー名には英字、数字、アンダースコアのみ使用できます。",
+      "userNameMin": "ユーザー名は3文字以上にしてください。",
+      "userNameMax": "ユーザー名は32文字以内にしてください。",
+      "userNamePattern": "ユーザー名には小文字の英字、数字、アンダースコアのみ使用できます。",
       "userNameTaken": "そのユーザー名は既に登録されています。新しいユーザー名を入力してください。",
       "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。",
       "resendEmailFailed": "メールを再送信できませんでした。もう一度お試しください。"
@@ -232,7 +232,8 @@
     }
   },
   "banner": {
-    "featuredArtists": "コミュニティのアーティスト",
+    "featuredArtists": "Achizuの地図には<count>{{count}}</count>組のアーティストが集まっています。",
+    "featuredArtistsLabel": "注目のアーティスト",
     "viewingUser": "<username>{{username}}</username> の地図を表示中",
     "backToMyMap": "自分の地図に戻る",
     "viewCommunityArtists": "コミュニティのアーティストを表示"
@@ -401,7 +402,8 @@
     },
     "error": {
       "renderMapError": "このブラウザでは地図の表示に対応していません。別のブラウザを使用してください。",
-      "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください。"
+      "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください。",
+      "loadArtistsError": "アーティストの読み込みに失敗しました。ページを更新してもう一度お試しください。"
     }
   },
   "artistList": {

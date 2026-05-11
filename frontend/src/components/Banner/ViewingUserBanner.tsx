@@ -17,7 +17,7 @@ export function ViewingUserBanner({ username }: ViewingUserBannerProps) {
                     i18nKey="banner.viewingUser"
                     values={{ username }}
                     components={{
-                        username: <span className="font-semibold text-primary" />,
+                        username: <span className="font-semibold text-primary-contrast" />,
                     }}
                 />
             }

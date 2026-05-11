@@ -131,7 +131,7 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
             <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
                 {/* Origin row */}
                 <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
-                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-semibold leading-tight bg-primary-light text-white border border-primary-light rounded">
+                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-semibold leading-tight bg-primary-contrast text-white border border-primary-contrast rounded">
                         {t('artistCard.fields.origin')}
                     </span>
                     <span className="min-w-0 text-sm text-text-secondary">
@@ -141,7 +141,7 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
 
                 {/* Active row */}
                 <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
-                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-bold leading-tight bg-primary-light text-white border border-primary-light rounded">
+                    <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-bold leading-tight bg-primary-contrast text-white border border-primary-contrast rounded">
                         {t('artistCard.fields.active')}
                     </span>
                     <span className="min-w-0 text-sm text-text-secondary">
@@ -169,27 +169,27 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
                     {/* Social icons */}
                     <div className="flex gap-3">
                         {artist.socialLinks?.website && (
-                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
                                 <HomeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.appleMusic && (
-                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.appleMusic')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.appleMusic')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
                                 <MusicIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.youtube && (
-                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.youtube')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.youtube')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
                                 <YoutubeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.instagram && (
-                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.instagram')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.instagram')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
                                 <InstagramIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.twitter && (
-                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.twitter')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.twitter')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
                                 <XIcon className="w-5 h-5" />
                             </a>
                         )}

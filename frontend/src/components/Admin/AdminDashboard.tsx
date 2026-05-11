@@ -577,7 +577,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                 setNotificationAudience('all');
                                                 setSelectedRecipient(null);
                                             }}
-                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'all' ? 'bg-primary text-white border-primary' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'all' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
                                         >
                                             All users
                                         </button>
@@ -586,7 +586,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                             role="radio"
                                             aria-checked={notificationAudience === 'user'}
                                             onClick={() => setNotificationAudience('user')}
-                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary text-white border-primary' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
                                         >
                                             Specific user
                                         </button>
@@ -847,7 +847,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2">
-                                    <button type="button" className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white">Primary action</button>
+                                    <button type="button" className="rounded-md bg-primary-contrast px-3 py-1.5 text-xs font-medium text-white">Primary action</button>
                                     <button type="button" className="rounded-md bg-success px-3 py-1.5 text-xs font-medium text-white">Approve</button>
                                     <button type="button" className="rounded-md bg-[rgb(220,38,38)] px-3 py-1.5 text-xs font-medium text-white">Reject</button>
                                 </div>

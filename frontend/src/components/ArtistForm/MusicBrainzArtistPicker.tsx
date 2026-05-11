@@ -490,7 +490,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                     type="button"
                                     onClick={handleDeepSearchFromEmpty}
                                     disabled={isOnlineSearching}
-                                    className="font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                                    className="font-semibold text-primary-contrast underline-offset-2 hover:underline disabled:opacity-50"
                                 >
                                     {t('artistForm.musicBrainz.deepSearch')}
                                 </button>

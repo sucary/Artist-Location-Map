@@ -66,7 +66,7 @@ export function NotificationContent({ content, onNavigate }: NotificationContent
                     return <span key={index}>{part.value}</span>;
                 }
 
-                const className = 'font-medium text-primary hover:text-primary-hover underline underline-offset-2';
+                const className = 'font-medium text-primary-contrast hover:text-primary-contrast-hover underline underline-offset-2';
 
                 if (part.isInternal) {
                     return (
