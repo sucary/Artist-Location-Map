@@ -23,6 +23,7 @@ import { getZoomForLocationType, isInteractiveTarget } from './utils/coordinates
 import { getArtists, getArtistsByUsername, getCityById, getFeaturedArtists } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
+import { useArtistNameDisplay } from '../../context/ArtistNameDisplayContext';
 import type { LocationView } from '../../types/artist';
 import type { ArtistPopupLifecycleState, MapViewProps } from './types';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +53,7 @@ export default function MapView({
 }: MapViewProps) {
     const { profile } = useAuth();
     const { locationLanguage } = useLocationLanguage();
+    const { artistNameDisplayMode } = useArtistNameDisplay();
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const selectedCityIdRef = useRef<string | null>(null);
@@ -245,6 +247,7 @@ export default function MapView({
         displayArtists,
         view,
         locationLanguage,
+        artistNameDisplayMode,
         selectedCityIdRef,
         setSelectedCityId,
         onEditArtist,

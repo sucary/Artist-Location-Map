@@ -5,6 +5,7 @@ import Supercluster from 'supercluster';
 import ArtistCard from '../../ArtistCard';
 import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
 import type { Artist, LocationLanguage, LocationView } from '../../../types/artist';
+import type { ArtistNameDisplayMode } from '../../../types/profile';
 import { makeArtistPoint, getSuperclusterZoom, isClusterFeature } from '../clusters/clusterIndex';
 import { createArtistMarkerElement, preloadArtistMarkerImages } from '../markers/artistMarker';
 import { createClusterMarkerElement, getClusterVisualRadius } from '../markers/clusterMarker';
@@ -91,6 +92,7 @@ interface UseArtistMarkersOptions {
     displayArtists: Artist[];
     view: LocationView;
     locationLanguage: LocationLanguage;
+    artistNameDisplayMode: ArtistNameDisplayMode;
     selectedCityIdRef: RefObject<string | null>;
     setSelectedCityId: Dispatch<SetStateAction<string | null>>;
     onEditArtist?: (artist: Artist) => void;
@@ -105,6 +107,7 @@ export const useArtistMarkers = ({
     displayArtists,
     view,
     locationLanguage,
+    artistNameDisplayMode,
     selectedCityIdRef,
     setSelectedCityId,
     onEditArtist,
@@ -566,7 +569,7 @@ export const useArtistMarkers = ({
 
             // Start at the cluster center before moving outward
             const marker = new maplibregl.Marker({
-                element: createArtistMarkerElement(artist),
+                element: createArtistMarkerElement(artist, artistNameDisplayMode),
                 anchor: 'center',
             })
                 .setLngLat(clusterCenter)
@@ -643,7 +646,7 @@ export const useArtistMarkers = ({
             clusterCenter,
         });
         setHasExpandedClusters(true);
-    }, [animateLineSource, animateMarkerTo, clearPendingMergeTimers, collapseExpandedClusters, mapRef, openArtistPopup]);
+    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, collapseExpandedClusters, mapRef, openArtistPopup]);
 
     // Sync visible Supercluster features with DOM markers
     const renderVisibleMarkers = useCallback(() => {
@@ -932,7 +935,7 @@ export const useArtistMarkers = ({
             const marker = existingEntry?.kind === 'artist'
                 ? existingEntry.marker
                 : new maplibregl.Marker({
-                    element: createArtistMarkerElement(artist),
+                    element: createArtistMarkerElement(artist, artistNameDisplayMode),
                     anchor: 'center',
                 }).setLngLat(
                     shouldLinkMarkerMotion
@@ -982,7 +985,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, removeMarkerEntry]);
+    }, [animateMarkerTo, artistNameDisplayMode, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, removeMarkerEntry]);
 
     useEffect(() => {
         // Compare only fields used by the spatial index

@@ -1,5 +1,7 @@
 import type { Artist } from '../../../types/artist';
+import type { ArtistNameDisplayMode } from '../../../types/profile';
 import { getAvatarUrl } from '../../../utils/cloudinaryUrl';
+import { getArtistDisplayNameParts } from '../../../utils/artistNameDisplay';
 
 // Artist map marker image handling
 
@@ -37,15 +39,16 @@ export const preloadArtistMarkerImages = (artists: Artist[]) => {
     });
 };
 
-export const createArtistMarkerElement = (artist: Artist) => {
+export const createArtistMarkerElement = (artist: Artist, artistNameDisplayMode?: ArtistNameDisplayMode) => {
     const imageUrl = getMarkerImageUrl(artist);
+    const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
     const element = document.createElement('button');
     const frame = document.createElement('div');
 
     // Build marker nodes directly to keep artist names and image URLs escaped.
     element.type = 'button';
     element.className = 'artist-maplibre-marker custom-artist-marker';
-    element.setAttribute('aria-label', artist.name);
+    element.setAttribute('aria-label', displayName.primary);
     element.ondblclick = (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -64,7 +67,7 @@ export const createArtistMarkerElement = (artist: Artist) => {
     } else {
         const placeholder = document.createElement('div');
         placeholder.className = 'flex h-full w-full items-center justify-center bg-surface-muted text-[10px] font-semibold leading-none text-text-muted';
-        placeholder.textContent = getNameShortcut(artist.name);
+        placeholder.textContent = getNameShortcut(displayName.primary);
         frame.appendChild(placeholder);
     }
 

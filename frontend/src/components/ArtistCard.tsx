@@ -5,6 +5,8 @@ import { EditIcon, TrashIcon } from './icons/GeneralIcons';
 import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
+import { useArtistNameDisplay } from '../context/ArtistNameDisplayContext';
+import { getArtistDisplayNameParts } from '../utils/artistNameDisplay';
 
 // Artist profile card display
 
@@ -29,8 +31,10 @@ const safeUrl = (url: string): string => {
 
 const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistCardProps) => {
     const { t } = useTranslation();
+    const { artistNameDisplayMode } = useArtistNameDisplay();
     const [actionsVisible, setActionsVisible] = useState(false);
     const profileUrl = getProfileUrl(artist.sourceImage, artist.profileCrop);
+    const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
 
     const handleCoverClick = (event: MouseEvent<HTMLDivElement>) => {
         if (!showActions || actionsVisible) return;
@@ -117,14 +121,14 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
                         className="pointer-events-auto w-fit max-w-full cursor-text select-text truncate text-lg font-semibold leading-none text-white"
                         onClick={(event) => event.stopPropagation()}
                     >
-                        {artist.name}
+                        {displayName.primary}
                     </h3>
-                    {artist.romanizedName && artist.romanizedName !== artist.name && (
+                    {displayName.secondary && (
                         <p
                             className="pointer-events-auto mt-1 w-fit max-w-full cursor-text select-text truncate pb-px text-xs font-medium leading-snug text-white/90"
                             onClick={(event) => event.stopPropagation()}
                         >
-                            {artist.romanizedName}
+                            {displayName.secondary}
                         </p>
                     )}
                 </div>

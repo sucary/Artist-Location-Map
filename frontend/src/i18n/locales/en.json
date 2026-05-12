@@ -258,11 +258,21 @@
       "makePrivate": "Make account private"
     },
     "language": {
-      "title": "Language",
-      "locationName": "Location name",
+      "title": "Display",
+      "locationName": "Location name language",
       "locationNameLanguage": "Location name language",
       "hint": "Some locations may display in a different language due to lack of translation.",
       "native": "Native"
+    },
+    "artistNames": {
+      "title": "Artist names",
+      "previewFooter": "Example display setting preview",
+      "options": {
+        "main": "Main name only",
+        "sub": "Sub name only",
+        "both": "Main + sub name",
+        "subFirst": "Sub + main name"
+      }
     },
     "username": {
       "title": "Username",
@@ -288,7 +298,7 @@
     "uiLanguage": {
       "title": "UI Language",
       "description": "Choose the language used by the app interface.",
-      "language": "UI language"
+      "language": "Main language"
     }
   },
   "tutorial": {

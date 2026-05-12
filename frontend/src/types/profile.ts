@@ -1,3 +1,5 @@
+export type ArtistNameDisplayMode = 'main' | 'sub' | 'both' | 'subFirst';
+
 export interface Profile {
     id: string;
     email: string;
@@ -6,6 +8,8 @@ export interface Profile {
     isApproved: boolean;
     isPrivate: boolean;
     locationLanguage: string;
+    uiLanguage: string;
+    artistNameDisplayMode: ArtistNameDisplayMode;
     tutorialCompleted: boolean;
     isRejected: boolean;
 }

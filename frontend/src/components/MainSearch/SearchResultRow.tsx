@@ -2,7 +2,9 @@ import type { ArtistSearchResult, UserSearchResult, SearchResult } from '../../t
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { UserIcon } from '../icons/GeneralIcons';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
+import { useArtistNameDisplay } from '../../context/ArtistNameDisplayContext';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
+import { getArtistDisplayNameParts } from '../../utils/artistNameDisplay';
 import { useTranslation } from 'react-i18next';
 
 interface SearchResultRowProps {
@@ -18,7 +20,9 @@ const getPlaceholderUrl = (name: string) =>
 
 function ArtistRow({ result, onSelect, id, isActive = false, onActive }: SearchResultRowProps & { result: ArtistSearchResult }) {
     const { locationLanguage } = useLocationLanguage();
+    const { artistNameDisplayMode } = useArtistNameDisplay();
     const artist = result.artist;
+    const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
 
     return (
         <button
@@ -35,9 +39,9 @@ function ArtistRow({ result, onSelect, id, isActive = false, onActive }: SearchR
                 className="w-9 h-9 rounded-full object-cover border border-border"
             />
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text truncate">{artist.name}</p>
-                {artist.romanizedName && artist.romanizedName !== artist.name && (
-                    <p className="text-xs text-text-secondary truncate">{artist.romanizedName}</p>
+                <p className="text-sm font-medium text-text truncate">{displayName.primary}</p>
+                {displayName.secondary && (
+                    <p className="text-xs text-text-secondary truncate">{displayName.secondary}</p>
                 )}
                 <p className="text-xs text-text-secondary truncate">
                     {formatLocationLocalized(artist.activeLocation, locationLanguage)}

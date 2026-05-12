@@ -8,6 +8,8 @@ export interface Profile {
   isApproved: boolean;
   isPrivate: boolean;
   locationLanguage: string;
+  uiLanguage: string;
+  artistNameDisplayMode: string;
   tutorialCompleted: boolean;
   isRejected: boolean;
 }
@@ -36,16 +38,31 @@ async function ensureRejectedRegistrationsTable(): Promise<void> {
 }
 
 async function ensureAddArtistTutorialColumn(): Promise<void> {
-    // Create tutorial completion column
     await pool.query(`
         ALTER TABLE profiles
         ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE
     `);
 }
 
+async function ensureArtistNameDisplayModeColumn(): Promise<void> {
+    await pool.query(`
+        ALTER TABLE profiles
+        ADD COLUMN IF NOT EXISTS artist_name_display_mode TEXT NOT NULL DEFAULT 'both'
+    `);
+}
+
+async function ensureUiLanguageColumn(): Promise<void> {
+    await pool.query(`
+        ALTER TABLE profiles
+        ADD COLUMN IF NOT EXISTS ui_language TEXT NOT NULL DEFAULT 'en'
+    `);
+}
+
 export const ProfileStore = {
     getByUserId: async (userId: string): Promise<Profile | null> => {
         await ensureAddArtistTutorialColumn();
+        await ensureArtistNameDisplayModeColumn();
+        await ensureUiLanguageColumn();
 
         const result = await pool.query<Omit<Profile, 'isRejected'>>(
             `SELECT
@@ -56,6 +73,8 @@ export const ProfileStore = {
                 p.is_approved as "isApproved",
                 p.is_private as "isPrivate",
                 p.location_language as "locationLanguage",
+                COALESCE(p.ui_language, 'en') as "uiLanguage",
+                COALESCE(p.artist_name_display_mode, 'both') as "artistNameDisplayMode",
                 COALESCE(p.tutorial_completed, false) as "tutorialCompleted"
               FROM profiles p
               WHERE p.id = $1`,
@@ -98,9 +117,15 @@ export const ProfileStore = {
         return result.rows;
     },
 
-    updateProfile: async (userId: string, updates: { username?: string; isPrivate?: boolean; locationLanguage?: string; tutorialCompleted?: boolean }): Promise<void> => {
+    updateProfile: async (userId: string, updates: { username?: string; isPrivate?: boolean; locationLanguage?: string; uiLanguage?: string; artistNameDisplayMode?: string; tutorialCompleted?: boolean }): Promise<void> => {
         if (updates.tutorialCompleted !== undefined) {
             await ensureAddArtistTutorialColumn();
+        }
+        if (updates.artistNameDisplayMode !== undefined) {
+            await ensureArtistNameDisplayModeColumn();
+        }
+        if (updates.uiLanguage !== undefined) {
+            await ensureUiLanguageColumn();
         }
 
         const setClauses: string[] = [];
@@ -118,6 +143,14 @@ export const ProfileStore = {
         if (updates.locationLanguage !== undefined) {
             setClauses.push(`location_language = $${paramIndex++}`);
             values.push(updates.locationLanguage);
+        }
+        if (updates.uiLanguage !== undefined) {
+            setClauses.push(`ui_language = $${paramIndex++}`);
+            values.push(updates.uiLanguage);
+        }
+        if (updates.artistNameDisplayMode !== undefined) {
+            setClauses.push(`artist_name_display_mode = $${paramIndex++}`);
+            values.push(updates.artistNameDisplayMode);
         }
         if (updates.tutorialCompleted !== undefined) {
             setClauses.push(`tutorial_completed = $${paramIndex++}`);

@@ -80,7 +80,7 @@ router.post('/set-username', requireAuth, asyncHandler(async (req: Authenticated
 // PUT /api/auth/profile - Update profile settings
 router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user!.id;
-    const { username, isPrivate, locationLanguage, tutorialCompleted } = req.body;
+    const { username, isPrivate, locationLanguage, uiLanguage, artistNameDisplayMode, tutorialCompleted } = req.body;
     let normalizedUsername: string | undefined;
 
     // Validate username if provided
@@ -110,13 +110,25 @@ router.put('/profile', requireAuth, asyncHandler(async (req: AuthenticatedReques
         return;
     }
 
+    const validUiLanguages = ['en', 'zh', 'zh-Hant', 'ja'];
+    if (uiLanguage !== undefined && !validUiLanguages.includes(uiLanguage)) {
+        res.status(400).json({ error: `uiLanguage must be one of: ${validUiLanguages.join(', ')}` });
+        return;
+    }
+
+    const validArtistNameDisplayModes = ['main', 'sub', 'both', 'subFirst'];
+    if (artistNameDisplayMode !== undefined && !validArtistNameDisplayModes.includes(artistNameDisplayMode)) {
+        res.status(400).json({ error: `artistNameDisplayMode must be one of: ${validArtistNameDisplayModes.join(', ')}` });
+        return;
+    }
+
     if (tutorialCompleted !== undefined && typeof tutorialCompleted !== 'boolean') {
         res.status(400).json({ error: 'tutorialCompleted must be a boolean' });
         return;
     }
 
     // Update profile
-    await ProfileStore.updateProfile(userId, { username: normalizedUsername, isPrivate, locationLanguage, tutorialCompleted });
+    await ProfileStore.updateProfile(userId, { username: normalizedUsername, isPrivate, locationLanguage, uiLanguage, artistNameDisplayMode, tutorialCompleted });
 
     // Return updated profile
     const updatedProfile = await ProfileStore.getByUserId(userId);

@@ -9,6 +9,8 @@ import { Input, IconButton, Spinner, CloseButton } from './ui';
 import ArtistCard from './ArtistCard';
 import type { Artist } from '../types/artist';
 import { useLocationLanguage } from '../context/LocationLanguageContext';
+import { useArtistNameDisplay } from '../context/ArtistNameDisplayContext';
+import { getArtistDisplayNameParts } from '../utils/artistNameDisplay';
 import { useTranslation } from 'react-i18next';
 
 interface ArtistListProps {
@@ -61,6 +63,7 @@ const ArtistList = ({
 }: ArtistListProps) => {
     const { t } = useTranslation();
     const { locationLanguage } = useLocationLanguage();
+    const { artistNameDisplayMode } = useArtistNameDisplay();
     const [searchQuery, setSearchQuery] = useState('');
     const [sortKey, setSortKey] = useState<SortKey>('dateAdded');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -132,8 +135,10 @@ const ArtistList = ({
             } else if (sortKey === 'recentlyUpdated') {
                 result = getTimeValue(a.updatedAt) - getTimeValue(b.updatedAt);
             } else if (sortKey === 'name') {
-                result = collator.compare(a.romanizedName || a.name, b.romanizedName || b.name)
-                    || collator.compare(a.name, b.name);
+                result = collator.compare(
+                    getArtistDisplayNameParts(a, artistNameDisplayMode).primary,
+                    getArtistDisplayNameParts(b, artistNameDisplayMode).primary
+                ) || collator.compare(a.name, b.name);
             } else if (sortKey === 'activeLocation') {
                 result = collator.compare(
                     formatLocationLocalized(a.activeLocation, locationLanguage),
@@ -158,7 +163,7 @@ const ArtistList = ({
 
             return (result * direction) || collator.compare(a.name, b.name);
         });
-    }, [filteredArtists, locationLanguage, sortDirection, sortKey]);
+    }, [artistNameDisplayMode, filteredArtists, locationLanguage, sortDirection, sortKey]);
 
     const positionArtistCard = (rowElement: HTMLElement) => {
         // Get the row's position relative to the wrapper
@@ -342,6 +347,7 @@ const ArtistList = ({
                         <ul className="divide-y divide-border">
                             {sortedArtists.map((artist) => {
                                 const isActive = selectedArtist?.id === artist.id;
+                                const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
 
                                 return (
                                 <li key={artist.id} className="group">
@@ -365,14 +371,14 @@ const ArtistList = ({
                                                 onClick={(e) => e.stopPropagation()}
                                                 className="w-fit max-w-full truncate whitespace-nowrap text-sm font-medium text-text select-text cursor-text"
                                             >
-                                                {artist.name}
+                                                {displayName.primary}
                                             </p>
-                                            {artist.romanizedName && artist.romanizedName !== artist.name && (
+                                            {displayName.secondary && (
                                                 <p
                                                     onClick={(e) => e.stopPropagation()}
                                                     className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
                                                 >
-                                                    {artist.romanizedName}
+                                                    {displayName.secondary}
                                                 </p>
                                             )}
                                             <p

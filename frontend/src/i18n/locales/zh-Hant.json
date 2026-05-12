@@ -258,11 +258,21 @@
       "makePrivate": "將帳號設為私人"
     },
     "language": {
-      "title": "語言",
-      "locationName": "地點名稱",
+      "title": "顯示",
+      "locationName": "地點名稱語言",
       "locationNameLanguage": "地點名稱語言",
       "hint": "部分地點可能因為缺少翻譯而顯示為其他語言。",
       "native": "当地"
+    },
+    "artistNames": {
+      "title": "藝人名稱",
+      "previewFooter": "顯示設定預覽",
+      "options": {
+        "main": "僅主名稱",
+        "sub": "僅副名稱",
+        "both": "主名稱 + 副名稱",
+        "subFirst": "副名稱 + 主名稱"
+      }
     },
     "username": {
       "title": "使用者名稱",
@@ -288,7 +298,7 @@
     "uiLanguage": {
       "title": "介面語言",
       "description": "選擇應用程式介面使用的語言。",
-      "language": "介面語言"
+      "language": "主要語言"
     }
   },
   "tutorial": {

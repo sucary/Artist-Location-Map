@@ -258,11 +258,21 @@
       "makePrivate": "将账号设为私密"
     },
     "language": {
-      "title": "语言",
-      "locationName": "地点名称",
+      "title": "显示",
+      "locationName": "地点名称语言",
       "locationNameLanguage": "地点名称语言",
       "hint": "部分地点由于缺少翻译可能显示为其他语言",
       "native": "当地"
+    },
+    "artistNames": {
+      "title": "艺人名字模式",
+      "previewFooter": "显示设置预览",
+      "options": {
+        "main": "仅主名称",
+        "sub": "仅副名称",
+        "both": "主名称 + 副名称",
+        "subFirst": "副名称 + 主名称"
+      }
     },
     "username": {
       "title": "用户名",
@@ -288,7 +298,7 @@
     "uiLanguage": {
       "title": "界面语言",
       "description": "选择应用界面使用的语言。",
-      "language": "界面语言"
+      "language": "主语言"
     }
   },
   "tutorial": {

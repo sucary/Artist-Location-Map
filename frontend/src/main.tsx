@@ -8,6 +8,7 @@ import { SettingsPage } from './components/Settings/SettingsPage'
 import { AboutPage } from './components/AboutPage'
 import { AuthProvider } from './context/AuthContext'
 import { LocationLanguageProvider } from './context/LocationLanguageContext'
+import { ArtistNameDisplayProvider } from './context/ArtistNameDisplayContext'
 import i18n from './i18n';
 
 const queryClient = new QueryClient();
@@ -23,12 +24,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <BrowserRouter>
                 <AuthProvider>
                     <LocationLanguageProvider>
-                        <Routes>
-                            <Route path="/" element={<App />} />
-                            <Route path="/u/:username" element={<App />} />
-                            <Route path="/settings" element={<SettingsPage />} />
-                            <Route path="/about" element={<AboutPage />} />
-                        </Routes>
+                        <ArtistNameDisplayProvider>
+                            <Routes>
+                                <Route path="/" element={<App />} />
+                                <Route path="/u/:username" element={<App />} />
+                                <Route path="/settings" element={<SettingsPage />} />
+                                <Route path="/about" element={<AboutPage />} />
+                            </Routes>
+                        </ArtistNameDisplayProvider>
                     </LocationLanguageProvider>
                 </AuthProvider>
             </BrowserRouter>

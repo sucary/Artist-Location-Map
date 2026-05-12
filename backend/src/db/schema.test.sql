@@ -187,6 +187,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     is_approved BOOLEAN NOT NULL DEFAULT TRUE,
     is_private BOOLEAN NOT NULL DEFAULT FALSE,
     location_language TEXT NOT NULL DEFAULT 'native',
+    ui_language TEXT NOT NULL DEFAULT 'en',
+    artist_name_display_mode TEXT NOT NULL DEFAULT 'both',
     tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

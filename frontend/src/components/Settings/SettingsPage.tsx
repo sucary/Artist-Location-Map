@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
+import { useArtistNameDisplay } from '../../context/ArtistNameDisplayContext';
 import { supabase } from '../../lib/supabase';
-import { API_URL } from '../../services/api';
+import { API_URL, updateProfile } from '../../services/api';
 import { Alert, PageLayout, PageSection } from '../ui';
 import type { LocationLanguage } from '../../types/artist';
+import type { ArtistNameDisplayMode } from '../../types/profile';
+import type { Artist } from '../../types/artist';
+import ArtistCard from '../ArtistCard';
 import { useTranslation } from 'react-i18next';
 
 type UiLanguage = 'en' | 'zh' | 'zh-Hant' | 'ja';
@@ -16,6 +20,79 @@ const isValidUsername = (value: string) => (
     /^[a-z0-9_]+$/.test(value)
 );
 
+const sampleArtist: Artist = {
+    id: 'artist-name-display-preview',
+    name: '\u30c1\u30e3\u30c3\u30c8\u30e2\u30f3\u30c1\u30fc',
+    romanizedName: 'Chatmonchy',
+    originalLocation: {
+        city: '\u5fb3\u5cf6\u5e02',
+        province: '\u5fb3\u5cf6\u770c',
+        country: '\u65e5\u672c',
+        coordinates: { lat: 34.0703, lng: 134.5548 },
+        displayName: '\u5fb3\u5cf6\u5e02, \u5fb3\u5cf6\u770c, \u65e5\u672c',
+        localizedChain: {
+            city: {
+                en: 'Tokushima',
+                zhHans: '\u5fb7\u5c9b\u5e02',
+                zhHant: '\u5fb7\u5cf6\u5e02',
+                ja: '\u5fb3\u5cf6\u5e02',
+                native: '\u5fb3\u5cf6\u5e02',
+            },
+            province: {
+                en: 'Tokushima',
+                zhHans: '\u5fb7\u5c9b\u53bf',
+                zhHant: '\u5fb7\u5cf6\u7e23',
+                ja: '\u5fb3\u5cf6\u770c',
+                native: '\u5fb3\u5cf6\u770c',
+            },
+            country: {
+                en: 'Japan',
+                zhHans: '\u65e5\u672c',
+                zhHant: '\u65e5\u672c',
+                ja: '\u65e5\u672c',
+                native: '\u65e5\u672c',
+            },
+        },
+    },
+    activeLocation: {
+        city: 'Tokyo',
+        province: 'Tokyo',
+        country: '\u65e5\u672c',
+        coordinates: { lat: 35.6762, lng: 139.6503 },
+        displayName: 'Tokyo, Tokyo, \u65e5\u672c',
+        localizedChain: {
+            city: {
+                en: 'Tokyo 23 wards',
+                zhHans: '\u4e1c\u4eac23\u533a',
+                zhHant: '\u6771\u4eac23\u5340',
+                ja: '\u6771\u4eac23\u533a',
+                native: '\u6771\u4eac23\u533a',
+            },
+            province: {
+                en: 'Tokyo',
+                zhHans: '\u4e1c\u4eac\u90fd',
+                zhHant: '\u6771\u4eac\u90fd',
+                ja: '\u6771\u4eac\u90fd',
+                native: '\u6771\u4eac\u90fd',
+            },
+            country: {
+                en: 'Japan',
+                zhHans: '\u65e5\u672c',
+                zhHant: '\u65e5\u672c',
+                ja: '\u65e5\u672c',
+                native: '\u65e5\u672c',
+            },
+        },
+    },
+    originalLocationDisplayCoordinates: { lat: 34.0703, lng: 134.5548 },
+    activeLocationDisplayCoordinates: { lat: 35.6762, lng: 139.6503 },
+    debutYear: 2000,
+    inactiveYear: 2018,
+    createdAt: '',
+    updatedAt: '',
+    originalCityId: 'preview-original-city',
+    activeCityId: 'preview-tokyo-23-wards',
+};
 const getUiLanguage = (language: string): UiLanguage => {
     if (language === 'zh-Hant' || language.startsWith('zh-Hant-') || ['zh-TW', 'zh-HK', 'zh-MO'].includes(language)) {
         return 'zh-Hant';
@@ -56,6 +133,7 @@ export function SettingsPage() {
 
     // Location language
     const { locationLanguage, setLocationLanguage } = useLocationLanguage();
+    const { artistNameDisplayMode, setArtistNameDisplayMode } = useArtistNameDisplay();
     const uiLanguage = getUiLanguage(i18n.resolvedLanguage || i18n.language || 'en');
     const uiLanguageOptions: { value: UiLanguage; label: string }[] = [
         { value: 'en', label: 'English' },
@@ -69,6 +147,12 @@ export function SettingsPage() {
         { value: 'zhHant', label: '\u7e41\u9ad4\u4e2d\u6587' },
         { value: 'ja', label: '\u65e5\u672c\u8a9e' },
         { value: 'native', label: t('settings.language.native') },
+    ];
+    const artistNameDisplayOptions: { value: ArtistNameDisplayMode; label: string }[] = [
+        { value: 'main', label: t('settings.artistNames.options.main') },
+        { value: 'sub', label: t('settings.artistNames.options.sub') },
+        { value: 'both', label: t('settings.artistNames.options.both') },
+        { value: 'subFirst', label: t('settings.artistNames.options.subFirst') },
     ];
 
     // Sync isPrivate with profile when it changes
@@ -210,6 +294,17 @@ export function SettingsPage() {
         }
     };
 
+    const handleUiLanguageChange = async (language: UiLanguage) => {
+        void i18n.changeLanguage(language);
+
+        try {
+            await updateProfile({ uiLanguage: language });
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
+        } catch {
+            // Local language remains available if account persistence fails
+        }
+    };
+
     const inputClass = 'w-full px-3 py-2 bg-surface border border-border-strong rounded-md text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary';
 
     return (
@@ -256,7 +351,7 @@ export function SettingsPage() {
                                     type="button"
                                     role="radio"
                                     aria-checked={uiLanguage === value}
-                                    onClick={() => void i18n.changeLanguage(value)}
+                                    onClick={() => void handleUiLanguageChange(value)}
                                     className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
                                         uiLanguage === value
                                             ? 'bg-primary-contrast text-white border-primary-contrast'
@@ -294,6 +389,42 @@ export function SettingsPage() {
                         <p className="text-xs text-text-muted mt-1">
                             {t('settings.language.hint')}
                         </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-text-secondary mb-2">
+                            {t('settings.artistNames.title')}
+                        </p>
+                        <div role="radiogroup" aria-label={t('settings.artistNames.title')} className="flex flex-wrap gap-2">
+                            {artistNameDisplayOptions.map(({ value, label }) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={artistNameDisplayMode === value}
+                                    onClick={() => setArtistNameDisplayMode(value)}
+                                    className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                        artistNameDisplayMode === value
+                                            ? 'bg-primary-contrast text-white border-primary-contrast'
+                                            : 'bg-surface border-border-strong text-text-secondary hover:bg-surface-muted'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="mt-3 flex justify-center">
+                            <div className="pointer-events-none">
+                                <ArtistCard
+                                    artist={sampleArtist}
+                                    showActions={false}
+                                    locationLanguage={locationLanguage}
+                                />
+                                <p className="mt-2 text-center text-xs text-text-muted">
+                                    {t('settings.artistNames.previewFooter')}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </PageSection>

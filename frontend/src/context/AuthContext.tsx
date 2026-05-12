@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { API_URL } from '../services/api';
 import type { Profile } from '../types/profile';
+import i18n from '../i18n';
 
 interface AuthContextType {
     user: User | null;
@@ -86,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => subscription.unsubscribe();
     }, [queryClient]);
+
+    useEffect(() => {
+        if (!profile?.uiLanguage) return;
+        if (i18n.resolvedLanguage === profile.uiLanguage || i18n.language === profile.uiLanguage) return;
+
+        void i18n.changeLanguage(profile.uiLanguage);
+    }, [profile?.uiLanguage]);
 
     const signIn = async (email: string, password: string, rememberMe = true) => {
         // Set storage mode BEFORE login so custom storage adapter uses the right storage

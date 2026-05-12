@@ -195,7 +195,7 @@ export const postAdminNotification = async (input: AdminNotificationInput): Prom
     return response.data;
 };
 
-export const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 'isPrivate' | 'locationLanguage' | 'tutorialCompleted'>>): Promise<Profile> => {
+export const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 'isPrivate' | 'locationLanguage' | 'uiLanguage' | 'artistNameDisplayMode' | 'tutorialCompleted'>>): Promise<Profile> => {
     const response = await api.put<Profile>('/auth/profile', updates);
     return response.data;
 };
