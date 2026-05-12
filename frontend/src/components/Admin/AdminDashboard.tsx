@@ -15,6 +15,9 @@ import {
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import type { PendingUser } from '../../types/profile';
 import { LocalizationEditor } from './LocalizationEditor';
+import { DarkModeInteractionTemplate } from './DarkModeInteractionTemplate';
+
+// Admin operations dashboard with moderation, notifications, and palette checks
 
 interface AdminDashboardProps {
     onClose: () => void;
@@ -55,6 +58,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const [pinnedNotificationsOpen, setPinnedNotificationsOpen] = useState(false);
     const [translationsOpen, setTranslationsOpen] = useState(false);
     const [statusTemplateOpen, setStatusTemplateOpen] = useState(false);
+    const [darkModeTemplateOpen, setDarkModeTemplateOpen] = useState(false);
     const [notificationAudience, setNotificationAudience] = useState<'all' | 'user'>('all');
     const [notificationTitle, setNotificationTitle] = useState('');
     const [notificationContent, setNotificationContent] = useState('');
@@ -78,6 +82,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         pinnedNotifications: 'admin-pinned-notifications',
         translations: 'admin-location-translations',
         statusTemplate: 'admin-status-palette-template',
+        darkModeTemplate: 'admin-dark-mode-interaction-template',
         recipients: 'admin-notification-recipients'
     };
 
@@ -851,6 +856,28 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                     <button type="button" className="rounded-md bg-success px-3 py-1.5 text-xs font-medium text-white">Approve</button>
                                     <button type="button" className="rounded-md bg-[rgb(220,38,38)] px-3 py-1.5 text-xs font-medium text-white">Reject</button>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Dark Mode Interaction Template */}
+                    <div className="border-t border-border pt-4">
+                        <button
+                            onClick={() => setDarkModeTemplateOpen(!darkModeTemplateOpen)}
+                            aria-expanded={darkModeTemplateOpen}
+                            aria-controls={sectionIds.darkModeTemplate}
+                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
+                        >
+                            <h2 className="text-xl font-semibold text-text">Dark Mode Interaction Template</h2>
+                            <ChevronDownIcon
+                                aria-hidden="true"
+                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${darkModeTemplateOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+
+                        {darkModeTemplateOpen && (
+                            <div id={sectionIds.darkModeTemplate} className="mt-2">
+                                <DarkModeInteractionTemplate />
                             </div>
                         )}
                     </div>

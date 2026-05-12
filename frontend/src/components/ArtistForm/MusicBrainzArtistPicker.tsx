@@ -348,8 +348,9 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                             }}
                             className="sr-only"
                         />
-                        <span className={`relative h-5 w-9 rounded-full transition-colors ${isDeepSearch ? 'bg-primary' : 'bg-border'}`}>
-                            <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-transform ${isDeepSearch ? 'translate-x-4' : ''}`} />
+                        <span className="relative inline-flex h-6 w-9 cursor-pointer items-center">
+                            <span className={`absolute left-1 top-1/2 h-3 w-7 -translate-y-1/2 rounded-full transition-colors duration-200 ${isDeepSearch ? 'bg-primary/35' : 'bg-border-strong'}`} />
+                            <span className={`relative h-5 w-5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition-colors transition-transform duration-200 ${isDeepSearch ? 'translate-x-4 bg-primary' : 'translate-x-0 bg-white app-dark:bg-text-secondary'}`} />
                         </span>
                     </label>
                 </div>
@@ -490,7 +491,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                                     type="button"
                                     onClick={handleDeepSearchFromEmpty}
                                     disabled={isOnlineSearching}
-                                    className="font-semibold text-primary-contrast underline-offset-2 hover:underline disabled:opacity-50"
+                                    className="font-semibold text-primary-contrast app-dark:text-primary underline-offset-2 hover:underline disabled:opacity-50"
                                 >
                                     {t('artistForm.musicBrainz.deepSearch')}
                                 </button>

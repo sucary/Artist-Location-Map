@@ -232,7 +232,7 @@
     }
   },
   "banner": {
-    "featuredArtists": "Achizu地图共收集了<count>{{count}}</count>位艺人",
+    "featuredArtists": "Achizu地图共收集了 <count>{{count}}</count> 位艺人",
     "featuredArtistsLabel": "全站艺人",
     "viewingUser": "正在查看<username>{{username}}</username>的地图",
     "backToMyMap": "返回我的地图",
@@ -252,7 +252,7 @@
     "title": "设置",
     "privacy": {
       "title": "隐私",
-      "description": "向其他用户隐藏你的账号。",
+      "description": "向其他用户隐藏你的账号",
       "errorHeader": "无法更新隐私设置",
       "makePublic": "将账号设为公开",
       "makePrivate": "将账号设为私密"
@@ -261,7 +261,7 @@
       "title": "语言",
       "locationName": "地点名称",
       "locationNameLanguage": "地点名称语言",
-      "hint": "部分地点可能因为缺少翻译而显示为其他语言。",
+      "hint": "部分地点由于缺少翻译可能显示为其他语言",
       "native": "当地"
     },
     "username": {
@@ -488,10 +488,12 @@
       },
       "copyCollection": {
         "title": "复制艺人合集",
-        "message": "要将<username>{{username}}</username>地图中的<count>{{count}}位艺人</count>复制到你的地图吗？",
+        "message_one": "要将<username>{{username}}</username>地图中的<count>{{count}}位艺人</count>复制到你的地图吗？",
+        "message_other": "要将<username>{{username}}</username>地图中的<count>{{count}}位艺人</count>复制到你的地图吗？",
         "skipExisting": "已拥有的艺人将被跳过。",
         "successTitle": "艺人集已复制",
-        "successMessage": "已复制{{copied}}位艺人，跳过{{skipped}}位。",
+        "successMessage_one": "已复制{{copied}}位艺人，跳过{{skipped}}位。",
+        "successMessage_other": "已复制{{copied}}位艺人，跳过{{skipped}}位。",
         "errorTitle": "无法复制合集",
         "errorMessage": "复制艺人合集失败。请重试。"
       }

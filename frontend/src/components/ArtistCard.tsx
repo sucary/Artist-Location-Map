@@ -6,6 +6,8 @@ import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
 
+// Artist profile card display
+
 interface ArtistCardProps {
     artist: Artist;
     showActions?: boolean;
@@ -25,15 +27,10 @@ const safeUrl = (url: string): string => {
     return '#';
 };
 
-// Placeholder for artists without profile picture
-const getPlaceholderUrl = (name: string) =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=320&background=e5e7eb&color=9ca3af`;
-
 const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistCardProps) => {
     const { t } = useTranslation();
     const [actionsVisible, setActionsVisible] = useState(false);
-    // Use Cloudinary transformation for profile banner
-    const backgroundImageUrl = getProfileUrl(artist.sourceImage, artist.profileCrop) || getPlaceholderUrl(artist.name);
+    const profileUrl = getProfileUrl(artist.sourceImage, artist.profileCrop);
 
     const handleCoverClick = (event: MouseEvent<HTMLDivElement>) => {
         if (!showActions || actionsVisible) return;
@@ -69,8 +66,8 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
             `}</style>
             {/* Header with cover image */}
             <div
-                className={`artist-cover relative w-full h-28 bg-surface-muted bg-cover bg-center ${actionsVisible ? 'artist-actions-visible' : ''}`}
-                style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+                className={`artist-cover relative w-full h-28 bg-surface-muted bg-cover bg-center ${profileUrl ? '' : 'artist-banner-placeholder'} ${actionsVisible ? 'artist-actions-visible' : ''}`}
+                style={profileUrl ? { backgroundImage: `url(${profileUrl})` } : undefined}
                 onClick={handleCoverClick}
             >
                 {/* Bottom gradient for name readability */}
@@ -113,14 +110,20 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
 
                 {/* Artist Name */}
                 <div
-                    className="absolute bottom-3 left-4 right-4 z-10 select-text cursor-text"
+                    className="pointer-events-none absolute bottom-3 left-4 right-4 z-10"
                     style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
                 >
-                    <h3 className="truncate text-lg font-semibold leading-none text-white">
+                    <h3
+                        className="pointer-events-auto w-fit max-w-full cursor-text select-text truncate text-lg font-semibold leading-none text-white"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         {artist.name}
                     </h3>
                     {artist.romanizedName && artist.romanizedName !== artist.name && (
-                        <p className="mt-1 truncate text-xs font-medium leading-none text-white/90">
+                        <p
+                            className="pointer-events-auto mt-1 w-fit max-w-full cursor-text select-text truncate pb-px text-xs font-medium leading-snug text-white/90"
+                            onClick={(event) => event.stopPropagation()}
+                        >
                             {artist.romanizedName}
                         </p>
                     )}
@@ -169,27 +172,27 @@ const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: Art
                     {/* Social icons */}
                     <div className="flex gap-3">
                         {artist.socialLinks?.website && (
-                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <HomeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.appleMusic && (
-                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.appleMusic')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.appleMusic)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.appleMusic')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <MusicIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.youtube && (
-                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.youtube')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.youtube')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <YoutubeIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.instagram && (
-                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.instagram')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.instagram')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <InstagramIcon className="w-5 h-5" />
                             </a>
                         )}
                         {artist.socialLinks?.twitter && (
-                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.twitter')} className="!text-text-muted hover:!text-primary-contrast visited:!text-text-muted transition-colors">
+                            <a href={safeUrl(artist.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.twitter')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <XIcon className="w-5 h-5" />
                             </a>
                         )}

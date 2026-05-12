@@ -326,7 +326,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 <button
                                     type="button"
                                     onClick={() => { setIsForgotPassword(false); clearMessages(); }}
-                                    className="text-primary-contrast hover:underline font-medium"
+                                    className="text-primary-contrast app-dark:text-primary hover:underline font-medium"
                                 >
                                     {t('auth.buttons.backToSignIn')}
                                 </button>
@@ -455,7 +455,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {isSignUp ? t('auth.signUp.haveAccount') : t('auth.signIn.dontHaveAccount')}{' '}
                         <button
                             onClick={() => { setIsSignUp(!isSignUp); clearMessages(); }}
-                            className="text-primary-contrast hover:underline font-medium"
+                            className="text-primary-contrast app-dark:text-primary hover:underline font-medium"
                         >
                             {isSignUp ? t('auth.buttons.signIn') : t('auth.buttons.signUp')}
                         </button>

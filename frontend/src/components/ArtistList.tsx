@@ -15,6 +15,8 @@ interface ArtistListProps {
     username?: string;
     viewingFeatured?: boolean;
     onClose: () => void;
+    closeSelectedSignal?: number;
+    onSelectedArtistChange?: (open: boolean) => void;
     onNavigateToArtist?: (artist: Artist) => void;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
@@ -49,6 +51,8 @@ const ArtistList = ({
     username,
     viewingFeatured,
     onClose,
+    closeSelectedSignal,
+    onSelectedArtistChange,
     onNavigateToArtist,
     onEditArtist,
     onDeleteArtist,
@@ -100,6 +104,14 @@ const ArtistList = ({
         document.addEventListener('pointerdown', handlePointerDownOutside);
         return () => document.removeEventListener('pointerdown', handlePointerDownOutside);
     }, [onClose]);
+
+    useEffect(() => {
+        setSelectedArtist(null);
+    }, [closeSelectedSignal]);
+
+    useEffect(() => {
+        onSelectedArtistChange?.(!!selectedArtist);
+    }, [onSelectedArtistChange, selectedArtist]);
 
     const filteredArtists = useMemo(() => artists.filter((artist) => {
         const q = searchQuery.toLowerCase();
@@ -227,7 +239,7 @@ const ArtistList = ({
                             title={t('artistList.actions.copyAll')}
                             disabled={isLoading || artists.length === 0}
                             onClick={() => onCopyCollection(artists.length)}
-                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
+                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
                         >
                             {isCopyingCollection ? (
                                 <Spinner size="sm" className="w-5 h-5" />
@@ -289,7 +301,7 @@ const ArtistList = ({
                                             setIsSortOpen(false);
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
-                                            option.value === sortKey ? 'bg-primary/5 text-primary-contrast font-medium' : 'text-text'
+                                            option.value === sortKey ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
                                         {t(option.labelKey)}
@@ -304,7 +316,7 @@ const ArtistList = ({
                             aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
                             title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
                             onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
-                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary p-2"
+                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-2"
                         >
                             {sortDirection === 'asc' ? (
                                 <ArrowUpIcon className="w-5 h-5" />
@@ -348,24 +360,24 @@ const ArtistList = ({
                                             className="w-10 h-10 rounded-full object-cover border border-border"
                                         />
                                         {/* Info */}
-                                        <div className="flex-1 min-w-0 text-left">
+                                        <div className="flex-1 min-w-0 text-left overflow-hidden">
                                             <p
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="truncate whitespace-nowrap text-sm font-medium text-text select-text cursor-text"
+                                                className="w-fit max-w-full truncate whitespace-nowrap text-sm font-medium text-text select-text cursor-text"
                                             >
                                                 {artist.name}
                                             </p>
                                             {artist.romanizedName && artist.romanizedName !== artist.name && (
                                                 <p
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
+                                                    className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
                                                 >
                                                     {artist.romanizedName}
                                                 </p>
                                             )}
                                             <p
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
+                                                className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
                                             >
                                                 {formatLocationLocalized(artist.activeLocation, locationLanguage)}
                                             </p>
@@ -377,7 +389,7 @@ const ArtistList = ({
                                                     aria-label={t('artistList.actions.goToLocation')}
                                                     onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded hover:bg-primary hover:text-white text-text-secondary"
+                                                    className="rounded text-text-secondary hover:bg-primary hover:!text-white app-dark:hover:!text-white"
                                                     title={t('artistList.actions.goToLocation')}
                                                 >
                                                     <MapPinIcon className="w-4 h-4" />
@@ -388,7 +400,7 @@ const ArtistList = ({
                                                     aria-label={t('artistList.actions.edit')}
                                                     onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded hover:bg-primary hover:text-white text-text-secondary"
+                                                    className="rounded text-text-secondary hover:bg-primary hover:!text-white app-dark:hover:!text-white"
                                                     title={t('artistList.actions.editShort')}
                                                 >
                                                     <EditIcon className="w-4 h-4" />
@@ -399,7 +411,7 @@ const ArtistList = ({
                                                     aria-label={t('artistList.actions.delete')}
                                                     onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:text-white"
+                                                    className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:hover:!text-white"
                                                     title={t('artistList.actions.deleteShort')}
                                                 >
                                                     <TrashIcon className="w-4 h-4" />

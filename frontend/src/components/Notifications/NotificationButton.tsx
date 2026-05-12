@@ -111,7 +111,7 @@ function NotificationItem({
                                     type="button"
                                     aria-expanded={expanded}
                                     aria-controls={contentId}
-                                    className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary-contrast"
+                                    className="flex items-center gap-0.5 text-xs font-medium text-text-secondary hover:text-primary-contrast app-dark:hover:text-primary"
                                     onClick={() => setExpanded((current) => !current)}
                                 >
                                     {expanded ? t('notifications.less') : t('notifications.more')}
@@ -121,7 +121,7 @@ function NotificationItem({
                             {notification.linkLabel && notification.linkUrl && (
                                 <button
                                     type="button"
-                                    className="text-xs font-medium text-primary-contrast hover:text-primary-contrast-hover"
+                                    className="text-xs font-medium text-primary-contrast app-dark:text-primary hover:text-primary-contrast-hover app-dark:hover:text-primary"
                                     onClick={() => onNavigate(notification.linkUrl!)}
                                 >
                                     {notification.linkLabel}
@@ -320,7 +320,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 onClick={() => {
                     if (!usesHoverMenu) setIsOpen((open) => !open);
                 }}
-                className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors text-text relative sm:h-13 sm:w-13"
+                className="h-12 w-12 flex items-center justify-center bg-surface rounded-lg shadow-md transition-colors text-text hover:bg-primary hover:text-white active:bg-primary active:text-white relative sm:h-13 sm:w-13"
             >
                 <BellIcon />
                 {notificationCount > 0 && (
@@ -340,7 +340,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                             {canClear && (
                                 <button
                                     type="button"
-                                    className="text-xs font-medium text-text-secondary hover:text-primary-contrast disabled:opacity-50"
+                                    className="text-xs font-medium text-text-secondary hover:text-primary-contrast app-dark:hover:text-primary disabled:opacity-50"
                                     disabled={clearMutation.isPending}
                                     onClick={() => clearMutation.mutate()}
                                 >

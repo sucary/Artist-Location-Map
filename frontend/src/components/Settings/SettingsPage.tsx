@@ -210,7 +210,7 @@ export function SettingsPage() {
         }
     };
 
-    const inputClass = 'w-full px-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary';
+    const inputClass = 'w-full px-3 py-2 bg-surface border border-border-strong rounded-md text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary';
 
     return (
         <PageLayout title={t('settings.title')}>
@@ -234,9 +234,10 @@ export function SettingsPage() {
                         aria-checked={isPrivate}
                         onClick={handlePrivacyToggle}
                         disabled={privacySaving}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${isPrivate ? 'bg-primary' : 'bg-border-strong'}`}
+                        className="relative inline-flex h-6 w-9 shrink-0 cursor-pointer items-center transition-opacity duration-200 focus:outline-none disabled:opacity-50"
                     >
-                        <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isPrivate ? 'translate-x-4' : 'translate-x-0'}`} />
+                        <span className={`pointer-events-none absolute left-1 top-1/2 h-3 w-7 -translate-y-1/2 rounded-full transition-colors duration-200 ${isPrivate ? 'bg-primary/35' : 'bg-border-strong'}`} />
+                        <span className={`pointer-events-none relative h-5 w-5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.35)] transform transition-colors transition-transform duration-200 ${isPrivate ? 'translate-x-4 bg-primary' : 'translate-x-0 bg-white app-dark:bg-text-secondary'}`} />
                     </button>
                 </div>
             </PageSection>

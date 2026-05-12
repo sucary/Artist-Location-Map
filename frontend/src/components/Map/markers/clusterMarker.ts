@@ -55,9 +55,13 @@ export const createClusterMarkerElement = (
         Math.max(CLUSTER_CONFIG.minClusterSize, size)
     );
     const countFactor = Math.min(1, count / 10);
-    const saturation = 30 + countFactor * 40;
-    const lightness = 50 - countFactor * 20;
+    const isDarkTheme = document.documentElement.dataset.theme === 'dark';
+    const saturation = isDarkTheme ? 20 + countFactor * 30 : 30 + countFactor * 40;
+    const lightness = isDarkTheme ? 62 - countFactor * 18 : 50 - countFactor * 20;
     const hue = generateHue(centerLng, centerLat);
+    const backgroundAlpha = 0.4;
+    const borderLightness = isDarkTheme ? lightness + 18 : lightness - 10;
+    const borderAlpha = 0.6;
     const fontSize = Math.max(12, Math.min(28, visualSize / 5));
 
     const element = document.createElement('button');
@@ -76,8 +80,8 @@ export const createClusterMarkerElement = (
     bubble.className = 'flex items-center justify-center rounded-full font-bold border-2 shadow-lg cursor-pointer text-white';
     bubble.style.width = `${visualSize}px`;
     bubble.style.height = `${visualSize}px`;
-    bubble.style.background = `hsla(${hue},${saturation}%,${lightness}%,0.4)`;
-    bubble.style.borderColor = `hsla(${hue},${saturation}%,${lightness - 10}%,0.6)`;
+    bubble.style.background = `hsla(${hue},${saturation}%,${lightness}%,${backgroundAlpha})`;
+    bubble.style.borderColor = `hsla(${hue},${saturation}%,${borderLightness}%,${borderAlpha})`;
     bubble.style.fontSize = `${fontSize}px`;
     bubble.textContent = String(count);
 

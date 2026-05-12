@@ -488,10 +488,12 @@
       },
       "copyCollection": {
         "title": "アーティストコレクションをコピーしますか？",
-        "message": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーしますか？",
+        "message_one": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーしますか？",
+        "message_other": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーしますか？",
         "skipExisting": "すでにあなたの地図にあるアーティストはスキップされます。",
         "successTitle": "コレクションをコピーしました",
-        "successMessage": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
+        "successMessage_one": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
+        "successMessage_other": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
         "errorTitle": "コレクションをコピーできませんでした",
         "errorMessage": "アーティストコレクションのコピーに失敗しました。もう一度お試しください。"
       }

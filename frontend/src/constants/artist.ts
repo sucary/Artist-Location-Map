@@ -1,6 +1,4 @@
-/**
- * Artist-related constants
- */
+// Artist domain constants
 
 export const MAX_NAME_LENGTH = 28;
 

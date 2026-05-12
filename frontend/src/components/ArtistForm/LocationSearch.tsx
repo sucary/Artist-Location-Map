@@ -177,7 +177,7 @@ export const LocationSearch = ({
                                         {isLoading && <Spinner size="sm" className="text-text-muted" />}
                                         {queueSize > 0 && (
                                             <div className={`${isLoading ? 'absolute inset-0' : ''} flex items-center justify-center`}>
-                                                <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary-contrast'}`}>{queueSize}</span>
+                                                <span className={`text-[10px] font-bold ${isLoading ? 'text-text-muted' : 'text-primary-contrast app-dark:text-primary-text-dark'}`}>{queueSize}</span>
                                             </div>
                                         )}
                                     </div>
@@ -217,7 +217,7 @@ export const LocationSearch = ({
                             <button
                                 type="button"
                                 onClick={handleRetry}
-                                className="ml-2 font-medium text-primary-contrast hover:underline"
+                                className="ml-2 font-medium text-primary-contrast app-dark:text-primary hover:underline"
                             >
                                 {t('artistForm.locationSearch.retry')}
                             </button>

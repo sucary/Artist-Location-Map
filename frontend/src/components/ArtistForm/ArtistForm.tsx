@@ -455,12 +455,12 @@ const ArtistForm = ({
                                     className="block w-full aspect-[3/1] object-cover bg-surface-muted"
                                 />
                                 {preUploadImageChoice === 'shared' && (
-                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-text shadow">
+                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
                                         <CheckCircleIcon className="h-5 w-5" />
                                     </span>
                                 )}
                                 <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
-                                    preUploadImageChoice === 'shared' ? 'bg-text-secondary' : 'bg-text/60'
+                                    preUploadImageChoice === 'shared' ? 'bg-text-secondary' : 'bg-text-secondary/80'
                                 }`}>
                                     {t('artistForm.mediaReview.sharedImage')}
                                 </span>
@@ -482,12 +482,12 @@ const ArtistForm = ({
                                     className="block w-full aspect-[3/1] object-cover bg-surface-muted"
                                 />
                                 {preUploadImageChoice === 'upload' && (
-                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-text shadow">
+                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
                                         <CheckCircleIcon className="h-5 w-5" />
                                     </span>
                                 )}
                                 <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
-                                    preUploadImageChoice === 'upload' ? 'bg-text-secondary' : 'bg-text/60'
+                                    preUploadImageChoice === 'upload' ? 'bg-text-secondary' : 'bg-text-secondary/80'
                                 }`}>
                                     {t('artistForm.mediaReview.yourUpload')}
                                 </span>
@@ -566,7 +566,7 @@ const ArtistForm = ({
                                 aria-label={t('artistForm.buttons.copyOriginalToActive')}
                                 onClick={handleCopyOriginalToActive}
                                 size="sm"
-                                className="bg-surface-muted border border-border text-text-secondary rounded-full hover:bg-primary hover:text-white hover:border-primary"
+                                className="bg-surface-muted border border-border text-text-secondary rounded-full hover:bg-primary hover:!text-white hover:border-primary app-dark:hover:!text-white"
                                 title={t('artistForm.buttons.copyOriginalToActive')}
                                 type="button"
                             >
@@ -609,6 +609,7 @@ const ArtistForm = ({
                                 aria-label={showInactive ? t('artistForm.buttons.setActive') : t('artistForm.buttons.setInactive')}
                                 onClick={toggleInactive}
                                 title={showInactive ? t('artistForm.buttons.setActive') : t('artistForm.buttons.setInactive')}
+                                className="text-text-secondary hover:text-primary app-dark:hover:text-primary"
                             >
                                 {showInactive ? <MusicNoteIcon /> : <SleepIcon />}
                             </IconButton>

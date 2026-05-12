@@ -232,7 +232,7 @@
     }
   },
   "banner": {
-    "featuredArtists": "Achizu地圖共收集了<count>{{count}}</count>位藝人",
+    "featuredArtists": "Achizu地圖共收集了 <count>{{count}}</count> 位藝人",
     "featuredArtistsLabel": "全站藝人",
     "viewingUser": "正在查看<username>{{username}}</username>的地圖",
     "backToMyMap": "回到我的地圖",
@@ -488,10 +488,12 @@
       },
       "copyCollection": {
         "title": "複製藝人合集",
-        "message": "要把<username>{{username}}</username>地圖中的<count>{{count}}位藝人</count>複製到你的地圖嗎？",
+        "message_one": "要把<username>{{username}}</username>地圖中的<count>{{count}}位藝人</count>複製到你的地圖嗎？",
+        "message_other": "要把<username>{{username}}</username>地圖中的<count>{{count}}位藝人</count>複製到你的地圖嗎？",
         "skipExisting": "你已經有的藝人會略過。",
         "successTitle": "藝人集已複製",
-        "successMessage": "已複製{{copied}}位藝人，略過{{skipped}}位。",
+        "successMessage_one": "已複製{{copied}}位藝人，略過{{skipped}}位。",
+        "successMessage_other": "已複製{{copied}}位藝人，略過{{skipped}}位。",
         "errorTitle": "無法複製合集",
         "errorMessage": "複製藝人合集失敗。請再試一次。"
       }

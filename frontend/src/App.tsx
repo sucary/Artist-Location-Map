@@ -65,6 +65,8 @@ function App() {
     const [isCopyingCollection, setIsCopyingCollection] = useState(false);
     const [isMobileLayout, setIsMobileLayout] = useState(getIsMobileLayout);
     const [artistPopupOpen, setArtistPopupOpen] = useState(false);
+    const [artistListCardOpen, setArtistListCardOpen] = useState(false);
+    const [artistListCloseCardSignal, setArtistListCloseCardSignal] = useState(0);
     const [mainSearchResultsOpen, setMainSearchResultsOpen] = useState(false);
     const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
     const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -291,6 +293,7 @@ function App() {
     const handleViewArtistListClick = () => {
         setShowForm(false);
         setMainSearchCloseSignal((signal) => signal + 1);
+        setArtistListCardOpen(false);
         setShowArtistList(true);
     };
 
@@ -302,8 +305,35 @@ function App() {
     const handleNavigateToArtist = (artist: Artist) => {
         setShowArtistList(false);
         setShowFeaturedList(false);
+        setArtistListCardOpen(false);
         setFocusedArtist(artist);
     };
+
+    const handleCloseArtistList = useCallback(() => {
+        setArtistListCardOpen(false);
+        setShowArtistList(false);
+    }, []);
+
+    const handleCloseFeaturedList = useCallback(() => {
+        setArtistListCardOpen(false);
+        setShowFeaturedList(false);
+    }, []);
+
+    const handleArtistListEmptyMapClick = useCallback(() => {
+        if (artistListCardOpen) {
+            setArtistListCloseCardSignal((signal) => signal + 1);
+            return;
+        }
+
+        if (showArtistList) {
+            handleCloseArtistList();
+            return;
+        }
+
+        if (showFeaturedList) {
+            handleCloseFeaturedList();
+        }
+    }, [artistListCardOpen, handleCloseArtistList, handleCloseFeaturedList, showArtistList, showFeaturedList]);
 
     const handleArtistPopupOpenChange = useCallback((open: boolean) => {
         setArtistPopupOpen(open);
@@ -347,8 +377,8 @@ function App() {
                             i18nKey="app.dialogs.copyCollection.message"
                             values={{ count: artistCount, username }}
                             components={{
-                                count: <strong className="font-semibold text-primary-contrast" />,
-                                username: <strong className="font-semibold text-primary-contrast" />,
+                                count: <strong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
+                                username: <strong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
                             }}
                         />
                     </p>
@@ -366,7 +396,7 @@ function App() {
                     await queryClient.invalidateQueries({ queryKey: ['artists'] });
                     showAppMessage(
                         t('app.dialogs.copyCollection.successTitle'),
-                        t('app.dialogs.copyCollection.successMessage', { copied: result.copied, skipped: result.skipped }),
+                        t('app.dialogs.copyCollection.successMessage', { count: result.copied, copied: result.copied, skipped: result.skipped }),
                         'success'
                     );
                 } catch (error) {
@@ -399,7 +429,7 @@ function App() {
     }
 
     return (
-        <main className="h-screen w-screen flex flex-col">
+        <main className="h-screen w-screen flex flex-col bg-background text-text">
             {/* Top controls */}
             <div className="absolute top-2 inset-x-2 z-[1100] flex items-start gap-2 pointer-events-none">
                 <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-auto">
@@ -417,10 +447,10 @@ function App() {
                                 <button
                                     aria-label={t('banner.backToMyMap')}
                                     onClick={() => setViewingFeatured(false)}
-                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors"
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors"
                                     title={t('banner.backToMyMap')}
                                 >
-                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                                         <polyline points="9 22 9 12 15 12 15 22" />
                                     </svg>
@@ -429,10 +459,10 @@ function App() {
                                 <button
                                     aria-label={t('banner.viewCommunityArtists')}
                                     onClick={() => setViewingFeatured(true)}
-                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md hover:bg-surface-muted active:bg-surface-muted transition-colors"
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors"
                                     title={t('banner.viewCommunityArtists')}
                                 >
-                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-text-secondary" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                         <polygon points="7.5,1.5 9,6 13.5,7.5 9,9 7.5,13.5 6,9 1.5,7.5 6,6" />
                                         <polygon points="18.5,6.5 19.5,9.5 22.5,10.5 19.5,11.5 18.5,14.5 17.5,11.5 14.5,10.5 17.5,9.5" />
                                         <polygon points="11.5,15.5 12.2,18 14.5,19 12.2,20 11.5,22.5 10.8,20 8.5,19 10.8,18" />
@@ -521,7 +551,9 @@ function App() {
                 <ArtistList
                     username={username}
                     viewingFeatured={viewingFeatured}
-                    onClose={() => viewingFeatured ? setShowFeaturedList(false) : setShowArtistList(false)}
+                    onClose={viewingFeatured ? handleCloseFeaturedList : handleCloseArtistList}
+                    closeSelectedSignal={artistListCloseCardSignal}
+                    onSelectedArtistChange={setArtistListCardOpen}
                     onNavigateToArtist={handleNavigateToArtist}
                     onEditArtist={isViewingOther || viewingFeatured ? undefined : handleEditFromList}
                     onDeleteArtist={isViewingOther || viewingFeatured ? undefined : handleDeleteArtist}
@@ -565,7 +597,7 @@ function App() {
                 onLocationPick={handleLocationPick}
                 onEditArtist={isViewingOther || viewingFeatured || !user ? undefined : handleEditArtist}
                 onDeleteArtist={isViewingOther || viewingFeatured || !user ? undefined : handleDeleteArtist}
-                onEmptyClick={showForm ? handleCloseForm : showArtistList ? () => setShowArtistList(false) : undefined}
+                onEmptyClick={showForm ? handleCloseForm : (showArtistList || showFeaturedList) ? handleArtistListEmptyMapClick : undefined}
                 focusedArtist={focusedArtist}
                 onFocusedArtistHandled={() => setFocusedArtist(null)}
                 isAuthenticated={!!user}

@@ -103,6 +103,7 @@ export default function MapView({
     // Persist tile theme changes for the next map visit.
     useEffect(() => {
         storeTileTheme(tileTheme);
+        document.documentElement.dataset.theme = tileTheme;
     }, [tileTheme]);
 
     const { data: artists, isError: artistsError } = useQuery({

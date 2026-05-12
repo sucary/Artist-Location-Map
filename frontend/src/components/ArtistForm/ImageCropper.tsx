@@ -145,7 +145,7 @@ const ImageCropper = ({
                         onClick={() => switchMode('avatar')}
                         className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                             mode === 'avatar'
-                                ? 'text-primary-contrast border-b-2 border-primary -mb-px'
+                                ? 'text-primary-contrast app-dark:text-primary border-b-2 border-primary -mb-px'
                                 : 'text-text-secondary hover:text-text'
                         }`}
                     >
@@ -157,7 +157,7 @@ const ImageCropper = ({
                         onClick={() => switchMode('profile')}
                         className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                             mode === 'profile'
-                                ? 'text-primary-contrast border-b-2 border-primary -mb-px'
+                                ? 'text-primary-contrast app-dark:text-primary border-b-2 border-primary -mb-px'
                                 : 'text-text-secondary hover:text-text'
                         }`}
                     >

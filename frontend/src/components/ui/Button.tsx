@@ -4,13 +4,13 @@ import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
     `font-medium rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed 
-    focus-visible:ring-2 focus-visible:ring-offset-2  focus-visible:ring-primary`,
+    focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface`,
     {
         variants: {
             variant: {
                 primary: 'bg-primary-contrast text-white hover:bg-primary-contrast-hover border border-transparent',
                 secondary: 'bg-surface text-text border border-border-strong hover:bg-surface-secondary ',
-                ghost: 'bg-transparent text-text-muted hover:text-primary-contrast border-none',
+                ghost: 'bg-transparent text-text-muted hover:text-primary-contrast app-dark:hover:text-primary border-none',
             },
             size: {
                 sm: 'px-3 py-1.5 text-xs',

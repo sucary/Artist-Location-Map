@@ -3,6 +3,8 @@ import { EditIcon } from '../icons/GeneralIcons';
 import { MAX_NAME_LENGTH } from '../../constants/artist';
 import { useTranslation } from 'react-i18next';
 
+// Artist form visual header
+
 type HoverTarget = 'name' | 'avatar' | null;
 
 interface ArtistFormHeaderProps {
@@ -85,13 +87,16 @@ const ArtistFormHeader = ({
                 }
             }}
             aria-label={t('artistForm.buttons.editBanner')}
-            className="relative z-[80] w-full h-32 shrink-0 bg-surface-muted bg-cover bg-center group/profile cursor-pointer"
-            style={{ backgroundImage: profileUrl ? `url(${profileUrl})` : undefined }}
+            className={`relative z-[80] w-full h-32 shrink-0 bg-surface-muted bg-cover bg-center group/profile cursor-pointer ${profileUrl ? '' : 'artist-banner-placeholder'}`}
+            style={profileUrl ? { backgroundImage: `url(${profileUrl})` } : undefined}
             onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
             onClick={handleProfileClick}
         >
+            {/* Bottom gradient for name readability */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 via-black/20 to-transparent pointer-events-none" />
+
             {/* Hover overlay */}
-            <div className={`absolute inset-0 bg-black/10 transition-colors flex items-center justify-center ${!hoverTarget ? 'group-hover/profile:bg-black/30' : ''}`}>
+            <div className={`absolute inset-0 transition-colors flex items-center justify-center ${!hoverTarget ? 'group-hover/profile:bg-black/30' : ''}`}>
                 <EditIcon aria-hidden="true" className={`w-6 h-6 text-white transition-opacity ${!hoverTarget ? 'opacity-0 group-hover/profile:opacity-100' : 'opacity-0'}`} />
             </div>
 
@@ -163,7 +168,7 @@ const ArtistFormHeader = ({
                 ) : (
                     <button
                         onClick={() => setIsEditingName(true)}
-                        className="text-lg font-bold text-white text-shadow-overlay hover:text-gray-100 whitespace-nowrap overflow-hidden p-0 m-0 leading-tight border-b-2 border-transparent cursor-pointer min-h-[1.75rem]"
+                        className="text-lg font-bold text-white text-shadow-overlay hover:text-white/90 whitespace-nowrap overflow-hidden p-0 m-0 leading-tight border-b-2 border-transparent cursor-pointer min-h-[1.75rem]"
                         title={name}
                         aria-label={t('artistForm.buttons.editName')}
                     >

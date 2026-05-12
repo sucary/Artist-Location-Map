@@ -20,7 +20,7 @@ interface ConfirmDialogProps {
 }
 
 const variantLabelClasses: Record<ConfirmDialogVariant, string> = {
-    default: 'text-primary-contrast',
+    default: 'text-primary-contrast app-dark:text-primary-text-dark',
     danger: 'text-[rgb(220,38,38)]',
     warning: 'text-warning',
     success: 'text-success',
