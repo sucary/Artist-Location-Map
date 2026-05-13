@@ -1,6 +1,9 @@
 import pool from '../config/database';
 import { City, LocalizedChain, LocalizedLocation, NominatimResponse, NominatimSearchResult } from '../types/city';
+import { applyLocationDisplayOverride, getLocationDisplayOverride } from './locationDisplayOverrides';
 import { nominatimLimiter } from './nominatimRateLimiter';
+
+// City lookup and geometry persistence services
 
 // Geocoding API configuration (LocationIQ - Nominatim-compatible)
 const GEOCODING_API_BASE = 'https://us1.locationiq.com/v1';
@@ -436,6 +439,7 @@ export const CityService = {
      * Save city from Nominatim data
      */
     saveFromNominatim: async (data: NominatimResponse): Promise<City> => {
+        data = applyLocationDisplayOverride(data);
         const geoType: string | null = data.geojson?.type ?? null;
 
         // For Point/LineString geometries, try to fetch the parent city's actual boundary.
@@ -484,6 +488,7 @@ export const CityService = {
         }
         province = province || 'Unknown';
         const country = data.address?.country || 'Unknown';
+        const displayOverride = getLocationDisplayOverride(data.osm_id, data.osm_type);
 
         // Disambiguate name+province when a different osm entity already
         const locationType = getDisplayType(data.type, data.addresstype, data.address as Record<string, string>, city);
@@ -578,15 +583,15 @@ export const CityService = {
                 INSERT INTO locations (
                     name, province, country,
                     display_name, osm_id, osm_type, type, class, importance,
-                    bounding_box, address_components,
+                    bounding_box, address_components, localized_names,
                     boundary, raw_boundary, center
                 ) VALUES (
                     $1, $2, $3,
                     $4, $5, $6, $7, $8, $9,
-                    $10, $11,
-                    ST_SetSRID(ST_Force2D(ST_GeomFromGeoJSON($12)), 4326)::geography,
-                    ST_SetSRID(ST_Force2D(ST_GeomFromGeoJSON($12)), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography
+                    $10, $11, $12,
+                    ST_SetSRID(ST_Force2D(ST_GeomFromGeoJSON($13)), 4326)::geography,
+                    ST_SetSRID(ST_Force2D(ST_GeomFromGeoJSON($13)), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography
                 )
                 ON CONFLICT (osm_id, osm_type) DO UPDATE SET
                     name = EXCLUDED.name,
@@ -598,6 +603,7 @@ export const CityService = {
                     display_name = EXCLUDED.display_name,
                     bounding_box = EXCLUDED.bounding_box,
                     address_components = EXCLUDED.address_components,
+                    localized_names = COALESCE(EXCLUDED.localized_names, locations.localized_names),
                     boundary = EXCLUDED.boundary,
                     raw_boundary = EXCLUDED.raw_boundary,
                     center = EXCLUDED.center,
@@ -615,6 +621,7 @@ export const CityService = {
                 data.importance,
                 data.boundingbox,
                 JSON.stringify(data.address),
+                displayOverride ? JSON.stringify(displayOverride.localizedNames) : null,
                 JSON.stringify(geojson),
                 parseFloat(data.lon),
                 parseFloat(data.lat)

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+// Artist request validation schemas
+
 const OPTIONAL_URL = z.string()
     .trim()
     .url()
@@ -50,6 +52,11 @@ export const SocialLinksSchema = z.object({
     }),
 });
 
+const optionalImageUrlField = OPTIONAL_URL.optional()
+    .nullable()
+    .or(z.literal(''))
+    .transform(val => val || undefined);
+
 export const CropAreaSchema = z.object({
     x: z.number(),
     y: z.number(),
@@ -61,7 +68,7 @@ export const ArtistInputSchema = z.object({
     musicbrainzMbid: z.string().uuid().optional().nullable().transform(val => val ?? undefined),
     name: z.string().min(1, "Name is required"),
     romanizedName: z.string().optional().nullable().transform(val => val?.trim() || undefined),
-    sourceImage: OPTIONAL_URL.optional().nullable().transform(val => val ?? undefined),
+    sourceImage: optionalImageUrlField,
     avatarCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),
     profileCrop: CropAreaSchema.optional().nullable().transform(val => val ?? undefined),
     originalLocation: LocationSchema,

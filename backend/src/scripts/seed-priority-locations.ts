@@ -1,19 +1,22 @@
 import 'dotenv/config';
 import pool from '../config/database';
+import { applyLocationDisplayOverride } from '../services/locationDisplayOverrides';
+
+// Priority location seed records from Nominatim
 
 interface PriorityLocationSeed {
-    searchQuery: string;
+    searchQueries: string[];
     nominatimQuery: string;
     rank: number;
 }
 
-// Define what we want to seed - the script will fetch actual data from Nominatim
-// Note: Tokyo 23 wards (relation 19631009) incorrectly shows as 千葉県 in Nominatim - blame Nominatim
+const TOKYO_PRIORITY_SEARCH_QUERIES = ['tokyo', '东京', 'tokyo, japan', '東京'];
+
+// Product-prioritized city choices
 const PRIORITY_SEEDS: PriorityLocationSeed[] = [
-    { searchQuery: 'tokyo', nominatimQuery: 'Tokyo, Japan', rank: 1 },
-    { searchQuery: 'tokyo', nominatimQuery: '東京23区', rank: 0 },  // Tokyo 23 special wards (central Tokyo)
-    { searchQuery: 'new york', nominatimQuery: 'New York City, New York, USA', rank: 0 },
-    // Add more as needed
+    { searchQueries: TOKYO_PRIORITY_SEARCH_QUERIES, nominatimQuery: 'Tokyo, Japan', rank: 1 },
+    { searchQueries: TOKYO_PRIORITY_SEARCH_QUERIES, nominatimQuery: 'Tokyo 23 wards, Tokyo, Japan', rank: 0 },
+    { searchQueries: ['new york'], nominatimQuery: 'New York City, New York, USA', rank: 0 },
 ];
 
 interface NominatimResult {
@@ -59,15 +62,16 @@ async function seedPriorityLocations() {
 
     for (const seed of PRIORITY_SEEDS) {
         try {
-            console.log(`Processing: "${seed.searchQuery}" -> "${seed.nominatimQuery}"`);
+            console.log(`Processing: "${seed.searchQueries.join(', ')}" -> "${seed.nominatimQuery}"`);
 
-            const result = await fetchFromNominatim(seed.nominatimQuery);
+            const fetchedResult = await fetchFromNominatim(seed.nominatimQuery);
 
-            if (!result) {
+            if (!fetchedResult) {
                 console.log(`  No result found for "${seed.nominatimQuery}", skipping\n`);
                 continue;
             }
 
+            const result = applyLocationDisplayOverride(fetchedResult);
             const name = result.name
                 || result.address?.city
                 || result.display_name.split(',')[0].trim();
@@ -78,39 +82,41 @@ async function seedPriorityLocations() {
             console.log(`  OSM: ${result.osm_type}/${result.osm_id}`);
             console.log(`  Coordinates: ${result.lat}, ${result.lon}`);
 
-            await pool.query(`
-                INSERT INTO priority_locations
-                    (search_query, osm_id, osm_type, name, province, country, display_name, lat, lng, rank)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                ON CONFLICT (search_query, osm_id, osm_type)
-                DO UPDATE SET
-                    name = EXCLUDED.name,
-                    province = EXCLUDED.province,
-                    country = EXCLUDED.country,
-                    display_name = EXCLUDED.display_name,
-                    lat = EXCLUDED.lat,
-                    lng = EXCLUDED.lng,
-                    rank = EXCLUDED.rank
-            `, [
-                seed.searchQuery.toLowerCase(),
-                result.osm_id,
-                result.osm_type,
-                name,
-                province,
-                country,
-                result.display_name,
-                parseFloat(result.lat),
-                parseFloat(result.lon),
-                seed.rank
-            ]);
+            for (const searchQuery of seed.searchQueries) {
+                await pool.query(`
+                    INSERT INTO priority_locations
+                        (search_query, osm_id, osm_type, name, province, country, display_name, lat, lng, rank)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    ON CONFLICT (search_query, osm_id, osm_type)
+                    DO UPDATE SET
+                        name = EXCLUDED.name,
+                        province = EXCLUDED.province,
+                        country = EXCLUDED.country,
+                        display_name = EXCLUDED.display_name,
+                        lat = EXCLUDED.lat,
+                        lng = EXCLUDED.lng,
+                        rank = EXCLUDED.rank
+                `, [
+                    searchQuery.toLowerCase(),
+                    result.osm_id,
+                    result.osm_type,
+                    name,
+                    province,
+                    country,
+                    result.display_name,
+                    parseFloat(result.lat),
+                    parseFloat(result.lon),
+                    seed.rank
+                ]);
+            }
 
-            console.log(`  Saved!\n`);
+            console.log('  Saved!\n');
 
-            // Rate limit - Nominatim requires 1 request per second
+            // Nominatim rate limit boundary
             await new Promise(resolve => setTimeout(resolve, 1100));
 
         } catch (error) {
-            console.error(`  Error processing "${seed.searchQuery}":`, error);
+            console.error(`  Error processing "${seed.searchQueries.join(', ')}":`, error);
         }
     }
 

@@ -5,6 +5,8 @@ import { validateSocialUrl } from '../../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '../ui';
 
+// Social URL input with platform validation feedback
+
 export interface SocialLinkField {
     key: SocialLinkKey;
     icon: ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
@@ -15,9 +17,10 @@ interface SocialLinkInputProps {
     field: SocialLinkField;
     value: string;
     onChange: (key: SocialLinkKey, value: string) => void;
+    externalError?: string;
 }
 
-const SocialLinkInput = ({ field, value, onChange }: SocialLinkInputProps) => {
+const SocialLinkInput = ({ field, value, onChange, externalError }: SocialLinkInputProps) => {
     const { key, icon: Icon, placeholder } = field;
     const [error, setError] = useState<string | null>(null);
     const [touched, setTouched] = useState(false);
@@ -44,25 +47,28 @@ const SocialLinkInput = ({ field, value, onChange }: SocialLinkInputProps) => {
         if (error) setError(null);
     };
 
+    const displayedError = externalError || (touched ? error : null);
+
     return (
         <div className="relative">
             <input
                 aria-label={placeholder}
+                aria-invalid={Boolean(displayedError)}
                 type="text"
                 name={`social-${key}`}
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
                 placeholder={placeholder}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                className={`w-full pl-9 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-inset ${displayedError ? 'border-error focus:border-error focus:ring-error' : 'border-border focus:border-primary focus:ring-primary'}`}
                 value={value}
                 onChange={(e) => handleChange(e.target.value)}
                 onBlur={handleBlur}
             />
             <Icon aria-hidden="true" className={`absolute left-3 top-2.5 w-4 h-4 transition-colors ${isValid ? 'text-primary' : 'text-text-muted'}`} />
-            {touched && error && (
+            {displayedError && (
                 <Alert variant="error" className="mt-2">
-                    {error}
+                    {displayedError}
                 </Alert>
             )}
         </div>

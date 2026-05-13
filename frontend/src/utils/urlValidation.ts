@@ -1,10 +1,12 @@
 import type { SocialLinkKey } from '../constants/artist';
 
+// Social URL validation rules shared by artist form controls
+
 const PLATFORM_PATTERNS: Record<SocialLinkKey, RegExp> = {
     website: /^https?:\/\/.+\..+/i,
     instagram: /^https?:\/\/(www\.)?instagram\.com\/.+/i,
     twitter: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/.+/i,
-    appleMusic: /^https?:\/\/.+\..+/i,
+    appleMusic: /^https?:\/\/(music\.apple\.com|itunes\.apple\.com)\/.+/i,
     youtube: /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/.+/i,
 };
 

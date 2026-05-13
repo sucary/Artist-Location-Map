@@ -9,6 +9,8 @@ import { getArtistMediaAssetStatus, uploadImageToCloudinary } from '../utils/clo
 import { validateAllSocialLinks } from '../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
 
+// Artist form state, autofill, validation, and persistence orchestration
+
 export interface UseArtistFormOptions {
     initialData?: Artist;
     onSuccess?: (artist: Artist) => void;
@@ -21,6 +23,7 @@ export interface UseArtistFormReturn {
 
     isSaving: boolean;
     error: string | null;
+    socialLinkErrors: Partial<Record<SocialLinkKey, string>>;
     musicBrainzLocationStatus: string | null;
     musicBrainzLocationSearches: {
         originalLocation: { query: string; key: number } | null;
@@ -83,6 +86,7 @@ export const useArtistForm = ({
     const [formData, setFormData] = useState<Partial<Artist>>(() => createInitialFormData(initialData));
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [socialLinkErrors, setSocialLinkErrors] = useState<Partial<Record<SocialLinkKey, string>>>({});
     const [musicBrainzLocationStatus, setMusicBrainzLocationStatus] = useState<string | null>(null);
     const [musicBrainzLocationSearches, setMusicBrainzLocationSearches] = useState<{
         originalLocation: { query: string; key: number } | null;
@@ -167,6 +171,14 @@ export const useArtistForm = ({
             ...prev,
             socialLinks: { ...prev.socialLinks, [key]: value }
         }));
+        setSocialLinkErrors(prev => {
+            if (!prev[key]) return prev;
+
+            // Field edits clear stale save-time URL errors
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
     }, []);
 
     const updateName = useCallback((name: string) => {
@@ -199,7 +211,18 @@ export const useArtistForm = ({
             return hosts.some((candidate) => host === candidate || host.endsWith(`.${candidate}`));
         });
 
-        return match?.url || fallback || '';
+        if (match?.url) return match.url;
+        if (!fallback) return '';
+
+        // Platform fields require a matching host even when sourced from catalog columns
+        if (hosts.length > 0) {
+            const fallbackHost = getLinkHost(fallback);
+            return hosts.some((candidate) => fallbackHost === candidate || fallbackHost.endsWith(`.${candidate}`))
+                ? fallback
+                : '';
+        }
+
+        return fallback;
     }, [getLinkHost]);
 
     const getMusicBrainzSocialLinks = useCallback((artist: MusicBrainzCatalogArtist) => {
@@ -367,6 +390,8 @@ export const useArtistForm = ({
     }, []);
 
     const validateForm = useCallback((): string | null => {
+        setSocialLinkErrors({});
+
         if (!formData.name || formData.name.trim() === '') {
             return t('artistForm.errors.nameRequired');
         }
@@ -384,6 +409,7 @@ export const useArtistForm = ({
             invalidProfile: (platform) => t('artistForm.errors.invalidSocialProfileUrl', { platform }),
         });
         if (!socialValidation.isValid) {
+            setSocialLinkErrors(socialValidation.errors);
             const firstError = Object.values(socialValidation.errors)[0];
             return firstError || t('artistForm.errors.invalidSocialLinkUrl');
         }
@@ -416,10 +442,37 @@ export const useArtistForm = ({
             onSuccess?.(savedArtist);
             onCancel?.();
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+            const error = err as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        error?: string;
+                        errors?: Array<{ field?: string; message?: string }>;
+                    };
+                };
+                message?: string;
+            };
             let errorMessage = t('artistForm.errors.failedSaveArtist');
 
-            if (error.response?.data?.message) {
+            const validationErrors = error.response?.data?.errors || [];
+            const nextSocialErrors = validationErrors.reduce<Partial<Record<SocialLinkKey, string>>>((acc, validationError) => {
+                const match = validationError.field?.match(/^socialLinks\.(website|instagram|twitter|appleMusic|youtube)$/);
+                if (match && validationError.message) {
+                    acc[match[1] as SocialLinkKey] = validationError.message;
+                }
+                return acc;
+            }, {});
+
+            if (Object.keys(nextSocialErrors).length > 0) {
+                setSocialLinkErrors(nextSocialErrors);
+            }
+
+            const firstValidationError = validationErrors[0];
+            if (firstValidationError?.message) {
+                errorMessage = firstValidationError.field
+                    ? `${firstValidationError.field}: ${firstValidationError.message}`
+                    : firstValidationError.message;
+            } else if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
             } else if (error.response?.data?.error) {
                 errorMessage = error.response.data.error;
@@ -438,6 +491,7 @@ export const useArtistForm = ({
         setFormData,
         isSaving,
         error,
+        socialLinkErrors,
         musicBrainzLocationStatus,
         musicBrainzLocationSearches,
         locationInputSyncKeys,

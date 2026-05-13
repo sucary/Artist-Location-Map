@@ -18,6 +18,7 @@ import type { MusicBrainzCatalogArtist } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 
+// Artist creation and editing form experience
 
 interface ArtistFormProps {
     initialData?: Artist;
@@ -80,6 +81,7 @@ const ArtistForm = ({
         formData,
         isSaving,
         error,
+        socialLinkErrors,
         musicBrainzLocationStatus,
         musicBrainzLocationSearches,
         locationInputSyncKeys,
@@ -115,6 +117,13 @@ const ArtistForm = ({
         // MusicBrainz end dates reveal the inactive-year control
         setShowInactive(true);
     }, [formData.inactiveYear]);
+
+    useEffect(() => {
+        if (Object.keys(socialLinkErrors).length === 0) return;
+
+        // Save-time URL errors reveal the social section
+        setIsSocialExpanded(true);
+    }, [socialLinkErrors]);
 
     useEffect(() => {
         const scrollElement = formScrollRef.current;
@@ -644,6 +653,7 @@ const ArtistForm = ({
                                         field={field}
                                         value={formData.socialLinks?.[field.key] || ''}
                                         onChange={updateSocialLink}
+                                        externalError={socialLinkErrors[field.key]}
                                     />
                                 ))}
                             </div>
