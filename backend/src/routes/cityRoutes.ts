@@ -17,10 +17,16 @@ const searchLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const parseResultLimit = (value: unknown, fallback: number, max: number): number => {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return Math.min(parsed, max);
+};
+
 // GET /api/cities/search - Text-based location search
 router.get('/search', searchLimiter, asyncHandler(async (req, res) => {
     const query = req.query.q as string;
-    const limit = parseInt(req.query.limit as string) || 50;
+    const limit = parseResultLimit(req.query.limit, 50, 50);
     const source = (req.query.source as string || 'auto') as 'auto' | 'local' | 'nominatim';
     const langParam = req.query.lang as string | undefined;
     const lang = langParam && VALID_LANGS.has(langParam as LocationLanguage)
@@ -43,7 +49,7 @@ router.get('/search', searchLimiter, asyncHandler(async (req, res) => {
 // POST /api/cities/reverse/search - Coordinate-based search (multiple results)
 router.post('/reverse/search', searchLimiter, asyncHandler(async (req, res) => {
     const { lat, lng } = CoordinatesSchema.parse(req.body);
-    const limit = parseInt(req.query.limit as string) || 50;
+    const limit = parseResultLimit(req.query.limit, 50, 50);
     const source = (req.query.source as string || 'auto') as 'auto' | 'nominatim';
 
     console.log(`[SEARCH] Reverse search: (${lat}, ${lng}) (source: ${source}, limit: ${limit})`);

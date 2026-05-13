@@ -15,6 +15,12 @@ const searchLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const parseResultLimit = (value: unknown, fallback: number, max: number): number => {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return Math.min(parsed, max);
+};
+
 async function resolveMapUserId(req: AuthenticatedRequest): Promise<string | undefined> {
     const mapUsername = req.query.mapUsername as string | undefined;
     if (!mapUsername) {
@@ -42,7 +48,7 @@ async function resolveMapUserId(req: AuthenticatedRequest): Promise<string | und
 // GET /api/search - Current-map artist search plus global user search
 router.get('/', searchLimiter, optionalAuth, asyncHandler(async (req: AuthenticatedRequest, res) => {
     const query = req.query.q as string;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseResultLimit(req.query.limit, 10, 25);
     const excludeUsername = req.query.excludeUser as string | undefined;
 
     if (!query || query.trim().length < 2) {

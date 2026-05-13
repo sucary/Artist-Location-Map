@@ -37,6 +37,12 @@ const CacheRequestSchema = z.object({
     message: 'Either mbid or query is required'
 });
 
+const parseResultLimit = (value: unknown, fallback: number, max: number): number => {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return Math.min(parsed, max);
+};
+
 router.get('/search', asyncHandler(async (req, res) => {
     const q = (req.query.q as string | undefined)?.trim();
     if (!q || q.length < 2) {
@@ -47,7 +53,7 @@ router.get('/search', asyncHandler(async (req, res) => {
         q,
         country: req.query.country as string | undefined,
         type: req.query.type as string | undefined,
-        limit: parseInt(req.query.limit as string) || 20,
+        limit: parseResultLimit(req.query.limit, 20, 50),
         offset: parseInt(req.query.offset as string) || 0
     });
 
@@ -61,7 +67,7 @@ router.get('/search-online', optionalAuth, remoteSearchLimiter, asyncHandler(asy
     }
 
     const results = await MusicBrainzCatalogService.searchRemote(q, {
-        limit: parseInt(req.query.limit as string) || 10,
+        limit: parseResultLimit(req.query.limit, 10, 25),
         offset: parseInt(req.query.offset as string) || 0
     });
 
