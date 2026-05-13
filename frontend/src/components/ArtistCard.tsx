@@ -5,8 +5,8 @@ import { EditIcon, TrashIcon } from './icons/GeneralIcons';
 import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
-import { useArtistNameDisplay } from '../context/ArtistNameDisplayContext';
-import { getArtistDisplayNameParts } from '../utils/artistNameDisplay';
+import { DEFAULT_ARTIST_NAME_DISPLAY_MODE, getArtistDisplayNameParts } from '../utils/artistNameDisplay';
+import type { ArtistNameDisplayMode } from '../types/profile';
 
 // Artist profile card display
 
@@ -14,6 +14,7 @@ interface ArtistCardProps {
     artist: Artist;
     showActions?: boolean;
     locationLanguage?: LocationLanguage;
+    artistNameDisplayMode?: ArtistNameDisplayMode;
 }
 
 // URL sanitizer
@@ -29,9 +30,13 @@ const safeUrl = (url: string): string => {
     return '#';
 };
 
-const ArtistCard = ({ artist, showActions = true, locationLanguage = 'en' }: ArtistCardProps) => {
+const ArtistCard = ({
+    artist,
+    showActions = true,
+    locationLanguage = 'en',
+    artistNameDisplayMode = DEFAULT_ARTIST_NAME_DISPLAY_MODE
+}: ArtistCardProps) => {
     const { t } = useTranslation();
-    const { artistNameDisplayMode } = useArtistNameDisplay();
     const [actionsVisible, setActionsVisible] = useState(false);
     const profileUrl = getProfileUrl(artist.sourceImage, artist.profileCrop);
     const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);

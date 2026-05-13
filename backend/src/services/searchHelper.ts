@@ -113,7 +113,13 @@ export const TextSearch = {
 
         if (!results) {
             console.log(`[SEARCH] Cache miss for: "${query}"${acceptLang ? ` (lang: ${acceptLang})` : ''} - calling geocoding API`);
-            results = await CityService.searchNominatim(query, limit, acceptLang ?? undefined);
+            try {
+                results = await CityService.searchNominatim(query, limit, acceptLang ?? undefined);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                console.warn(`[SEARCH] Geocoding API failed for "${query}": ${message}`);
+                return { results: [], fromCache: false };
+            }
 
             SearchCacheService.set(query, results, acceptLang ?? undefined).catch(err => {
                 console.error('Failed to cache search results:', err);

@@ -31,6 +31,10 @@ const getPlaceholderUrl = (name: string) =>
 
 type SortKey = 'dateAdded' | 'recentlyUpdated' | 'name' | 'activeLocation' | 'originLocation' | 'debutYear';
 type SortDirection = 'asc' | 'desc';
+type SelectedArtistState = {
+    artist: Artist | null;
+    closeSignal: number | undefined;
+};
 
 const sortOptions: Array<{ value: SortKey; labelKey: string; togglable: boolean }> = [
     { value: 'dateAdded', labelKey: 'artistList.sort.options.dateAdded', togglable: true },
@@ -68,7 +72,10 @@ const ArtistList = ({
     const [sortKey, setSortKey] = useState<SortKey>('dateAdded');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [isSortOpen, setIsSortOpen] = useState(false);
-    const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+    const [selectedArtistState, setSelectedArtistState] = useState<SelectedArtistState>({
+        artist: null,
+        closeSignal: closeSelectedSignal
+    });
     const [cardPosition, setCardPosition] = useState<number>(0);
     const listRef = useRef<HTMLDivElement>(null);
     const sortRef = useRef<HTMLDivElement>(null);
@@ -84,6 +91,9 @@ const ArtistList = ({
     });
 
     const selectedSortOption = sortOptions.find((option) => option.value === sortKey);
+    const selectedArtist = selectedArtistState.closeSignal === closeSelectedSignal
+        ? selectedArtistState.artist
+        : null;
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -107,10 +117,6 @@ const ArtistList = ({
         document.addEventListener('pointerdown', handlePointerDownOutside);
         return () => document.removeEventListener('pointerdown', handlePointerDownOutside);
     }, [onClose]);
-
-    useEffect(() => {
-        setSelectedArtist(null);
-    }, [closeSelectedSignal]);
 
     useEffect(() => {
         onSelectedArtistChange?.(!!selectedArtist);
@@ -178,7 +184,10 @@ const ArtistList = ({
 
     const handleRowClick = (artist: Artist, e: React.MouseEvent<HTMLElement>) => {
         positionArtistCard(e.currentTarget);
-        setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
+        setSelectedArtistState({
+            artist: selectedArtist?.id === artist.id ? null : artist,
+            closeSignal: closeSelectedSignal
+        });
     };
 
     const handleRowKeyDown = (artist: Artist, e: React.KeyboardEvent<HTMLElement>) => {
@@ -188,7 +197,10 @@ const ArtistList = ({
 
         e.preventDefault();
         positionArtistCard(e.currentTarget);
-        setSelectedArtist(selectedArtist?.id === artist.id ? null : artist);
+        setSelectedArtistState({
+            artist: selectedArtist?.id === artist.id ? null : artist,
+            closeSignal: closeSelectedSignal
+        });
     };
 
     const handleArtistCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -222,7 +234,12 @@ const ArtistList = ({
                     style={{ top: cardPosition, transform: 'translateY(-50%)' }}
                     onClick={handleArtistCardClick}
                 >
-                    <ArtistCard artist={selectedArtist} showActions={!!(onEditArtist || onDeleteArtist)} locationLanguage={locationLanguage} />
+                    <ArtistCard
+                        artist={selectedArtist}
+                        showActions={!!(onEditArtist || onDeleteArtist)}
+                        locationLanguage={locationLanguage}
+                        artistNameDisplayMode={artistNameDisplayMode}
+                    />
                 </div>
             )}
 

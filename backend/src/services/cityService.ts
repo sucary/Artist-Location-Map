@@ -255,7 +255,7 @@ export const CityService = {
 
             if (!response.ok) {
                 console.error(`[GEOCODING] API error: ${response.status} ${response.statusText}`);
-                throw new Error(`Location search service error: ${response.statusText}`);
+                throw new Error(`Location search service error: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json() as NominatimResponse[];
@@ -497,11 +497,15 @@ export const CityService = {
         }
 
         // Check if this exact location already exists
+        // Real placement boundary, not point-derived fallback geometry
         const existingCheck = data.osm_id
             ? await pool.query(`
                 SELECT id, name, province, country, osm_id, osm_type,
                        ST_Y(center::geometry) as lat,
-                       ST_X(center::geometry) as lng
+                       ST_X(center::geometry) as lng,
+                       boundary IS NOT NULL
+                           AND NOT ST_IsEmpty(boundary::geometry)
+                           AND ST_Area(boundary) >= 1000000 as has_boundary
                 FROM locations
                 WHERE osm_id = $1 AND osm_type = $2
                 LIMIT 1
@@ -509,13 +513,16 @@ export const CityService = {
             : await pool.query(`
                 SELECT id, name, province, country, osm_id, osm_type,
                        ST_Y(center::geometry) as lat,
-                       ST_X(center::geometry) as lng
+                       ST_X(center::geometry) as lng,
+                       boundary IS NOT NULL
+                           AND NOT ST_IsEmpty(boundary::geometry)
+                           AND ST_Area(boundary) >= 1000000 as has_boundary
                 FROM locations
                 WHERE name = $1 AND province = $2
                 LIMIT 1
             `, [city, province]);
 
-        if (existingCheck.rows.length > 0) {
+        if (existingCheck.rows.length > 0 && existingCheck.rows[0].has_boundary) {
             return rowToCity(existingCheck.rows[0]);
         }
 
@@ -582,8 +589,18 @@ export const CityService = {
                     ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography
                 )
                 ON CONFLICT (osm_id, osm_type) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    province = EXCLUDED.province,
+                    country = EXCLUDED.country,
                     type = EXCLUDED.type,
+                    class = EXCLUDED.class,
+                    importance = EXCLUDED.importance,
                     display_name = EXCLUDED.display_name,
+                    bounding_box = EXCLUDED.bounding_box,
+                    address_components = EXCLUDED.address_components,
+                    boundary = EXCLUDED.boundary,
+                    raw_boundary = EXCLUDED.raw_boundary,
+                    center = EXCLUDED.center,
                     last_updated = NOW()
                 RETURNING id
             `, [
@@ -846,72 +863,97 @@ export const CityService = {
     /**
      * Generate a random point within the city boundary
      */
-    generateRandomPoint: async (cityId: string, minDistanceMeters: number = 150): Promise<{lat: number, lng: number} | null> => {
-        const maxRetries = 5;
+    generateRandomPoint: async (cityId: string, minDistanceMeters: number = 150, userId?: string): Promise<{lat: number, lng: number} | null> => {
+        const candidateCount = 64;
+        const distanceRelaxationSteps = [1, 0.75, 0.5, 0.25, 0];
         let bestCandidate: { lat: number; lng: number } | null = null;
         let bestMinDist = -1;
 
-        for (let attempt = 0; attempt < maxRetries; attempt++) {
-            const result = await pool.query(`
-                SELECT
-                    ST_Y(ST_GeometryN(point, 1)) as lat,
-                    ST_X(ST_GeometryN(point, 1)) as lng
-                FROM (
-                    SELECT ST_GeneratePoints(boundary::geometry, 1) as point
-                    FROM locations
-                    WHERE id = $1
-                ) as generated
-            `, [cityId]);
+        const result = await pool.query(`
+            SELECT
+                ST_Y((dumped.point).geom) as lat,
+                ST_X((dumped.point).geom) as lng
+            FROM (
+                SELECT ST_Dump(ST_GeneratePoints(COALESCE(boundary, raw_boundary)::geometry, $2)) as point
+                FROM locations
+                WHERE id = $1
+                  AND COALESCE(boundary, raw_boundary) IS NOT NULL
+                  AND NOT ST_IsEmpty(COALESCE(boundary, raw_boundary)::geometry)
+            ) as dumped
+        `, [cityId, candidateCount]);
 
-            if (result.rows.length === 0) return null;
+        if (result.rows.length === 0) {
+            console.warn(`[cityService] no usable placement boundary for location ${cityId}`);
+            return null;
+        }
 
-            const candidate = {
-                lat: parseFloat(result.rows[0].lat),
-                lng: parseFloat(result.rows[0].lng)
-            };
+        const candidates = result.rows
+            .filter((row) => row.lat !== null && row.lng !== null)
+            .map((row) => ({
+                lat: parseFloat(row.lat),
+                lng: parseFloat(row.lng)
+            }))
+            .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng));
 
-            // Check distance to nearest existing marker within radius
-            const nearbyResult = await pool.query(`
-                SELECT MIN(nearest_dist) as min_dist FROM (
-                    SELECT ST_Distance(
-                        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-                        original_display_coordinates
-                    ) as nearest_dist
-                    FROM artists
-                    WHERE original_display_coordinates IS NOT NULL
-                        AND ST_DWithin(
-                            original_display_coordinates,
+        if (candidates.length === 0) {
+            console.warn(`[cityService] failed to generate placement point for location ${cityId}`);
+            return null;
+        }
+
+        for (const distanceRatio of distanceRelaxationSteps) {
+            const targetDistance = minDistanceMeters * distanceRatio;
+
+            if (targetDistance <= 0) {
+                // Boundary point fallback avoids city-center marker stacks
+                return bestCandidate || candidates[0];
+            }
+
+            for (const candidate of candidates) {
+                // Placement separation applies to the current map owner only
+                const nearbyResult = await pool.query(`
+                    SELECT MIN(nearest_dist) as min_dist FROM (
+                        SELECT ST_Distance(
                             ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-                            $3
-                        )
-                    UNION ALL
-                    SELECT ST_Distance(
-                        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-                        active_display_coordinates
-                    ) as nearest_dist
-                    FROM artists
-                    WHERE active_display_coordinates IS NOT NULL
-                        AND ST_DWithin(
-                            active_display_coordinates,
+                            original_display_coordinates
+                        ) as nearest_dist
+                        FROM artists
+                        WHERE original_display_coordinates IS NOT NULL
+                            AND ($4::uuid IS NULL OR user_id = $4::uuid)
+                            AND ST_DWithin(
+                                original_display_coordinates,
+                                ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+                                $3
+                            )
+                        UNION ALL
+                        SELECT ST_Distance(
                             ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-                            $3
-                        )
-                ) as distances
-            `, [candidate.lng, candidate.lat, minDistanceMeters]);
+                            active_display_coordinates
+                        ) as nearest_dist
+                        FROM artists
+                        WHERE active_display_coordinates IS NOT NULL
+                            AND ($4::uuid IS NULL OR user_id = $4::uuid)
+                            AND ST_DWithin(
+                                active_display_coordinates,
+                                ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+                                $3
+                            )
+                    ) as distances
+                `, [candidate.lng, candidate.lat, targetDistance, userId || null]);
 
-            const minDist = nearbyResult.rows[0].min_dist;
+                const minDist = nearbyResult.rows[0].min_dist;
 
-            if (minDist === null) return candidate;
+                if (minDist === null) return candidate;
 
-            if (parseFloat(minDist) >= minDistanceMeters) return candidate;
+                if (parseFloat(minDist) >= targetDistance) return candidate;
 
-            if (parseFloat(minDist) > bestMinDist) {
-                bestMinDist = parseFloat(minDist);
-                bestCandidate = candidate;
+                if (parseFloat(minDist) > bestMinDist) {
+                    bestMinDist = parseFloat(minDist);
+                    bestCandidate = candidate;
+                }
             }
         }
 
-        return bestCandidate;
+        return bestCandidate || candidates[0];
     },
 
     /**

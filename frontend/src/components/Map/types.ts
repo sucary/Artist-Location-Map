@@ -2,6 +2,8 @@ import type maplibregl from 'maplibre-gl';
 import type { Root } from 'react-dom/client';
 import type { Artist, SelectionMode } from '../../types/artist';
 
+// Map component contracts and marker state types
+
 export interface Coordinates {
     lat: number;
     lng: number;
@@ -51,6 +53,8 @@ export type ClusterFeature = ArtistPoint | ClusterPoint;
 export type MarkerEntry = {
     marker: maplibregl.Marker;
     kind: 'artist' | 'cluster';
+    // Visible marker content identity
+    markerRenderKey?: string;
     leafKey?: string;
     popup?: maplibregl.Popup;
     root?: Root;
@@ -67,5 +71,6 @@ export type ExpandedClusterState = {
 
 export type ArtistPopupLifecycleState = {
     open: boolean;
+    openedAt: number;
     closedAt: number;
 };

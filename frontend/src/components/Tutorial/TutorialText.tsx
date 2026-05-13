@@ -1,5 +1,6 @@
 import type { TutorialStep } from './TutorialOverlay';
 import { Trans, useTranslation } from 'react-i18next';
+import { TransStrong } from '../i18n/TransComponents';
 
 export function useTutorialText(): TutorialStep[] {
     const { t } = useTranslation();
@@ -19,7 +20,7 @@ export function useTutorialText(): TutorialStep[] {
                     <p>
                         <Trans
                             i18nKey="tutorial.steps.searchArtist.body.deepSearch"
-                            components={{ strong: <strong /> }}
+                            components={{ strong: <TransStrong /> }}
                         />
                     </p>
                 </>
@@ -33,7 +34,7 @@ export function useTutorialText(): TutorialStep[] {
                 <p>
                     <Trans
                         i18nKey="tutorial.steps.origin.body"
-                        components={{ strong: <strong /> }}
+                        components={{ strong: <TransStrong /> }}
                     />
                 </p>
             ),

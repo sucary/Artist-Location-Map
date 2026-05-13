@@ -23,6 +23,7 @@ import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 import { useTutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
 import { ConfirmDialog, type ConfirmDialogVariant } from './components/ui';
 import { Trans, useTranslation } from 'react-i18next';
+import { TransStrong } from './components/i18n/TransComponents';
 
 interface AppDialogState {
     title: string;
@@ -249,7 +250,7 @@ function App() {
                 <Trans
                     i18nKey="app.dialogs.deleteArtist.message"
                     values={{ name: artist.name }}
-                    components={{ strong: <strong className="font-semibold text-[rgb(220,38,38)]" /> }}
+                    components={{ strong: <TransStrong className="font-semibold text-[rgb(220,38,38)]" /> }}
                 />
             ),
             variant: 'danger',
@@ -377,8 +378,8 @@ function App() {
                             i18nKey="app.dialogs.copyCollection.message"
                             values={{ count: artistCount, username }}
                             components={{
-                                count: <strong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
-                                username: <strong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
+                                count: <TransStrong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
+                                username: <TransStrong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
                             }}
                         />
                     </p>
@@ -447,7 +448,7 @@ function App() {
                                 <button
                                     aria-label={t('banner.backToMyMap')}
                                     onClick={() => setViewingFeatured(false)}
-                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors"
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors focus:outline-none"
                                     title={t('banner.backToMyMap')}
                                 >
                                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -459,7 +460,7 @@ function App() {
                                 <button
                                     aria-label={t('banner.viewCommunityArtists')}
                                     onClick={() => setViewingFeatured(true)}
-                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors"
+                                    className="h-12 w-12 shrink-0 flex items-center justify-center bg-surface border border-border rounded-md shadow-md text-text hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary transition-colors focus:outline-none"
                                     title={t('banner.viewCommunityArtists')}
                                 >
                                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

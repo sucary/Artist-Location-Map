@@ -1,28 +1,35 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import { createRoot } from 'react-dom/client';
 import maplibregl from 'maplibre-gl';
-import Supercluster from 'supercluster';
 import ArtistCard from '../../ArtistCard';
 import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
 import type { Artist, LocationLanguage, LocationView } from '../../../types/artist';
 import type { ArtistNameDisplayMode } from '../../../types/profile';
-import { makeArtistPoint, getSuperclusterZoom, isClusterFeature } from '../clusters/clusterIndex';
-import { createArtistMarkerElement, preloadArtistMarkerImages } from '../markers/artistMarker';
-import { createClusterMarkerElement, getClusterVisualRadius } from '../markers/clusterMarker';
+import { makeArtistPoint, getClusterZoom, isClusterFeature } from '../clusters/clusterIndex';
+import { createArtistMarkerElement, getArtistMarkerRenderKey, preloadArtistMarkerImages } from '../markers/artistMarker';
+import {
+    createClusterMarkerElement,
+    getClusterVisualMetrics,
+} from '../markers/clusterMarker';
 import type {
+    ArtistPoint,
     ArtistPointProperties,
     ClusterFeature,
     ClusterPoint,
-    ClusterProperties,
     ExpandedClusterState,
     MarkerEntry,
     ArtistPopupLifecycleState,
 } from '../types';
 
+// Map marker rendering, clustering, expansion, and popup lifecycle
+
 const markerMoveDuration = 260;
 const mergedClusterAppearDelay = markerMoveDuration;
 const markerMoveLinkMaxDistance = 360;
 const clusterCollapseAfterPopupCloseGraceMs = 800;
+const focusedMarkerZIndex = 1000;
+const selectedMarkerZIndex = focusedMarkerZIndex - 1;
+const maxRandomMarkerZIndex = selectedMarkerZIndex - 1;
 
 const markerAnimations = new WeakMap<maplibregl.Marker, number>();
 
@@ -35,10 +42,17 @@ const getMarkerCoordinates = (marker: maplibregl.Marker): [number, number] => {
     return [lngLat.lng, lngLat.lat];
 };
 
+const getRandomMarkerZIndex = () => String(Math.floor(Math.random() * maxRandomMarkerZIndex) + 1);
+
 const replaceMarkerElementContents = (target: HTMLElement, source: HTMLElement) => {
     target.setAttribute('aria-label', source.getAttribute('aria-label') ?? '');
     target.style.width = source.style.width;
     target.style.height = source.style.height;
+    if (source.dataset.artistId) {
+        target.dataset.artistId = source.dataset.artistId;
+    } else {
+        delete target.dataset.artistId;
+    }
     target.replaceChildren(...Array.from(source.childNodes));
 };
 
@@ -70,7 +84,7 @@ const getClusterLeafKey = (leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointPro
         .join('|')
 );
 
-// Include only fields that change Supercluster output
+// Include only fields that change spatial output
 const getArtistIndexSignature = (artists: Artist[], view: LocationView) => (
     `${view}|${artists.map((artist) => {
         const active = artist.activeLocation.coordinates;
@@ -85,6 +99,233 @@ const getArtistIndexSignature = (artists: Artist[], view: LocationView) => (
         ].join(':');
     }).join('|')}`
 );
+
+type ScreenPixel = {
+    x: number;
+    y: number;
+};
+
+type ScreenArtistPoint = {
+    point: ArtistPoint;
+    pixel: ScreenPixel;
+};
+
+type ScreenCluster = {
+    points: ScreenArtistPoint[];
+    center: ScreenPixel;
+    radius: number;
+};
+
+type ScreenObstacle = {
+    center: ScreenPixel;
+    radius: number;
+};
+
+const getPointDistance = (first: ScreenPixel, second: ScreenPixel) => {
+    const dx = first.x - second.x;
+    const dy = first.y - second.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};
+
+const getClusterId = (points: ScreenArtistPoint[]) => {
+    const key = points.map(({ point }) => point.properties.artistId).sort().join('|');
+    let hash = 0;
+
+    // Stable numeric id keeps marker reuse tied to leaf membership
+    for (let index = 0; index < key.length; index += 1) {
+        hash = ((hash << 5) - hash + key.charCodeAt(index)) | 0;
+    }
+
+    return Math.abs(hash) || 1;
+};
+
+const measureScreenCluster = (points: ScreenArtistPoint[]): ScreenCluster => {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    points.forEach(({ pixel }) => {
+        minX = Math.min(minX, pixel.x);
+        maxX = Math.max(maxX, pixel.x);
+        minY = Math.min(minY, pixel.y);
+        maxY = Math.max(maxY, pixel.y);
+    });
+
+    const center = {
+        x: (minX + maxX) / 2,
+        y: (minY + maxY) / 2,
+    };
+    const radius = points.reduce((maxRadius, { pixel }) => (
+        Math.max(maxRadius, getPointDistance(center, pixel))
+    ), 0);
+
+    return { points, center, radius };
+};
+
+const hasArtistMarkerCollision = (points: ScreenArtistPoint[]) => {
+    // Readability gate for preserving separated child markers
+    for (let firstIndex = 0; firstIndex < points.length; firstIndex += 1) {
+        for (let secondIndex = firstIndex + 1; secondIndex < points.length; secondIndex += 1) {
+            if (getPointDistance(points[firstIndex].pixel, points[secondIndex].pixel) <= CLUSTER_CONFIG.artistMarkerCollisionDistance) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+};
+
+const resolveMarkerCollisions = (
+    offsets: ScreenPixel[],
+    spacing: number,
+    obstacleSpacing: number,
+    obstacles: ScreenObstacle[] = []
+) => {
+    const positions = offsets.map((offset) => ({ ...offset }));
+
+    // Deterministic pair and obstacle separation for expanded marker layout
+    for (let pass = 0; pass < 18; pass += 1) {
+        let moved = false;
+
+        for (let firstIndex = 0; firstIndex < positions.length; firstIndex += 1) {
+            for (let secondIndex = firstIndex + 1; secondIndex < positions.length; secondIndex += 1) {
+                const dx = positions[firstIndex].x - positions[secondIndex].x;
+                const dy = positions[firstIndex].y - positions[secondIndex].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance >= spacing) continue;
+
+                const fallbackAngle = ((firstIndex * 31 + secondIndex * 17) % 360) * (Math.PI / 180);
+                const normalX = distance > 0 ? dx / distance : Math.cos(fallbackAngle);
+                const normalY = distance > 0 ? dy / distance : Math.sin(fallbackAngle);
+                const push = (spacing - distance) / 2;
+
+                positions[firstIndex].x += normalX * push;
+                positions[firstIndex].y += normalY * push;
+                positions[secondIndex].x -= normalX * push;
+                positions[secondIndex].y -= normalY * push;
+                moved = true;
+            }
+        }
+
+        positions.forEach((position, positionIndex) => {
+            obstacles.forEach((obstacle, obstacleIndex) => {
+                const dx = position.x - obstacle.center.x;
+                const dy = position.y - obstacle.center.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const requiredDistance = obstacleSpacing / 2 + obstacle.radius;
+                if (distance >= requiredDistance) return;
+
+                const fallbackAngle = ((positionIndex * 43 + obstacleIndex * 19) % 360) * (Math.PI / 180);
+                const normalX = distance > 0 ? dx / distance : Math.cos(fallbackAngle);
+                const normalY = distance > 0 ? dy / distance : Math.sin(fallbackAngle);
+                const push = requiredDistance - distance;
+
+                position.x += normalX * push;
+                position.y += normalY * push;
+                moved = true;
+            });
+        });
+
+        if (!moved) break;
+    }
+
+    return positions;
+};
+
+const buildGeometricClusters = (
+    artists: Artist[],
+    view: LocationView,
+    map: maplibregl.Map,
+    mapZoom: number
+) => {
+    if (mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5) {
+        return {
+            features: artists.map((artist) => makeArtistPoint(artist, view)),
+            leavesByClusterId: new Map<number, ArtistPoint[]>(),
+        };
+    }
+
+    const screenClusters = artists
+        .map((artist) => {
+            const point = makeArtistPoint(artist, view);
+            return {
+                points: [{
+                    point,
+                    pixel: map.project(point.geometry.coordinates as [number, number]),
+                }],
+            };
+        })
+        .map((cluster) => measureScreenCluster(cluster.points));
+
+    let merged = true;
+    while (merged) {
+        merged = false;
+        let bestMerge: { firstIndex: number; secondIndex: number; cluster: ScreenCluster } | null = null;
+
+        // Smallest valid merge preserves tight local clusters first
+        for (let firstIndex = 0; firstIndex < screenClusters.length; firstIndex += 1) {
+            for (let secondIndex = firstIndex + 1; secondIndex < screenClusters.length; secondIndex += 1) {
+                const candidate = measureScreenCluster([
+                    ...screenClusters[firstIndex].points,
+                    ...screenClusters[secondIndex].points,
+                ]);
+                if (candidate.radius > CLUSTER_CONFIG.maxClusterRadius) continue;
+                if (bestMerge && candidate.radius >= bestMerge.cluster.radius) continue;
+                bestMerge = { firstIndex, secondIndex, cluster: candidate };
+            }
+        }
+
+        if (bestMerge) {
+            screenClusters.splice(bestMerge.secondIndex, 1);
+            screenClusters.splice(bestMerge.firstIndex, 1, bestMerge.cluster);
+            merged = true;
+        }
+    }
+
+    const canvas = map.getCanvas();
+    const padding = CLUSTER_CONFIG.maxClusterRadius;
+    const isVisiblePixel = (pixel: ScreenPixel) => (
+        pixel.x >= -padding
+        && pixel.x <= canvas.clientWidth + padding
+        && pixel.y >= -padding
+        && pixel.y <= canvas.clientHeight + padding
+    );
+    const leavesByClusterId = new Map<number, ArtistPoint[]>();
+    const features: ClusterFeature[] = [];
+
+    screenClusters.forEach((cluster) => {
+        const isVisible = isVisiblePixel(cluster.center)
+            || cluster.points.some(({ pixel }) => isVisiblePixel(pixel));
+        if (!isVisible) return;
+
+        // Non-overlapping child markers stay individually readable
+        if (cluster.points.length === 1 || !hasArtistMarkerCollision(cluster.points)) {
+            cluster.points.forEach(({ point }) => features.push(point));
+            return;
+        }
+
+        const id = getClusterId(cluster.points);
+        const centerLngLat = map.unproject([cluster.center.x, cluster.center.y]);
+        const leaves = cluster.points.map(({ point }) => point);
+        leavesByClusterId.set(id, leaves);
+        features.push({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [centerLngLat.lng, centerLngLat.lat],
+            },
+            properties: {
+                cluster: true,
+                cluster_id: id,
+                point_count: leaves.length,
+                point_count_abbreviated: leaves.length,
+            },
+        });
+    });
+
+    return { features, leavesByClusterId };
+};
 
 interface UseArtistMarkersOptions {
     mapRef: RefObject<maplibregl.Map | null>;
@@ -120,11 +361,20 @@ export const useArtistMarkers = ({
     const expandedRef = useRef<Map<string, ExpandedClusterState>>(new Map());
     const collapsingClusterHidesRef = useRef<Map<string, Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>>>(new Map());
     const visibleClustersRef = useRef<ClusterPoint[]>([]);
+    const visibleClusterRadiiRef = useRef<Map<number, number>>(new Map());
 
     // Current map data and popup handles
-    const clusterIndexRef = useRef<Supercluster<ArtistPointProperties, ClusterProperties> | null>(null);
+    const clusterLeavesRef = useRef<Map<number, ArtistPoint[]>>(new Map());
     const artistsByIdRef = useRef<Map<string, Artist>>(new Map());
     const activePopupRef = useRef<maplibregl.Popup | null>(null);
+    const artistMarkerZIndexRef = useRef<Map<string, string>>(new Map());
+    const lastSelectedArtistIdRef = useRef<string | null>(null);
+    const popupOptionsRef = useRef({
+        locationLanguage,
+        onEditArtist,
+        onDeleteArtist,
+        view,
+    });
 
     // Previous render state used to compare map changes
     const lastClusterZoomRef = useRef<number | null>(null);
@@ -138,6 +388,48 @@ export const useArtistMarkers = ({
     const pendingMergeTimersRef = useRef<Set<number>>(new Set());
     const clusterTransitionUntilRef = useRef(0);
     const [hasExpandedClusters, setHasExpandedClusters] = useState(false);
+
+    // Popup callbacks update independently from marker reconciliation
+    popupOptionsRef.current = {
+        locationLanguage,
+        onEditArtist,
+        onDeleteArtist,
+        view,
+    };
+
+    const syncArtistMarkerStackOrder = useCallback((artistId: string, element: HTMLElement, clusterDisabled: boolean) => {
+        if (!clusterDisabled) {
+            element.style.zIndex = '';
+            return;
+        }
+
+        let zIndex = artistMarkerZIndexRef.current.get(artistId);
+        if (!zIndex) {
+            // Stable random stack order while clustering is disabled
+            zIndex = getRandomMarkerZIndex();
+            artistMarkerZIndexRef.current.set(artistId, zIndex);
+        }
+
+        element.style.zIndex = zIndex;
+    }, []);
+
+    const promoteSelectedArtistMarker = useCallback((artistId: string, element: HTMLElement) => {
+        const previousArtistId = lastSelectedArtistIdRef.current;
+        if (previousArtistId && previousArtistId !== artistId) {
+            // Previous selection returns to the randomized stack
+            artistMarkerZIndexRef.current.delete(previousArtistId);
+            const previousEntry = markersRef.current.get(`artist-${previousArtistId}`);
+            if (previousEntry?.kind === 'artist') {
+                syncArtistMarkerStackOrder(previousArtistId, previousEntry.marker.getElement(), true);
+            }
+        }
+
+        // Last selected marker remains above the randomized layer
+        const zIndex = String(selectedMarkerZIndex);
+        lastSelectedArtistIdRef.current = artistId;
+        artistMarkerZIndexRef.current.set(artistId, zIndex);
+        element.style.zIndex = zIndex;
+    }, [syncArtistMarkerStackOrder]);
 
     const clearPendingMergeTimers = useCallback(() => {
         pendingMergeTimersRef.current.forEach((timer) => window.clearTimeout(timer));
@@ -267,6 +559,17 @@ export const useArtistMarkers = ({
     useEffect(() => {
         artistsByIdRef.current = new Map(displayArtists.map((artist) => [artist.id, artist]));
         preloadArtistMarkerImages(displayArtists);
+
+        // Random stack entries only belong to the current artist set
+        const artistIds = new Set(displayArtists.map((artist) => artist.id));
+        artistMarkerZIndexRef.current.forEach((_, artistId) => {
+            if (!artistIds.has(artistId)) {
+                artistMarkerZIndexRef.current.delete(artistId);
+            }
+        });
+        if (lastSelectedArtistIdRef.current && !artistIds.has(lastSelectedArtistIdRef.current)) {
+            lastSelectedArtistIdRef.current = null;
+        }
     }, [displayArtists]);
 
     const removeMarkerEntry = useCallback((entry: MarkerEntry, destination?: [number, number], onDone?: () => void) => {
@@ -304,8 +607,9 @@ export const useArtistMarkers = ({
 
     const setArtistPopupLifecycle = useCallback((open: boolean) => {
         if (artistPopupLifecycleRef?.current) {
-            // Close time protects cluster expansion during popup rebuilds
+            // Popup timing protects cluster transitions during rebuilds
             artistPopupLifecycleRef.current.open = open;
+            artistPopupLifecycleRef.current.openedAt = open ? performance.now() : artistPopupLifecycleRef.current.openedAt;
             artistPopupLifecycleRef.current.closedAt = open ? 0 : performance.now();
         }
         onArtistPopupOpenChange?.(open);
@@ -326,7 +630,7 @@ export const useArtistMarkers = ({
     }, [mapRef, setArtistPopupLifecycle]);
 
     const isClusterSourceHidden = useCallback((key: string, leafKey: string) => {
-        // Supercluster ids can change while leaf membership stays the same
+        // Cluster ids can change while leaf membership stays the same
         const matches = (state: Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>) => (
             state.hiddenClusterKey === key || state.hiddenClusterLeafKey === leafKey
         );
@@ -410,6 +714,7 @@ export const useArtistMarkers = ({
 
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
+        const { locationLanguage, onEditArtist, onDeleteArtist, view } = popupOptionsRef.current;
         const showActions = !!(onEditArtist || onDeleteArtist);
         // React renders the content, MapLibre places the popup
         root.render(
@@ -430,6 +735,9 @@ export const useArtistMarkers = ({
         activePopupRef.current = popup;
 
         marker.getElement().classList.add('marker-focused');
+        if (map.getZoom() >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5) {
+            promoteSelectedArtistMarker(artist.id, marker.getElement());
+        }
         setSelectedCityId(view === 'active' ? artist.activeCityId : artist.originalCityId);
 
         const handleClick = (event: MouseEvent) => {
@@ -477,13 +785,12 @@ export const useArtistMarkers = ({
             entry.popup = popup;
             entry.root = root;
         }
-    }, [locationLanguage, mapRef, onDeleteArtist, onEditArtist, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId, view]);
+    }, [mapRef, promoteSelectedArtistMarker, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId]);
 
     // Open a cluster into separate artist markers
     const expandCluster = useCallback((feature: ClusterPoint, sourceElement?: HTMLElement) => {
         const map = mapRef.current;
-        const index = clusterIndexRef.current;
-        if (!map || !index) return;
+        if (!map) return;
 
         const clusterId = feature.properties.cluster_id;
         const clusterKey = `expanded-${clusterId}`;
@@ -493,7 +800,8 @@ export const useArtistMarkers = ({
             return;
         }
 
-        const leaves = index.getLeaves(clusterId, Infinity);
+        const leaves = clusterLeavesRef.current.get(clusterId) ?? [];
+        if (leaves.length === 0) return;
         const expandedLeafKey = getClusterLeafKey(leaves);
         const clusterMarkerKey = `cluster-${clusterId}`;
         // Ignore clicks while zoom or merge work is still changing markers
@@ -521,6 +829,36 @@ export const useArtistMarkers = ({
         const [clusterLng, clusterLat] = feature.geometry.coordinates;
         const clusterCenter: [number, number] = [clusterLng, clusterLat];
         const clusterPixel = map.project([clusterLng, clusterLat]);
+        const markerObstacleRadius = CLUSTER_CONFIG.outerCollisionDistance / 2;
+        const obstacleEntries: ScreenObstacle[] = [];
+
+        // Outside visible markers and cluster circles block expanded positions
+        markersRef.current.forEach((entry, key) => {
+            if (entry.kind === 'cluster' && (key === clusterMarkerKey || entry.leafKey === expandedLeafKey)) return;
+            if (entry.marker.getElement().style.visibility === 'hidden') return;
+
+            const [lng, lat] = getMarkerCoordinates(entry.marker);
+            const pixel = map.project([lng, lat]);
+            const clusterIdMatch = key.match(/^cluster-(\d+)$/);
+            const radius = entry.kind === 'cluster' && clusterIdMatch
+                ? visibleClusterRadiiRef.current.get(Number(clusterIdMatch[1])) ?? markerObstacleRadius
+                : markerObstacleRadius;
+
+            obstacleEntries.push({
+                center: { x: pixel.x - clusterPixel.x, y: pixel.y - clusterPixel.y },
+                radius,
+            });
+        });
+        expandedRef.current.forEach((state) => {
+            state.markers.forEach((marker) => {
+                const [lng, lat] = getMarkerCoordinates(marker);
+                const pixel = map.project([lng, lat]);
+                obstacleEntries.push({
+                    center: { x: pixel.x - clusterPixel.x, y: pixel.y - clusterPixel.y },
+                    radius: markerObstacleRadius,
+                });
+            });
+        });
         // Space expanded markers in screen pixels
         const rawOffsets = leaves.map((leaf) => {
             const [lng, lat] = leaf.geometry.coordinates;
@@ -528,29 +866,12 @@ export const useArtistMarkers = ({
             return { x: pixel.x - clusterPixel.x, y: pixel.y - clusterPixel.y };
         });
 
-        const markerSpacing = CLUSTER_CONFIG.gridSpacing;
-        const positions = rawOffsets.map((offset) => ({ ...offset }));
-
-        // Separate markers that would overlap on screen
-        for (let pass = 0; pass < 10; pass++) {
-            for (let i = 0; i < positions.length; i++) {
-                for (let j = 0; j < positions.length; j++) {
-                    if (i === j) continue;
-                    const dx = positions[i].x - positions[j].x;
-                    const dy = positions[i].y - positions[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < markerSpacing && dist > 0) {
-                        const push = (markerSpacing - dist) / 2 + 2;
-                        positions[i].x += (dx / dist) * push;
-                        positions[i].y += (dy / dist) * push;
-                    } else if (dist === 0) {
-                        const angle = Math.random() * Math.PI * 2;
-                        positions[i].x += Math.cos(angle) * markerSpacing / 2;
-                        positions[i].y += Math.sin(angle) * markerSpacing / 2;
-                    }
-                }
-            }
-        }
+        const positions = resolveMarkerCollisions(
+            rawOffsets,
+            CLUSTER_CONFIG.gridSpacing,
+            CLUSTER_CONFIG.outerCollisionDistance,
+            obstacleEntries
+        );
 
         // Expanded marker and connector collections
         const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
@@ -564,8 +885,8 @@ export const useArtistMarkers = ({
 
             // Convert screen position back to map coordinates
             const position = positions[index];
-            const expandedLngLat = map.unproject([clusterPixel.x + position.x, clusterPixel.y + position.y]);
             const originalLngLat = leaf.geometry.coordinates as [number, number];
+            const expandedLngLat = map.unproject([clusterPixel.x + position.x, clusterPixel.y + position.y]);
 
             // Start at the cluster center before moving outward
             const marker = new maplibregl.Marker({
@@ -648,20 +969,38 @@ export const useArtistMarkers = ({
         setHasExpandedClusters(true);
     }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, collapseExpandedClusters, mapRef, openArtistPopup]);
 
-    // Sync visible Supercluster features with DOM markers
+    const refreshArtistMarkerElement = useCallback((
+        entry: MarkerEntry,
+        artistId: string,
+        nextRenderKey: string
+    ): string => {
+        const artist = artistsByIdRef.current.get(artistId);
+        if (!artist) return entry.markerRenderKey ?? nextRenderKey;
+
+        if (entry.markerRenderKey === nextRenderKey) {
+            return nextRenderKey;
+        }
+
+        replaceMarkerElementContents(
+            entry.marker.getElement(),
+            createArtistMarkerElement(artist, artistNameDisplayMode)
+        );
+
+        return nextRenderKey;
+    }, [artistNameDisplayMode]);
+
+    // Sync visible geometric cluster features with DOM markers
     const renderVisibleMarkers = useCallback(() => {
         const map = mapRef.current;
-        const index = clusterIndexRef.current;
-        if (!map || !index || !mapReady) return;
+        if (!map || !mapReady) return;
 
-        // Query only the visible map bounds
+        // Build visible clusters from the current projected geometry
         const bounds = map.getBounds();
         const mapZoom = map.getZoom();
-        const zoom = getSuperclusterZoom(mapZoom);
-        const clusters = index.getClusters(
-            [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-            zoom
-        ) as ClusterFeature[];
+        const zoom = getClusterZoom(mapZoom);
+        const clusterDisabled = mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5;
+        const { features: clusters, leavesByClusterId } = buildGeometricClusters(displayArtists, view, map, mapZoom);
+        clusterLeavesRef.current = leavesByClusterId;
 
         // Counts and zooms from the previous render
         const nextMarkerKeys = new Set<string>();
@@ -670,7 +1009,7 @@ export const useArtistMarkers = ({
         const previousClusterZoom = lastClusterZoomRef.current;
         const previousMapZoom = lastMapZoomRef.current;
 
-        // Compare Supercluster zoom and MapLibre zoom separately
+        // Compare cluster zoom and MapLibre zoom separately
         const isZoomSplit = previousClusterZoom !== null && zoom > previousClusterZoom;
         const isZoomMerge = previousClusterZoom !== null && zoom < previousClusterZoom;
         const isMapZoomIn = previousMapZoom !== null && mapZoom > previousMapZoom + 0.01;
@@ -779,16 +1118,19 @@ export const useArtistMarkers = ({
         const visibleClusters = clusters.filter((feature): feature is ClusterPoint => !!feature.properties.cluster);
         const clusterRadii = new Map<number, number>();
         const clusterPixels = new Map<number, ReturnType<maplibregl.Map['project']>>();
+        const clusterVisuals = new Map<number, ReturnType<typeof getClusterVisualMetrics>>();
 
-        // Measure cluster sizes before applying collision limits
+        // Measure cluster sizes before collision caps
         visibleClusters.forEach((cluster) => {
             const clusterId = cluster.properties.cluster_id;
-            const radius = getClusterVisualRadius(cluster, index, map);
-            clusterRadii.set(clusterId, radius);
-            clusterPixels.set(clusterId, map.project(cluster.geometry.coordinates as [number, number]));
+            const leaves = leavesByClusterId.get(clusterId) ?? [];
+            const visual = getClusterVisualMetrics(cluster, leaves, map);
+            clusterVisuals.set(clusterId, visual);
+            clusterRadii.set(clusterId, visual.radius);
+            clusterPixels.set(clusterId, map.project(visual.center));
         });
 
-        // Reduce cluster sizes that would overlap on screen
+        // Reduce visible cluster overlap without changing membership
         visibleClusters.forEach((cluster) => {
             const clusterId = cluster.properties.cluster_id;
             const clusterPixel = clusterPixels.get(clusterId);
@@ -798,13 +1140,13 @@ export const useArtistMarkers = ({
             let cappedRadius = ownRadius;
             clusterRadii.forEach((otherRadius, otherClusterId) => {
                 if (otherClusterId === clusterId) return;
+
                 const otherPixel = clusterPixels.get(otherClusterId);
                 if (!otherPixel) return;
 
-                const distance = Math.sqrt(
-                    (clusterPixel.x - otherPixel.x) ** 2
-                    + (clusterPixel.y - otherPixel.y) ** 2
-                );
+                const dx = clusterPixel.x - otherPixel.x;
+                const dy = clusterPixel.y - otherPixel.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 cappedRadius = Math.min(
                     cappedRadius,
                     Math.max(CLUSTER_CONFIG.minClusterSize / 2, distance - otherRadius - 4)
@@ -814,13 +1156,17 @@ export const useArtistMarkers = ({
         });
 
         visibleClustersRef.current = visibleClusters;
+        visibleClusterRadiiRef.current = new Map(clusterRadii);
         // Store next marker positions before removing stale markers
         clusters.forEach((feature) => {
-            const [lng, lat] = feature.geometry.coordinates;
+            const [lng, lat] = feature.geometry.coordinates as [number, number];
             const key = isClusterFeature(feature)
                 ? `cluster-${feature.properties.cluster_id}`
                 : `artist-${feature.properties.artistId}`;
-            nextPositions.set(key, [lng, lat]);
+            const position: [number, number] = isClusterFeature(feature)
+                ? clusterVisuals.get(feature.properties.cluster_id)?.center ?? [lng, lat]
+                : [lng, lat];
+            nextPositions.set(key, position);
         });
 
         const mergeTargetKeys = new Set<string>();
@@ -860,13 +1206,13 @@ export const useArtistMarkers = ({
 
             if (isClusterFeature(feature)) {
                 // Load images for artists inside this cluster
+                const leaves = leavesByClusterId.get(feature.properties.cluster_id) ?? [];
                 const { element, center } = createClusterMarkerElement(
                     feature,
-                    index,
+                    leaves,
                     map,
                     clusterRadii.get(feature.properties.cluster_id)
                 );
-                const leaves = index.getLeaves(feature.properties.cluster_id, Infinity);
                 const clusterArtists = leaves
                     .map((leaf) => artistsByIdRef.current.get(leaf.properties.artistId))
                     .filter((artist): artist is Artist => !!artist);
@@ -932,6 +1278,7 @@ export const useArtistMarkers = ({
             const key = `artist-${artist.id}`;
             const existingEntry = markersRef.current.get(key);
             const target: [number, number] = [lng, lat];
+            const markerRenderKey = getArtistMarkerRenderKey(artist, artistNameDisplayMode);
             const marker = existingEntry?.kind === 'artist'
                 ? existingEntry.marker
                 : new maplibregl.Marker({
@@ -942,8 +1289,10 @@ export const useArtistMarkers = ({
                         ? findNearestPosition(target, previousPositions, markerMoveLinkMaxDistance) ?? target
                         : target
                 ).addTo(map);
+            let nextMarkerRenderKey = markerRenderKey;
 
             if (existingEntry?.kind === 'artist') {
+                nextMarkerRenderKey = refreshArtistMarkerElement(existingEntry, artist.id, markerRenderKey);
                 animateMarkerTo(marker, target);
             } else if (shouldLinkMarkerMotion) {
                 animateMarkerTo(marker, target);
@@ -953,17 +1302,19 @@ export const useArtistMarkers = ({
                 event.stopPropagation();
                 openArtistPopup(artist, marker);
             };
+            syncArtistMarkerStackOrder(artist.id, marker.getElement(), clusterDisabled);
 
             markersRef.current.set(key, {
                 marker,
                 kind: 'artist',
+                markerRenderKey: nextMarkerRenderKey,
                 popup: existingEntry?.popup,
                 root: existingEntry?.root,
             });
             nextMarkerKeys.add(key);
         });
 
-        // Remove markers missing from the current Supercluster result
+        // Remove markers missing from the current cluster result
         markersRef.current.forEach((entry, key) => {
             if (nextMarkerKeys.has(key)) return;
             const currentPosition = getMarkerCoordinates(entry.marker);
@@ -985,10 +1336,10 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, removeMarkerEntry]);
+    }, [animateMarkerTo, artistNameDisplayMode, displayArtists, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
-        // Compare only fields used by the spatial index
+        // Compare only fields used by geometric clustering
         const nextSignature = getArtistIndexSignature(displayArtists, view);
         if (clusterIndexSignatureRef.current === nextSignature) {
             // Same index inputs keep expanded clusters intact
@@ -996,7 +1347,7 @@ export const useArtistMarkers = ({
             return;
         }
 
-        // New index inputs need a new Supercluster instance
+        // New cluster inputs need a fresh visible render
         clusterIndexSignatureRef.current = nextSignature;
 
         lastClusterZoomRef.current = null;
@@ -1005,11 +1356,6 @@ export const useArtistMarkers = ({
         mergeHoldTokenRef.current += 1;
         mergeHoldTargetKeysRef.current.clear();
         clearPendingMergeTimers();
-        clusterIndexRef.current = new Supercluster<ArtistPointProperties, ClusterProperties>({
-            radius: CLUSTER_CONFIG.maxClusterRadius,
-            maxZoom: CLUSTER_CONFIG.disableClusteringAtZoomLevel - 1,
-        }).load(displayArtists.map((artist) => makeArtistPoint(artist, view)));
-
         // Popup close can happen just before this rebuild
         if (!shouldKeepExpandedClusters()) {
             removeExpandedClusterArtifacts();

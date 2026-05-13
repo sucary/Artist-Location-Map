@@ -2,9 +2,12 @@ import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
 import type { Artist, LocationView } from '../../../types/artist';
 import type { ArtistPoint, ClusterFeature, ClusterPoint } from '../types';
 
+// Artist GeoJSON point and cluster feature helpers
+
 const getArtistCoords = (artist: Artist, view: LocationView) => {
-    const location = view === 'active' ? artist.activeLocation : artist.originalLocation;
-    return location.coordinates;
+    return view === 'active'
+        ? artist.activeLocationDisplayCoordinates
+        : artist.originalLocationDisplayCoordinates;
 };
 
 export const makeArtistPoint = (artist: Artist, view: LocationView): ArtistPoint => {
@@ -25,7 +28,7 @@ export const isClusterFeature = (feature: ClusterFeature): feature is ClusterPoi
     feature.properties.cluster === true
 );
 
-export const getSuperclusterZoom = (mapZoom: number) => (
+export const getClusterZoom = (mapZoom: number) => (
     // Keep clusters visible until the configured break point is clearly crossed.
     mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5
         ? CLUSTER_CONFIG.disableClusteringAtZoomLevel

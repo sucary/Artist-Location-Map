@@ -11,12 +11,12 @@ import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 const NORMAL_USER_DAILY_UPLOAD_LIMIT = 25;
-const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
-const LANDSCAPE_MAX_WIDTH = 1920;
-const LANDSCAPE_MAX_HEIGHT = 1080;
-const PORTRAIT_MAX_WIDTH = 1080;
-const PORTRAIT_MAX_HEIGHT = 1920;
-const SQUARE_MAX_DIMENSION = 1080;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const LANDSCAPE_MAX_WIDTH = 1280;
+const LANDSCAPE_MAX_HEIGHT = 720;
+const PORTRAIT_MAX_WIDTH = 720;
+const PORTRAIT_MAX_HEIGHT = 1280;
+const SQUARE_MAX_DIMENSION = 720;
 const ALLOWED_IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'webp']);
 
 function isExpectedCloudinaryUrl(secureUrl: string, publicId: string): boolean {
@@ -233,7 +233,7 @@ router.post(
         }
 
         if (Number.isFinite(bytes) && bytes! > MAX_IMAGE_BYTES) {
-            await rejectAndDeleteUpload(publicId, 'Image size must be smaller than 1 MB', res);
+            await rejectAndDeleteUpload(publicId, 'Image size must be smaller than 5 MB', res);
             return;
         }
 

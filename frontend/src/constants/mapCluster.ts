@@ -1,9 +1,14 @@
+// Map clustering distance and marker layout thresholds
 export const CLUSTER_CONFIG = {
   disableClusteringAtZoomLevel: 8,
   maxClusterRadius: 100,
-  gridSpacing: 32,
+  // Same-cluster markers keep the original readability gap
+  artistMarkerCollisionDistance: 44,
+  gridSpacing: 44,
+  // Outside markers and cluster circles allow slight visual overlap
+  outerCollisionDistance: 36,
   minClusterSize: 28,
-  maxClusterSize: 260,
+  maxClusterSize: 400,
   maxOffsetRatio: 0.25,
   refreshDelay: 100,
 } as const;

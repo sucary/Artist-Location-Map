@@ -8,6 +8,7 @@ import { MediaCleanupService } from './mediaCleanupService';
 
 // ~1km tolerance to account for Nominatim coordinate variations
 const COORD_TOLERANCE = 0.01;
+const MIN_PLACEMENT_BOUNDARY_AREA_M2 = 1000000;
 
 function coordsMatch(a: Coordinates, b: Coordinates): boolean {
     return Math.abs(a.lat - b.lat) < COORD_TOLERANCE &&
@@ -27,9 +28,24 @@ function shouldUseManualCoordinates(
     return location.osmType !== 'node' && isManualSelection(location.coordinates, cityCenter);
 }
 
+async function hasUsablePlacementBoundary(cityId: string): Promise<boolean> {
+    const result = await pool.query<{ usable: boolean }>(`
+        SELECT (
+            COALESCE(boundary, raw_boundary) IS NOT NULL
+            AND NOT ST_IsEmpty(COALESCE(boundary, raw_boundary)::geometry)
+            AND ST_Area(COALESCE(boundary, raw_boundary)) >= $2
+        ) AS usable
+        FROM locations
+        WHERE id = $1
+    `, [cityId, MIN_PLACEMENT_BOUNDARY_AREA_M2]);
+
+    return result.rows[0]?.usable === true;
+}
+
 async function resolveCity(osmId: number, osmType: string): Promise<City> {
     let city = await CityService.getByOsmId(osmId, osmType);
-    if (!city) {
+
+    if (!city || !await hasUsablePlacementBoundary(city.id)) {
         const nominatimData = await CityService.fetchByOsmId(osmId, osmType);
         if (!nominatimData) {
             throw new Error('Failed to fetch city data from Nominatim');
@@ -181,9 +197,7 @@ async function applySharedArtistMedia(
         await MediaCleanupService.deletePublicIdIfUnused(previousSharedPublicId);
     }
 
-    delete data.sourceImage;
-    delete data.avatarCrop;
-    delete data.profileCrop;
+    return;
 }
 
 export const ArtistService = {
@@ -220,7 +234,7 @@ export const ArtistService = {
             originalDisplayCoordinates = data.originalLocation.coordinates;
         } else {
             data.originalLocation.coordinates = originalCity.center;
-            const randomPoint = await CityService.generateRandomPoint(originalCity.id);
+            const randomPoint = await CityService.generateRandomPoint(originalCity.id, undefined, userId);
             originalDisplayCoordinates = randomPoint || originalCity.center;
         }
 
@@ -231,7 +245,7 @@ export const ArtistService = {
             activeDisplayCoordinates = data.activeLocation.coordinates;
         } else {
             data.activeLocation.coordinates = activeCity.center;
-            const randomPoint = await CityService.generateRandomPoint(activeCity.id);
+            const randomPoint = await CityService.generateRandomPoint(activeCity.id, undefined, userId);
             activeDisplayCoordinates = randomPoint || activeCity.center;
         }
 
@@ -319,7 +333,7 @@ export const ArtistService = {
                 storeData.originalLocationDisplayCoordinates = data.originalLocation!.coordinates;
             } else {
                 data.originalLocation!.coordinates = originalCity!.center;
-                const randomPoint = await CityService.generateRandomPoint(finalOriginalCityId);
+                const randomPoint = await CityService.generateRandomPoint(finalOriginalCityId, undefined, userId);
                 storeData.originalLocationDisplayCoordinates = randomPoint || originalCity!.center;
             }
         }
@@ -332,7 +346,7 @@ export const ArtistService = {
                 storeData.activeLocationDisplayCoordinates = data.activeLocation!.coordinates;
             } else {
                 data.activeLocation!.coordinates = activeCity!.center;
-                const randomPoint = await CityService.generateRandomPoint(finalActiveCityId);
+                const randomPoint = await CityService.generateRandomPoint(finalActiveCityId, undefined, userId);
                 storeData.activeLocationDisplayCoordinates = randomPoint || activeCity!.center;
             }
         }

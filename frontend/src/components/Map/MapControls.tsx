@@ -5,6 +5,8 @@ import type { MapTileTheme } from './config/mapStyles';
 import { LocationIcon, NorthIcon, ExpandIcon, CollapseIcon } from '../icons/MapIcons';
 import { useTranslation } from 'react-i18next';
 
+// Floating map control drawer and map actions
+
 interface MapControlsProps {
     view: LocationView;
     setView: (view: LocationView) => void;

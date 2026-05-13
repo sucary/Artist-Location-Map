@@ -110,6 +110,13 @@ const ArtistForm = ({
     }, [formData.sourceImage, onTutorialImageStateChange]);
 
     useEffect(() => {
+        if (formData.inactiveYear === undefined) return;
+
+        // MusicBrainz end dates reveal the inactive-year control
+        setShowInactive(true);
+    }, [formData.inactiveYear]);
+
+    useEffect(() => {
         const scrollElement = formScrollRef.current;
         if (!scrollElement) return;
 

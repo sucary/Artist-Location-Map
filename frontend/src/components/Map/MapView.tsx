@@ -28,6 +28,8 @@ import type { LocationView } from '../../types/artist';
 import type { ArtistPopupLifecycleState, MapViewProps } from './types';
 import { useTranslation } from 'react-i18next';
 
+// Interactive artist map shell and control wiring
+
 type MarkerWithUpdate = maplibregl.Marker & {
     // Reach MapLibre's private updater to follow inertial tile movement.
     _update?: (event?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => void;
@@ -65,7 +67,7 @@ export default function MapView({
     const revertingStyleRef = useRef(false);
     const locationLanguageRef = useRef(locationLanguage);
     const attributionButtonRef = useRef<HTMLButtonElement | null>(null);
-    const artistPopupLifecycleRef = useRef<ArtistPopupLifecycleState>({ open: false, closedAt: 0 });
+    const artistPopupLifecycleRef = useRef<ArtistPopupLifecycleState>({ open: false, openedAt: 0, closedAt: 0 });
     const mobileControlsOpenRef = useRef(true);
     const attributionOpenRef = useRef(false);
     const popupControlsSnapshotRef = useRef<{ mobileControlsOpen: boolean; attributionOpen: boolean } | null>(null);
@@ -518,6 +520,9 @@ export default function MapView({
             }
 
             if (isArtistPopupActive()) {
+                if (performance.now() - artistPopupLifecycleRef.current.openedAt < 150) {
+                    return;
+                }
                 suppressDoubleClickZoomBriefly();
                 closeActiveArtistPopup();
                 return;

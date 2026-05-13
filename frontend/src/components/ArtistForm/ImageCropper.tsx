@@ -28,15 +28,25 @@ interface CropState {
     zoom: number;
 }
 
-/**
- * Convert Area (from react-easy-crop) to CropArea (our type)
- */
 const areaToCropArea = (area: Area): CropArea => ({
     x: area.x,
     y: area.y,
     width: area.width,
     height: area.height,
 });
+
+const getCenteredCrop = (imageWidth: number, imageHeight: number, aspect: number): CropArea => {
+    const imageAspect = imageWidth / imageHeight;
+    const width = imageAspect > aspect ? imageHeight * aspect : imageWidth;
+    const height = imageAspect > aspect ? imageHeight : imageWidth / aspect;
+
+    return {
+        x: Math.max(0, (imageWidth - width) / 2),
+        y: Math.max(0, (imageHeight - height) / 2),
+        width,
+        height,
+    };
+};
 
 const INITIAL_CROP_STATE: CropState = {
     crop: { x: 0, y: 0 },
@@ -55,6 +65,7 @@ const ImageCropper = ({
     const dialogRef = useDialogAccessibility(onCancel);
     const [mode, setMode] = useState<CropMode>(initialMode);
     const { t } = useTranslation();
+    const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
 
     // Single crop state - resets when switching tabs
     const [cropState, setCropState] = useState<CropState>({ ...INITIAL_CROP_STATE });
@@ -112,18 +123,35 @@ const ImageCropper = ({
         return () => element.removeEventListener('wheel', handleWheel);
     }, []);
 
+    useEffect(() => {
+        let cancelled = false;
+        const image = new Image();
+        image.onload = () => {
+            if (cancelled) return;
+            setImageSize({ width: image.naturalWidth, height: image.naturalHeight });
+        };
+        image.src = imageSrc;
+
+        return () => {
+            cancelled = true;
+        };
+    }, [imageSrc]);
+
     const handleSave = useCallback(() => {
-        // Use saved crop areas, or fall back to initial crops if provided
         const avatarCrop = avatarCroppedArea
             ? areaToCropArea(avatarCroppedArea)
-            : initialAvatarCrop || { x: 0, y: 0, width: 400, height: 400 };
+            : initialAvatarCrop || (imageSize
+                ? getCenteredCrop(imageSize.width, imageSize.height, ASPECT_RATIOS.avatar)
+                : { x: 0, y: 0, width: 400, height: 400 });
 
         const profileCrop = profileCroppedArea
             ? areaToCropArea(profileCroppedArea)
-            : initialProfileCrop || { x: 0, y: 0, width: 800, height: 320 };
+            : initialProfileCrop || (imageSize
+                ? getCenteredCrop(imageSize.width, imageSize.height, ASPECT_RATIOS.profile)
+                : { x: 0, y: 0, width: 800, height: 320 });
 
         onSave({ avatarCrop, profileCrop });
-    }, [avatarCroppedArea, profileCroppedArea, initialAvatarCrop, initialProfileCrop, onSave]);
+    }, [avatarCroppedArea, profileCroppedArea, imageSize, initialAvatarCrop, initialProfileCrop, onSave]);
 
     // Check if either crop has been modified
     const hasChanges = avatarCroppedArea !== null || profileCroppedArea !== null;

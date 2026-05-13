@@ -419,6 +419,7 @@ export function SettingsPage() {
                                     artist={sampleArtist}
                                     showActions={false}
                                     locationLanguage={locationLanguage}
+                                    artistNameDisplayMode={artistNameDisplayMode}
                                 />
                                 <p className="mt-2 text-center text-xs text-text-muted">
                                     {t('settings.artistNames.previewFooter')}

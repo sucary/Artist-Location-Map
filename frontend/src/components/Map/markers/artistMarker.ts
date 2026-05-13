@@ -9,6 +9,22 @@ const preloadedImageUrls = new Set<string>();
 
 const getMarkerImageUrl = (artist: Artist) => getAvatarUrl(artist.sourceImage, artist.avatarCrop);
 
+export const getArtistMarkerRenderKey = (
+    artist: Artist,
+    artistNameDisplayMode?: ArtistNameDisplayMode
+) => {
+    const imageUrl = getMarkerImageUrl(artist) ?? '';
+    const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
+
+    // Visible marker content cache key
+    return [
+        artist.id,
+        displayName.primary,
+        artist.name,
+        imageUrl,
+    ].join('|');
+};
+
 const getNameShortcut = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return '';
@@ -39,22 +55,27 @@ export const preloadArtistMarkerImages = (artists: Artist[]) => {
     });
 };
 
-export const createArtistMarkerElement = (artist: Artist, artistNameDisplayMode?: ArtistNameDisplayMode) => {
+export const createArtistMarkerElement = (
+    artist: Artist,
+    artistNameDisplayMode?: ArtistNameDisplayMode
+) => {
     const imageUrl = getMarkerImageUrl(artist);
     const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
     const element = document.createElement('button');
     const frame = document.createElement('div');
 
-    // Build marker nodes directly to keep artist names and image URLs escaped.
+    // Escaped marker content from DOM node construction
     element.type = 'button';
     element.className = 'artist-maplibre-marker custom-artist-marker';
     element.setAttribute('aria-label', displayName.primary);
+    element.dataset.artistId = artist.id;
     element.ondblclick = (event) => {
         event.preventDefault();
         event.stopPropagation();
     };
 
-    frame.className = 'relative w-7 h-7 rounded-full border-2 border-white app-dark:border-border-strong overflow-hidden bg-surface-muted shadow-sm group';
+    // Marker footprint matches clustering collision distance
+    frame.className = 'relative w-10 h-10 rounded-full border-3 border-white app-dark:border-border-strong overflow-hidden bg-surface-muted shadow-xl shadow-black/10 group';
 
     if (imageUrl) {
         const image = document.createElement('img');
