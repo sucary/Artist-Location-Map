@@ -319,7 +319,7 @@ export function DarkModeInteractionTemplate() {
                                     <div className="absolute inset-8 rounded-full border-2 border-text/70" />
                                 </div>
                                 <div className="flex gap-3 border-t border-border p-4">
-                                    <button type="button" className="flex-1 rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-secondary">Cancel</button>
+                                    <button type="button" className="flex-1 rounded-md border border-transparent bg-[#F3F4F6] px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:bg-[#3A3A3C]">Cancel</button>
                                     <button type="button" className="flex-1 rounded-md border border-transparent bg-primary-contrast px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-contrast-hover disabled:cursor-not-allowed disabled:opacity-50">Save</button>
                                 </div>
                             </div>
@@ -350,7 +350,7 @@ export function DarkModeInteractionTemplate() {
                             <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
                                 <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={() => setShowDialogPreview(false)} />
                                 <section role="dialog" aria-modal="true" className="relative w-[calc(100%-1rem)] max-w-80 rounded-lg border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80">
-                                    <h2 className="text-base font-semibold text-error">Delete artist</h2>
+                                    <h2 className="text-base font-semibold text-error app-dark:text-primary app-dark:font-bold">Delete artist</h2>
                                     <div className="mt-3 text-sm leading-5 text-text-secondary">ConfirmDialog surface and actions, contained inside this preview frame.</div>
                                     <div className="mt-4 flex gap-3">
                                         <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowDialogPreview(false)}>Cancel</Button>

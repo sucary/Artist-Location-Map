@@ -6,6 +6,8 @@ import { ASPECT_RATIOS } from '../../constants/artist';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import { useTranslation } from 'react-i18next';
 
+// Image cropper dialog with avatar and profile crop controls
+
 export interface CropResult {
     avatarCrop: CropArea;
     profileCrop: CropArea;
@@ -270,7 +272,7 @@ const ImageCropper = ({
                 <div className="flex gap-3 p-4 border-t border-border">
                     <button
                         onClick={onCancel}
-                        className="flex-1 px-4 py-2 text-sm font-medium text-text bg-surface border border-border-strong rounded-md hover:bg-surface-secondary transition-colors"
+                        className="flex-1 rounded-md border border-transparent bg-[#F3F4F6] px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:bg-[#3A3A3C]"
                         type="button"
                     >
                         {t('artistForm.buttons.cancel')}

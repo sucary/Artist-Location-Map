@@ -126,7 +126,7 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                                 />
                             </div>
 
-                            {error && <p role="alert" className="text-error text-sm">{error}</p>}
+                            {error && <p role="alert" className="text-error text-sm app-dark:text-primary app-dark:font-bold">{error}</p>}
 
                             <button
                                 type="submit"

@@ -168,7 +168,7 @@ export function LocalizationEditor() {
                                 </span>
                                 {missing > 0 && <span className="text-xs text-warning shrink-0">{missing} missing</span>}
                                 {missing === 0 && lc && <span className="text-xs text-success shrink-0">ok</span>}
-                                {!lc && <span className="text-xs text-error shrink-0">none</span>}
+                                {!lc && <span className="text-xs text-error shrink-0 app-dark:text-primary app-dark:font-bold">none</span>}
                             </button>
                         );
                     })}

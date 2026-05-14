@@ -576,14 +576,16 @@ export default function MapView({
         onFocusedLocationHandled?.();
     }, [focusedLocation, mapReady, onFocusedLocationHandled]);
 
-    // Fly to a focused artist and reopen its popup after the animation.
+    // Fly to a focused artist marker and reopen its popup after the animation.
     useEffect(() => {
         const map = mapRef.current;
         if (!map || !mapReady || !focusedArtist) return;
 
-        const location = view === 'active' ? focusedArtist.activeLocation : focusedArtist.originalLocation;
+        const markerCoordinates = view === 'active'
+            ? focusedArtist.activeLocationDisplayCoordinates
+            : focusedArtist.originalLocationDisplayCoordinates;
         map.flyTo({
-            center: [location.coordinates.lng, location.coordinates.lat],
+            center: [markerCoordinates.lng, markerCoordinates.lat],
             zoom: 11,
             duration: 2000,
         });

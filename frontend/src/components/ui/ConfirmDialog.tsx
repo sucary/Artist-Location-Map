@@ -4,6 +4,8 @@ import { cn } from '../../lib/utils';
 import { Button } from './Button';
 import { useTranslation } from 'react-i18next';
 
+// Confirmation dialog variants and destructive action styling
+
 export type ConfirmDialogVariant = 'default' | 'danger' | 'warning' | 'success' | 'error';
 
 interface ConfirmDialogProps {
@@ -21,10 +23,10 @@ interface ConfirmDialogProps {
 
 const variantLabelClasses: Record<ConfirmDialogVariant, string> = {
     default: 'text-primary-contrast app-dark:text-primary-text-dark',
-    danger: 'text-[rgb(220,38,38)]',
+    danger: 'text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold',
     warning: 'text-warning',
     success: 'text-success',
-    error: 'text-[rgb(220,38,38)]',
+    error: 'text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold',
 };
 
 const confirmButtonClasses: Record<ConfirmDialogVariant, string> = {

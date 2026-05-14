@@ -3,6 +3,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
 
+// Status alert presentation variants
+
 const alertVariants = cva(
     'rounded-lg px-3 py-2',
     {
@@ -21,7 +23,7 @@ const alertVariants = cva(
 );
 
 const alertAccentClasses = {
-    error: 'text-[rgb(220,38,38)]',
+    error: 'text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold',
     success: 'text-success',
     warning: 'text-warning',
     info: 'text-primary-contrast app-dark:text-primary-text-dark',

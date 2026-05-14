@@ -2,6 +2,8 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
+// Shared button variants for primary, secondary, and low-emphasis actions
+
 const buttonVariants = cva(
     `font-medium rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed 
     focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface`,
@@ -9,7 +11,7 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 primary: 'bg-primary-contrast text-white hover:bg-primary-contrast-hover border border-transparent',
-                secondary: 'bg-surface text-text border border-border-strong hover:bg-surface-secondary ',
+                secondary: 'bg-[#F3F4F6] text-text border border-transparent hover:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:bg-[#3A3A3C]',
                 ghost: 'bg-transparent text-text-muted hover:text-primary-contrast app-dark:hover:text-primary border-none',
             },
             size: {

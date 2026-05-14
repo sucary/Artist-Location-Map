@@ -250,7 +250,7 @@ function App() {
                 <Trans
                     i18nKey="app.dialogs.deleteArtist.message"
                     values={{ name: artist.name }}
-                    components={{ strong: <TransStrong className="font-semibold text-[rgb(220,38,38)]" /> }}
+                    components={{ strong: <TransStrong className="font-semibold text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold" /> }}
                 />
             ),
             variant: 'danger',

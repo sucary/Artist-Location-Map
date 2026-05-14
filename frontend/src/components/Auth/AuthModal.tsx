@@ -16,10 +16,10 @@ interface AuthModalProps {
 
 function AuthErrorBox({ message }: { message: string }) {
     return (
-        <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error">
+        <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error app-dark:text-primary app-dark:font-bold">
             <svg
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-[#ef4444]"
+                className="h-4 w-4 shrink-0 text-[#ef4444] app-dark:text-primary"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

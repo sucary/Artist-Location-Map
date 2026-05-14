@@ -820,7 +820,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                     </div>
                                     <div className="rounded-md border border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] p-3">
                                         <div className="h-5 w-full rounded bg-[rgb(220,38,38)]" />
-                                        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[rgb(220,38,38)]">Error / Danger</p>
+                                        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold">Error / Danger</p>
                                         <p className="text-xs text-text-secondary">#DC2626</p>
                                     </div>
                                 </div>
@@ -848,7 +848,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                 <div className="flex flex-wrap gap-2">
                                     <span className="rounded-md bg-success/10 px-2 py-1 text-xs font-medium text-success">Saved</span>
                                     <span className="rounded-md bg-warning/10 px-2 py-1 text-xs font-medium text-warning">Needs review</span>
-                                    <span className="rounded-md bg-[rgba(220,38,38,0.1)] px-2 py-1 text-xs font-medium text-[rgb(220,38,38)]">Failed</span>
+                                    <span className="rounded-md bg-[rgba(220,38,38,0.1)] px-2 py-1 text-xs font-medium text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold">Failed</span>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2">
