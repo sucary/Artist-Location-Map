@@ -62,6 +62,9 @@ export type MarkerEntry = {
 
 export type ExpandedClusterState = {
     markers: maplibregl.Marker[];
+    debugRingMarkers: maplibregl.Marker[];
+    artistClusterColors: Map<string, string>;
+    markerTargets: [number, number][];
     sourceId: string;
     layerId: string;
     hiddenClusterKey: string;

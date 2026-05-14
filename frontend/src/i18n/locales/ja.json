@@ -257,6 +257,13 @@
       "makePublic": "アカウントを公開する",
       "makePrivate": "アカウントを非公開にする"
     },
+    "adminTools": {
+      "title": "管理者ツール",
+      "clusterDebug": "クラスターデバッグ",
+      "clusterDebugDescription": "地図にクラスターデバッグ操作を表示します。",
+      "showClusterDebug": "クラスターデバッグ操作を表示",
+      "hideClusterDebug": "クラスターデバッグ操作を非表示"
+    },
     "language": {
       "title": "表示",
       "locationName": "地名の言語",

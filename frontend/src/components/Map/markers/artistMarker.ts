@@ -9,6 +9,23 @@ const preloadedImageUrls = new Set<string>();
 
 const getMarkerImageUrl = (artist: Artist) => getAvatarUrl(artist.sourceImage, artist.avatarCrop);
 
+export const createArtistDebugCenterElement = (color: string) => {
+    const element = document.createElement('div');
+
+    element.setAttribute('aria-hidden', 'true');
+    element.className = 'artist-maplibre-marker-debug-center';
+    element.style.width = '10px';
+    element.style.height = '10px';
+    element.style.borderRadius = '9999px';
+    element.style.boxSizing = 'border-box';
+    element.style.border = '2px solid #ffffff';
+    element.style.background = color;
+    element.style.pointerEvents = 'none';
+    element.style.boxShadow = '0 0 0 1px #111827, 0 1px 6px rgba(0,0,0,0.5)';
+
+    return element;
+};
+
 export const getArtistMarkerRenderKey = (
     artist: Artist,
     artistNameDisplayMode?: ArtistNameDisplayMode
@@ -57,7 +74,8 @@ export const preloadArtistMarkerImages = (artists: Artist[]) => {
 
 export const createArtistMarkerElement = (
     artist: Artist,
-    artistNameDisplayMode?: ArtistNameDisplayMode
+    artistNameDisplayMode?: ArtistNameDisplayMode,
+    clusterDebugColor?: string
 ) => {
     const imageUrl = getMarkerImageUrl(artist);
     const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
@@ -77,7 +95,14 @@ export const createArtistMarkerElement = (
     // Marker footprint matches clustering collision distance
     frame.className = 'relative w-10 h-10 rounded-full border-3 border-white app-dark:border-border-strong overflow-hidden bg-surface-muted shadow-xl shadow-black/10 group';
 
-    if (imageUrl) {
+    if (clusterDebugColor) {
+        // Debug swatch preserves marker geometry while hiding the avatar
+        const swatch = document.createElement('div');
+        element.dataset.clusterDebugColor = clusterDebugColor;
+        swatch.className = 'h-full w-full';
+        swatch.style.background = clusterDebugColor;
+        frame.appendChild(swatch);
+    } else if (imageUrl) {
         const image = document.createElement('img');
         image.src = imageUrl;
         image.className = 'w-full h-full object-cover object-center';

@@ -257,6 +257,13 @@
       "makePublic": "将账号设为公开",
       "makePrivate": "将账号设为私密"
     },
+    "adminTools": {
+      "title": "管理员工具",
+      "clusterDebug": "圈圈调试",
+      "clusterDebugDescription": "在地图上显示圈圈调试按钮。",
+      "showClusterDebug": "显示圈圈调试按钮",
+      "hideClusterDebug": "隐藏圈圈调试按钮"
+    },
     "language": {
       "title": "显示",
       "locationName": "地点名称语言",

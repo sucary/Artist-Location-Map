@@ -257,6 +257,13 @@
       "makePublic": "將帳號設為公開",
       "makePrivate": "將帳號設為私人"
     },
+    "adminTools": {
+      "title": "管理員工具",
+      "clusterDebug": "圈圈除錯",
+      "clusterDebugDescription": "在地圖上顯示圈圈除錯按鈕。",
+      "showClusterDebug": "顯示圈圈除錯按鈕",
+      "hideClusterDebug": "隱藏圈圈除錯按鈕"
+    },
     "language": {
       "title": "顯示",
       "locationName": "地點名稱語言",

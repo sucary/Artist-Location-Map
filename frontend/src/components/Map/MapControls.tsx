@@ -14,7 +14,11 @@ interface MapControlsProps {
     setTileTheme: (theme: MapTileTheme) => void;
     canUseDarkTiles: boolean;
     hasExpandedClusters: boolean;
+    clusterColorDebugEnabled: boolean;
+    showClusterDebugControls: boolean;
     onToggleClusters: () => void;
+    onToggleRawClusters: () => void;
+    onToggleClusterColorDebug: () => void;
     canResetMapView: boolean;
     onResetMapView: () => void;
     onLocate: () => void;
@@ -34,7 +38,11 @@ export function MapControls({
     setTileTheme,
     canUseDarkTiles,
     hasExpandedClusters,
+    clusterColorDebugEnabled,
+    showClusterDebugControls,
     onToggleClusters,
+    onToggleRawClusters,
+    onToggleClusterColorDebug,
     canResetMapView,
     onResetMapView,
     onLocate,
@@ -206,6 +214,30 @@ export function MapControls({
                     >
                         {hasExpandedClusters ? <CollapseIcon className="w-5 h-5" /> : <ExpandIcon className="w-5 h-5" />}
                     </button>
+
+                    {showClusterDebugControls && (
+                        <>
+                            {/* Admin-only cluster inspection controls */}
+                            <button
+                                aria-label={hasExpandedClusters ? 'Collapse raw cluster debug' : 'Expand raw cluster debug'}
+                                onClick={onToggleRawClusters}
+                                className={`${mapButtonClass} rounded-md shadow-md border border-warning/70 text-warning hover:text-warning`}
+                                title={hasExpandedClusters ? 'Collapse raw cluster debug' : 'Expand raw cluster debug'}
+                            >
+                                <span aria-hidden="true" className="text-[10px] font-bold leading-none">DBG1</span>
+                            </button>
+
+                            <button
+                                aria-pressed={clusterColorDebugEnabled}
+                                aria-label={clusterColorDebugEnabled ? 'Disable cluster color debug' : 'Enable cluster color debug'}
+                                onClick={onToggleClusterColorDebug}
+                                className={`${mapButtonClass} rounded-md shadow-md border border-warning/70 text-warning hover:text-warning ${clusterColorDebugEnabled ? 'bg-warning/10' : ''}`}
+                                title={clusterColorDebugEnabled ? 'Disable cluster color debug' : 'Enable cluster color debug'}
+                            >
+                                <span aria-hidden="true" className="text-[10px] font-bold leading-none">DBG2</span>
+                            </button>
+                        </>
+                    )}
 
                     <button
                         aria-label={t('map.buttons.mapControls.resetMapDirection')}

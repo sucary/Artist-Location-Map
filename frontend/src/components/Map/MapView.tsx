@@ -13,9 +13,21 @@ import {
     type MapTileLayer,
     type MapTileTheme,
 } from './config/mapStyles';
-import { defaultCenter, defaultZoom, scrollWheelZoomRate, trackpadZoomRate } from './config/mapConstants';
-import { getStoredTileTheme, storeTileLayer, storeTileTheme } from './config/mapStorage';
+import {
+    CLUSTER_DEBUG_CONTROLS_STORAGE_EVENT,
+    defaultCenter,
+    defaultZoom,
+    scrollWheelZoomRate,
+    trackpadZoomRate,
+} from './config/mapConstants';
+import {
+    getStoredClusterDebugControlsEnabled,
+    getStoredTileTheme,
+    storeTileLayer,
+    storeTileTheme,
+} from './config/mapStorage';
 import { useArtistMarkers } from './hooks/useArtistMarkers';
+import { getClusterZoom } from './clusters/clusterIndex';
 import { patchMapLabelLanguage } from './layers/labelLanguage';
 import { syncCityBoundaryLayers } from './layers/cityBoundaryLayers';
 import { syncChinaClaimedBorderLayers } from './layers/chinaClaimedBorderLayers';
@@ -86,7 +98,12 @@ export default function MapView({
     const [attributionOpen, setAttributionOpen] = useState(false);
     const [mobileControlsOpen, setMobileControlsOpen] = useState(true);
     const [canResetMapView, setCanResetMapView] = useState(false);
+    const [clusterColorDebugEnabled, setClusterColorDebugEnabled] = useState(false);
+    const [clusterDebugControlsEnabled, setClusterDebugControlsEnabled] = useState(getStoredClusterDebugControlsEnabled);
+    const [rawClusterDebugExpanded, setRawClusterDebugExpanded] = useState(false);
     const { t } = useTranslation();
+    const canUseClusterDebugControls = isAdmin && clusterDebugControlsEnabled;
+    const activeClusterColorDebugEnabled = canUseClusterDebugControls && clusterColorDebugEnabled;
 
     const isArtistPopupActive = useCallback(() => {
         const lifecycle = artistPopupLifecycleRef.current;
@@ -109,6 +126,19 @@ export default function MapView({
         storeTileTheme(tileTheme);
         document.documentElement.dataset.theme = tileTheme;
     }, [tileTheme]);
+
+    // Admin map debug visibility follows the browser-local settings toggle.
+    useEffect(() => {
+        const syncClusterDebugControls = (event: Event) => {
+            const enabled = event instanceof CustomEvent && typeof event.detail?.enabled === 'boolean'
+                ? event.detail.enabled
+                : getStoredClusterDebugControlsEnabled();
+            setClusterDebugControlsEnabled(enabled);
+        };
+
+        window.addEventListener(CLUSTER_DEBUG_CONTROLS_STORAGE_EVENT, syncClusterDebugControls);
+        return () => window.removeEventListener(CLUSTER_DEBUG_CONTROLS_STORAGE_EVENT, syncClusterDebugControls);
+    }, []);
 
     const { data: artists, isError: artistsError } = useQuery({
         queryKey: ['artists', username, viewingFeatured],
@@ -238,6 +268,7 @@ export default function MapView({
         closeActiveArtistPopup,
         collapseExpandedClusters,
         expandAllVisibleClusters,
+        expandAllVisibleClustersAtLocations,
         expandedRef,
         hasExpandedClusters,
         markersRef,
@@ -250,6 +281,7 @@ export default function MapView({
         view,
         locationLanguage,
         artistNameDisplayMode,
+        clusterColorDebugEnabled: activeClusterColorDebugEnabled,
         selectedCityIdRef,
         setSelectedCityId,
         onEditArtist,
@@ -257,6 +289,17 @@ export default function MapView({
         onArtistPopupOpenChange: handleArtistPopupOpenChange,
         artistPopupLifecycleRef,
     });
+
+    useEffect(() => {
+        if (canUseClusterDebugControls) return;
+
+        setClusterColorDebugEnabled(false);
+        if (!rawClusterDebugExpanded) return;
+
+        // Hidden debug mode cannot leave center-only markers active.
+        collapseExpandedClusters(false);
+        setRawClusterDebugExpanded(false);
+    }, [canUseClusterDebugControls, collapseExpandedClusters, rawClusterDebugExpanded]);
 
     useEffect(() => {
         if (suppressArtistPopup) {
@@ -435,8 +478,11 @@ export default function MapView({
             markersRef.current.forEach(({ marker }) => {
                 (marker as MarkerWithUpdate)._update?.({ type: 'move' });
             });
-            expandedRef.current.forEach(({ markers }) => {
+            expandedRef.current.forEach(({ markers, debugRingMarkers }) => {
                 markers.forEach((marker) => {
+                    (marker as MarkerWithUpdate)._update?.({ type: 'move' });
+                });
+                debugRingMarkers.forEach((marker) => {
                     (marker as MarkerWithUpdate)._update?.({ type: 'move' });
                 });
             });
@@ -453,7 +499,16 @@ export default function MapView({
             // Keep the cluster open while drag inertia settles.
             suppressClusterCollapseUntilRef.current = performance.now() + 600;
         };
+        const logZoomLevel = () => {
+            const mapZoom = map.getZoom();
+            // Debug zoom pair after a completed zoom gesture
+            console.log('[cluster-debug] zoom level', {
+                mapZoom,
+                clusterZoom: getClusterZoom(mapZoom),
+            });
+        };
         const handleZoomEnd = () => {
+            logZoomLevel();
             // Zoom changes cluster membership, so stale expanded markers are cleared.
             collapseExpandedClusters(false);
             renderVisibleMarkers();
@@ -629,6 +684,41 @@ export default function MapView({
         setCanResetMapView(false);
     }, []);
 
+    const handleToggleClusters = useCallback(() => {
+        setRawClusterDebugExpanded(false);
+        if (hasExpandedClusters) {
+            collapseExpandedClusters();
+            return;
+        }
+
+        expandAllVisibleClusters();
+    }, [collapseExpandedClusters, expandAllVisibleClusters, hasExpandedClusters]);
+
+    const handleToggleRawClusters = useCallback(() => {
+        if (!canUseClusterDebugControls) return;
+
+        const mapZoom = mapRef.current?.getZoom() ?? null;
+        // Debug zoom pair for checking rendered radius against cluster buckets
+        console.log('[cluster-debug] zoom level', {
+            mapZoom,
+            clusterZoom: mapZoom === null ? null : getClusterZoom(mapZoom),
+        });
+
+        if (hasExpandedClusters) {
+            collapseExpandedClusters();
+            setRawClusterDebugExpanded(false);
+            return;
+        }
+
+        expandAllVisibleClustersAtLocations();
+        setRawClusterDebugExpanded(true);
+    }, [canUseClusterDebugControls, collapseExpandedClusters, expandAllVisibleClustersAtLocations, hasExpandedClusters]);
+
+    const handleToggleClusterColorDebug = useCallback(() => {
+        if (!canUseClusterDebugControls) return;
+        setClusterColorDebugEnabled((enabled) => !enabled);
+    }, [canUseClusterDebugControls]);
+
     const activeCanUseDarkTiles = canUseDarkTiles(tileLayer);
 
     // Collapse attribution before opening the mobile control drawer.
@@ -657,7 +747,11 @@ export default function MapView({
                 setTileTheme={setTileTheme}
                 canUseDarkTiles={activeCanUseDarkTiles}
                 hasExpandedClusters={hasExpandedClusters}
-                onToggleClusters={() => hasExpandedClusters ? collapseExpandedClusters() : expandAllVisibleClusters()}
+                clusterColorDebugEnabled={activeClusterColorDebugEnabled}
+                showClusterDebugControls={canUseClusterDebugControls}
+                onToggleClusters={handleToggleClusters}
+                onToggleRawClusters={handleToggleRawClusters}
+                onToggleClusterColorDebug={handleToggleClusterColorDebug}
                 canResetMapView={canResetMapView}
                 onResetMapView={handleResetMapView}
                 onLocate={handleLocate}

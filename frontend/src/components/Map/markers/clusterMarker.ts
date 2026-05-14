@@ -13,6 +13,12 @@ export type ClusterVisualMetrics = {
 type ClusterVisualColors = {
     background: string;
     border: string;
+    centerFill: string;
+    centerRing: string;
+    debugFill: string;
+    coverageRing: string;
+    coverageFill: string;
+    pullRing: string;
 };
 
 const generateHue = (lng: number, lat: number) => {
@@ -33,7 +39,48 @@ const getClusterVisualColors = (count: number, center: [number, number]): Cluste
     return {
         background: `hsla(${hue},${saturation}%,${lightness}%,0.4)`,
         border: `hsla(${hue},${saturation}%,${borderLightness}%,0.6)`,
+        centerFill: `hsl(${hue},${Math.min(95, saturation + 20)}%,${isDarkTheme ? 74 : 34}%)`,
+        centerRing: isDarkTheme ? '#ffffff' : '#111827',
+        debugFill: `hsl(${hue},${saturation}%,${lightness}%)`,
+        coverageRing: `hsla(${hue},${saturation}%,${borderLightness}%,0.95)`,
+        coverageFill: `hsla(${hue},${saturation}%,${lightness}%,0.08)`,
+        pullRing: `hsla(${hue},${saturation}%,${isDarkTheme ? 84 : 28}%,0.95)`,
     };
+};
+
+const createDebugRingElement = (radius: number, color: string, fill: string, dashed = false) => {
+    const size = Math.max(CLUSTER_CONFIG.minClusterSize, radius * 2);
+    const element = document.createElement('div');
+
+    element.setAttribute('aria-hidden', 'true');
+    element.className = 'artist-maplibre-cluster-debug-ring';
+    element.style.width = `${size}px`;
+    element.style.height = `${size}px`;
+    element.style.borderRadius = '9999px';
+    element.style.boxSizing = 'border-box';
+    element.style.border = `${dashed ? 2 : 3}px ${dashed ? 'dashed' : 'solid'} ${color}`;
+    element.style.background = fill;
+    element.style.pointerEvents = 'none';
+    element.style.boxShadow = dashed ? 'none' : `0 0 0 1px ${color}`;
+
+    return element;
+};
+
+const createDebugCenterElement = (colors: ClusterVisualColors) => {
+    const element = document.createElement('div');
+
+    element.setAttribute('aria-hidden', 'true');
+    element.className = 'artist-maplibre-cluster-debug-center';
+    element.style.width = '14px';
+    element.style.height = '14px';
+    element.style.borderRadius = '9999px';
+    element.style.boxSizing = 'border-box';
+    element.style.border = `3px solid ${colors.centerRing}`;
+    element.style.background = colors.centerFill;
+    element.style.pointerEvents = 'none';
+    element.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.65), 0 2px 8px rgba(0,0,0,0.45)';
+
+    return element;
 };
 
 export const getClusterVisualMetrics = (
@@ -72,7 +119,7 @@ export const getClusterVisualMetrics = (
     const center: [number, number] = [centerLngLat.lng, centerLngLat.lat];
     let maxDistance = 0;
 
-    // Radius covers the farthest clustered artist from the geometric center
+    // Target range remains the farthest artist center
     leaves.forEach((leaf) => {
         const [leafLng, leafLat] = leaf.geometry.coordinates;
         const leafPixel = map.project([leafLng, leafLat]);
@@ -90,21 +137,54 @@ export const getClusterVisualMetrics = (
     };
 };
 
+export const getClusterDebugColor = (
+    feature: ClusterPoint,
+    leaves: ArtistPoint[],
+    map: maplibregl.Map
+) => {
+    const metrics = getClusterVisualMetrics(feature, leaves, map);
+    return getClusterVisualColors(feature.properties.point_count, metrics.center).debugFill;
+};
+
+export const createClusterDebugRingElements = (
+    feature: ClusterPoint,
+    leaves: ArtistPoint[],
+    map: maplibregl.Map,
+    clusterRadius?: number,
+    pullRangeRadius: number = CLUSTER_CONFIG.maxClusterRadius
+): ClusterVisual[] => {
+    const metrics = getClusterVisualMetrics(feature, leaves, map);
+    const colors = getClusterVisualColors(feature.properties.point_count, metrics.center);
+
+    return [
+        {
+            element: createDebugRingElement(clusterRadius ?? metrics.radius, colors.coverageRing, colors.coverageFill),
+            center: metrics.center,
+        },
+        {
+            element: createDebugRingElement(pullRangeRadius, colors.pullRing, 'transparent', true),
+            center: metrics.center,
+        },
+        {
+            element: createDebugCenterElement(colors),
+            center: metrics.center,
+        },
+    ];
+};
+
 export const createClusterMarkerElement = (
     feature: ClusterPoint,
     leaves: ArtistPoint[],
     map: maplibregl.Map,
-    maxRadius?: number
+    debugSolid = false
 ): ClusterVisual => {
     const count = feature.properties.point_count;
     const metrics = getClusterVisualMetrics(feature, leaves, map);
     const [centerLng, centerLat] = metrics.center;
-    const ownRadius = metrics.radius;
     const colors = getClusterVisualColors(count, metrics.center);
-    // Respect collision caps from neighboring clusters
     const radius = Math.max(
         CLUSTER_CONFIG.minClusterSize / 2,
-        Math.min(maxRadius ?? ownRadius, ownRadius)
+        metrics.radius
     );
     const size = radius * 2;
     const visualSize = Math.min(
@@ -129,10 +209,11 @@ export const createClusterMarkerElement = (
     bubble.className = 'flex items-center justify-center rounded-full font-bold border-2 shadow-lg cursor-pointer text-white';
     bubble.style.width = `${visualSize}px`;
     bubble.style.height = `${visualSize}px`;
-    bubble.style.background = colors.background;
-    bubble.style.borderColor = colors.border;
+    bubble.style.background = debugSolid ? colors.debugFill : colors.background;
+    bubble.style.borderColor = debugSolid ? colors.coverageRing : colors.border;
     bubble.style.fontSize = `${fontSize}px`;
     bubble.textContent = String(count);
+    element.dataset.clusterDebugColor = colors.debugFill;
 
     element.appendChild(bubble);
 

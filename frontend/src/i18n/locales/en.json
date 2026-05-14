@@ -257,6 +257,13 @@
       "makePublic": "Make account public",
       "makePrivate": "Make account private"
     },
+    "adminTools": {
+      "title": "Admin tools",
+      "clusterDebug": "Cluster debugging",
+      "clusterDebugDescription": "Show cluster debug controls on the map.",
+      "showClusterDebug": "Show cluster debug controls",
+      "hideClusterDebug": "Hide cluster debug controls"
+    },
     "language": {
       "title": "Display",
       "locationName": "Location name language",

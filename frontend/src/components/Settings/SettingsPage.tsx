@@ -11,6 +11,8 @@ import type { ArtistNameDisplayMode } from '../../types/profile';
 import type { Artist } from '../../types/artist';
 import ArtistCard from '../ArtistCard';
 import { useTranslation } from 'react-i18next';
+import { getStoredClusterDebugControlsEnabled, storeClusterDebugControlsEnabled } from '../Map/config/mapStorage';
+
 
 type UiLanguage = 'en' | 'zh' | 'zh-Hant' | 'ja';
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
@@ -130,6 +132,9 @@ export function SettingsPage() {
     const [isPrivate, setIsPrivate] = useState(profile?.isPrivate ?? false);
     const [privacySaving, setPrivacySaving] = useState(false);
     const [privacyError, setPrivacyError] = useState<string | null>(null);
+
+    // Admin map debug controls stay browser-local
+    const [clusterDebugControlsEnabled, setClusterDebugControlsEnabled] = useState(getStoredClusterDebugControlsEnabled);
 
     // Location language
     const { locationLanguage, setLocationLanguage } = useLocationLanguage();
@@ -294,6 +299,14 @@ export function SettingsPage() {
         }
     };
 
+    const handleClusterDebugControlsToggle = () => {
+        const nextValue = !clusterDebugControlsEnabled;
+
+        // Admin debug preference stays in this browser.
+        storeClusterDebugControlsEnabled(nextValue);
+        setClusterDebugControlsEnabled(nextValue);
+    };
+
     const handleUiLanguageChange = async (language: UiLanguage) => {
         void i18n.changeLanguage(language);
 
@@ -336,6 +349,32 @@ export function SettingsPage() {
                     </button>
                 </div>
             </PageSection>
+
+            {profile.isAdmin && (
+                <PageSection title={t('settings.adminTools.title')}>
+                    <div className="flex items-center justify-between gap-5">
+                        <div>
+                            <p className="text-sm font-medium text-text">
+                                {t('settings.adminTools.clusterDebug')}
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">
+                                {t('settings.adminTools.clusterDebugDescription')}
+                            </p>
+                        </div>
+                        <button
+                            aria-label={clusterDebugControlsEnabled ? t('settings.adminTools.hideClusterDebug') : t('settings.adminTools.showClusterDebug')}
+                            type="button"
+                            role="switch"
+                            aria-checked={clusterDebugControlsEnabled}
+                            onClick={handleClusterDebugControlsToggle}
+                            className="relative inline-flex h-6 w-9 shrink-0 cursor-pointer items-center transition-opacity duration-200 focus:outline-none"
+                        >
+                            <span className={`pointer-events-none absolute left-1 top-1/2 h-3 w-7 -translate-y-1/2 rounded-full transition-colors duration-200 ${clusterDebugControlsEnabled ? 'bg-primary/35' : 'bg-border-strong'}`} />
+                            <span className={`pointer-events-none relative h-5 w-5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.35)] transform transition-colors transition-transform duration-200 ${clusterDebugControlsEnabled ? 'translate-x-4 bg-primary' : 'translate-x-0 bg-white app-dark:bg-text-secondary'}`} />
+                        </button>
+                    </div>
+                </PageSection>
+            )}
 
             {/* Language */}
             <PageSection title={t('settings.language.title')}>
