@@ -99,12 +99,11 @@ export function LocalizationEditor() {
         setSaving(true);
         setMessage(null);
         try {
-            await resetLocalizedNames(selectedLocation.id);
-            setMessage({ text: 'Reset. Will re-fetch on next use.', type: 'success' });
-            setChain(null);
-            setSelectedLocation(null);
+            const data = await resetLocalizedNames(selectedLocation.id);
+            setChain(data.localizedNames);
+            setMessage({ text: 'Reset and refreshed', type: 'success' });
         } catch {
-            setMessage({ text: 'Failed to reset', type: 'error' });
+            setMessage({ text: 'Failed to reset and refresh', type: 'error' });
         } finally {
             setSaving(false);
             setShowResetConfirm(false);
@@ -238,7 +237,7 @@ export function LocalizationEditor() {
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? <Spinner size="sm" /> : 'Save'}
                         </Button>
-                        <Button onClick={() => setShowResetConfirm(true)} disabled={saving} className="bg-error hover:bg-error/90">
+                        <Button onClick={() => setShowResetConfirm(true)} disabled={saving} variant="secondary">
                             Reset
                         </Button>
                     </div>
@@ -258,6 +257,7 @@ export function LocalizationEditor() {
                     open
                     title="Reset translations?"
                     variant="warning"
+                    confirmButtonVariant="secondary"
                     confirmLabel="Reset"
                     cancelLabel="Cancel"
                     isLoading={saving}

@@ -6,6 +6,7 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CoordinatesSchema } from '../schemas/artistValidation';
 import { requireAuth, requireAdmin } from '../middleware/authMiddleware';
 import { LocalizedChain } from '../types/city';
+import { LocationLocalizationService } from '../services/locationLocalizationService';
 
 const router = Router();
 
@@ -140,10 +141,18 @@ router.patch('/:id/localized-names', requireAuth, requireAdmin, asyncHandler(asy
         throw new AppError('City not found', 404);
     }
 
-    // Reset: clear manual flag so ensureLocalized will re-fetch
+    // Reset: clear manual flag, then immediately re-run auto-localization.
     if (reset === true) {
         await CityService.resetLocalizedNames(id);
-        res.json({ message: 'Localized names reset to auto-fetch', id });
+        const refreshed = await LocationLocalizationService.ensureLocalized(id);
+        if (!refreshed) {
+            throw new AppError('Localized names reset, but automatic refresh failed', 502);
+        }
+        res.json({
+            message: 'Localized names reset and refreshed',
+            id,
+            localizedNames: refreshed.chain,
+        });
         return;
     }
 

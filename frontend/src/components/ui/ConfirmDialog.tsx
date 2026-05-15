@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import { cn } from '../../lib/utils';
-import { Button } from './Button';
+import { Button, type ButtonProps } from './Button';
 import { useTranslation } from 'react-i18next';
 
 // Confirmation dialog variants and destructive action styling
@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: ConfirmDialogVariant;
+    confirmButtonVariant?: ButtonProps['variant'];
     isLoading?: boolean;
     dimBackdrop?: boolean;
     onConfirm: () => void;
@@ -44,6 +45,7 @@ export function ConfirmDialog({
     confirmLabel,
     cancelLabel,
     variant = 'default',
+    confirmButtonVariant,
     isLoading = false,
     dimBackdrop = true,
     onConfirm,
@@ -90,7 +92,11 @@ export function ConfirmDialog({
                     )}
                     <Button
                         type="button"
-                        className={cn(confirmButtonClasses[variant], cancelLabel && onCancel ? 'flex-1' : 'w-full')}
+                        variant={confirmButtonVariant}
+                        className={cn(
+                            !confirmButtonVariant && confirmButtonClasses[variant],
+                            cancelLabel && onCancel ? 'flex-1' : 'w-full'
+                        )}
                         isLoading={isLoading}
                         onClick={onConfirm}
                     >

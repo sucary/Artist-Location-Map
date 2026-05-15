@@ -451,7 +451,7 @@ export const updateLocalizedNames = async (
 // Reset localized names to auto-fetch (admin only)
 export const resetLocalizedNames = async (
     locationId: string
-): Promise<{ message: string; id: string }> => {
+): Promise<{ message: string; id: string; localizedNames: LocalizedChain }> => {
     const response = await api.patch(`/cities/${locationId}/localized-names`, { reset: true });
     return response.data;
 };
