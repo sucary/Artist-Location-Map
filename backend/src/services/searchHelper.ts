@@ -50,6 +50,23 @@ export function deduplicateResults<T extends { osmId: number; osmType: string }>
     return unique;
 }
 
+type NominatimLikeResult = {
+    class?: unknown;
+    type?: unknown;
+};
+
+/**
+ * Keep geocoding results that represent actual places users can choose.
+ * Nominatim often returns legitimate localities/neighbourhoods as `node`s,
+ * so geometry type is not a safe proxy for selectability.
+ */
+export function isSelectableNominatimResult(result: NominatimLikeResult): boolean {
+    const resultClass = typeof result.class === 'string' ? result.class.toLowerCase() : '';
+    const resultType = typeof result.type === 'string' ? result.type.toLowerCase() : '';
+
+    return resultType !== 'yes' && (resultClass === 'place' || resultClass === 'boundary');
+}
+
 function normalizeSearchQuery(query: string): string {
     return query.trim().toLowerCase().replace(/\s+/g, '');
 }
@@ -128,13 +145,10 @@ export const TextSearch = {
             console.log(`[SEARCH] Cache hit for: "${query}"${acceptLang ? ` (lang: ${acceptLang})` : ''} (${results.length} results)`);
         }
 
-        // Filter to only place/boundary results — exclude nodes (no polygon) and infrastructure (railway, building, etc.)
-        const nonPlaceClasses = new Set(['railway', 'building', 'aeroway', 'highway']);
-        const filtered = results.filter(r =>
-            (r.type as string)?.toLowerCase() !== 'yes'
-            && r.osmType !== 'node'
-            && !nonPlaceClasses.has(r.class as string)
-        );
+        // Keep only actual place/boundary results. Valid localities and neighbourhoods
+        // are often returned by Nominatim as nodes, so geometry type alone would
+        // incorrectly hide them.
+        const filtered = results.filter(isSelectableNominatimResult);
 
         // Cross-reference with local DB to set isLocal flag
         const osmPairs = filtered.map(r => ({ osmId: r.osmId, osmType: r.osmType }));

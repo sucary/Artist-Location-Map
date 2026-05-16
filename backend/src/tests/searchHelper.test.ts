@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deduplicateResults } from '../services/searchHelper';
+import { deduplicateResults, isSelectableNominatimResult } from '../services/searchHelper';
 
 describe('searchHelper', () => {
     describe('deduplicateResults', () => {
@@ -70,4 +70,35 @@ describe('searchHelper', () => {
             expect(result[2].name).toBe('Second');
         });
     });
+
+    describe('isSelectableNominatimResult', () => {
+        it('keeps place nodes such as localities', () => {
+            expect(isSelectableNominatimResult({
+                class: 'place',
+                type: 'locality',
+            })).toBe(true);
+        });
+
+        it('keeps administrative boundaries', () => {
+            expect(isSelectableNominatimResult({
+                class: 'boundary',
+                type: 'administrative',
+            })).toBe(true);
+        });
+
+        it('drops non-place features such as streams', () => {
+            expect(isSelectableNominatimResult({
+                class: 'waterway',
+                type: 'stream',
+            })).toBe(false);
+        });
+
+        it('drops malformed yes-type results', () => {
+            expect(isSelectableNominatimResult({
+                class: 'place',
+                type: 'yes',
+            })).toBe(false);
+        });
+    });
+
 });
