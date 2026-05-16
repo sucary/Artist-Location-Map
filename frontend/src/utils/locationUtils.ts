@@ -69,6 +69,7 @@ export interface ExtractedLocation {
     osmType?: string;
     type?: string;
     isManualSelection?: boolean;
+    cityId?: string;
 }
 
 interface AddressFields {
@@ -115,7 +116,8 @@ export const extractLocationData = (result: SearchResult): ExtractedLocation => 
         osmId: result.osmId,
         osmType: result.osmType,
         type: result.type,
-        isManualSelection: result.isManualSelection
+        isManualSelection: result.isManualSelection,
+        cityId: result.id,
     };
 };
 

@@ -111,6 +111,7 @@ const ArtistForm = ({
         onTutorialImageStateChange?.(Boolean(formData.sourceImage));
     }, [formData.sourceImage, onTutorialImageStateChange]);
 
+
     useEffect(() => {
         if (formData.inactiveYear === undefined) return;
 
@@ -149,6 +150,7 @@ const ArtistForm = ({
         startManualPinSelection(locationType);
         onRequestSelection?.(locationType);
     };
+
 
     // Get pending coordinates for the correct field
     const getPendingCoordinatesFor = (field: 'originalLocation' | 'activeLocation') => {

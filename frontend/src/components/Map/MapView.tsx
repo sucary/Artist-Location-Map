@@ -64,6 +64,8 @@ export default function MapView({
     suppressArtistPopup = false,
     onArtistPopupOpenChange,
     interactionsDisabled = false,
+    canAdjustDisplayCoordinates = false,
+    onDisplayCoordinateChange,
 }: MapViewProps) {
     const { profile } = useAuth();
     const { locationLanguage } = useLocationLanguage();
@@ -101,6 +103,7 @@ export default function MapView({
     const [clusterColorDebugEnabled, setClusterColorDebugEnabled] = useState(false);
     const [clusterDebugControlsEnabled, setClusterDebugControlsEnabled] = useState(getStoredClusterDebugControlsEnabled);
     const [rawClusterDebugExpanded, setRawClusterDebugExpanded] = useState(false);
+    const [activeAdjustmentCityId, setActiveAdjustmentCityId] = useState<string | null>(null);
     const { t } = useTranslation();
     const canUseClusterDebugControls = isAdmin && clusterDebugControlsEnabled;
     const activeClusterColorDebugEnabled = canUseClusterDebugControls && clusterColorDebugEnabled;
@@ -155,6 +158,12 @@ export default function MapView({
         queryKey: ['city', selectedCityId],
         queryFn: () => selectedCityId ? getCityById(selectedCityId) : null,
         enabled: !!selectedCityId,
+    });
+
+    const { data: activeAdjustmentCity } = useQuery({
+        queryKey: ['city', activeAdjustmentCityId],
+        queryFn: () => activeAdjustmentCityId ? getCityById(activeAdjustmentCityId) : null,
+        enabled: !!activeAdjustmentCityId,
     });
 
     useEffect(() => {
@@ -288,6 +297,10 @@ export default function MapView({
         onDeleteArtist,
         onArtistPopupOpenChange: handleArtistPopupOpenChange,
         artistPopupLifecycleRef,
+        canAdjustDisplayCoordinates,
+        onDisplayCoordinateEditStart: setActiveAdjustmentCityId,
+        onDisplayCoordinateEditEnd: () => setActiveAdjustmentCityId(null),
+        onDisplayCoordinateChange,
     });
 
     useEffect(() => {
@@ -662,6 +675,12 @@ export default function MapView({
         if (!map || !mapReady) return;
         syncCityBoundaryLayers(map, selectedCity, isAdmin);
     }, [isAdmin, mapReady, selectedCity]);
+
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !mapReady) return;
+        syncCityBoundaryLayers(map, activeAdjustmentCity ?? selectedCity, isAdmin);
+    }, [activeAdjustmentCity, isAdmin, mapReady, selectedCity]);
 
     // Center the map on the browser geolocation result.
     const handleLocate = useCallback(() => {

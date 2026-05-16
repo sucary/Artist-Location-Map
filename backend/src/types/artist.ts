@@ -112,6 +112,8 @@ export interface UpdateArtistDTO {
     socialLinks?: SocialLinks;
     debutYear?: number;
     inactiveYear?: number;
+    originalLocationDisplayCoordinates?: Coordinates;
+    activeLocationDisplayCoordinates?: Coordinates;
 }
 
 /**

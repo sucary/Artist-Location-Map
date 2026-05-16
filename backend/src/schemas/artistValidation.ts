@@ -78,4 +78,9 @@ export const ArtistInputSchema = z.object({
     inactiveYear: z.number().int().min(1900).max(2100).optional().nullable().transform(val => val ?? undefined),
 });
 
+export const ArtistUpdateSchema = ArtistInputSchema.partial().extend({
+    originalLocationDisplayCoordinates: CoordinatesSchema.optional(),
+    activeLocationDisplayCoordinates: CoordinatesSchema.optional(),
+});
+
 export type ArtistFormData = z.infer<typeof ArtistInputSchema>;

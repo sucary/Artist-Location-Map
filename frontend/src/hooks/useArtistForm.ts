@@ -117,7 +117,16 @@ export const useArtistForm = ({
         const locationData = extractLocationData(result);
         setFormData(prev => ({
             ...prev,
-            [locationType]: locationData
+            [locationType]: locationData,
+            ...(locationType === 'originalLocation'
+                ? {
+                    originalCityId: result.id ?? prev.originalCityId,
+                    originalLocationDisplayCoordinates: { ...locationData.coordinates },
+                }
+                : {
+                    activeCityId: result.id ?? prev.activeCityId,
+                    activeLocationDisplayCoordinates: { ...locationData.coordinates },
+                }),
         }));
         setLocationInputSyncKeys(prev => ({
             ...prev,
@@ -161,6 +170,7 @@ export const useArtistForm = ({
         }));
         setPendingField(null);
     }, []);
+
 
     const startManualPinSelection = useCallback((field: 'originalLocation' | 'activeLocation') => {
         setPendingField(field);

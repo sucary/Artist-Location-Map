@@ -27,6 +27,7 @@ import type {
     MarkerEntry,
     ArtistPopupLifecycleState,
 } from '../types';
+import { getCityById } from '../../../services/api';
 
 const markerMoveDuration = 260;
 const mergedClusterAppearDelay = markerMoveDuration;
@@ -39,6 +40,10 @@ const selectedMarkerZIndex = focusedMarkerZIndex - 1;
 const maxRandomMarkerZIndex = selectedMarkerZIndex - 1;
 
 const markerAnimations = new WeakMap<maplibregl.Marker, number>();
+const displayCoordinateDragHandlers = new WeakMap<maplibregl.Marker, {
+    dragStart: () => void;
+    dragEnd: () => Promise<void>;
+}>();
 
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 // Use the shortest path when longitude crosses the dateline
@@ -495,6 +500,14 @@ interface UseArtistMarkersOptions {
     onDeleteArtist?: (artist: Artist) => void;
     onArtistPopupOpenChange?: (open: boolean) => void;
     artistPopupLifecycleRef?: RefObject<ArtistPopupLifecycleState>;
+    canAdjustDisplayCoordinates?: boolean;
+    onDisplayCoordinateEditStart?: (cityId: string) => void;
+    onDisplayCoordinateEditEnd?: () => void;
+    onDisplayCoordinateChange?: (
+        artist: Artist,
+        view: LocationView,
+        coordinates: { lat: number; lng: number }
+    ) => Promise<void> | void;
 }
 
 export const useArtistMarkers = ({
@@ -511,6 +524,10 @@ export const useArtistMarkers = ({
     onDeleteArtist,
     onArtistPopupOpenChange,
     artistPopupLifecycleRef,
+    canAdjustDisplayCoordinates = false,
+    onDisplayCoordinateEditStart,
+    onDisplayCoordinateEditEnd,
+    onDisplayCoordinateChange,
 }: UseArtistMarkersOptions) => {
     // Marker sets owned by this hook
     const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -530,6 +547,13 @@ export const useArtistMarkers = ({
         locationLanguage,
         onEditArtist,
         onDeleteArtist,
+        view,
+    });
+    const displayCoordinateEditOptionsRef = useRef({
+        canAdjustDisplayCoordinates,
+        onDisplayCoordinateEditStart,
+        onDisplayCoordinateEditEnd,
+        onDisplayCoordinateChange,
         view,
     });
 
@@ -555,6 +579,186 @@ export const useArtistMarkers = ({
             view,
         };
     }, [locationLanguage, onDeleteArtist, onEditArtist, view]);
+
+    useEffect(() => {
+        displayCoordinateEditOptionsRef.current = {
+            canAdjustDisplayCoordinates,
+            onDisplayCoordinateEditStart,
+            onDisplayCoordinateEditEnd,
+            onDisplayCoordinateChange,
+            view,
+        };
+    }, [
+        canAdjustDisplayCoordinates,
+        onDisplayCoordinateChange,
+        onDisplayCoordinateEditEnd,
+        onDisplayCoordinateEditStart,
+        view,
+    ]);
+
+    const isPointInsideRing = useCallback((point: [number, number], ring: number[][]) => {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const [xi, yi] = ring[i];
+            const [xj, yj] = ring[j];
+            const intersects = ((yi > point[1]) !== (yj > point[1]))
+                && (point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi);
+            if (intersects) inside = !inside;
+        }
+        return inside;
+    }, []);
+
+    const isInsideBoundary = useCallback((
+        coordinates: { lat: number; lng: number },
+        boundary: { type: 'Polygon' | 'MultiPolygon'; coordinates: number[][][] | number[][][][] }
+    ) => {
+        const point: [number, number] = [coordinates.lng, coordinates.lat];
+        const polygons = boundary.type === 'Polygon'
+            ? [boundary.coordinates as number[][][]]
+            : boundary.coordinates as number[][][][];
+
+        return polygons.some((polygon) => (
+            polygon.length > 0
+            && isPointInsideRing(point, polygon[0])
+            && polygon.slice(1).every((hole) => !isPointInsideRing(point, hole))
+        ));
+    }, [isPointInsideRing]);
+
+    const bindDisplayCoordinateEditing = useCallback((
+        marker: maplibregl.Marker,
+        artist: Artist,
+        clusterDisabled: boolean
+    ) => {
+        const element = marker.getElement();
+        const options = displayCoordinateEditOptionsRef.current;
+        const cityId = options.view === 'active' ? artist.activeCityId : artist.originalCityId;
+        const canEdit = options.canAdjustDisplayCoordinates && clusterDisabled && Boolean(cityId);
+        const startCoordinates = options.view === 'active'
+            ? artist.activeLocationDisplayCoordinates
+            : artist.originalLocationDisplayCoordinates;
+        let longPressTimer: number | null = null;
+        let pointerStartedAsTouch = false;
+        let touchDragActive = false;
+        let touchDragPointerId: number | null = null;
+        let touchDragBoundary: Awaited<ReturnType<typeof getCityById>> | null = null;
+
+        const desktopPointer = window.matchMedia('(pointer: fine)').matches;
+        marker.setDraggable(canEdit && desktopPointer);
+        element.classList.toggle('display-coordinate-editable', canEdit);
+
+        element.onpointerdown = canEdit ? (event) => {
+            pointerStartedAsTouch = event.pointerType === 'touch';
+            if (event.pointerType === 'mouse' || event.pointerType === 'pen') {
+                return;
+            }
+            if (event.pointerType === 'touch') {
+                touchDragPointerId = event.pointerId;
+                longPressTimer = window.setTimeout(() => {
+                    touchDragActive = true;
+                    element.classList.add('display-coordinate-edit-armed');
+                    element.classList.add('display-coordinate-dragging');
+                    element.dataset.displayCoordinateDragging = 'true';
+                    element.setPointerCapture(event.pointerId);
+                    mapRef.current?.dragPan.disable();
+                    options.onDisplayCoordinateEditStart?.(cityId);
+                    void getCityById(cityId).then((city) => {
+                        touchDragBoundary = city;
+                    });
+                }, 450);
+            }
+        } : null;
+        element.onpointerup = element.onpointercancel = async () => {
+            if (longPressTimer !== null) {
+                window.clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            element.classList.remove('display-coordinate-edit-armed');
+            if (touchDragActive) {
+                const lngLat = marker.getLngLat();
+                const nextCoordinates = { lat: lngLat.lat, lng: lngLat.lng };
+                try {
+                    const city = touchDragBoundary ?? await getCityById(cityId);
+                    if (!city.boundary || !isInsideBoundary(nextCoordinates, city.boundary)) {
+                        marker.setLngLat([startCoordinates.lng, startCoordinates.lat]);
+                    } else {
+                        await options.onDisplayCoordinateChange?.(artist, options.view, nextCoordinates);
+                    }
+                } finally {
+                    touchDragActive = false;
+                    touchDragPointerId = null;
+                    touchDragBoundary = null;
+                    delete element.dataset.displayCoordinateDragging;
+                    element.classList.remove('display-coordinate-dragging');
+                    element.dataset.suppressArtistClick = 'true';
+                    window.setTimeout(() => {
+                        delete element.dataset.suppressArtistClick;
+                    }, 300);
+                    mapRef.current?.dragPan.enable();
+                    options.onDisplayCoordinateEditEnd?.();
+                }
+            } else if (pointerStartedAsTouch && !element.dataset.displayCoordinateDragging) {
+                marker.setDraggable(false);
+            }
+        };
+        element.onpointermove = canEdit ? (event) => {
+            if (event.pointerType !== 'touch') return;
+            if (touchDragActive && touchDragPointerId === event.pointerId) {
+                event.preventDefault();
+                event.stopPropagation();
+                const map = mapRef.current;
+                if (!map) return;
+                const rect = map.getCanvas().getBoundingClientRect();
+                const lngLat = map.unproject([event.clientX - rect.left, event.clientY - rect.top]);
+                marker.setLngLat([lngLat.lng, lngLat.lat]);
+                return;
+            }
+            if (longPressTimer !== null) {
+                // Moving before the hold completes means this is map panning, not editing.
+                window.clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        } : null;
+
+        const previousDragHandlers = displayCoordinateDragHandlers.get(marker);
+        if (previousDragHandlers) {
+            marker.off('dragstart', previousDragHandlers.dragStart);
+            marker.off('dragend', previousDragHandlers.dragEnd);
+            displayCoordinateDragHandlers.delete(marker);
+        }
+        if (!canEdit || !cityId) return;
+
+        const dragStart = () => {
+            element.dataset.displayCoordinateDragging = 'true';
+            element.classList.add('display-coordinate-dragging');
+            options.onDisplayCoordinateEditStart?.(cityId);
+        };
+        const dragEnd = async () => {
+            const lngLat = marker.getLngLat();
+            const nextCoordinates = { lat: lngLat.lat, lng: lngLat.lng };
+            try {
+                const city = await getCityById(cityId);
+                if (!city.boundary || !isInsideBoundary(nextCoordinates, city.boundary)) {
+                    marker.setLngLat([startCoordinates.lng, startCoordinates.lat]);
+                    return;
+                }
+                await options.onDisplayCoordinateChange?.(artist, options.view, nextCoordinates);
+            } finally {
+                delete element.dataset.displayCoordinateDragging;
+                element.classList.remove('display-coordinate-dragging');
+                element.dataset.suppressArtistClick = 'true';
+                window.setTimeout(() => {
+                    delete element.dataset.suppressArtistClick;
+                }, 300);
+                element.classList.remove('display-coordinate-edit-armed');
+                marker.setDraggable(canEdit && desktopPointer);
+                options.onDisplayCoordinateEditEnd?.();
+            }
+        };
+
+        marker.on('dragstart', dragStart);
+        marker.on('dragend', dragEnd);
+        displayCoordinateDragHandlers.set(marker, { dragStart, dragEnd });
+    }, [isInsideBoundary]);
 
     const syncArtistMarkerStackOrder = useCallback((artistId: string, element: HTMLElement, clusterDisabled: boolean) => {
         if (!clusterDisabled) {
@@ -1498,8 +1702,13 @@ export const useArtistMarkers = ({
             marker.getElement().onclick = (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (
+                    marker.getElement().dataset.displayCoordinateDragging
+                    || marker.getElement().dataset.suppressArtistClick
+                ) return;
                 openArtistPopup(artist, marker);
             };
+            bindDisplayCoordinateEditing(marker, artist, clusterDisabled);
             syncArtistMarkerStackOrder(artist.id, marker.getElement(), clusterDisabled);
 
             markersRef.current.set(key, {
@@ -1534,7 +1743,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
+    }, [animateMarkerTo, artistNameDisplayMode, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
         // Compare only fields used by geometric clustering

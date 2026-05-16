@@ -33,6 +33,23 @@
   cursor: pointer;
 }
 
+.artist-maplibre-marker.display-coordinate-editable {
+  cursor: grab;
+}
+
+.artist-maplibre-marker.display-coordinate-editable:active,
+.artist-maplibre-marker.display-coordinate-edit-armed {
+  cursor: grabbing;
+}
+
+.artist-maplibre-marker.display-coordinate-edit-armed {
+  touch-action: none;
+}
+
+.custom-artist-marker.display-coordinate-dragging > div {
+  border-color: var(--color-primary) !important;
+}
+
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 a[href] {

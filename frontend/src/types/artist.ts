@@ -42,6 +42,7 @@ export interface Location {
     type?: string;
     isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
+    cityId?: string;
 }
 
 /**

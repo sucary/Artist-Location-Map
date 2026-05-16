@@ -27,6 +27,12 @@ export interface MapViewProps {
     suppressArtistPopup?: boolean;
     onArtistPopupOpenChange?: (open: boolean) => void;
     interactionsDisabled?: boolean;
+    canAdjustDisplayCoordinates?: boolean;
+    onDisplayCoordinateChange?: (
+        artist: Artist,
+        view: 'original' | 'active',
+        coordinates: Coordinates
+    ) => Promise<void> | void;
 }
 
 export type ArtistPointProperties = {

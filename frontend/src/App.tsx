@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
-import { copyArtistCollectionByUsername, deleteArtist, getArtistsByUsername, getFeaturedArtists, updateProfile } from './services/api';
+import { copyArtistCollectionByUsername, deleteArtist, getArtistsByUsername, getFeaturedArtists, updateArtist, updateProfile } from './services/api';
 import MapView from './components/Map/MapView';
 import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
@@ -199,6 +199,18 @@ function App() {
     const handleConsumeCoordinates = () => {
         setPendingCoordinates(null);
     };
+
+    const handleDisplayCoordinateChange = useCallback(async (
+        artist: Artist,
+        view: 'original' | 'active',
+        coordinates: { lat: number; lng: number }
+    ) => {
+        const payload = view === 'original'
+            ? { originalLocationDisplayCoordinates: coordinates }
+            : { activeLocationDisplayCoordinates: coordinates };
+        await updateArtist(artist.id, payload);
+        await queryClient.invalidateQueries({ queryKey: ['artists'] });
+    }, [queryClient]);
 
     const handleEditArtist = (artist: Artist) => {
         if (!user) {
@@ -605,6 +617,8 @@ function App() {
                 suppressArtistPopup={isMobileLayout && (showForm || showArtistList || showFeaturedList || mainSearchResultsOpen)}
                 onArtistPopupOpenChange={handleArtistPopupOpenChange}
                 interactionsDisabled={mapInteractionsDisabled}
+                canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !!user}
+                onDisplayCoordinateChange={handleDisplayCoordinateChange}
             />
         </main>
     );

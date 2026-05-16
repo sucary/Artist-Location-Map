@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { ArtistService } from '../services/artistService';
 import { ArtistQueryParams, LocationView, Artist } from '../types/artist';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { ArtistInputSchema } from '../schemas/artistValidation';
+import { ArtistInputSchema, ArtistUpdateSchema } from '../schemas/artistValidation';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import pool from '../config/database';
 import { ArtistStore } from '../models/artistStore';
@@ -255,7 +255,7 @@ export const createArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
 });
 
 export const updateArtist = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const data = ArtistInputSchema.partial().parse(req.body);
+    const data = ArtistUpdateSchema.parse(req.body);
     const userId = req.user!.id;
     const isAdmin = req.profile?.isAdmin ?? false;
 
