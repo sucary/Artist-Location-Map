@@ -8,6 +8,7 @@ import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
 import AddArtistButton from './components/Map/buttons/AddArtistButton';
 import AddGigButton from './components/Map/buttons/AddGigButton';
+import ViewGigPanelButton from './components/Map/buttons/ViewGigPanelButton';
 import ViewArtistListButton from './components/Map/buttons/ViewArtistListButton';
 import TourModeButton from './components/Map/buttons/TourModeButton';
 import { AccountButton } from './components/Auth/AccountButton';
@@ -28,6 +29,7 @@ import { ConfirmDialog, type ConfirmDialogVariant } from './components/ui';
 import { Trans, useTranslation } from 'react-i18next';
 import { TransStrong } from './components/i18n/TransComponents';
 import { GigForm } from './components/Tour/GigForm';
+import { GigPanel } from './components/Tour/GigPanel';
 import { TourControls } from './components/Tour/TourControls';
 import { TourBanner } from './components/Tour/TourBanner';
 
@@ -76,6 +78,7 @@ function App() {
 
     const [showForm, setShowForm] = useState(false);
     const [showGigForm, setShowGigForm] = useState(false);
+    const [showGigPanel, setShowGigPanel] = useState(false);
     const [showArtistList, setShowArtistList] = useState(false);
     const [showFeaturedList, setShowFeaturedList] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
@@ -134,6 +137,7 @@ function App() {
             setSearchParams({ view: 'featured' });
             setShowFeaturedList(false);
             setShowGigForm(false);
+            setShowGigPanel(false);
         } else {
             setSearchParams({});
         }
@@ -345,6 +349,10 @@ function App() {
         setPendingCoordinates(null);
     };
 
+    const handleCloseGigPanel = () => {
+        setShowGigPanel(false);
+    };
+
     const showAppMessage = useCallback((
         title: string,
         message: ReactNode,
@@ -404,6 +412,7 @@ function App() {
             setShowArtistList(false);
             setShowFeaturedList(false);
             setShowGigForm(false);
+            setShowGigPanel(false);
             setMainSearchCloseSignal((signal) => signal + 1);
             setShowForm(true);
             setTutorialArtistHasImage(false);
@@ -422,6 +431,7 @@ function App() {
         setShowForm(false);
         setShowArtistList(false);
         setShowFeaturedList(false);
+        setShowGigPanel(false);
         setMainSearchCloseSignal((signal) => signal + 1);
         updateTourParams({
             active: true,
@@ -433,6 +443,7 @@ function App() {
 
     const handleExitTourMode = () => {
         handleCloseGigForm();
+        handleCloseGigPanel();
         updateTourParams({ active: false });
     };
 
@@ -460,6 +471,7 @@ function App() {
         setShowForm(false);
         setShowArtistList(false);
         setShowFeaturedList(false);
+        setShowGigPanel(false);
         setMainSearchCloseSignal((signal) => signal + 1);
         setEditingGig(null);
         setGigFormArtist(null);
@@ -474,6 +486,7 @@ function App() {
         }
 
         setShowArtistList(false);
+        setShowGigPanel(false);
         setEditingGig(null);
         setGigFormArtist(artist);
         setShowGigForm(true);
@@ -482,6 +495,7 @@ function App() {
 
     const handleEditGig = (gig: Gig) => {
         setShowForm(false);
+        setShowGigPanel(false);
         setEditingGig(gig);
         setGigFormArtist(null);
         setShowGigForm(true);
@@ -496,6 +510,15 @@ function App() {
         await queryClient.invalidateQueries({ queryKey: ['gigs'] });
         await queryClient.invalidateQueries({ queryKey: ['tours'] });
         handleCloseGigForm();
+    };
+
+    const handleOpenGigPanel = () => {
+        setShowForm(false);
+        setShowGigForm(false);
+        setShowArtistList(false);
+        setShowFeaturedList(false);
+        setMainSearchCloseSignal((signal) => signal + 1);
+        setShowGigPanel(true);
     };
 
     const handleDeleteGig = (gig: Gig) => {
@@ -525,6 +548,7 @@ function App() {
         setShowForm(false);
         setMainSearchCloseSignal((signal) => signal + 1);
         setArtistListCardOpen(false);
+        setShowGigPanel(false);
         setShowArtistList(true);
     };
 
@@ -573,6 +597,7 @@ function App() {
         // Mobile keeps one foreground surface open at a time.
         setShowForm(false);
         setShowGigForm(false);
+        setShowGigPanel(false);
         setShowArtistList(false);
         setShowFeaturedList(false);
         setMainSearchCloseSignal((signal) => signal + 1);
@@ -585,6 +610,7 @@ function App() {
         // Main search owns the mobile foreground while results are visible.
         setShowForm(false);
         setShowGigForm(false);
+        setShowGigPanel(false);
         setShowArtistList(false);
         setShowFeaturedList(false);
     }, [isMobileLayout]);
@@ -593,6 +619,7 @@ function App() {
     const mapInteractionsDisabled = (isMobileLayout && showArtistList)
         || (isMobileLayout && showFeaturedList)
         || (isMobileLayout && showGigForm)
+        || (isMobileLayout && showGigPanel)
         || mainSearchResultsOpen
         || notificationMenuOpen
         || accountMenuOpen;
@@ -762,13 +789,16 @@ function App() {
                 }} />
             )}
 
-            {!showForm && !showGigForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && !tourMode.active && (
+            {!showForm && !showGigForm && !showGigPanel && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && !tourMode.active && (
                 <AddArtistButton onClick={handleAddArtistClick} />
             )}
-            {!showForm && !showGigForm && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && tourMode.active && (
+            {!showForm && !showGigForm && !showGigPanel && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && tourMode.active && (
                 <AddGigButton onClick={handleAddGigClick} />
             )}
-            {(!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
+            {tourMode.active && !showForm && !showGigForm && !showGigPanel && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
+                <ViewGigPanelButton onClick={handleOpenGigPanel} />
+            )}
+            {(!isMobileLayout || !showArtistList) && !showGigPanel && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
                 <ViewArtistListButton onClick={() => {
                     if (viewingFeatured) {
                         setShowForm(false);
@@ -779,7 +809,7 @@ function App() {
                     }
                 }} />
             )}
-            {tourMode.active && !showGigForm && (
+            {tourMode.active && !showGigForm && !showGigPanel && (
                 <TourControls
                     tourMode={tourMode}
                     onIntervalChange={handleTourIntervalChange}
@@ -819,6 +849,14 @@ function App() {
                         onCancel={handleCloseGigForm}
                     />
                 </div>
+            )}
+            {showGigPanel && (
+                <GigPanel
+                    gigs={tourGigs}
+                    onClose={handleCloseGigPanel}
+                    onEditGig={handleEditGig}
+                    onDeleteGig={handleDeleteGig}
+                />
             )}
             {(showArtistList || (viewingFeatured && showFeaturedList)) && (
                 <ArtistList
@@ -874,11 +912,11 @@ function App() {
                 onDeleteArtist={isViewingOther || viewingFeatured || !user ? undefined : handleDeleteArtist}
                 onEditGig={tourMode.active ? handleEditGig : undefined}
                 onDeleteGig={tourMode.active ? handleDeleteGig : undefined}
-                onEmptyClick={showGigForm ? handleCloseGigForm : showForm ? handleCloseForm : (showArtistList || showFeaturedList) ? handleArtistListEmptyMapClick : undefined}
+                onEmptyClick={showGigPanel ? handleCloseGigPanel : showGigForm ? handleCloseGigForm : showForm ? handleCloseForm : (showArtistList || showFeaturedList) ? handleArtistListEmptyMapClick : undefined}
                 focusedArtist={focusedArtist}
                 onFocusedArtistHandled={() => setFocusedArtist(null)}
                 isAuthenticated={!!user}
-                suppressArtistPopup={isMobileLayout && (showForm || showGigForm || showArtistList || showFeaturedList || mainSearchResultsOpen)}
+                suppressArtistPopup={isMobileLayout && (showForm || showGigForm || showGigPanel || showArtistList || showFeaturedList || mainSearchResultsOpen)}
                 onArtistPopupOpenChange={handleArtistPopupOpenChange}
                 interactionsDisabled={mapInteractionsDisabled}
                 canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !tourMode.active && !!user}

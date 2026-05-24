@@ -500,6 +500,7 @@
       "enterTourMode": "進入巡演模式",
       "exitTourMode": "退出巡演模式",
       "addGig": "新增演出",
+      "viewGigPanel": "查看演出",
       "createTour": "建立巡演",
       "clearDates": "清除日期",
       "exit": "退出",
@@ -552,6 +553,31 @@
       "default": "<count>{{count}}</count> 場即將到來的演出",
       "interval": "{{from}} - {{to}}（<count>{{count}}</count> 場演出）",
       "day": "已高亮 {{day}}（<count>{{count}}</count> 場演出）"
+    },
+    "panel": {
+      "title": "演出",
+      "empty": "目前日期範圍內沒有演出。",
+      "noResults": "沒有符合目前篩選的演出。",
+      "noTour": "無巡演",
+      "controls": {
+        "selection": "選擇",
+        "filter": "篩選",
+        "filterPlaceholder": "篩選演出",
+        "sort": "排序"
+      },
+      "sort": {
+        "dateAsc": "日期升序",
+        "dateDesc": "日期降序",
+        "artist": "藝人",
+        "location": "地點",
+        "tour": "巡演"
+      },
+      "views": {
+        "gig": "演出",
+        "tour": "巡演",
+        "artist": "藝人",
+        "location": "地點"
+      }
     },
     "dialogs": {
       "deleteGig": {

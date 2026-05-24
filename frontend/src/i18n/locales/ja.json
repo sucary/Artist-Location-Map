@@ -500,6 +500,7 @@
       "enterTourMode": "ツアーモードを開始",
       "exitTourMode": "ツアーモードを終了",
       "addGig": "公演を追加",
+      "viewGigPanel": "公演を見る",
       "createTour": "ツアーを作成",
       "clearDates": "日付をクリア",
       "exit": "終了",
@@ -552,6 +553,31 @@
       "default": "今後の公演<count>{{count}}</count>件",
       "interval": "{{from}} - {{to}}（公演<count>{{count}}</count>件）",
       "day": "{{day}}をハイライト（公演<count>{{count}}</count>件）"
+    },
+    "panel": {
+      "title": "公演",
+      "empty": "現在の日付範囲に公演はありません。",
+      "noResults": "現在の絞り込みに一致する公演はありません。",
+      "noTour": "ツアーなし",
+      "controls": {
+        "selection": "表示",
+        "filter": "絞り込み",
+        "filterPlaceholder": "公演を絞り込み",
+        "sort": "並び替え"
+      },
+      "sort": {
+        "dateAsc": "日付 昇順",
+        "dateDesc": "日付 降順",
+        "artist": "アーティスト",
+        "location": "場所",
+        "tour": "ツアー"
+      },
+      "views": {
+        "gig": "公演",
+        "tour": "ツアー",
+        "artist": "アーティスト",
+        "location": "場所"
+      }
     },
     "dialogs": {
       "deleteGig": {

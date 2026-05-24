@@ -501,6 +501,7 @@
       "enterTourMode": "Enter Tour Mode",
       "exitTourMode": "Exit Tour Mode",
       "addGig": "Add gig",
+      "viewGigPanel": "View gigs",
       "createTour": "Create tour",
       "clearDates": "Clear dates",
       "exit": "Exit",
@@ -553,6 +554,31 @@
       "default": "<count>{{count}}</count> upcoming gigs",
       "interval": "{{from}} - {{to}} (<count>{{count}}</count> gigs)",
       "day": "{{day}} highlighted (<count>{{count}}</count> gigs)"
+    },
+    "panel": {
+      "title": "Gigs",
+      "empty": "No gigs in the current date range.",
+      "noResults": "No gigs match the current filter.",
+      "noTour": "No tour",
+      "controls": {
+        "selection": "Selection",
+        "filter": "Filter",
+        "filterPlaceholder": "Filter gigs",
+        "sort": "Sort"
+      },
+      "sort": {
+        "dateAsc": "Date ascending",
+        "dateDesc": "Date descending",
+        "artist": "Artist",
+        "location": "Location",
+        "tour": "Tour"
+      },
+      "views": {
+        "gig": "Gig",
+        "tour": "Tour",
+        "artist": "Artist",
+        "location": "Location"
+      }
     },
     "dialogs": {
       "deleteGig": {
