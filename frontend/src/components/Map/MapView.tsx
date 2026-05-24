@@ -32,13 +32,15 @@ import { patchMapLabelLanguage } from './layers/labelLanguage';
 import { syncCityBoundaryLayers } from './layers/cityBoundaryLayers';
 import { syncChinaClaimedBorderLayers } from './layers/chinaClaimedBorderLayers';
 import { getZoomForLocationType, isInteractiveTarget } from './utils/coordinates';
-import { getArtists, getArtistsByUsername, getCityById, getFeaturedArtists } from '../../services/api';
+import { getArtists, getArtistsByUsername, getCityById, getFeaturedArtists, getGigs } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { useArtistNameDisplay } from '../../context/ArtistNameDisplayContext';
-import type { LocationView } from '../../types/artist';
+import type { Artist, LocationView } from '../../types/artist';
+import type { GigMarkerArtist } from '../../types/gig';
 import type { ArtistPopupLifecycleState, MapViewProps } from './types';
 import { useTranslation } from 'react-i18next';
+import { GigCard } from '../Tour/GigCard';
 
 // Interactive artist map shell and control wiring
 
@@ -50,10 +52,13 @@ type MarkerWithUpdate = maplibregl.Marker & {
 export default function MapView({
     username,
     viewingFeatured,
+    tourMode,
     selectionMode,
     onLocationPick,
     onEditArtist,
     onDeleteArtist,
+    onEditGig,
+    onDeleteGig,
     onEmptyClick,
     focusedArtist,
     onFocusedArtistHandled,
@@ -89,6 +94,7 @@ export default function MapView({
     const restoreDoubleClickZoomTimerRef = useRef<number | null>(null);
     const interactionsDisabledRef = useRef(interactionsDisabled);
     const desktopViewportRef = useRef(false);
+    const previousTourModeActiveRef = useRef(false);
 
     const isAdmin = profile?.isAdmin ?? false;
     const [mapReady, setMapReady] = useState(false);
@@ -107,6 +113,7 @@ export default function MapView({
     const { t } = useTranslation();
     const canUseClusterDebugControls = isAdmin && clusterDebugControlsEnabled;
     const activeClusterColorDebugEnabled = canUseClusterDebugControls && clusterColorDebugEnabled;
+    const tourModeActive = tourMode?.active ?? false;
 
     const isArtistPopupActive = useCallback(() => {
         const lifecycle = artistPopupLifecycleRef.current;
@@ -150,9 +157,77 @@ export default function MapView({
             if (username) return getArtistsByUsername(username);
             return getArtists();
         },
+        enabled: !tourModeActive,
     });
 
-    const displayArtists = useMemo(() => artists || [], [artists]);
+    const gigQueryParams = tourMode?.interval
+        ? { from: tourMode.interval.from, to: tourMode.interval.to }
+        : undefined;
+
+    const { data: gigs, isError: gigsError } = useQuery({
+        queryKey: ['gigs', gigQueryParams],
+        queryFn: () => getGigs(gigQueryParams),
+        enabled: tourModeActive,
+    });
+
+    const gigMarkerArtists = useMemo<GigMarkerArtist[]>(() => (gigs || []).map((gig) => ({
+        id: gig.id,
+        userId: gig.userId,
+        name: gig.artist.name,
+        romanizedName: gig.artist.romanizedName,
+        sourceImage: gig.artist.sourceImage,
+        avatarCrop: gig.artist.avatarCrop,
+        originalLocation: gig.location,
+        activeLocation: gig.location,
+        socialLinks: gig.externalUrl ? { website: gig.externalUrl } : undefined,
+        createdAt: gig.createdAt,
+        updatedAt: gig.updatedAt,
+        originalLocationDisplayCoordinates: gig.displayCoordinates,
+        activeLocationDisplayCoordinates: gig.displayCoordinates,
+        originalCityId: gig.locationCityId,
+        activeCityId: gig.locationCityId,
+        gig,
+    })), [gigs]);
+
+    const displayArtists = useMemo(() => (
+        tourModeActive ? gigMarkerArtists : artists || []
+    ), [artists, gigMarkerArtists, tourModeActive]);
+
+    const highlightedGigIds = useMemo(() => {
+        if (!tourMode?.selectedDay) return undefined;
+        const selectedDay = tourMode.selectedDay;
+        return new Set((gigs || [])
+            .filter((gig) => gig.date === selectedDay)
+            .map((gig) => gig.id));
+    }, [gigs, tourMode?.selectedDay]);
+
+    const handleMarkerEdit = useCallback((artist: Artist) => {
+        if (tourModeActive) {
+            onEditGig?.((artist as GigMarkerArtist).gig);
+            return;
+        }
+        onEditArtist?.(artist);
+    }, [onEditArtist, onEditGig, tourModeActive]);
+
+    const handleMarkerDelete = useCallback((artist: Artist) => {
+        if (tourModeActive) {
+            onDeleteGig?.((artist as GigMarkerArtist).gig);
+            return;
+        }
+        onDeleteArtist?.(artist);
+    }, [onDeleteArtist, onDeleteGig, tourModeActive]);
+
+    const renderPopupContent = useCallback((artist: Artist, showActions: boolean) => {
+        if (!tourModeActive) return undefined;
+        const gig = (artist as GigMarkerArtist).gig;
+        return (
+            <GigCard
+                gig={gig}
+                showActions={showActions}
+                locationLanguage={locationLanguage}
+            />
+        );
+    }, [locationLanguage, tourModeActive]);
 
     const { data: selectedCity } = useQuery({
         queryKey: ['city', selectedCityId],
@@ -287,21 +362,31 @@ export default function MapView({
         mapRef,
         mapReady,
         displayArtists,
-        view,
+        view: tourModeActive ? 'active' : view,
         locationLanguage,
         artistNameDisplayMode,
         clusterColorDebugEnabled: activeClusterColorDebugEnabled,
         selectedCityIdRef,
         setSelectedCityId,
-        onEditArtist,
-        onDeleteArtist,
+        onEditArtist: tourModeActive ? onEditGig ? handleMarkerEdit : undefined : onEditArtist,
+        onDeleteArtist: tourModeActive ? onDeleteGig ? handleMarkerDelete : undefined : onDeleteArtist,
         onArtistPopupOpenChange: handleArtistPopupOpenChange,
         artistPopupLifecycleRef,
-        canAdjustDisplayCoordinates,
+        canAdjustDisplayCoordinates: tourModeActive ? false : canAdjustDisplayCoordinates,
         onDisplayCoordinateEditStart: setActiveAdjustmentCityId,
         onDisplayCoordinateEditEnd: () => setActiveAdjustmentCityId(null),
         onDisplayCoordinateChange,
+        highlightedArtistIds: highlightedGigIds,
+        renderPopupContent: tourModeActive ? renderPopupContent : undefined,
     });
+
+    useEffect(() => {
+        if (previousTourModeActiveRef.current && !tourModeActive) {
+            // Gig popup content must not survive the Tour Mode boundary
+            closeActiveArtistPopup();
+        }
+        previousTourModeActiveRef.current = tourModeActive;
+    }, [closeActiveArtistPopup, tourModeActive]);
 
     useEffect(() => {
         if (canUseClusterDebugControls) return;
@@ -780,12 +865,12 @@ export default function MapView({
                 setMobileControlsOpen={setMobileControlsOpen}
                 forceMobileControlsClosed={attributionOpen}
                 onRequestMobileOpen={closeAttribution}
-                showViewToggle={isAuthenticated && !viewingFeatured}
+                showViewToggle={isAuthenticated && !viewingFeatured && !tourModeActive}
             />
 
             {selectionMode?.active && <SelectionPrompt onCancel={onLocationPick} />}
-            {(mapError || artistsError) && (
-                <MapErrorOverlay message={mapError || t('map.error.loadArtistsError')} />
+            {(mapError || artistsError || gigsError) && (
+                <MapErrorOverlay message={mapError || t(tourModeActive ? 'tour.errors.loadGigs' : 'map.error.loadArtistsError')} />
             )}
         </div>
     );

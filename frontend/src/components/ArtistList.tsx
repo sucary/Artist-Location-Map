@@ -22,6 +22,7 @@ interface ArtistListProps {
     onNavigateToArtist?: (artist: Artist) => void;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
+    onAddGig?: (artist: Artist) => void;
     onCopyCollection?: (artistCount: number) => void;
     isCopyingCollection?: boolean;
 }
@@ -62,6 +63,7 @@ const ArtistList = ({
     onNavigateToArtist,
     onEditArtist,
     onDeleteArtist,
+    onAddGig,
     onCopyCollection,
     isCopyingCollection = false
 }: ArtistListProps) => {
@@ -208,8 +210,16 @@ const ArtistList = ({
 
         // ArtistCard owns the overlay UI; the list owns edit/delete routing.
         const target = e.target as HTMLElement;
+        const addGigButton = target.closest('[data-action="add-gig"]');
         const editButton = target.closest('[data-action="edit"]');
         const deleteButton = target.closest('[data-action="delete"]');
+
+        if (addGigButton && onAddGig) {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddGig(selectedArtist);
+            return;
+        }
 
         if (editButton && onEditArtist) {
             e.preventDefault();
@@ -237,6 +247,7 @@ const ArtistList = ({
                     <ArtistCard
                         artist={selectedArtist}
                         showActions={!!(onEditArtist || onDeleteArtist)}
+                        onAddGig={onAddGig}
                         locationLanguage={locationLanguage}
                         artistNameDisplayMode={artistNameDisplayMode}
                     />

@@ -495,6 +495,79 @@
       "twitter": "艺人X主页"
     }
   },
+  "tour": {
+    "actions": {
+      "enterTourMode": "进入巡演模式",
+      "exitTourMode": "退出巡演模式",
+      "addGig": "添加演出",
+      "createTour": "创建巡演",
+      "clearDates": "清除日期",
+      "exit": "退出",
+      "viewEvent": "查看活动"
+    },
+    "fields": {
+      "artist": "艺人",
+      "artists": "艺人",
+      "date": "日期",
+      "tour": "巡演",
+      "addToTour": "添加到巡演",
+      "createTour": "创建巡演",
+      "createTourOptional": "创建巡演（可选）",
+      "tourName": "巡演名称",
+      "gigs": "演出",
+      "from": "开始",
+      "to": "结束",
+      "highlightDay": "高亮日期",
+      "venue": "场馆",
+      "location": "地点"
+    },
+    "form": {
+      "addTitle": "添加演出",
+      "editTitle": "编辑演出",
+      "selectArtist": "选择艺人",
+      "selectTour": "选择巡演",
+      "createTour": "创建巡演",
+      "addArtistToGig": "向演出添加艺人",
+      "addToExistingTour": "添加到已有巡演",
+      "createATour": "创建巡演",
+      "removeArtist": "移除 {{name}}",
+      "noArtistsFound": "未找到艺人",
+      "noToursFound": "未找到巡演",
+      "noGigsForTour": "当前日期范围内没有演出。",
+      "sections": {
+        "gig": "演出",
+        "tour": "巡演"
+      },
+      "tourMode": {
+        "none": "无",
+        "existing": "已有",
+        "new": "新建"
+      },
+      "preselectedArtist": "已选择 {{name}}",
+      "venuePlaceholder": "场馆名称",
+      "locationPlaceholder": "搜索演出地点"
+    },
+    "banner": {
+      "label": "巡演模式",
+      "default": "<count>{{count}}</count> 场即将到来的演出",
+      "interval": "{{from}} - {{to}}（<count>{{count}}</count> 场演出）",
+      "day": "已高亮 {{day}}（<count>{{count}}</count> 场演出）"
+    },
+    "dialogs": {
+      "deleteGig": {
+        "title": "删除演出",
+        "message": "删除 {{artist}} 在 {{date}} 的演出吗？此操作无法撤销。"
+      }
+    },
+    "errors": {
+      "requiredFields": "请选择艺人、日期和地点。",
+      "requiredTour": "请选择巡演。",
+      "requiredTourName": "请输入巡演名称。",
+      "loadGigs": "无法加载演出。",
+      "deleteFailedTitle": "无法删除演出",
+      "deleteFailedMessage": "删除演出失败。请重试。"
+    }
+  },
   "app": {
     "dialogs": {
       "deleteArtist": {

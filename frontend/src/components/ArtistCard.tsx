@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react';
 import type { Artist, LocationLanguage } from '../types/artist';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from './icons/SocialIcons';
-import { EditIcon, TrashIcon } from './icons/GeneralIcons';
+import { CalendarIcon, EditIcon, TrashIcon } from './icons/GeneralIcons';
 import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import type { ArtistNameDisplayMode } from '../types/profile';
 interface ArtistCardProps {
     artist: Artist;
     showActions?: boolean;
+    onAddGig?: (artist: Artist) => void;
     locationLanguage?: LocationLanguage;
     artistNameDisplayMode?: ArtistNameDisplayMode;
 }
@@ -33,6 +34,7 @@ const safeUrl = (url: string): string => {
 const ArtistCard = ({
     artist,
     showActions = true,
+    onAddGig,
     locationLanguage = 'en',
     artistNameDisplayMode = DEFAULT_ARTIST_NAME_DISPLAY_MODE
 }: ArtistCardProps) => {
@@ -95,7 +97,7 @@ const ArtistCard = ({
                         {/* Edit */}
                         <div
                             className="artist-action-edit flex items-center justify-center cursor-pointer"
-                            style={{ width: '80%', backgroundColor: 'rgba(0, 0, 0, 0.5)', transition: 'background-color 0.15s' }}
+                            style={{ width: onAddGig ? '60%' : '80%', backgroundColor: 'rgba(0, 0, 0, 0.5)', transition: 'background-color 0.15s' }}
                             data-action="edit"
                             data-artist-id={artist.id}
                             aria-label={t('artistCard.actions.edit')}
@@ -103,6 +105,18 @@ const ArtistCard = ({
                         >
                             <EditIcon className="w-6 h-6 text-white" />
                         </div>
+                        {onAddGig && (
+                            <div
+                                className="artist-action-edit flex items-center justify-center cursor-pointer"
+                                style={{ width: '20%', backgroundColor: 'rgba(0, 0, 0, 0.55)', transition: 'background-color 0.15s' }}
+                                data-action="add-gig"
+                                data-artist-id={artist.id}
+                                aria-label={t('tour.actions.addGig')}
+                                title={t('tour.actions.addGig')}
+                            >
+                                <CalendarIcon className="w-5 h-5 text-white" />
+                            </div>
+                        )}
                         {/* Delete */}
                         <div
                             className="artist-action-delete flex items-center justify-center cursor-pointer"

@@ -6,6 +6,10 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Drop tables if they exist (reverse dependency order)
+DROP TABLE IF EXISTS tour_artists CASCADE;
+DROP TABLE IF EXISTS gig_artists CASCADE;
+DROP TABLE IF EXISTS artist_gigs CASCADE;
+DROP TABLE IF EXISTS artist_tours CASCADE;
 DROP TABLE IF EXISTS artists CASCADE;
 DROP TABLE IF EXISTS artist_media_assets CASCADE;
 DROP TABLE IF EXISTS artist_media_asset_reviews CASCADE;
@@ -337,6 +341,53 @@ CREATE TABLE IF NOT EXISTS artists (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS artist_tours (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS artist_gigs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tour_id UUID REFERENCES artist_tours(id) ON DELETE SET NULL,
+    venue_name VARCHAR(255),
+    city VARCHAR(255) NOT NULL,
+    province VARCHAR(255) NOT NULL,
+    country VARCHAR(100),
+    display_name TEXT,
+    city_id UUID REFERENCES locations(id),
+    coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
+    display_coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
+    "date" DATE NOT NULL,
+    timezone TEXT,
+    external_source TEXT,
+    external_id TEXT,
+    external_artist_id TEXT,
+    external_url TEXT,
+    imported_at TIMESTAMPTZ,
+    last_synced_at TIMESTAMPTZ,
+    raw_external_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS gig_artists (
+    gig_id UUID NOT NULL REFERENCES artist_gigs(id) ON DELETE CASCADE,
+    artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (gig_id, artist_id)
+);
+
+CREATE TABLE IF NOT EXISTS tour_artists (
+    tour_id UUID NOT NULL REFERENCES artist_tours(id) ON DELETE CASCADE,
+    artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (tour_id, artist_id)
+);
+
 -- ============================================
 -- Indexes
 -- ============================================
@@ -373,6 +424,16 @@ CREATE INDEX IF NOT EXISTS idx_artists_active_city ON artists(active_city);
 CREATE INDEX IF NOT EXISTS idx_artists_original_city_id ON artists(original_city_id);
 CREATE INDEX IF NOT EXISTS idx_artists_active_city_id ON artists(active_city_id);
 CREATE INDEX IF NOT EXISTS idx_artists_musicbrainz_mbid ON artists(musicbrainz_mbid);
+CREATE INDEX IF NOT EXISTS idx_artist_gigs_user_date ON artist_gigs(user_id, "date");
+CREATE INDEX IF NOT EXISTS idx_artist_gigs_tour_id ON artist_gigs(tour_id);
+CREATE INDEX IF NOT EXISTS idx_artist_gigs_city_id ON artist_gigs(city_id);
+CREATE INDEX IF NOT EXISTS idx_artist_gigs_display_coordinates ON artist_gigs USING GIST(display_coordinates);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_artist_gigs_external_unique
+ON artist_gigs(user_id, external_source, external_id)
+WHERE external_source IS NOT NULL AND external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_artist_tours_user_name ON artist_tours(user_id, name);
+CREATE INDEX IF NOT EXISTS idx_gig_artists_artist_id ON gig_artists(artist_id);
+CREATE INDEX IF NOT EXISTS idx_tour_artists_artist_id ON tour_artists(artist_id);
 CREATE INDEX IF NOT EXISTS idx_media_upload_events_user_created ON media_upload_events(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_media_upload_events_status ON media_upload_events(status);
 CREATE INDEX IF NOT EXISTS idx_artist_media_assets_uploaded_by ON artist_media_assets(uploaded_by);
@@ -391,6 +452,16 @@ CREATE TRIGGER update_artists_updated_at
 
 CREATE TRIGGER update_artist_media_assets_updated_at
     BEFORE UPDATE ON artist_media_assets
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_artist_gigs_updated_at
+    BEFORE UPDATE ON artist_gigs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_artist_tours_updated_at
+    BEFORE UPDATE ON artist_tours
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

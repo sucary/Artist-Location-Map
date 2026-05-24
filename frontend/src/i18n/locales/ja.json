@@ -495,6 +495,79 @@
       "twitter": "アーティストのXプロフィール"
     }
   },
+  "tour": {
+    "actions": {
+      "enterTourMode": "ツアーモードを開始",
+      "exitTourMode": "ツアーモードを終了",
+      "addGig": "公演を追加",
+      "createTour": "ツアーを作成",
+      "clearDates": "日付をクリア",
+      "exit": "終了",
+      "viewEvent": "イベントを見る"
+    },
+    "fields": {
+      "artist": "アーティスト",
+      "artists": "アーティスト",
+      "date": "日付",
+      "tour": "ツアー",
+      "addToTour": "ツアーに追加",
+      "createTour": "ツアーを作成",
+      "createTourOptional": "ツアーを作成（任意）",
+      "tourName": "ツアー名",
+      "gigs": "公演",
+      "from": "開始",
+      "to": "終了",
+      "highlightDay": "ハイライト日",
+      "venue": "会場",
+      "location": "場所"
+    },
+    "form": {
+      "addTitle": "公演を追加",
+      "editTitle": "公演を編集",
+      "selectArtist": "アーティストを選択",
+      "selectTour": "ツアーを選択",
+      "createTour": "ツアーを作成",
+      "addArtistToGig": "公演にアーティストを追加",
+      "addToExistingTour": "既存のツアーに追加",
+      "createATour": "ツアーを作成",
+      "removeArtist": "{{name}}を削除",
+      "noArtistsFound": "アーティストが見つかりません",
+      "noToursFound": "ツアーが見つかりません",
+      "noGigsForTour": "現在の日付範囲に公演はありません。",
+      "sections": {
+        "gig": "公演",
+        "tour": "ツアー"
+      },
+      "tourMode": {
+        "none": "なし",
+        "existing": "既存",
+        "new": "新規"
+      },
+      "preselectedArtist": "{{name}}を選択中",
+      "venuePlaceholder": "会場名",
+      "locationPlaceholder": "公演の場所を検索"
+    },
+    "banner": {
+      "label": "ツアーモード",
+      "default": "今後の公演<count>{{count}}</count>件",
+      "interval": "{{from}} - {{to}}（公演<count>{{count}}</count>件）",
+      "day": "{{day}}をハイライト（公演<count>{{count}}</count>件）"
+    },
+    "dialogs": {
+      "deleteGig": {
+        "title": "公演を削除",
+        "message": "{{date}}の{{artist}}の公演を削除しますか？この操作は元に戻せません。"
+      }
+    },
+    "errors": {
+      "requiredFields": "アーティスト、日付、場所を選択してください。",
+      "requiredTour": "ツアーを選択してください。",
+      "requiredTourName": "ツアー名を入力してください。",
+      "loadGigs": "公演を読み込めませんでした。",
+      "deleteFailedTitle": "公演を削除できませんでした",
+      "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください。"
+    }
+  },
   "app": {
     "dialogs": {
       "deleteArtist": {

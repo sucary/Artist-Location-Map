@@ -3,6 +3,7 @@ import type { Artist, ArtistQueryParams, LocalizedChain } from '../types/artist'
 import type { City } from '../types/city';
 import type { MainSearchResponse } from '../types/search';
 import type { Profile } from '../types/profile';
+import type { Gig, GigInput, GigQueryParams, Tour, TourInput } from '../types/gig';
 import { supabase } from '../lib/supabase';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -79,6 +80,40 @@ export const getFeaturedArtists = async (): Promise<Artist[]> => {
         console.error('Failed to fetch featured artists:', error);
         throw error;
     }
+};
+
+export const getGigs = async (params?: GigQueryParams): Promise<Gig[]> => {
+    const response = await api.get<Gig[]>('/gigs', { params });
+    return response.data;
+};
+
+export const getArtistGigs = async (artistId: string): Promise<Gig[]> => {
+    const response = await api.get<Gig[]>(`/gigs/artist/${artistId}`);
+    return response.data;
+};
+
+export const getTours = async (): Promise<Tour[]> => {
+    const response = await api.get<Tour[]>('/gigs/tours');
+    return response.data;
+};
+
+export const createTour = async (tourData: TourInput): Promise<Tour> => {
+    const response = await api.post<Tour>('/gigs/tours', tourData);
+    return response.data;
+};
+
+export const createGig = async (gigData: GigInput): Promise<Gig> => {
+    const response = await api.post<Gig>('/gigs', gigData);
+    return response.data;
+};
+
+export const updateGig = async (id: string, gigData: Partial<GigInput>): Promise<Gig> => {
+    const response = await api.put<Gig>(`/gigs/${id}`, gigData);
+    return response.data;
+};
+
+export const deleteGig = async (id: string): Promise<void> => {
+    await api.delete(`/gigs/${id}`);
 };
 
 export const getCityById = async (id: string): Promise<City> => {

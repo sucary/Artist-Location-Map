@@ -100,7 +100,7 @@ export type LocationView = 'original' | 'active';
  */
 export interface SelectionMode {
     active: boolean;
-    targetField: 'originalLocation' | 'activeLocation';
+    targetField: 'originalLocation' | 'activeLocation' | 'gigLocation';
 }
 
 /**

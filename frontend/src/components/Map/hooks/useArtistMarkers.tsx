@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type ReactNode, type RefObject, type SetStateAction } from 'react';
 import { createRoot } from 'react-dom/client';
 import maplibregl from 'maplibre-gl';
 import ArtistCard from '../../ArtistCard';
@@ -71,6 +71,15 @@ const replaceMarkerElementContents = (target: HTMLElement, source: HTMLElement) 
         delete target.dataset.clusterDebugColor;
     }
     target.replaceChildren(...Array.from(source.childNodes));
+};
+
+const syncArtistMarkerHighlight = (
+    element: HTMLElement,
+    artistId: string,
+    highlightedArtistIds?: Set<string>
+) => {
+    // Selected-day highlight is marker chrome outside avatar content
+    element.classList.toggle('gig-marker-highlighted', highlightedArtistIds?.has(artistId) ?? false);
 };
 
 const setClusterElementExpandedHidden = (element: HTMLElement, hidden: boolean) => {
@@ -508,6 +517,8 @@ interface UseArtistMarkersOptions {
         view: LocationView,
         coordinates: { lat: number; lng: number }
     ) => Promise<void> | void;
+    highlightedArtistIds?: Set<string>;
+    renderPopupContent?: (artist: Artist, showActions: boolean) => ReactNode;
 }
 
 export const useArtistMarkers = ({
@@ -528,6 +539,8 @@ export const useArtistMarkers = ({
     onDisplayCoordinateEditStart,
     onDisplayCoordinateEditEnd,
     onDisplayCoordinateChange,
+    highlightedArtistIds,
+    renderPopupContent,
 }: UseArtistMarkersOptions) => {
     // Marker sets owned by this hook
     const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -548,6 +561,7 @@ export const useArtistMarkers = ({
         onEditArtist,
         onDeleteArtist,
         view,
+        renderPopupContent,
     });
     const displayCoordinateEditOptionsRef = useRef({
         canAdjustDisplayCoordinates,
@@ -577,8 +591,9 @@ export const useArtistMarkers = ({
             onEditArtist,
             onDeleteArtist,
             view,
+            renderPopupContent,
         };
-    }, [locationLanguage, onDeleteArtist, onEditArtist, view]);
+    }, [locationLanguage, onDeleteArtist, onEditArtist, renderPopupContent, view]);
 
     useEffect(() => {
         displayCoordinateEditOptionsRef.current = {
@@ -1078,11 +1093,13 @@ export const useArtistMarkers = ({
 
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
-        const { locationLanguage, onEditArtist, onDeleteArtist, view } = popupOptionsRef.current;
+        const { locationLanguage, onEditArtist, onDeleteArtist, view, renderPopupContent } = popupOptionsRef.current;
         const showActions = !!(onEditArtist || onDeleteArtist);
         // React renders the content, MapLibre places the popup
         root.render(
-            <ArtistCard artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
+            renderPopupContent
+                ? renderPopupContent(artist, showActions)
+                : <ArtistCard artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
         );
 
         const popup = new maplibregl.Popup({
@@ -1295,12 +1312,14 @@ export const useArtistMarkers = ({
 
             if (renderExpandedArtistMarkers) {
                 // Interactive artist markers stay out of raw debug overlays
+                const element = createArtistMarkerElement(
+                    artist,
+                    artistNameDisplayMode,
+                    clusterColorDebugEnabled ? clusterDebugColor : undefined
+                );
+                syncArtistMarkerHighlight(element, artist.id, highlightedArtistIds);
                 const marker = new maplibregl.Marker({
-                    element: createArtistMarkerElement(
-                        artist,
-                        artistNameDisplayMode,
-                        clusterColorDebugEnabled ? clusterDebugColor : undefined
-                    ),
+                    element,
                     anchor: 'center',
                 })
                     .setLngLat(clusterCenter)
@@ -1384,7 +1403,7 @@ export const useArtistMarkers = ({
             markerTargets,
         });
         setHasExpandedClusters(true);
-    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, mapRef, openArtistPopup]);
+    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, highlightedArtistIds, mapRef, openArtistPopup]);
 
     const refreshArtistMarkerElement = useCallback((
         entry: MarkerEntry,
@@ -1680,7 +1699,8 @@ export const useArtistMarkers = ({
             const existingEntry = markersRef.current.get(key);
             const target: [number, number] = [lng, lat];
             const debugColor = clusterColorDebugEnabled ? clusterDebugColorsRef.current.get(artist.id) : undefined;
-            const markerRenderKey = `${getArtistMarkerRenderKey(artist, artistNameDisplayMode)}|${debugColor ?? ''}`;
+            const highlighted = highlightedArtistIds?.has(artist.id) ?? false;
+            const markerRenderKey = `${getArtistMarkerRenderKey(artist, artistNameDisplayMode)}|${debugColor ?? ''}|${highlighted ? 'highlighted' : ''}`;
             const marker = existingEntry?.kind === 'artist'
                 ? existingEntry.marker
                 : new maplibregl.Marker({
@@ -1699,6 +1719,7 @@ export const useArtistMarkers = ({
             } else if (shouldLinkMarkerMotion) {
                 animateMarkerTo(marker, target);
             }
+            syncArtistMarkerHighlight(marker.getElement(), artist.id, highlightedArtistIds);
             marker.getElement().onclick = (event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1743,7 +1764,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
+    }, [animateMarkerTo, artistNameDisplayMode, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, highlightedArtistIds, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
         // Compare only fields used by geometric clustering
@@ -1777,7 +1798,7 @@ export const useArtistMarkers = ({
         visibleClustersRef.current.forEach((cluster) => expandCluster(cluster));
     }, [expandCluster]);
 
-    // Repaint markers when cluster-color debug changes
+    // Repaint expanded markers when marker chrome changes
     useEffect(() => {
         renderVisibleMarkers();
         expandedRef.current.forEach((state) => {
@@ -1794,9 +1815,10 @@ export const useArtistMarkers = ({
                         clusterColorDebugEnabled ? state.artistClusterColors.get(artistId) : undefined
                     )
                 );
+                syncArtistMarkerHighlight(marker.getElement(), artistId, highlightedArtistIds);
             });
         });
-    }, [artistNameDisplayMode, clusterColorDebugEnabled, renderVisibleMarkers]);
+    }, [artistNameDisplayMode, clusterColorDebugEnabled, highlightedArtistIds, renderVisibleMarkers]);
 
     // Debug action for validating true clustered artist coordinates
     const expandAllVisibleClustersAtLocations = useCallback(() => {

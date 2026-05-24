@@ -113,6 +113,11 @@ html[data-theme="dark"] .artist-banner-placeholder {
   transition: transform 0.15s ease-out;
 }
 
+.gig-marker-highlighted > div {
+  box-shadow: 0 0 0 3px var(--color-primary), 0 0 18px rgba(250, 35, 59, 0.55);
+  transform: scale(1.12);
+}
+
 /* Tutorial indicator */
 .tutorial-indicator {
   position: relative;

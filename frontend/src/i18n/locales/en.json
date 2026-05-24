@@ -13,7 +13,8 @@
     "redirectToMap": "Redirecting to the map",
     "backToMap": "Back to map",
     "delete": "Delete",
-    "copy": "Copy"
+    "copy": "Copy",
+    "edit": "Edit"
   },
   "auth": {
     "fields": {
@@ -493,6 +494,79 @@
       "youtube": "Artist YouTube",
       "instagram": "Artist Instagram",
       "twitter": "Artist X profile"
+    }
+  },
+  "tour": {
+    "actions": {
+      "enterTourMode": "Enter Tour Mode",
+      "exitTourMode": "Exit Tour Mode",
+      "addGig": "Add gig",
+      "createTour": "Create tour",
+      "clearDates": "Clear dates",
+      "exit": "Exit",
+      "viewEvent": "View event"
+    },
+    "fields": {
+      "artist": "Artist",
+      "artists": "Artists",
+      "date": "Date",
+      "tour": "Tour",
+      "addToTour": "Add to tour",
+      "createTour": "Create tour",
+      "createTourOptional": "Create tour (optional)",
+      "tourName": "Tour name",
+      "gigs": "Gigs",
+      "from": "From",
+      "to": "To",
+      "highlightDay": "Highlight day",
+      "venue": "Venue",
+      "location": "Location"
+    },
+    "form": {
+      "addTitle": "Add gig",
+      "editTitle": "Edit gig",
+      "selectArtist": "Select artist",
+      "selectTour": "Select tour",
+      "createTour": "Create tour",
+      "addArtistToGig": "Add artist to gig",
+      "addToExistingTour": "Existing tour",
+      "createATour": "Create a tour",
+      "removeArtist": "Remove {{name}}",
+      "noArtistsFound": "No artists found",
+      "noToursFound": "No tours found",
+      "noGigsForTour": "No gigs in the current date range.",
+      "sections": {
+        "gig": "Gig",
+        "tour": "Tour"
+      },
+      "tourMode": {
+        "none": "None",
+        "existing": "Existing",
+        "new": "New"
+      },
+      "preselectedArtist": "{{name}} selected",
+      "venuePlaceholder": "Venue name",
+      "locationPlaceholder": "Search gig location"
+    },
+    "banner": {
+      "label": "Tour Mode",
+      "default": "<count>{{count}}</count> upcoming gigs",
+      "interval": "{{from}} - {{to}} (<count>{{count}}</count> gigs)",
+      "day": "{{day}} highlighted (<count>{{count}}</count> gigs)"
+    },
+    "dialogs": {
+      "deleteGig": {
+        "title": "Delete gig",
+        "message": "Delete {{artist}} on {{date}}? This cannot be undone."
+      }
+    },
+    "errors": {
+      "requiredFields": "Select an artist, date, and location.",
+      "requiredTour": "Select a tour.",
+      "requiredTourName": "Enter a tour name.",
+      "loadGigs": "Failed to load gigs.",
+      "deleteFailedTitle": "Could not delete gig",
+      "deleteFailedMessage": "Failed to delete gig. Please try again."
     }
   },
   "app": {
