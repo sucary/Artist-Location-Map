@@ -7,6 +7,7 @@ import { Button, CloseButton } from '../ui';
 import { VenueLocationSearch } from './VenueLocationSearch';
 import { ArtistMultiSelect } from './ArtistMultiSelect';
 import { TourSelect } from './TourSelect';
+import { GigDatePicker } from './GigDatePicker';
 import { useTranslation } from 'react-i18next';
 
 interface GigFormProps {
@@ -147,18 +148,12 @@ export function GigForm({
                         )}
                     </div>
 
-                    <div className="rounded-md p-1">
-                        <label htmlFor="gig-date" className="mb-1 block text-sm font-bold text-text">
-                            {t('tour.fields.date')}
-                        </label>
-                        <input
-                            id="gig-date"
-                            type="date"
-                            value={date}
-                            onChange={(event) => setDate(event.target.value)}
-                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:ml-0 [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0"
-                        />
-                    </div>
+                    <GigDatePicker
+                        id="gig-date"
+                        label={t('tour.fields.date')}
+                        value={date}
+                        onChange={setDate}
+                    />
 
                     <div className="location-search-compact">
                         <VenueLocationSearch

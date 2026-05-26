@@ -1,4 +1,5 @@
 import type maplibregl from 'maplibre-gl';
+import type { ReactNode } from 'react';
 import type { Root } from 'react-dom/client';
 import type { Artist, SelectionMode } from '../../types/artist';
 import type { Gig, TourModeState } from '../../types/gig';
@@ -32,6 +33,7 @@ export interface MapViewProps {
     onArtistPopupOpenChange?: (open: boolean) => void;
     interactionsDisabled?: boolean;
     canAdjustDisplayCoordinates?: boolean;
+    tourControlSlot?: ReactNode;
     onDisplayCoordinateChange?: (
         artist: Artist,
         view: 'original' | 'active',

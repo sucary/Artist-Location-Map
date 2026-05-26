@@ -520,7 +520,6 @@
       "gigs": "Gigs",
       "from": "From",
       "to": "To",
-      "highlightDay": "Highlight day",
       "venue": "Venue",
       "location": "Location",
       "venueLocation": "Venue / location"
@@ -598,6 +597,12 @@
       "loadGigs": "Failed to load gigs",
       "deleteFailedTitle": "Could not delete gig",
       "deleteFailedMessage": "Failed to delete gig. Please try again"
+    },
+    "calendar": {
+      "selectDate": "Select date",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "today": "Today"
     }
   },
   "app": {

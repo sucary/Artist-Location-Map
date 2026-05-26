@@ -519,7 +519,6 @@
       "gigs": "演出",
       "from": "開始",
       "to": "結束",
-      "highlightDay": "高亮日期",
       "venue": "場館",
       "location": "地點",
       "venueLocation": "場館 / 地點"
@@ -597,6 +596,12 @@
       "loadGigs": "無法載入演出",
       "deleteFailedTitle": "無法刪除演出",
       "deleteFailedMessage": "刪除演出失敗。請再試一次"
+    },
+    "calendar": {
+      "selectDate": "選擇日期",
+      "previousMonth": "上個月",
+      "nextMonth": "下個月",
+      "today": "今天"
     }
   },
   "app": {

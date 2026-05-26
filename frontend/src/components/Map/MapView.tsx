@@ -70,6 +70,7 @@ export default function MapView({
     onArtistPopupOpenChange,
     interactionsDisabled = false,
     canAdjustDisplayCoordinates = false,
+    tourControlSlot,
     onDisplayCoordinateChange,
 }: MapViewProps) {
     const { profile } = useAuth();
@@ -866,6 +867,7 @@ export default function MapView({
                 forceMobileControlsClosed={attributionOpen}
                 onRequestMobileOpen={closeAttribution}
                 showViewToggle={isAuthenticated && !viewingFeatured && !tourModeActive}
+                tourControlSlot={tourControlSlot}
             />
 
             {selectionMode?.active && <SelectionPrompt onCancel={onLocationPick} />}

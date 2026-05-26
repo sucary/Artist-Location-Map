@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { TouchEvent } from 'react';
+import type { ReactNode, TouchEvent } from 'react';
 import type { LocationView } from '../../types/artist';
 import type { MapTileTheme } from './config/mapStyles';
 import { LocationIcon, NorthIcon, ExpandIcon, CollapseIcon } from '../icons/MapIcons';
@@ -29,6 +29,7 @@ interface MapControlsProps {
     forceMobileControlsClosed?: boolean;
     onRequestMobileOpen?: () => void;
     showViewToggle?: boolean;
+    tourControlSlot?: ReactNode;
 }
 
 export function MapControls({
@@ -53,6 +54,7 @@ export function MapControls({
     forceMobileControlsClosed = false,
     onRequestMobileOpen,
     showViewToggle = true,
+    tourControlSlot,
 }: MapControlsProps) {
     const [isMobile, setIsMobile] = useState(false);
     const [closedOffset, setClosedOffset] = useState(0);
@@ -162,6 +164,8 @@ export function MapControls({
         >
             <div className="flex gap-2 items-end">
                 <div className="relative flex flex-col gap-2 items-end">
+                    {tourControlSlot}
+
                     {showViewToggle && (
                         <div role="group" aria-label={t('map.buttons.mapControls.toggleLocationView')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
                             <button

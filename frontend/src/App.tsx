@@ -452,12 +452,7 @@ function App() {
         updateTourParams({ active: true, from, to, day: null });
     };
 
-    const handleTourDayChange = (day: string | null) => {
-        setRememberedTourMode((state) => ({ ...state, selectedDay: day }));
-        updateTourParams({ active: true, day });
-    };
-
-    const handleTourClearInterval = () => {
+    const handleTourDateReset = () => {
         setRememberedTourMode({ interval: null, selectedDay: null });
         updateTourParams({ active: true, from: null, to: null, day: null });
     };
@@ -809,14 +804,6 @@ function App() {
                     }
                 }} />
             )}
-            {tourMode.active && !showGigForm && !showGigPanel && (
-                <TourControls
-                    tourMode={tourMode}
-                    onIntervalChange={handleTourIntervalChange}
-                    onDayChange={handleTourDayChange}
-                    onClearInterval={handleTourClearInterval}
-                />
-            )}
             {showForm && (
                 <div className={selectionMode?.active ? 'hidden sm:block' : undefined}>
                     <ArtistForm
@@ -918,6 +905,13 @@ function App() {
                 interactionsDisabled={mapInteractionsDisabled}
                 canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !tourMode.active && !!user}
                 onDisplayCoordinateChange={handleDisplayCoordinateChange}
+                tourControlSlot={tourMode.active && !showGigForm && !showGigPanel ? (
+                    <TourControls
+                        tourMode={tourMode}
+                        onIntervalChange={handleTourIntervalChange}
+                        onReset={handleTourDateReset}
+                    />
+                ) : undefined}
             />
         </main>
     );
