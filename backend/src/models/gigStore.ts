@@ -27,7 +27,7 @@ const ARTIST_JSON = `
 
 const GIG_SELECT_COLUMNS = `
     g.id, g.user_id, g.tour_id, g.venue_name,
-    g.city, g.province, g.country, g.display_name, g.city_id,
+    g.city, g.province, g.country, g.display_name, g.city_id, g.place_location_id,
     ST_Y(g.coordinates::geometry) AS lat,
     ST_X(g.coordinates::geometry) AS lng,
     ST_Y(g.display_coordinates::geometry) AS display_lat,
@@ -38,6 +38,15 @@ const GIG_SELECT_COLUMNS = `
     g.created_at, g.updated_at,
     t.name AS tour_name,
     l.localized_names AS location_localized_names,
+    CASE WHEN pl.id IS NULL THEN NULL ELSE jsonb_build_object(
+        'id', pl.id,
+        'provider', pl.provider,
+        'providerPlaceId', pl.provider_place_id,
+        'name', pl.name,
+        'formatted', pl.formatted,
+        'categories', pl.categories,
+        'isVenue', pl.is_venue
+    ) END AS place_location,
     COALESCE(
         jsonb_agg(${ARTIST_JSON} ORDER BY a.name) FILTER (WHERE a.id IS NOT NULL),
         '[]'::jsonb
@@ -90,6 +99,7 @@ function rowToGig(row: Record<string, unknown>): Gig {
         artist: primaryArtist,
         artists,
         venueName: row.venue_name as string | undefined,
+        placeLocation: row.place_location as Gig['placeLocation'],
         location: {
             city: row.city as string,
             province: row.province as string,
@@ -101,7 +111,8 @@ function rowToGig(row: Record<string, unknown>): Gig {
             },
             ...(localizedChain?.city ? { localizedChain } : {}),
         },
-        locationCityId: row.city_id as string,
+        locationCityId: row.city_id as string | null | undefined,
+        placeLocationId: row.place_location_id as string | null | undefined,
         displayCoordinates: {
             lat: parseFloat(row.display_lat as string),
             lng: parseFloat(row.display_lng as string),
@@ -205,8 +216,9 @@ export const GigStore = {
             LEFT JOIN artist_media_assets ama ON a.musicbrainz_mbid = ama.musicbrainz_mbid
             LEFT JOIN artist_tours t ON g.tour_id = t.id
             LEFT JOIN locations l ON g.city_id = l.id
+            LEFT JOIN place_locations pl ON g.place_location_id = pl.id
             WHERE ${conditions.join(' AND ')}
-            GROUP BY g.id, t.id, l.localized_names
+            GROUP BY g.id, t.id, l.localized_names, pl.id
             ORDER BY g."date" ASC, g.created_at ASC
         `, values);
 
@@ -222,8 +234,9 @@ export const GigStore = {
             LEFT JOIN artist_media_assets ama ON a.musicbrainz_mbid = ama.musicbrainz_mbid
             LEFT JOIN artist_tours t ON g.tour_id = t.id
             LEFT JOIN locations l ON g.city_id = l.id
+            LEFT JOIN place_locations pl ON g.place_location_id = pl.id
             WHERE g.id = $1
-            GROUP BY g.id, t.id, l.localized_names
+            GROUP BY g.id, t.id, l.localized_names, pl.id
         `, [id]);
 
         return result.rows[0] ? rowToGig(result.rows[0]) : undefined;
@@ -242,19 +255,19 @@ export const GigStore = {
         const result = await pool.query(`
             INSERT INTO artist_gigs (
                 user_id, tour_id, venue_name,
-                city, province, country, display_name, city_id,
+                city, province, country, display_name, city_id, place_location_id,
                 coordinates, display_coordinates,
                 "date", timezone,
                 external_source, external_id, external_artist_id, external_url,
                 imported_at, last_synced_at, raw_external_data
             ) VALUES (
                 $1, $2, $3,
-                $4, $5, $6, $7, $8,
-                ST_SetSRID(ST_MakePoint($9, $10), 4326)::geography,
-                ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
-                $13::date, $14,
-                $15, $16, $17, $18,
-                $19, $20, $21
+                $4, $5, $6, $7, $8, $9,
+                ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
+                ST_SetSRID(ST_MakePoint($12, $13), 4326)::geography,
+                $14::date, $15,
+                $16, $17, $18, $19,
+                $20, $21, $22
             )
             RETURNING id
         `, [
@@ -265,7 +278,8 @@ export const GigStore = {
             data.location.province,
             data.location.country || null,
             data.location.displayName || null,
-            data.locationCityId,
+            data.locationCityId || null,
+            data.placeLocationId || null,
             data.location.coordinates.lng,
             data.location.coordinates.lat,
             data.displayCoordinates.lng,
@@ -278,7 +292,7 @@ export const GigStore = {
             data.externalUrl || null,
             data.importedAt || null,
             data.lastSyncedAt || null,
-            data.rawExternalData === undefined ? null : JSON.stringify(data.rawExternalData),
+            data.rawExternalData === undefined || data.rawExternalData === null ? null : JSON.stringify(data.rawExternalData),
         ]);
 
         await setGigArtists(result.rows[0].id, data.artistIds);
@@ -334,7 +348,12 @@ export const GigStore = {
 
         if (data.locationCityId !== undefined) {
             updates.push(`city_id = $${paramIndex++}`);
-            values.push(data.locationCityId);
+            values.push(data.locationCityId || null);
+        }
+
+        if (data.placeLocationId !== undefined) {
+            updates.push(`place_location_id = $${paramIndex++}`);
+            values.push(data.placeLocationId || null);
         }
 
         if (data.displayCoordinates) {

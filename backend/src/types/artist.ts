@@ -21,6 +21,8 @@ export interface Location {
     osmType?: string;
     isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
+    cityId?: string;
+    source?: 'geoapify' | 'local' | 'manual' | 'venue';
 }
 
 /**

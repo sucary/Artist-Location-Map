@@ -16,9 +16,11 @@ export interface Gig {
     artistIds: string[];
     artist: GigArtistSummary;
     artists: GigArtistSummary[];
-    venueName?: string;
+    venueName?: string | null;
+    placeLocation?: GigPlaceLocationSummary | null;
     location: Location;
-    locationCityId: string;
+    locationCityId?: string | null;
+    placeLocationId?: string | null;
     displayCoordinates: Coordinates;
     date: string;
     timezone?: string;
@@ -33,14 +35,32 @@ export interface Gig {
     updatedAt: Date | string;
 }
 
+export interface GigPlaceLocationSummary {
+    id: string;
+    provider: string;
+    providerPlaceId: string;
+    name: string;
+    formatted?: string | null;
+    categories: string[];
+    isVenue: boolean;
+}
+
 export interface GigInput {
     artistIds: string[];
     tourId?: string | null;
     newTourName?: string;
-    venueName?: string;
+    venueName?: string | null;
+    placeLocationId?: string | null;
     location: Location;
     date: string;
     timezone?: string;
+    externalSource?: string | null;
+    externalId?: string | null;
+    externalArtistId?: string | null;
+    externalUrl?: string | null;
+    importedAt?: Date | string | null;
+    lastSyncedAt?: Date | string | null;
+    rawExternalData?: unknown;
 }
 
 export interface TourSummary {

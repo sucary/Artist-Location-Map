@@ -1,51 +1,28 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getArtists, getTours, type SearchResult } from '../../services/api';
+import { getArtists, getTours } from '../../services/api';
 import type { Artist, Location } from '../../types/artist';
 import type { Gig, GigInput } from '../../types/gig';
-import { formatLocationLocalized } from '../../utils/locationUtils';
 import { Button, CloseButton } from '../ui';
-import { LocationSearch } from '../ArtistForm/LocationSearch';
+import { VenueLocationSearch } from './VenueLocationSearch';
 import { ArtistMultiSelect } from './ArtistMultiSelect';
 import { TourSelect } from './TourSelect';
-import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { useTranslation } from 'react-i18next';
 
 interface GigFormProps {
     initialGig?: Gig | null;
     initialArtist?: Artist | null;
-    pendingCoordinates?: { lat: number; lng: number } | null;
-    onRequestSelection: () => void;
-    onConsumePendingCoordinates: () => void;
     onSubmit: (input: GigInput, id?: string) => Promise<void> | void;
     onCancel: () => void;
 }
 
-const searchResultToLocation = (result: SearchResult): Location => ({
-    city: result.name,
-    province: result.province,
-    country: result.country,
-    displayName: result.displayName,
-    coordinates: result.center,
-    osmId: result.osmId,
-    osmType: result.osmType,
-    type: result.type,
-    isManualSelection: result.isManualSelection,
-    localizedChain: result.localizedChain,
-    cityId: result.id,
-});
-
 export function GigForm({
     initialGig,
     initialArtist,
-    pendingCoordinates,
-    onRequestSelection,
-    onConsumePendingCoordinates,
     onSubmit,
     onCancel,
 }: GigFormProps) {
     const { t } = useTranslation();
-    const { locationLanguage } = useLocationLanguage();
     const { data: artists = [] } = useQuery({
         queryKey: ['artists'],
         queryFn: () => getArtists(),
@@ -61,6 +38,9 @@ export function GigForm({
     const [newTourName, setNewTourName] = useState('');
     const [date, setDate] = useState(initialGig?.date ?? '');
     const [location, setLocation] = useState<Location | null>(initialGig?.location ?? null);
+    const [venueName, setVenueName] = useState<string | null>(initialGig?.venueName ?? null);
+    const [placeLocationId, setPlaceLocationId] = useState<string | null>(initialGig?.placeLocationId ?? null);
+    const [rawExternalData, setRawExternalData] = useState<unknown>(initialGig?.rawExternalData ?? undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const hasTours = tours.length > 0;
@@ -73,6 +53,9 @@ export function GigForm({
         setNewTourName('');
         setDate(initialGig?.date ?? '');
         setLocation(initialGig?.location ?? null);
+        setVenueName(initialGig?.venueName ?? null);
+        setPlaceLocationId(initialGig?.placeLocationId ?? null);
+        setRawExternalData(initialGig?.rawExternalData ?? undefined);
         setError(null);
     }, [initialArtist?.id, initialGig]);
 
@@ -120,8 +103,11 @@ export function GigForm({
                 artistIds,
                 tourId: tourMode === 'existing' && tourId ? tourId : null,
                 newTourName: tourMode === 'new' && newTourName.trim() ? newTourName.trim() : undefined,
+                venueName: venueName?.trim() || null,
+                placeLocationId,
                 location,
                 date,
+                rawExternalData: venueName ? rawExternalData : null,
             }, initialGig?.id);
         } finally {
             setIsSaving(false);
@@ -172,14 +158,16 @@ export function GigForm({
                     </div>
 
                     <div className="location-search-compact">
-                        <LocationSearch
-                            displayValue={location ? formatLocationLocalized(location, locationLanguage) : ''}
-                            onChange={(result) => setLocation(searchResultToLocation(result))}
-                            onManualPin={onRequestSelection}
-                            pendingCoordinates={pendingCoordinates}
-                            onCoordinatesConsumed={onConsumePendingCoordinates}
-                            placeholder={t('tour.form.locationPlaceholder')}
-                            label={t('tour.fields.location')}
+                        <VenueLocationSearch
+                            venueName={venueName}
+                            location={location}
+                            rawExternalData={rawExternalData}
+                            onChange={(value) => {
+                                setVenueName(value.venueName ?? null);
+                                setPlaceLocationId(value.placeLocationId ?? null);
+                                setLocation(value.location);
+                                setRawExternalData(value.rawExternalData);
+                            }}
                         />
                     </div>
 

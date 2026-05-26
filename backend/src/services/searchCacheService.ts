@@ -19,7 +19,7 @@ export const SearchCacheService = {
      * Get cached search results for a keyword
      * Returns null if not found or expired
      */
-    async get(query: string, lang?: string): Promise<NominatimSearchResult[] | null> {
+    async get<T = NominatimSearchResult>(query: string, lang?: string): Promise<T[] | null> {
         const keyword = this.normalizeKeyword(query, lang);
 
         try {
@@ -32,7 +32,7 @@ export const SearchCacheService = {
             `, [keyword]);
 
             if (result.rows.length === 0) return null;
-            return result.rows[0].results as NominatimSearchResult[];
+            return result.rows[0].results as T[];
         } catch (error) {
             console.error('Error fetching from search cache:', error);
             return null;
@@ -68,7 +68,7 @@ export const SearchCacheService = {
     /**
      * Cache search results for a keyword
      */
-    async set(query: string, results: NominatimSearchResult[], lang?: string): Promise<void> {
+    async set<T = NominatimSearchResult>(query: string, results: T[], lang?: string): Promise<void> {
         const keyword = this.normalizeKeyword(query, lang);
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + CACHE_DURATION_DAYS);

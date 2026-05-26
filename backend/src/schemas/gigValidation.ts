@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LocationSchema } from './artistValidation';
+import { CoordinatesSchema } from './artistValidation';
 
 // Gig request validation schemas
 
@@ -19,23 +19,59 @@ const optionalText = z.string()
     .nullable()
     .transform((value) => value || undefined);
 
+const clearableText = z.string()
+    .trim()
+    .max(255)
+    .optional()
+    .nullable()
+    .transform((value) => value || null);
+
 const optionalDateTime = z.string()
     .datetime()
     .optional()
     .nullable()
     .transform((value) => value ?? undefined);
 
+// External tour locations can persist without local city boundaries
+const PROVIDER_LOCATION_SOURCES = new Set(['geoapify', 'local', 'manual', 'venue']);
+
+const GigLocationSchema = z.object({
+    city: z.string().min(1, 'City is required'),
+    province: z.string().min(1, 'Province is required'),
+    country: z.string().optional().nullable().transform((value) => value ?? undefined),
+    displayName: z.string().optional().nullable().transform((value) => value ?? undefined),
+    coordinates: CoordinatesSchema,
+    osmId: z.number().optional(),
+    osmType: z.string().optional(),
+    type: z.string().optional(),
+    isManualSelection: z.boolean().optional(),
+    cityId: z.string().uuid().optional(),
+    source: z.enum(['geoapify', 'local', 'manual', 'venue']).optional(),
+}).superRefine((location, context) => {
+    if (location.cityId) return;
+    if (location.source && PROVIDER_LOCATION_SOURCES.has(location.source)) return;
+
+    if (!location.osmId || !location.osmType) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Gig location must include cityId, provider source, or osmId and osmType',
+            path: ['cityId'],
+        });
+    }
+});
+
 const GigBaseSchema = z.object({
     artistIds: z.array(z.string().uuid()).min(1),
     tourId: z.string().uuid().optional().nullable(),
     newTourName: optionalText,
-    venueName: optionalText,
-    location: LocationSchema,
+    venueName: clearableText,
+    placeLocationId: z.string().uuid().optional().nullable(),
+    location: GigLocationSchema,
     date: ISO_DATE,
-    timezone: optionalText,
-    externalSource: optionalText,
-    externalId: optionalText,
-    externalArtistId: optionalText,
+    timezone: clearableText,
+    externalSource: clearableText,
+    externalId: clearableText,
+    externalArtistId: clearableText,
     externalUrl: OPTIONAL_URL.optional().nullable().or(z.literal('')).transform((value) => value || undefined),
     importedAt: optionalDateTime,
     lastSyncedAt: optionalDateTime,

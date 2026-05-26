@@ -11,6 +11,7 @@ import uploadRoutes from './routes/uploadRoutes';
 import musicbrainzCatalogRoutes from './routes/musicbrainzCatalogRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import gigRoutes from './routes/gigRoutes';
+import venueRoutes from './routes/venueRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { verifyDatabaseConnection } from './config/database';
 
@@ -47,6 +48,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/musicbrainz-catalog', musicbrainzCatalogRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/gigs', gigRoutes);
+app.use('/api/venues', venueRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({

@@ -43,6 +43,7 @@ export interface Location {
     isManualSelection?: boolean;
     localizedChain?: LocalizedChain;
     cityId?: string;
+    source?: 'geoapify' | 'local' | 'manual' | 'venue';
 }
 
 /**

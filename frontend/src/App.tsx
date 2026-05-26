@@ -842,9 +842,6 @@ function App() {
                     <GigForm
                         initialGig={editingGig}
                         initialArtist={gigFormArtist}
-                        pendingCoordinates={pendingCoordinates}
-                        onRequestSelection={() => handleStartSelection('gigLocation')}
-                        onConsumePendingCoordinates={handleConsumeCoordinates}
                         onSubmit={handleGigFormSubmit}
                         onCancel={handleCloseGigForm}
                     />

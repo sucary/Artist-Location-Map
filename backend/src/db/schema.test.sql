@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS tour_artists CASCADE;
 DROP TABLE IF EXISTS gig_artists CASCADE;
 DROP TABLE IF EXISTS artist_gigs CASCADE;
 DROP TABLE IF EXISTS artist_tours CASCADE;
+DROP TABLE IF EXISTS place_locations CASCADE;
 DROP TABLE IF EXISTS artists CASCADE;
 DROP TABLE IF EXISTS artist_media_assets CASCADE;
 DROP TABLE IF EXISTS artist_media_asset_reviews CASCADE;
@@ -100,6 +101,31 @@ CREATE TABLE IF NOT EXISTS priority_locations (
     created_at TIMESTAMP DEFAULT NOW(),
 
     CONSTRAINT uq_priority_query_osm UNIQUE (search_query, osm_id, osm_type)
+);
+
+-- ============================================
+-- Place Locations (point venues/POIs for Tour Mode)
+-- ============================================
+CREATE TABLE IF NOT EXISTS place_locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider TEXT NOT NULL,
+    provider_place_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    formatted TEXT,
+    address_line1 TEXT,
+    address_line2 TEXT,
+    city TEXT,
+    province TEXT,
+    country TEXT,
+    country_code TEXT,
+    coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
+    categories TEXT[] NOT NULL DEFAULT '{}',
+    is_venue BOOLEAN NOT NULL DEFAULT FALSE,
+    timezone TEXT,
+    raw_provider_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (provider, provider_place_id)
 );
 
 -- ============================================
@@ -359,6 +385,7 @@ CREATE TABLE IF NOT EXISTS artist_gigs (
     country VARCHAR(100),
     display_name TEXT,
     city_id UUID REFERENCES locations(id),
+    place_location_id UUID REFERENCES place_locations(id),
     coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
     display_coordinates GEOGRAPHY(POINT, 4326) NOT NULL,
     "date" DATE NOT NULL,
@@ -401,6 +428,14 @@ CREATE INDEX IF NOT EXISTS idx_locations_importance ON locations(importance DESC
 CREATE INDEX IF NOT EXISTS idx_locations_parent_id ON locations(parent_id);
 CREATE INDEX IF NOT EXISTS idx_locations_admin_level ON locations(admin_level);
 
+-- Place locations indexes
+CREATE INDEX IF NOT EXISTS idx_place_locations_provider_place ON place_locations(provider, provider_place_id);
+CREATE INDEX IF NOT EXISTS idx_place_locations_name_trgm ON place_locations USING gin(name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_place_locations_formatted_trgm ON place_locations USING gin(formatted gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_place_locations_categories ON place_locations USING gin(categories);
+CREATE INDEX IF NOT EXISTS idx_place_locations_is_venue ON place_locations(is_venue);
+CREATE INDEX IF NOT EXISTS idx_place_locations_coordinates ON place_locations USING gist(coordinates);
+
 -- Priority locations indexes
 CREATE INDEX IF NOT EXISTS idx_priority_search_query ON priority_locations(search_query);
 
@@ -427,6 +462,7 @@ CREATE INDEX IF NOT EXISTS idx_artists_musicbrainz_mbid ON artists(musicbrainz_m
 CREATE INDEX IF NOT EXISTS idx_artist_gigs_user_date ON artist_gigs(user_id, "date");
 CREATE INDEX IF NOT EXISTS idx_artist_gigs_tour_id ON artist_gigs(tour_id);
 CREATE INDEX IF NOT EXISTS idx_artist_gigs_city_id ON artist_gigs(city_id);
+CREATE INDEX IF NOT EXISTS idx_artist_gigs_place_location_id ON artist_gigs(place_location_id);
 CREATE INDEX IF NOT EXISTS idx_artist_gigs_display_coordinates ON artist_gigs USING GIST(display_coordinates);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_artist_gigs_external_unique
 ON artist_gigs(user_id, external_source, external_id)

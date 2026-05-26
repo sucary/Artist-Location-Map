@@ -21,21 +21,33 @@ export interface Gig {
     artistIds: string[];
     artist: GigArtistSummary;
     artists: GigArtistSummary[];
-    venueName?: string;
+    venueName?: string | null;
+    placeLocation?: GigPlaceLocationSummary | null;
     location: GigLocation;
-    locationCityId: string;
+    locationCityId?: string | null;
+    placeLocationId?: string | null;
     displayCoordinates: Coordinates;
     date: string;
-    timezone?: string;
-    externalSource?: string;
-    externalId?: string;
-    externalArtistId?: string;
+    timezone?: string | null;
+    externalSource?: string | null;
+    externalId?: string | null;
+    externalArtistId?: string | null;
     externalUrl?: string;
     importedAt?: Date | string;
     lastSyncedAt?: Date | string;
     rawExternalData?: unknown;
     createdAt: Date | string;
     updatedAt: Date | string;
+}
+
+export interface GigPlaceLocationSummary {
+    id: string;
+    provider: string;
+    providerPlaceId: string;
+    name: string;
+    formatted?: string | null;
+    categories: string[];
+    isVenue: boolean;
 }
 
 export interface TourSummary {
@@ -68,13 +80,14 @@ export interface CreateGigDTO {
     artistIds: string[];
     tourId?: string | null;
     newTourName?: string;
-    venueName?: string;
+    venueName?: string | null;
+    placeLocationId?: string | null;
     location: Location;
     date: string;
-    timezone?: string;
-    externalSource?: string;
-    externalId?: string;
-    externalArtistId?: string;
+    timezone?: string | null;
+    externalSource?: string | null;
+    externalId?: string | null;
+    externalArtistId?: string | null;
     externalUrl?: string;
     importedAt?: string;
     lastSyncedAt?: string;
@@ -85,13 +98,14 @@ export interface UpdateGigDTO {
     artistIds?: string[];
     tourId?: string | null;
     newTourName?: string;
-    venueName?: string;
+    venueName?: string | null;
+    placeLocationId?: string | null;
     location?: Location;
     date?: string;
-    timezone?: string;
-    externalSource?: string;
-    externalId?: string;
-    externalArtistId?: string;
+    timezone?: string | null;
+    externalSource?: string | null;
+    externalId?: string | null;
+    externalArtistId?: string | null;
     externalUrl?: string;
     importedAt?: string;
     lastSyncedAt?: string;
@@ -100,13 +114,13 @@ export interface UpdateGigDTO {
 
 export interface StoreGigDTO extends CreateGigDTO {
     userId: string;
-    locationCityId: string;
+    locationCityId?: string | null;
     displayCoordinates: Coordinates;
 }
 
 export interface UpdateStoreGigDTO extends UpdateGigDTO {
     userId?: string;
-    locationCityId?: string;
+    locationCityId?: string | null;
     displayCoordinates?: Coordinates;
 }
 

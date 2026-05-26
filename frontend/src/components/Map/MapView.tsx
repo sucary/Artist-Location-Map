@@ -184,8 +184,8 @@ export default function MapView({
         updatedAt: gig.updatedAt,
         originalLocationDisplayCoordinates: gig.displayCoordinates,
         activeLocationDisplayCoordinates: gig.displayCoordinates,
-        originalCityId: gig.locationCityId,
-        activeCityId: gig.locationCityId,
+        originalCityId: gig.locationCityId ?? '',
+        activeCityId: gig.locationCityId ?? '',
         gig,
     })), [gigs]);
 

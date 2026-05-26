@@ -149,6 +149,42 @@ export interface SearchResponse {
     hasMore: boolean;
 }
 
+export interface TourLocationSearchResult {
+    source: 'geoapify' | 'local';
+    providerId?: string;
+    placeLocationId?: string;
+    name: string;
+    displayName?: string;
+    city: string;
+    province: string;
+    country?: string;
+    countryCode?: string;
+    center: { lat: number; lng: number };
+    cityId?: string;
+    type?: string;
+    categories?: string[];
+    isVenue?: boolean;
+    venueName?: string;
+    isCached?: boolean;
+    rawExternalData?: unknown;
+}
+
+export interface VenueSearchResult extends TourLocationSearchResult {
+    source: 'geoapify';
+    providerId: string;
+    venueName: string;
+}
+
+export interface VenueSearchResponse {
+    results: VenueSearchResult[];
+    source: 'geoapify' | 'cache';
+}
+
+export interface TourLocationSearchResponse {
+    results: TourLocationSearchResult[];
+    source: 'local' | 'geoapify' | 'cache';
+}
+
 export interface Notification {
     id: string;
     userId: string;
@@ -411,6 +447,39 @@ export const reverseSearchCities = async (
         console.error('Failed to reverse search:', error);
         throw error;
     }
+};
+
+export const searchVenues = async (
+    query: string,
+    options: { limit?: number; lat?: number; lng?: number; countryCode?: string; lang?: string; nativeName?: boolean } = {},
+    signal?: AbortSignal
+): Promise<VenueSearchResponse> => {
+    const response = await api.get<VenueSearchResponse>('/venues/search', {
+        params: { q: query, ...options },
+        signal,
+    });
+    return response.data;
+};
+
+export const searchTourLocations = async (
+    query: string,
+    options: { limit?: number; lat?: number; lng?: number; countryCode?: string; lang?: string; nativeName?: boolean } = {},
+    signal?: AbortSignal
+): Promise<TourLocationSearchResponse> => {
+    const response = await api.get<TourLocationSearchResponse>('/venues/location-search', {
+        params: { q: query, ...options },
+        signal,
+    });
+    return response.data;
+};
+
+export const reverseTourLocation = async (
+    lat: number,
+    lng: number,
+    signal?: AbortSignal
+): Promise<TourLocationSearchResult> => {
+    const response = await api.post<TourLocationSearchResult>('/venues/reverse-local', { lat, lng }, { signal });
+    return response.data;
 };
 
 // Create a new artist

@@ -39,6 +39,14 @@ function shouldUseManualCoordinates(
     return location.osmType !== 'node' && isManualSelection(location.coordinates, cityCenter);
 }
 
+// Provider-backed tour points do not require our locations table
+function isExternalTourLocation(location: Location): boolean {
+    return location.source === 'geoapify' ||
+           location.source === 'local' ||
+           location.source === 'manual' ||
+           location.source === 'venue';
+}
+
 function toIsoDate(date: Date): string {
     return date.toISOString().slice(0, 10);
 }
@@ -61,6 +69,11 @@ async function hasUsablePlacementBoundary(cityId: string): Promise<boolean> {
     `, [cityId, MIN_PLACEMENT_BOUNDARY_AREA_M2]);
 
     return result.rows[0]?.usable === true;
+}
+
+async function resolveContainingLocalCity(coords: Coordinates): Promise<City | null> {
+    const results = await CityService.reverseGeocodeAll(coords.lat, coords.lng, 1);
+    return results[0] ?? null;
 }
 
 async function resolveCity(osmId: number, osmType: string): Promise<City> {
@@ -130,8 +143,52 @@ async function assertTourForOwner(tourId: string | undefined | null, userId: str
 async function resolveGigLocation(
     location: Location,
     userId: string
-): Promise<{ location: Location; locationCityId: string; displayCoordinates: Coordinates }> {
+): Promise<{ location: Location; locationCityId: string | null; displayCoordinates: Coordinates }> {
+    if (location.cityId && (!location.osmId || !location.osmType)) {
+        const city = await CityService.getById(location.cityId);
+        if (!city) {
+            throw new Error('Gig location cityId was not found');
+        }
+
+        // Tour provider locations already carry their exact marker point
+        return {
+            location: {
+                ...location,
+                city: location.city || city.name,
+                province: location.province || city.province,
+                country: location.country || city.country || undefined,
+                displayName: location.displayName || city.displayName,
+                coordinates: location.coordinates,
+            },
+            locationCityId: city.id,
+            displayCoordinates: location.coordinates,
+        };
+    }
+
     if (!location.osmId || !location.osmType) {
+        if (isExternalTourLocation(location)) {
+            const localCity = await resolveContainingLocalCity(location.coordinates);
+            if (localCity) {
+                return {
+                    location: {
+                        ...location,
+                        city: location.city || localCity.name,
+                        province: location.province || localCity.province,
+                        country: location.country || localCity.country || undefined,
+                    },
+                    locationCityId: localCity.id,
+                    displayCoordinates: location.coordinates,
+                };
+            }
+
+            // Geoapify venue coordinates are valid even without a local city row
+            return {
+                location,
+                locationCityId: null,
+                displayCoordinates: location.coordinates,
+            };
+        }
+
         throw new Error('Gig location must include osmId and osmType');
     }
 

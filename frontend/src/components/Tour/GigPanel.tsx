@@ -75,6 +75,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
             const searchText = [
                 getArtistNames(gig),
                 gig.tour?.name,
+                gig.venueName,
                 gig.location.city,
                 gig.location.province,
                 gig.location.country,
