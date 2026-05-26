@@ -64,6 +64,7 @@ const GigBaseSchema = z.object({
     artistIds: z.array(z.string().uuid()).min(1),
     tourId: z.string().uuid().optional().nullable(),
     newTourName: optionalText,
+    gigName: clearableText,
     venueName: clearableText,
     placeLocationId: z.string().uuid().optional().nullable(),
     location: GigLocationSchema,

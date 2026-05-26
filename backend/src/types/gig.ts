@@ -21,6 +21,7 @@ export interface Gig {
     artistIds: string[];
     artist: GigArtistSummary;
     artists: GigArtistSummary[];
+    gigName?: string | null;
     venueName?: string | null;
     placeLocation?: GigPlaceLocationSummary | null;
     location: GigLocation;
@@ -80,6 +81,7 @@ export interface CreateGigDTO {
     artistIds: string[];
     tourId?: string | null;
     newTourName?: string;
+    gigName?: string | null;
     venueName?: string | null;
     placeLocationId?: string | null;
     location: Location;
@@ -98,6 +100,7 @@ export interface UpdateGigDTO {
     artistIds?: string[];
     tourId?: string | null;
     newTourName?: string;
+    gigName?: string | null;
     venueName?: string | null;
     placeLocationId?: string | null;
     location?: Location;

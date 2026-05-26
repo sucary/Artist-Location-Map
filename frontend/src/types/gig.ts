@@ -16,6 +16,7 @@ export interface Gig {
     artistIds: string[];
     artist: GigArtistSummary;
     artists: GigArtistSummary[];
+    gigName?: string | null;
     venueName?: string | null;
     placeLocation?: GigPlaceLocationSummary | null;
     location: Location;
@@ -49,6 +50,7 @@ export interface GigInput {
     artistIds: string[];
     tourId?: string | null;
     newTourName?: string;
+    gigName?: string | null;
     venueName?: string | null;
     placeLocationId?: string | null;
     location: Location;

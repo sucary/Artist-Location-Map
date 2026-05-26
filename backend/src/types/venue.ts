@@ -38,4 +38,5 @@ export interface VenueSearchResponse {
 export interface TourLocationSearchResponse {
     results: TourLocationSearchResult[];
     source: 'local' | 'geoapify' | 'cache';
+    hasMore: boolean;
 }

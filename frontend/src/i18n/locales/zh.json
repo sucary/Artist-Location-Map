@@ -509,6 +509,7 @@
     "fields": {
       "artist": "艺人",
       "artists": "艺人",
+      "gigName": "演出名称（可选）",
       "date": "日期",
       "tour": "巡演",
       "addToTour": "添加到巡演",
@@ -520,7 +521,8 @@
       "to": "结束",
       "highlightDay": "高亮日期",
       "venue": "场馆",
-      "location": "地点"
+      "location": "地点",
+      "venueLocation": "场馆 / 地点"
     },
     "form": {
       "addTitle": "添加演出",
@@ -534,7 +536,7 @@
       "removeArtist": "移除 {{name}}",
       "noArtistsFound": "未找到艺人",
       "noToursFound": "未找到巡演",
-      "noGigsForTour": "当前日期范围内没有演出。",
+      "noGigsForTour": "当前日期范围内没有演出",
       "sections": {
         "gig": "演出",
         "tour": "巡演"
@@ -545,8 +547,11 @@
         "new": "新建"
       },
       "preselectedArtist": "已选择 {{name}}",
-      "venuePlaceholder": "场馆名称",
-      "locationPlaceholder": "搜索演出地点"
+      "gigNamePlaceholder": "输入演出名称",
+      "venuePlaceholder": "输入场馆名称",
+      "locationPlaceholder": "搜索场馆 / 地点",
+      "locationSearchHint": "一些较小的场馆可能不会出现在搜索结果中",
+      "tourNamePlaceholder": "输入巡演名称"
     },
     "banner": {
       "label": "巡演模式",
@@ -556,8 +561,8 @@
     },
     "panel": {
       "title": "演出",
-      "empty": "当前日期范围内没有演出。",
-      "noResults": "没有符合当前筛选的演出。",
+      "empty": "当前日期范围内没有演出",
+      "noResults": "没有符合当前筛选的演出",
       "noTour": "无巡演",
       "controls": {
         "selection": "选择",
@@ -586,12 +591,12 @@
       }
     },
     "errors": {
-      "requiredFields": "请选择艺人、日期和地点。",
-      "requiredTour": "请选择巡演。",
-      "requiredTourName": "请输入巡演名称。",
-      "loadGigs": "无法加载演出。",
+      "requiredFields": "请选择艺人、日期和地点",
+      "requiredTour": "请选择巡演",
+      "requiredTourName": "请输入巡演名称",
+      "loadGigs": "无法加载演出",
       "deleteFailedTitle": "无法删除演出",
-      "deleteFailedMessage": "删除演出失败。请重试。"
+      "deleteFailedMessage": "删除演出失败。请重试"
     }
   },
   "app": {

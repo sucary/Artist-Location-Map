@@ -108,6 +108,7 @@ interface SearchInput {
 
 interface LocalFirstSearchInput extends SearchInput {
     locationLanguage?: LocationLanguage;
+    source?: 'auto' | 'geoapify';
 }
 
 function getApiKey(): string {
@@ -296,6 +297,22 @@ function normalizeLocalResult(result: LocalSearchResult, isCached = false): Tour
         isVenue: false,
         isCached,
     };
+}
+
+function getResultKey(result: TourLocationSearchResult): string {
+    if (result.placeLocationId) return `place:${result.placeLocationId}`;
+    if (result.providerId) return `provider:${result.providerId}`;
+    return `point:${result.name}:${result.center.lat.toFixed(6)}:${result.center.lng.toFixed(6)}`;
+}
+
+function dedupeTourLocationResults(results: TourLocationSearchResult[]): TourLocationSearchResult[] {
+    const seen = new Set<string>();
+    return results.filter((result) => {
+        const key = getResultKey(result);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 function geoapifyResultToPlaceInput(
@@ -488,10 +505,11 @@ export const VenueSearchService = {
             ...localResults.map((result) => normalizeLocalResult(result)),
         ].slice(0, limit);
 
-        if (dbResults.length > 0) {
+        if (input.source !== 'geoapify' && dbResults.length > 0) {
             return {
                 results: dbResults,
                 source: 'local',
+                hasMore: true,
             };
         }
 
@@ -503,10 +521,15 @@ export const VenueSearchService = {
             isCached: fromCache,
             places,
         });
+        const geoapifyResults = normalized.filter((result): result is TourLocationSearchResult => !!result);
+        const combinedResults = input.source === 'geoapify'
+            ? dedupeTourLocationResults([...dbResults, ...geoapifyResults]).slice(0, limit)
+            : geoapifyResults.slice(0, limit);
 
         return {
-            results: normalized.filter((result): result is TourLocationSearchResult => !!result),
+            results: combinedResults,
             source: fromCache ? 'cache' : 'geoapify',
+            hasMore: false,
         };
     },
 

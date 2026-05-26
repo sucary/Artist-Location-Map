@@ -379,6 +379,7 @@ CREATE TABLE IF NOT EXISTS artist_gigs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tour_id UUID REFERENCES artist_tours(id) ON DELETE SET NULL,
+    gig_name VARCHAR(255),
     venue_name VARCHAR(255),
     city VARCHAR(255) NOT NULL,
     province VARCHAR(255) NOT NULL,

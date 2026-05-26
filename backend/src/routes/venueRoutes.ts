@@ -26,6 +26,7 @@ const SearchQuerySchema = z.object({
     countryCode: z.string().trim().length(2).optional(),
     lang: z.string().trim().regex(/^[a-z]{2}$/i).transform((value) => value.toLowerCase()).optional(),
     nativeName: z.coerce.boolean().optional(),
+    source: z.enum(['auto', 'geoapify']).optional(),
 });
 
 function toAppError(error: unknown): AppError {
@@ -68,6 +69,7 @@ router.get('/location-search', asyncHandler(async (req, res) => {
             countryCode: query.countryCode,
             lang: query.lang,
             nativeName: query.nativeName,
+            source: query.source,
         });
         res.json(result);
     } catch (error) {

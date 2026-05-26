@@ -510,6 +510,7 @@
     "fields": {
       "artist": "Artist",
       "artists": "Artists",
+      "gigName": "Gig name (optional)",
       "date": "Date",
       "tour": "Tour",
       "addToTour": "Add to tour",
@@ -521,7 +522,8 @@
       "to": "To",
       "highlightDay": "Highlight day",
       "venue": "Venue",
-      "location": "Location"
+      "location": "Location",
+      "venueLocation": "Venue / location"
     },
     "form": {
       "addTitle": "Add gig",
@@ -535,7 +537,7 @@
       "removeArtist": "Remove {{name}}",
       "noArtistsFound": "No artists found",
       "noToursFound": "No tours found",
-      "noGigsForTour": "No gigs in the current date range.",
+      "noGigsForTour": "No gigs in the current date range",
       "sections": {
         "gig": "Gig",
         "tour": "Tour"
@@ -546,8 +548,11 @@
         "new": "New"
       },
       "preselectedArtist": "{{name}} selected",
-      "venuePlaceholder": "Venue name",
-      "locationPlaceholder": "Search gig location"
+      "gigNamePlaceholder": "Enter gig name",
+      "venuePlaceholder": "Enter venue name",
+      "locationPlaceholder": "Search venue / location",
+      "locationSearchHint": "Some smaller venues may not appear in search results",
+      "tourNamePlaceholder": "Enter tour name"
     },
     "banner": {
       "label": "Tour Mode",
@@ -557,8 +562,8 @@
     },
     "panel": {
       "title": "Gigs",
-      "empty": "No gigs in the current date range.",
-      "noResults": "No gigs match the current filter.",
+      "empty": "No gigs in the current date range",
+      "noResults": "No gigs match the current filter",
       "noTour": "No tour",
       "controls": {
         "selection": "Selection",
@@ -587,12 +592,12 @@
       }
     },
     "errors": {
-      "requiredFields": "Select an artist, date, and location.",
-      "requiredTour": "Select a tour.",
-      "requiredTourName": "Enter a tour name.",
-      "loadGigs": "Failed to load gigs.",
+      "requiredFields": "Select an artist, date, and location",
+      "requiredTour": "Select a tour",
+      "requiredTourName": "Enter a tour name",
+      "loadGigs": "Failed to load gigs",
       "deleteFailedTitle": "Could not delete gig",
-      "deleteFailedMessage": "Failed to delete gig. Please try again."
+      "deleteFailedMessage": "Failed to delete gig. Please try again"
     }
   },
   "app": {

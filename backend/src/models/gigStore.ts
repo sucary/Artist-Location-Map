@@ -26,7 +26,7 @@ const ARTIST_JSON = `
 `;
 
 const GIG_SELECT_COLUMNS = `
-    g.id, g.user_id, g.tour_id, g.venue_name,
+    g.id, g.user_id, g.tour_id, g.gig_name, g.venue_name,
     g.city, g.province, g.country, g.display_name, g.city_id, g.place_location_id,
     ST_Y(g.coordinates::geometry) AS lat,
     ST_X(g.coordinates::geometry) AS lng,
@@ -98,6 +98,7 @@ function rowToGig(row: Record<string, unknown>): Gig {
         artistIds: artists.map((artist) => artist.id),
         artist: primaryArtist,
         artists,
+        gigName: row.gig_name as string | null | undefined,
         venueName: row.venue_name as string | undefined,
         placeLocation: row.place_location as Gig['placeLocation'],
         location: {
@@ -198,6 +199,7 @@ export const GigStore = {
                     WHERE qga.gig_id = g.id
                     AND (qa.name ILIKE $${paramIndex} OR qa.romanized_name ILIKE $${paramIndex})
                 )
+                OR g.gig_name ILIKE $${paramIndex}
                 OR g.venue_name ILIKE $${paramIndex}
                 OR g.city ILIKE $${paramIndex}
                 OR g.province ILIKE $${paramIndex}
@@ -254,25 +256,26 @@ export const GigStore = {
 
         const result = await pool.query(`
             INSERT INTO artist_gigs (
-                user_id, tour_id, venue_name,
+                user_id, tour_id, gig_name, venue_name,
                 city, province, country, display_name, city_id, place_location_id,
                 coordinates, display_coordinates,
                 "date", timezone,
                 external_source, external_id, external_artist_id, external_url,
                 imported_at, last_synced_at, raw_external_data
             ) VALUES (
-                $1, $2, $3,
-                $4, $5, $6, $7, $8, $9,
-                ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
-                ST_SetSRID(ST_MakePoint($12, $13), 4326)::geography,
-                $14::date, $15,
-                $16, $17, $18, $19,
-                $20, $21, $22
+                $1, $2, $3, $4,
+                $5, $6, $7, $8, $9, $10,
+                ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
+                ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography,
+                $15::date, $16,
+                $17, $18, $19, $20,
+                $21, $22, $23
             )
             RETURNING id
         `, [
             data.userId,
             tourId || null,
+            data.gigName || null,
             data.venueName || null,
             data.location.city,
             data.location.province,
@@ -331,6 +334,11 @@ export const GigStore = {
         if (data.venueName !== undefined) {
             updates.push(`venue_name = $${paramIndex++}`);
             values.push(data.venueName || null);
+        }
+
+        if (data.gigName !== undefined) {
+            updates.push(`gig_name = $${paramIndex++}`);
+            values.push(data.gigName || null);
         }
 
         if (data.location) {

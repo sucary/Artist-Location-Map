@@ -509,6 +509,7 @@
     "fields": {
       "artist": "アーティスト",
       "artists": "アーティスト",
+      "gigName": "公演名（任意）",
       "date": "日付",
       "tour": "ツアー",
       "addToTour": "ツアーに追加",
@@ -520,7 +521,8 @@
       "to": "終了",
       "highlightDay": "ハイライト日",
       "venue": "会場",
-      "location": "場所"
+      "location": "場所",
+      "venueLocation": "会場 / 場所"
     },
     "form": {
       "addTitle": "公演を追加",
@@ -534,7 +536,7 @@
       "removeArtist": "{{name}}を削除",
       "noArtistsFound": "アーティストが見つかりません",
       "noToursFound": "ツアーが見つかりません",
-      "noGigsForTour": "現在の日付範囲に公演はありません。",
+      "noGigsForTour": "現在の日付範囲に公演はありません",
       "sections": {
         "gig": "公演",
         "tour": "ツアー"
@@ -545,8 +547,11 @@
         "new": "新規"
       },
       "preselectedArtist": "{{name}}を選択中",
-      "venuePlaceholder": "会場名",
-      "locationPlaceholder": "公演の場所を検索"
+      "gigNamePlaceholder": "公演名を入力",
+      "venuePlaceholder": "会場名を入力",
+      "locationPlaceholder": "会場 / 場所を検索",
+      "locationSearchHint": "小規模な会場は検索結果に表示されない場合があります",
+      "tourNamePlaceholder": "ツアー名を入力"
     },
     "banner": {
       "label": "ツアーモード",
@@ -556,8 +561,8 @@
     },
     "panel": {
       "title": "公演",
-      "empty": "現在の日付範囲に公演はありません。",
-      "noResults": "現在の絞り込みに一致する公演はありません。",
+      "empty": "現在の日付範囲に公演はありません",
+      "noResults": "現在の絞り込みに一致する公演はありません",
       "noTour": "ツアーなし",
       "controls": {
         "selection": "表示",
@@ -586,12 +591,12 @@
       }
     },
     "errors": {
-      "requiredFields": "アーティスト、日付、場所を選択してください。",
-      "requiredTour": "ツアーを選択してください。",
-      "requiredTourName": "ツアー名を入力してください。",
-      "loadGigs": "公演を読み込めませんでした。",
+      "requiredFields": "アーティスト、日付、場所を選択してください",
+      "requiredTour": "ツアーを選択してください",
+      "requiredTourName": "ツアー名を入力してください",
+      "loadGigs": "公演を読み込めませんでした",
       "deleteFailedTitle": "公演を削除できませんでした",
-      "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください。"
+      "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください"
     }
   },
   "app": {

@@ -8,7 +8,7 @@ import {
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { SearchIcon } from '../icons/GeneralIcons';
-import { Alert, Spinner } from '../ui';
+import { Alert, Button, Spinner } from '../ui';
 import { useTranslation } from 'react-i18next';
 
 // Tour-only Geoapify venue and location picker
@@ -64,13 +64,20 @@ export function VenueLocationSearch({
     const [results, setResults] = useState<TourLocationSearchResult[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 320 });
     const [error, setError] = useState<string | null>(null);
     const abortRef = useRef<AbortController | null>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<HTMLDivElement>(null);
+    const skipNextSyncRef = useRef(false);
 
     useEffect(() => {
+        if (skipNextSyncRef.current) {
+            skipNextSyncRef.current = false;
+            return;
+        }
         setQuery(venueName || (location ? formatLocationLocalized(location, locationLanguage) : ''));
     }, [location, locationLanguage, venueName]);
 
@@ -111,14 +118,15 @@ export function VenueLocationSearch({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const runSearch = async () => {
+    const runSearch = async (source: 'auto' | 'geoapify' = 'auto') => {
         const searchQuery = query.trim();
         if (searchQuery.length < 2) return;
 
         abortRef.current?.abort();
         const controller = new AbortController();
         abortRef.current = controller;
-        setIsLoading(true);
+        setIsLoading(source !== 'geoapify');
+        setIsLoadingMore(source === 'geoapify');
         setError(null);
 
         try {
@@ -126,8 +134,10 @@ export function VenueLocationSearch({
                 limit: 10,
                 lang: getGeoapifyLanguage(locationLanguage),
                 nativeName: locationLanguage === 'native',
+                source,
             }, controller.signal);
             setResults(response.results);
+            setHasMore(response.hasMore);
             setIsOpen(true);
         } catch {
             setError(t('tour.venueSearch.failedLocation', {
@@ -138,6 +148,7 @@ export function VenueLocationSearch({
                 abortRef.current = null;
             }
             setIsLoading(false);
+            setIsLoadingMore(false);
         }
     };
 
@@ -156,7 +167,23 @@ export function VenueLocationSearch({
             rawExternalData: result.isVenue ? result.rawExternalData : null,
         });
         setQuery(result.isVenue ? result.venueName || result.name : formatLocationLocalized(nextLocation, locationLanguage));
+        setHasMore(false);
         setIsOpen(false);
+    };
+
+    const clearSelectedLocationForEdit = (nextQuery: string) => {
+        if (!location && !venueName) return;
+
+        // Typed text must be confirmed by selecting a matching result
+        skipNextSyncRef.current = true;
+        onChange({
+            venueName: null,
+            placeLocationId: null,
+            location: null,
+            rawExternalData: null,
+        });
+        setQuery(nextQuery);
+        setHasMore(false);
     };
 
     const renderResults = () => {
@@ -200,6 +227,18 @@ export function VenueLocationSearch({
                         </button>
                     );
                 })}
+                {hasMore && (
+                    <Button
+                        type="button"
+                        disabled={isLoadingMore}
+                        variant="ghost"
+                        onClick={() => { void runSearch('geoapify'); }}
+                        className="flex w-full items-center justify-center gap-2 rounded-none border-t border-border"
+                    >
+                        {isLoadingMore && <Spinner size="sm" />}
+                        <span>{isLoadingMore ? t('artistForm.locationSearch.searching') : t('artistForm.locationSearch.searchMore')}</span>
+                    </Button>
+                )}
             </div>
         );
     };
@@ -209,7 +248,7 @@ export function VenueLocationSearch({
     return (
         <div className="relative rounded-md p-1" ref={rootRef}>
             <label htmlFor={inputId} className="mb-1 block text-sm font-bold text-text">
-                {t('tour.fields.location')}
+                {t('tour.fields.venueLocation')}
             </label>
             <div className="relative" ref={controlsRef}>
                 <input
@@ -218,15 +257,9 @@ export function VenueLocationSearch({
                     autoComplete="off"
                     value={query}
                     onChange={(event) => {
-                        setQuery(event.target.value);
-                        if (venueName) {
-                                onChange({
-                                    venueName: null,
-                                    placeLocationId: null,
-                                    location,
-                                    rawExternalData: null,
-                                });
-                        }
+                        const nextQuery = event.target.value;
+                        setQuery(nextQuery);
+                        clearSelectedLocationForEdit(nextQuery);
                     }}
                     onFocus={openResults}
                     onKeyDown={(event) => {
@@ -245,13 +278,16 @@ export function VenueLocationSearch({
                 <button
                     type="button"
                     aria-label={t('tour.venueSearch.searchLocation', { defaultValue: 'Search location' })}
-                    disabled={query.trim().length < 2 || isLoading}
+                    disabled={query.trim().length < 2 || isLoading || isLoadingMore}
                     onClick={() => { void runSearch(); }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
                 >
                     {isLoading ? <Spinner size="sm" /> : <SearchIcon className="h-4 w-4" />}
                 </button>
             </div>
+            <p className="mx-1 mt-1 text-xs text-text-secondary">
+                {t('tour.form.locationSearchHint')}
+            </p>
 
             {error && (
                 <Alert variant="error" header={t('artistForm.locationSearch.failedHeader')} className="mt-2">

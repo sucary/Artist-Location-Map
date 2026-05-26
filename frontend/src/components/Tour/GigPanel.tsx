@@ -74,6 +74,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
         return gigs.filter((gig) => {
             const searchText = [
                 getArtistNames(gig),
+                gig.gigName,
                 gig.tour?.name,
                 gig.venueName,
                 gig.location.city,
@@ -145,7 +146,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                     </div>
 
                     <div className="flex min-h-14 min-w-0 flex-col justify-center">
-                        <p className="truncate text-sm font-semibold text-text">{getArtistNames(gig)}</p>
+                        <p className="truncate text-sm font-semibold text-text">{gig.gigName || getArtistNames(gig)}</p>
                         <p className="mt-1 truncate text-xs text-text-secondary">{getCityLabel(gig)}</p>
                     </div>
 

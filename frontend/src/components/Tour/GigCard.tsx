@@ -17,6 +17,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
     const { t } = useTranslation();
     const avatarUrl = getAvatarUrl(gig.artist.sourceImage, gig.artist.avatarCrop);
     const artistNames = gig.artists.map((artist) => artist.name).join(', ');
+    const title = gig.gigName || artistNames || gig.artist.name;
 
     return (
         <div className="w-80 overflow-hidden rounded-lg bg-surface font-sans shadow-lg">
@@ -29,9 +30,11 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                     </div>
                 )}
                 <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold text-text">{artistNames || gig.artist.name}</h3>
-                    {gig.artist.romanizedName && (
-                        <p className="truncate text-xs text-text-secondary">{gig.artist.romanizedName}</p>
+                    <h3 className="truncate text-base font-semibold text-text">{title}</h3>
+                    {(gig.gigName || gig.artist.romanizedName) && (
+                        <p className="truncate text-xs text-text-secondary">
+                            {gig.gigName ? artistNames || gig.artist.name : gig.artist.romanizedName}
+                        </p>
                     )}
                 </div>
             </div>

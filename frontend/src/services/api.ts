@@ -183,6 +183,7 @@ export interface VenueSearchResponse {
 export interface TourLocationSearchResponse {
     results: TourLocationSearchResult[];
     source: 'local' | 'geoapify' | 'cache';
+    hasMore: boolean;
 }
 
 export interface Notification {
@@ -463,7 +464,7 @@ export const searchVenues = async (
 
 export const searchTourLocations = async (
     query: string,
-    options: { limit?: number; lat?: number; lng?: number; countryCode?: string; lang?: string; nativeName?: boolean } = {},
+    options: { limit?: number; lat?: number; lng?: number; countryCode?: string; lang?: string; nativeName?: boolean; source?: 'auto' | 'geoapify' } = {},
     signal?: AbortSignal
 ): Promise<TourLocationSearchResponse> => {
     const response = await api.get<TourLocationSearchResponse>('/venues/location-search', {

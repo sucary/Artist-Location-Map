@@ -36,6 +36,7 @@ export function GigForm({
     const [tourMode, setTourMode] = useState<'none' | 'existing' | 'new'>(initialGig?.tourId ? 'existing' : 'none');
     const [tourId, setTourId] = useState(initialGig?.tourId ?? '');
     const [newTourName, setNewTourName] = useState('');
+    const [gigName, setGigName] = useState(initialGig?.gigName ?? '');
     const [date, setDate] = useState(initialGig?.date ?? '');
     const [location, setLocation] = useState<Location | null>(initialGig?.location ?? null);
     const [venueName, setVenueName] = useState<string | null>(initialGig?.venueName ?? null);
@@ -51,6 +52,7 @@ export function GigForm({
         setTourMode(initialGig?.tourId ? 'existing' : 'none');
         setTourId(initialGig?.tourId ?? '');
         setNewTourName('');
+        setGigName(initialGig?.gigName ?? '');
         setDate(initialGig?.date ?? '');
         setLocation(initialGig?.location ?? null);
         setVenueName(initialGig?.venueName ?? null);
@@ -103,6 +105,7 @@ export function GigForm({
                 artistIds,
                 tourId: tourMode === 'existing' && tourId ? tourId : null,
                 newTourName: tourMode === 'new' && newTourName.trim() ? newTourName.trim() : undefined,
+                gigName: gigName.trim() || null,
                 venueName: venueName?.trim() || null,
                 placeLocationId,
                 location,
@@ -128,19 +131,6 @@ export function GigForm({
 
             <div className="flex-1 overflow-y-auto">
                 <div className="flex flex-col gap-4 p-4">
-                    <div className="rounded-md p-1">
-                        <label htmlFor="gig-date" className="mb-1 block text-sm font-bold text-text">
-                            {t('tour.fields.date')}
-                        </label>
-                        <input
-                            id="gig-date"
-                            type="date"
-                            value={date}
-                            onChange={(event) => setDate(event.target.value)}
-                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:ml-0 [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0"
-                        />
-                    </div>
-
                     <div>
                         <ArtistMultiSelect
                             artists={artists}
@@ -157,6 +147,19 @@ export function GigForm({
                         )}
                     </div>
 
+                    <div className="rounded-md p-1">
+                        <label htmlFor="gig-date" className="mb-1 block text-sm font-bold text-text">
+                            {t('tour.fields.date')}
+                        </label>
+                        <input
+                            id="gig-date"
+                            type="date"
+                            value={date}
+                            onChange={(event) => setDate(event.target.value)}
+                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:ml-0 [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0"
+                        />
+                    </div>
+
                     <div className="location-search-compact">
                         <VenueLocationSearch
                             venueName={venueName}
@@ -171,7 +174,23 @@ export function GigForm({
                         />
                     </div>
 
-                    <div className="rounded-md border-t border-border p-1 pt-4">
+                    <div className="rounded-md p-1">
+                        <label htmlFor="gig-name" className="mb-1 block text-sm font-bold text-text">
+                            {t('tour.fields.gigName')}
+                        </label>
+                        <input
+                            id="gig-name"
+                            type="text"
+                            autoComplete="off"
+                            value={gigName}
+                            maxLength={255}
+                            onChange={(event) => setGigName(event.target.value)}
+                            placeholder={t('tour.form.gigNamePlaceholder')}
+                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                        />
+                    </div>
+
+                    <div className="rounded-md p-1">
                         <div className="mb-3 flex items-center justify-between gap-3">
                             <span className="block text-sm font-bold text-text">{t('tour.fields.addToTour')}</span>
                             <label className="inline-flex items-center">
@@ -237,7 +256,7 @@ export function GigForm({
                                         aria-label={t('tour.form.createATour')}
                                         type="text"
                                         autoComplete="off"
-                                        placeholder={t('tour.fields.tourName')}
+                                        placeholder={t('tour.form.tourNamePlaceholder')}
                                         value={newTourName}
                                         maxLength={255}
                                         onChange={(event) => setNewTourName(event.target.value)}

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import type { Artist } from '../../types/artist';
-import { ChevronDownIcon } from '../icons/GeneralIcons';
+import { getAvatarUrl } from '../../utils/cloudinaryUrl';
+import { ChevronDownIcon, CloseIcon, PlusIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 
 interface ArtistMultiSelectProps {
@@ -18,7 +19,9 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     const listboxId = `${inputId}-artists`;
     const containerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const { t } = useTranslation();
+    const [isAddingArtist, setIsAddingArtist] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -52,11 +55,17 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     }, [isOpen, query, selectedArtists.length]);
 
     useEffect(() => {
+        if (!isAddingArtist) return;
+        inputRef.current?.focus();
+    }, [isAddingArtist]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             // Portaled list remains part of the active picker
             if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
             setIsOpen(false);
+            setIsAddingArtist(false);
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -67,11 +76,22 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
         if (value.includes(artistId)) return;
         onChange([...value, artistId]);
         setQuery('');
-        setIsOpen(true);
+        setIsOpen(false);
+        setIsAddingArtist(false);
     };
 
     const removeArtist = (artistId: string) => {
         onChange(value.filter((id) => id !== artistId));
+    };
+
+    const openArtistField = () => {
+        setIsAddingArtist(true);
+        setIsOpen(true);
+    };
+
+    const closeArtistField = () => {
+        setIsOpen(false);
+        setIsAddingArtist(false);
     };
 
     return (
@@ -80,60 +100,106 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                 {label}
             </label>
             <div ref={containerRef} className="relative">
-                <div className="relative">
-                    <input
-                        id={inputId}
-                        role="combobox"
-                        aria-autocomplete="list"
-                        aria-controls={isOpen ? listboxId : undefined}
-                        aria-expanded={isOpen}
-                        aria-haspopup="listbox"
-                        autoComplete="off"
-                        type="text"
-                        value={query}
-                        onChange={(event) => {
-                            setQuery(event.target.value);
-                            setIsOpen(true);
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                        placeholder={placeholder}
-                        className="w-full border border-border-strong rounded-md bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
-                    />
-                    <button
-                        aria-label={t('artistForm.yearSelect.label')}
-                        aria-controls={isOpen ? listboxId : undefined}
-                        aria-expanded={isOpen}
-                        aria-haspopup="listbox"
-                        type="button"
-                        onMouseDown={(event) => {
-                            event.preventDefault();
-                            setIsOpen((open) => !open);
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary transition-colors hover:bg-primary hover:text-white"
-                    >
-                        <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                </div>
+                <div
+                    className="flex flex-wrap items-center gap-2"
+                    onMouseDown={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        closeArtistField();
+                    }}
+                >
+                    {selectedArtists.map((artist) => {
+                        const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
 
-                {selectedArtists.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedArtists.map((artist) => (
+                        return (
                             <button
                                 key={artist.id}
                                 type="button"
                                 onClick={() => removeArtist(artist.id)}
-                                className="inline-flex max-w-full items-center gap-1 rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-primary hover:text-white"
+                                className="group relative inline-flex max-w-full items-center gap-1.5 overflow-hidden rounded-full bg-surface-muted py-1 pl-3 pr-1 text-xs font-medium text-text-secondary transition-colors hover:bg-primary hover:text-white"
                                 title={removeLabel(artist.name)}
                             >
-                                <span className="truncate">{artist.name}</span>
-                                <span aria-hidden="true">x</span>
+                                <span className="min-w-0 truncate">{artist.name}</span>
+                                {avatarUrl ? (
+                                    <span className="relative grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full">
+                                        <img
+                                            src={avatarUrl}
+                                            alt=""
+                                            className="h-full w-full object-cover group-hover:hidden"
+                                        />
+                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid">
+                                            <CloseIcon className="h-3 w-3" />
+                                        </span>
+                                    </span>
+                                ) : (
+                                    <span className="relative grid h-5 w-5 shrink-0 place-items-center rounded-full bg-surface-secondary text-[10px] font-semibold text-text-secondary group-hover:bg-transparent group-hover:text-white">
+                                        <span className="group-hover:hidden">
+                                            {Array.from(artist.name.trim())[0]?.toUpperCase()}
+                                        </span>
+                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid">
+                                            <CloseIcon className="h-3 w-3" />
+                                        </span>
+                                    </span>
+                                )}
                             </button>
-                        ))}
+                        );
+                    })}
+
+                    <button
+                        type="button"
+                        aria-label={placeholder}
+                        onClick={openArtistField}
+                        className={`grid h-7 place-items-center rounded-full transition-colors ${
+                            selectedArtists.length === 0 ? 'w-full' : 'w-7'
+                        } ${
+                            isAddingArtist
+                                ? 'bg-primary text-white'
+                                : 'bg-surface-muted text-text-secondary hover:bg-primary hover:text-white'
+                        }`}
+                    >
+                        <PlusIcon className="h-4 w-4" />
+                    </button>
+                </div>
+
+                {isAddingArtist && (
+                    <div className="relative mt-2">
+                        <input
+                            ref={inputRef}
+                            id={inputId}
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-controls={isOpen ? listboxId : undefined}
+                            aria-expanded={isOpen}
+                            aria-haspopup="listbox"
+                            autoComplete="off"
+                            type="text"
+                            value={query}
+                            onChange={(event) => {
+                                setQuery(event.target.value);
+                                setIsOpen(true);
+                            }}
+                            onFocus={() => setIsOpen(true)}
+                            placeholder={placeholder}
+                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                        />
+                        <button
+                            aria-label={t('artistForm.yearSelect.label')}
+                            aria-controls={isOpen ? listboxId : undefined}
+                            aria-expanded={isOpen}
+                            aria-haspopup="listbox"
+                            type="button"
+                            onMouseDown={(event) => {
+                                event.preventDefault();
+                                setIsOpen((open) => !open);
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary transition-colors hover:bg-primary hover:text-white"
+                        >
+                            <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        </button>
                     </div>
                 )}
             </div>
 
-            {isOpen && createPortal(
+            {isAddingArtist && isOpen && createPortal(
                 <div
                     id={listboxId}
                     role="listbox"
