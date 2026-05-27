@@ -106,6 +106,7 @@ function rowToGig(row: Record<string, unknown>): Gig {
             province: row.province as string,
             country: row.country as string | undefined,
             displayName: row.display_name as string | undefined,
+            cityId: row.city_id as string | undefined,
             coordinates: {
                 lat: parseFloat(row.lat as string),
                 lng: parseFloat(row.lng as string),
