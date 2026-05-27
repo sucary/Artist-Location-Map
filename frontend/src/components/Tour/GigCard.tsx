@@ -4,6 +4,7 @@ import { getAvatarUrl } from '../../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { EditIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
+import { formatLocalizedDateValue } from '../../utils/dateFormatting';
 
 interface GigCardProps {
     gig: Gig;
@@ -11,13 +12,12 @@ interface GigCardProps {
     showActions?: boolean;
 }
 
-const formatGigDate = (gig: Gig) => gig.date;
-
 export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: GigCardProps) => {
-    const { t } = useTranslation();
+    const { i18n, t } = useTranslation();
     const avatarUrl = getAvatarUrl(gig.artist.sourceImage, gig.artist.avatarCrop);
     const artistNames = gig.artists.map((artist) => artist.name).join(', ');
     const title = gig.gigName || artistNames || gig.artist.name;
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
 
     return (
         <div className="w-80 overflow-hidden rounded-lg bg-surface font-sans shadow-lg">
@@ -41,7 +41,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
             <div className="space-y-2 px-4 py-3 text-sm">
                 <div>
                     <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('tour.fields.date')}</span>
-                    <p className="font-medium text-text">{formatGigDate(gig)}</p>
+                    <p className="font-medium text-text">{formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback)}</p>
                 </div>
                 {gig.tour && (
                     <div>

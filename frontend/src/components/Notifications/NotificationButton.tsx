@@ -13,18 +13,19 @@ import { CloseButton } from '../ui';
 import { NotificationContent } from './NotificationContent';
 import type { PendingUser } from '../../types/profile';
 import { useTranslation } from 'react-i18next';
+import { formatLocalizedDate } from '../../utils/dateFormatting';
 
 type MenuNotification = Notification & {
     source: 'persisted' | 'synthetic';
 };
 
 function formatTimestamp(value: string) {
-    return new Intl.DateTimeFormat(undefined, {
+    return formatLocalizedDate(value, {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-    }).format(new Date(value));
+    });
 }
 
 function BellIcon() {

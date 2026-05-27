@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronDownIcon } from '../icons/GeneralIcons';
+import { formatLocalizedDate, getBrowserDateLocale } from '../../utils/dateFormatting';
 import {
     addMonths,
     getCalendarDays,
@@ -22,12 +23,10 @@ function isBetween(dateValue: string, from: string, to: string): boolean {
     return Boolean(from && to && dateValue > from && dateValue < to);
 }
 
-function formatNumericDate(value: string): string {
+function formatNumericDate(value: string, fallback?: string): string {
     const date = parseDateValue(value);
     if (!date) return '';
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${month}/${day}`;
+    return formatLocalizedDate(date, { month: '2-digit', day: '2-digit' }, fallback);
 }
 
 function getRangeFillClass(
@@ -66,7 +65,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
         maxHeight: 560,
         opensAbove: true,
     });
-    const locale = i18n.resolvedLanguage || i18n.language || undefined;
+    const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -112,8 +111,8 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
     }, [locale]);
 
     const months = useMemo(() => [visibleMonth, addMonths(visibleMonth, 1)], [visibleMonth]);
-    const startDisplayValue = from ? formatNumericDate(from) : '--/--';
-    const endDisplayValue = to ? formatNumericDate(to) : '--/--';
+    const startDisplayValue = from ? formatNumericDate(from, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';
+    const endDisplayValue = to ? formatNumericDate(to, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';
     const hasCompleteRange = Boolean(from && to);
 
     const selectDate = (date: Date) => {

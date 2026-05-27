@@ -32,6 +32,7 @@ import { GigForm } from './components/Tour/GigForm';
 import { GigPanel } from './components/Tour/GigPanel';
 import { TourControls } from './components/Tour/TourControls';
 import { TourBanner } from './components/Tour/TourBanner';
+import { formatLocalizedDateValue } from './utils/dateFormatting';
 
 interface AppDialogState {
     title: string;
@@ -74,7 +75,7 @@ function App() {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryClient = useQueryClient();
     const { user, profile } = useAuth();
-    const { t } = useTranslation();
+    const { i18n, t } = useTranslation();
 
     const [showForm, setShowForm] = useState(false);
     const [showGigForm, setShowGigForm] = useState(false);
@@ -519,7 +520,7 @@ function App() {
     const handleDeleteGig = (gig: Gig) => {
         setAppDialog({
             title: t('tour.dialogs.deleteGig.title'),
-            message: t('tour.dialogs.deleteGig.message', { artist: gig.artist.name, date: gig.date }),
+            message: t('tour.dialogs.deleteGig.message', { artist: gig.artist.name, date: formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, i18n.resolvedLanguage || i18n.language || undefined) }),
             variant: 'danger',
             confirmLabel: t('common.delete'),
             cancelLabel: t('common.cancel'),

@@ -16,6 +16,7 @@ import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import type { PendingUser } from '../../types/profile';
 import { LocalizationEditor } from './LocalizationEditor';
 import { DarkModeInteractionTemplate } from './DarkModeInteractionTemplate';
+import { formatLocalizedDate, formatLocalizedTime } from '../../utils/dateFormatting';
 
 // Admin operations dashboard with moderation, notifications, and palette checks
 
@@ -33,6 +34,12 @@ interface PendingMediaReview {
     submittedByEmail?: string | null;
     createdAt: string;
 }
+
+const formatAdminDateTime = (value: string, dateOptions?: Intl.DateTimeFormatOptions, timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' }) => {
+    const date = formatLocalizedDate(value, dateOptions);
+    const time = formatLocalizedTime(value, timeOptions);
+    return `${date} ${time}`;
+};
 
 interface AdminDialogState {
     title: string;
@@ -427,7 +434,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                     <p className="text-sm font-medium text-text">{user.username || 'No username'}</p>
                                                     <p className="text-sm text-text-secondary">{user.email}</p>
                                                     <p className="text-xs text-text-muted mt-1">
-                                                        Registered: {new Date(user.createdAt).toLocaleDateString('fi-FI')} {new Date(user.createdAt).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')}
+                                                        Registered: {formatAdminDateTime(user.createdAt)}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-2">
@@ -496,7 +503,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                             Submitted by {review.submittedByUsername || review.submittedByEmail || 'Unknown user'}
                                                         </p>
                                                         <p className="text-xs text-text-muted mt-1">
-                                                            {new Date(review.createdAt).toLocaleDateString('fi-FI')} {new Date(review.createdAt).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':')}
+                                                            {formatAdminDateTime(review.createdAt, undefined, { hour: '2-digit', minute: '2-digit' })}
                                                         </p>
                                                     </div>
                                                     <div className="flex gap-2">
@@ -735,7 +742,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                         <p className="truncate text-sm font-semibold text-text">{notification.title}</p>
                                                         <p className="mt-1 max-h-10 overflow-hidden text-sm text-text-secondary">{notification.content}</p>
                                                         <p className="mt-2 text-xs text-text-muted">
-                                                            {notification.recipientCount} recipient{notification.recipientCount === 1 ? '' : 's'} · {new Date(notification.createdAt).toLocaleDateString('fi-FI')}
+                                                            {notification.recipientCount} recipient{notification.recipientCount === 1 ? '' : 's'} · {formatLocalizedDate(notification.createdAt)}
                                                         </p>
                                                     </div>
                                                     <Button

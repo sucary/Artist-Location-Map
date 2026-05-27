@@ -3,6 +3,7 @@ import type { Gig } from '../../types/gig';
 import { CloseButton, IconButton } from '../ui';
 import { ChevronDownIcon, EditIcon, SearchIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
+import { getBrowserDateLocale } from '../../utils/dateFormatting';
 
 type GigPanelView = 'gig' | 'tour' | 'artist' | 'location';
 type GigPanelSort = 'dateAsc' | 'dateDesc' | 'artist' | 'location' | 'tour';
@@ -38,6 +39,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
     const sortRef = useRef<HTMLDivElement>(null);
     const viewListboxId = 'gig-panel-view-options';
     const sortListboxId = 'gig-panel-sort-options';
+    const dateLocale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -61,9 +63,9 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
         }
 
         return {
-            month: new Intl.DateTimeFormat(i18n.language, { month: 'short' }).format(parsedDate).toUpperCase(),
-            day: new Intl.DateTimeFormat(i18n.language, { day: 'numeric' }).format(parsedDate),
-            weekday: new Intl.DateTimeFormat(i18n.language, { weekday: 'short' }).format(parsedDate),
+            month: new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(parsedDate).toUpperCase(),
+            day: new Intl.DateTimeFormat(dateLocale, { day: 'numeric' }).format(parsedDate),
+            weekday: new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(parsedDate),
         };
     };
 

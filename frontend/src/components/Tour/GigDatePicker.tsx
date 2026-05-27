@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { CalendarIcon, ChevronDownIcon } from '../icons/GeneralIcons';
+import { getBrowserDateLocale } from '../../utils/dateFormatting';
+
+// Single-date picker and shared calendar primitives
 
 interface GigDatePickerProps {
     id: string;
@@ -52,14 +55,13 @@ export function getCalendarDays(monthDate: Date): Date[] {
     });
 }
 
-export function formatDisplayDate(value: string, locale?: string): string {
+export function formatDisplayDate(value: string, locale?: Intl.LocalesArgument): string {
     const date = parseDateValue(value);
     if (!date) return '';
     return new Intl.DateTimeFormat(locale, {
         year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        weekday: 'short',
+        month: '2-digit',
+        day: '2-digit',
     }).format(date);
 }
 
@@ -71,8 +73,8 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
     const today = useMemo(() => new Date(), []);
     const [isOpen, setIsOpen] = useState(false);
     const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(selectedDate ?? today));
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 360 });
-    const locale = i18n.resolvedLanguage || i18n.language || undefined;
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 420 });
+    const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
         if (selectedDate) setVisibleMonth(getMonthStart(selectedDate));
@@ -94,13 +96,13 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
         if (disabled) return;
 
         const rect = rootRef.current.getBoundingClientRect();
-        const gap = 8;
+        const gap = 10;
         const availableBelow = window.innerHeight - rect.bottom - gap;
         const availableAbove = rect.top - gap;
-        const opensAbove = availableBelow < 330 && availableAbove > availableBelow;
-        const maxHeight = Math.max(280, Math.min(520, opensAbove ? availableAbove : availableBelow));
-        const width = Math.min(window.innerWidth - 16, 640);
-        const left = Math.min(Math.max(8, rect.left + 4), window.innerWidth - width - 8);
+        const opensAbove = availableBelow < 380 && availableAbove > availableBelow;
+        const maxHeight = Math.max(320, Math.min(500, opensAbove ? availableAbove : availableBelow));
+        const width = Math.min(window.innerWidth - 16, 340);
+        const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
 
         // Fixed portal avoids clipping inside the gig form scroller
         setDropdownPosition({
@@ -142,11 +144,11 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
                 aria-expanded={isOpen}
                 disabled={disabled}
                 onClick={() => setIsOpen((open) => !open)}
-                className="flex w-full items-center justify-between gap-3 rounded-md border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors hover:border-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border-strong"
+                className="flex w-full items-center justify-between gap-3 rounded-md border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <span className="flex min-w-0 items-center gap-2">
                     <CalendarIcon className="h-4 w-4 shrink-0 text-text-secondary" />
-                    <span className={displayValue ? 'truncate' : 'truncate text-text-muted'}>
+                    <span className={displayValue ? 'truncate tabular-nums' : 'truncate text-text-muted'}>
                         {displayValue || t('tour.calendar.selectDate')}
                     </span>
                 </span>
@@ -156,7 +158,7 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
             {isOpen && !disabled && createPortal(
                 <div
                     ref={dropdownRef}
-                    className="fixed z-[9999] overflow-y-auto rounded-md border border-border-strong bg-surface p-3 shadow-xl"
+                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 pb-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,
@@ -164,55 +166,56 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
                         maxHeight: `${dropdownPosition.maxHeight}px`,
                     }}
                 >
-                    <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="relative mb-3 text-center text-base font-bold text-text">
                         <button
                             type="button"
                             aria-label={t('tour.calendar.previousMonth')}
                             onClick={() => setVisibleMonth((month) => addMonths(month, -1))}
-                            className="grid h-8 w-8 place-items-center rounded text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                            className="absolute left-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-text transition-colors hover:bg-surface-muted"
                         >
                             <ChevronDownIcon className="h-4 w-4 rotate-90" />
                         </button>
-                        <div className="min-w-0 truncate text-sm font-bold text-text">{monthLabel}</div>
+                        {monthLabel}
                         <button
                             type="button"
                             aria-label={t('tour.calendar.nextMonth')}
                             onClick={() => setVisibleMonth((month) => addMonths(month, 1))}
-                            className="grid h-8 w-8 place-items-center rounded text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                            className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-text transition-colors hover:bg-surface-muted"
                         >
                             <ChevronDownIcon className="h-4 w-4 -rotate-90" />
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-text-secondary">
+                    <div className="grid grid-cols-7 text-center text-xs font-normal text-text-secondary">
                         {weekdays.map((weekday, index) => (
-                            <div key={`${weekday}-${index}`} className="h-6 leading-6">
+                            <div key={`${weekday}-${index}`} className="h-8 leading-8">
                                 {weekday}
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-1 grid grid-cols-7 gap-1">
+                    <div className="grid grid-cols-7">
                         {calendarDays.map((date) => {
                             const dateValue = toDateValue(date);
                             const isSelected = dateValue === selectedValue;
                             const isCurrentMonth = date.getMonth() === visibleMonth.getMonth();
 
                             return (
-                                <button
-                                    key={dateValue}
-                                    type="button"
-                                    onClick={() => selectDate(date)}
-                                    className={`grid h-8 place-items-center rounded text-sm transition-colors ${
-                                        isSelected
-                                            ? 'bg-primary text-white'
-                                            : isCurrentMonth
+                                <div key={dateValue} className="relative grid h-10 place-items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => selectDate(date)}
+                                        className={`relative z-10 grid h-9 w-9 place-items-center rounded-full text-sm font-medium transition-colors ${
+                                            isSelected
+                                                ? 'bg-primary-contrast text-white'
+                                                : isCurrentMonth
                                                 ? 'text-text hover:bg-surface-muted'
                                                 : 'text-text-muted hover:bg-surface-muted hover:text-text-secondary'
-                                    }`}
-                                >
-                                    {date.getDate()}
-                                </button>
+                                        }`}
+                                    >
+                                        {date.getDate()}
+                                    </button>
+                                </div>
                             );
                         })}
                     </div>
