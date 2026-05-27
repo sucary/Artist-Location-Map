@@ -127,7 +127,6 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
 
     const resetDates = () => {
         onReset();
-        setIsOpen(false);
     };
 
     return (

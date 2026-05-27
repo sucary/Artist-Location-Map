@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import type { Gig } from '../../types/gig';
 import type { LocationLanguage } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
@@ -6,86 +7,335 @@ import { EditIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedDateValue } from '../../utils/dateFormatting';
 
+// Gig marker popup display
+
 interface GigCardProps {
     gig: Gig;
     locationLanguage?: LocationLanguage;
     showActions?: boolean;
 }
 
+const getInitial = (name: string) => Array.from(name.trim())[0]?.toUpperCase();
+
+// Artist overflow toggle size invariant
+const artistToggleButtonClass = 'inline-flex h-7 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold leading-none text-text transition-colors hover:bg-surface-secondary';
+const COLLAPSED_CHIP_LIMIT = 2;
+const COLLAPSED_STACK_LIMIT = 6;
+const TITLE_GAP = 8;
+
+// Dense counts fit fixed toggle capsules
+const getArtistToggleButtonClass = (isStackToggle: boolean, hiddenCount: number) => {
+    const sizeClass = isStackToggle ? 'h-11 w-11' : 'h-7 w-9';
+    const textClass = hiddenCount >= 1000 ? 'text-[10px]' : hiddenCount >= 100 ? 'text-[11px]' : hiddenCount >= 10 ? 'text-xs' : 'text-base';
+
+    return `inline-flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-surface-muted ${textClass} font-bold leading-none text-text transition-colors hover:bg-surface-secondary`;
+};
+
 export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: GigCardProps) => {
     const { i18n, t } = useTranslation();
-    const avatarUrl = getAvatarUrl(gig.artist.sourceImage, gig.artist.avatarCrop);
-    const artistNames = gig.artists.map((artist) => artist.name).join(', ');
-    const title = gig.gigName || artistNames || gig.artist.name;
+    const [artistsExpanded, setArtistsExpanded] = useState(false);
+    const [actionsVisible, setActionsVisible] = useState(false);
+    const artists = gig.artists.length ? gig.artists : [gig.artist];
+    const topSectionBackgroundUrl = getAvatarUrl(artists[0]?.sourceImage, artists[0]?.avatarCrop) || artists[0]?.sourceImage;
+    const titleRowRef = useRef<HTMLDivElement>(null);
+    const titleMeasureRef = useRef<HTMLDivElement>(null);
+    const [isTitleStacked, setIsTitleStacked] = useState(false);
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const showArtistAvatarStack = !artistsExpanded && artists.length > COLLAPSED_CHIP_LIMIT;
+    const collapsedVisibleCount = showArtistAvatarStack
+        ? Math.min(COLLAPSED_STACK_LIMIT, artists.length - 1)
+        : COLLAPSED_CHIP_LIMIT;
+    const visibleArtists = artistsExpanded ? artists : artists.slice(0, collapsedVisibleCount);
+    const hiddenArtistCount = artists.length - visibleArtists.length;
+    const formattedDate = formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback);
+    const locationLabel = formatLocationLocalized(gig.location, locationLanguage);
+    const hasTitleSection = Boolean(gig.gigName || gig.tour);
+    const hasSingleArtistHero = artists.length === 1 && !artistsExpanded;
+    const hasTwoArtistTourOnlyTitle = artists.length === 2 && !artistsExpanded && !gig.gigName && Boolean(gig.tour);
+    const topSectionGapClass = hasSingleArtistHero ? 'gap-2' : hasTwoArtistTourOnlyTitle ? 'gap-2.5' : 'gap-3';
+
+    const renderArtistChip = (artist: typeof artists[number]) => {
+        const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
+
+        return (
+            <span
+                key={artist.id}
+                className="inline-flex max-w-full shrink-0 items-center gap-1.5 overflow-hidden rounded-full bg-surface-muted py-1 pl-3 pr-1 text-sm font-medium text-text-secondary"
+            >
+                <span className="min-w-0 truncate">{artist.name}</span>
+                {avatarUrl ? (
+                    <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full">
+                        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    </span>
+                ) : (
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-surface-secondary text-[10px] font-semibold text-text-secondary">
+                        {getInitial(artist.name)}
+                    </span>
+                )}
+            </span>
+        );
+    };
+
+    const renderArtistAvatar = (artist: typeof artists[number], index: number) => {
+        const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
+
+        return (
+            <span
+                key={artist.id}
+                title={artist.name}
+                className={`grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-0 text-sm font-bold text-white ${avatarUrl ? 'bg-transparent' : 'bg-primary'} ${index > 0 ? '-ml-3' : ''}`}
+            >
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                    getInitial(artist.name)
+                )}
+            </span>
+        );
+    };
+
+    const renderPrimaryArtist = (artist: typeof artists[number]) => {
+        const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
+
+        return (
+            <div className="flex min-w-0 items-center justify-between gap-3">
+                <span className="min-w-0 truncate text-xl font-semibold leading-7 text-text">{artist.name}</span>
+                <span className={`grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border-0 text-base font-bold text-white ${avatarUrl ? 'bg-transparent' : 'bg-primary'}`}>
+                    {avatarUrl ? (
+                        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                        getInitial(artist.name)
+                    )}
+                </span>
+            </div>
+        );
+    };
+
+    const renderSecondaryArtistName = (artist: typeof artists[number]) => (
+        <span key={artist.id} className="min-w-0 truncate text-xl font-semibold leading-7 text-text">{artist.name}</span>
+    );
+
+    const renderSecondaryArtistAvatar = (artist: typeof artists[number], index: number) => {
+        const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
+
+        return (
+            <span
+                key={artist.id}
+                className={`grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border-0 text-base font-bold text-white ${avatarUrl ? 'bg-transparent' : 'bg-primary'} ${index > 0 ? '-ml-4' : ''}`}
+            >
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                    getInitial(artist.name)
+                )}
+            </span>
+        );
+    };
+
+    const renderInfoBadge = (value: string) => (
+        <span className="inline-flex max-w-full items-center rounded-full bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary">
+            <span className="min-w-0 truncate">{value}</span>
+        </span>
+    );
+
+    const expandArtists = (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setArtistsExpanded(true);
+    };
+
+    const collapseArtists = (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setArtistsExpanded(false);
+    };
+
+    const revealActions = (event: MouseEvent<HTMLDivElement>) => {
+        if (!showActions || actionsVisible) return;
+        if ((event.target as HTMLElement).closest('[data-action]')) return;
+
+        // First touch reveals bottom actions without activating them
+        event.preventDefault();
+        event.stopPropagation();
+        setActionsVisible(true);
+    };
+
+    useLayoutEffect(() => {
+        if (!hasTitleSection) return;
+
+        const row = titleRowRef.current;
+        const measure = titleMeasureRef.current;
+        if (!row || !measure) return;
+
+        const calculateTitleLayout = () => {
+            const gigWidth = measure.querySelector<HTMLElement>('[data-gig-title-measure]')?.offsetWidth ?? 0;
+            const tourWidth = measure.querySelector<HTMLElement>('[data-tour-title-measure]')?.offsetWidth ?? 0;
+            const gapWidth = gigWidth > 0 && tourWidth > 0 ? TITLE_GAP : 0;
+
+            // Same-row title layout requires both labels to fit naturally
+            setIsTitleStacked(gigWidth + tourWidth + gapWidth > row.clientWidth);
+        };
+
+        calculateTitleLayout();
+        const observer = new ResizeObserver(calculateTitleLayout);
+        observer.observe(row);
+        return () => observer.disconnect();
+    }, [gig.gigName, gig.tour?.name, hasTitleSection]);
 
     return (
-        <div className="w-80 overflow-hidden rounded-lg bg-surface font-sans shadow-lg">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                {avatarUrl ? (
-                    <img src={avatarUrl} alt={gig.artist.name} className="h-11 w-11 rounded-full border border-border object-cover" />
+        <div className="flex w-80 flex-col overflow-hidden rounded-lg border border-border bg-surface font-sans shadow-lg">
+            <div className="relative overflow-hidden bg-surface">
+                {topSectionBackgroundUrl && (
+                    <>
+                        <img
+                            aria-hidden="true"
+                            src={topSectionBackgroundUrl}
+                            alt=""
+                            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl"
+                        />
+                        <div aria-hidden="true" className="absolute inset-0 bg-surface/60" />
+                    </>
+                )}
+                <div className={`relative flex flex-col px-5 pb-4 pt-5 ${topSectionGapClass}`}>
+                {artists.length === 1 && !artistsExpanded ? (
+                    renderPrimaryArtist(artists[0])
+                ) : artists.length === 2 && !artistsExpanded ? (
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            {artists.map(renderSecondaryArtistName)}
+                        </div>
+                        <div className="flex shrink-0 items-center">
+                            {artists.map(renderSecondaryArtistAvatar)}
+                        </div>
+                    </div>
                 ) : (
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-muted text-sm font-semibold text-text-muted">
-                        {Array.from(gig.artist.name.trim())[0]?.toUpperCase()}
+                    <div className={artistsExpanded ? 'flex flex-wrap gap-2' : `flex min-w-0 flex-nowrap items-center gap-2 overflow-hidden ${!hasTitleSection ? 'min-h-11' : ''}`}>
+                        {showArtistAvatarStack ? (
+                            <div className="flex min-w-0 shrink-0 items-center">
+                                <button
+                                    type="button"
+                                    onClick={expandArtists}
+                                    aria-label={t('common.expand', { defaultValue: 'Expand' })}
+                                    className="flex min-w-0 shrink-0 items-center border-0 bg-transparent p-0"
+                                >
+                                    {visibleArtists.map(renderArtistAvatar)}
+                                </button>
+                                {hiddenArtistCount > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={expandArtists}
+                                        className={`${getArtistToggleButtonClass(showArtistAvatarStack, hiddenArtistCount)} -ml-3`}
+                                    >
+                                        +{hiddenArtistCount}
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            visibleArtists.map(renderArtistChip)
+                        )}
+                        {hiddenArtistCount > 0 && !showArtistAvatarStack && (
+                            <button
+                                type="button"
+                                onClick={expandArtists}
+                                className={getArtistToggleButtonClass(showArtistAvatarStack, hiddenArtistCount)}
+                            >
+                                +{hiddenArtistCount}
+                            </button>
+                        )}
+                        {artistsExpanded && artists.length > 2 && (
+                            <button
+                                type="button"
+                                onClick={collapseArtists}
+                                aria-label={t('common.close', { defaultValue: 'Close' })}
+                                className={artistToggleButtonClass}
+                            >
+                                -
+                            </button>
+                        )}
                     </div>
                 )}
-                <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold text-text">{title}</h3>
-                    {(gig.gigName || gig.artist.romanizedName) && (
-                        <p className="truncate text-xs text-text-secondary">
-                            {gig.gigName ? artistNames || gig.artist.name : gig.artist.romanizedName}
-                        </p>
-                    )}
+                {hasTitleSection && (
+                    <div ref={titleRowRef} className={isTitleStacked ? 'flex min-w-0 flex-col gap-1' : 'flex min-w-0 items-baseline gap-2'}>
+                        {gig.gigName && (
+                            <h3 className="min-w-0 truncate text-sm font-semibold leading-tight text-text">{gig.gigName}</h3>
+                        )}
+                        {gig.tour && (
+                            <p className={hasTwoArtistTourOnlyTitle ? 'max-w-full truncate text-xs font-semibold text-text-muted' : isTitleStacked ? 'max-w-full truncate text-xs font-semibold text-text-muted' : 'shrink-0 truncate text-xs font-semibold text-text-muted'}>{gig.tour.name}</p>
+                        )}
+                    </div>
+                )}
+                {hasTitleSection && (
+                    <div ref={titleMeasureRef} aria-hidden="true" className="pointer-events-none fixed left-0 top-0 flex gap-2 opacity-0">
+                        {gig.gigName && (
+                            <span data-gig-title-measure className="whitespace-nowrap text-sm font-semibold leading-tight">
+                                {gig.gigName}
+                            </span>
+                        )}
+                        {gig.tour && (
+                            <span data-tour-title-measure className="whitespace-nowrap text-xs font-semibold">
+                                {gig.tour.name}
+                            </span>
+                        )}
+                    </div>
+                )}
                 </div>
             </div>
-            <div className="space-y-2 px-4 py-3 text-sm">
-                <div>
-                    <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('tour.fields.date')}</span>
-                    <p className="font-medium text-text">{formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback)}</p>
+
+            <div className="relative overflow-hidden rounded-b-lg" onMouseLeave={() => setActionsVisible(false)}>
+                <div className="flex flex-col gap-3 px-5 pb-3 pt-4">
+                    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5">
+                        <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
+                            <svg aria-hidden="true" focusable="false" className="mt-0.5 h-4 w-4 text-text-muted" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 21s7-5.1 7-11a7 7 0 10-14 0c0 5.9 7 11 7 11z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="2" />
+                            </svg>
+                            <span className="flex min-w-0 flex-col">
+                                {gig.venueName && (
+                                    <span className="min-w-0 break-words font-semibold leading-5 text-text">{gig.venueName}</span>
+                                )}
+                                <span className="min-w-0 break-words leading-5">{locationLabel}</span>
+                            </span>
+                        </div>
+                        <div className="-mt-0.5 flex shrink-0 items-start justify-end">
+                            {renderInfoBadge(formattedDate)}
+                        </div>
+                    </div>
                 </div>
-                {gig.tour && (
-                    <div>
-                        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('tour.fields.tour')}</span>
-                        <p className="text-text">{gig.tour.name}</p>
+                {showActions && (
+                    <div
+                        className="relative grid h-4 place-items-center bg-surface"
+                        onMouseEnter={() => setActionsVisible(true)}
+                        onClick={revealActions}
+                        aria-label={t('artistCard.actions.edit')}
+                        title={t('artistCard.actions.edit')}
+                    >
+                        <div className="flex w-8 flex-col gap-0.5">
+                            <span className="h-0.5 rounded-full bg-text-muted" />
+                            <span className="h-0.5 rounded-full bg-text-muted" />
+                        </div>
                     </div>
                 )}
-                {gig.venueName && (
-                    <div>
-                        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('tour.fields.venue')}</span>
-                        <p className="text-text">{gig.venueName}</p>
+                {showActions && (
+                    <div
+                        className={`absolute inset-0 z-10 flex transform-gpu overflow-hidden rounded-b-lg backdrop-blur-sm transition-transform duration-200 ease-out ${actionsVisible ? 'pointer-events-auto translate-y-0' : 'pointer-events-none translate-y-full'}`}
+                    >
+                        <div
+                            className="flex flex-1 cursor-pointer items-center justify-center bg-black/50 hover:bg-black/65"
+                            data-action="edit"
+                            aria-label={t('artistCard.actions.edit')}
+                            title={t('artistCard.actions.edit')}
+                        >
+                            <EditIcon className="h-6 w-6 text-white" />
+                        </div>
+                        <div
+                            className="flex w-1/5 cursor-pointer items-center justify-center bg-red-500/85 hover:bg-red-600/95"
+                            data-action="delete"
+                            aria-label={t('artistCard.actions.delete')}
+                            title={t('artistCard.actions.delete')}
+                        >
+                            <TrashIcon className="h-5 w-5 text-white" />
+                        </div>
                     </div>
-                )}
-                <div>
-                    <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('tour.fields.location')}</span>
-                    <p className="text-text-secondary">{formatLocationLocalized(gig.location, locationLanguage)}</p>
-                </div>
-                {gig.externalUrl && (
-                    <a href={gig.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-primary-contrast hover:underline">
-                        {t('tour.actions.viewEvent')}
-                    </a>
                 )}
             </div>
-            {showActions && (
-                <div className="flex border-t border-border">
-                    <button
-                        type="button"
-                        data-action="edit"
-                        className="flex flex-1 items-center justify-center gap-2 px-3 py-2 text-sm text-text-secondary hover:bg-primary hover:text-white"
-                    >
-                        <EditIcon className="h-4 w-4" />
-                        {t('common.edit', { defaultValue: 'Edit' })}
-                    </button>
-                    <button
-                        type="button"
-                        data-action="delete"
-                        className="flex w-16 items-center justify-center px-3 py-2 text-error hover:bg-error hover:text-white"
-                        aria-label={t('common.delete')}
-                        title={t('common.delete')}
-                    >
-                        <TrashIcon className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

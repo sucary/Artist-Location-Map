@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { getArtists, getTours } from '../../services/api';
 import type { Artist, Location } from '../../types/artist';
 import type { Gig, GigInput } from '../../types/gig';
@@ -15,6 +16,26 @@ interface GigFormProps {
     initialArtist?: Artist | null;
     onSubmit: (input: GigInput, id?: string) => Promise<void> | void;
     onCancel: () => void;
+}
+
+// API validation response shape
+type ApiValidationError = {
+    errors?: Array<{
+        field?: string;
+        message?: string;
+    }>;
+    message?: string;
+};
+
+function getSubmitErrorMessage(error: unknown, fallback: string): string {
+    if (!axios.isAxiosError<ApiValidationError>(error)) return fallback;
+
+    const data = error.response?.data;
+    const validationMessages = data?.errors
+        ?.map((issue) => [issue.field, issue.message].filter(Boolean).join(': '))
+        .filter(Boolean);
+
+    return validationMessages?.length ? validationMessages.join('\n') : data?.message || fallback;
 }
 
 export function GigForm({
@@ -102,6 +123,11 @@ export function GigForm({
 
         setIsSaving(true);
         try {
+            // Persisted gig locations keep their selected city identity
+            const submitLocation = location && initialGig?.locationCityId && !location.cityId
+                ? { ...location, cityId: initialGig.locationCityId }
+                : location;
+
             await onSubmit({
                 artistIds,
                 tourId: tourMode === 'existing' && tourId ? tourId : null,
@@ -109,10 +135,12 @@ export function GigForm({
                 gigName: gigName.trim() || null,
                 venueName: venueName?.trim() || null,
                 placeLocationId,
-                location,
+                location: submitLocation,
                 date,
                 rawExternalData: venueName ? rawExternalData : null,
             }, initialGig?.id);
+        } catch (submitError) {
+            setError(getSubmitErrorMessage(submitError, t('tour.errors.saveFailed', { defaultValue: 'Failed to save gig' })));
         } finally {
             setIsSaving(false);
         }
@@ -264,7 +292,7 @@ export function GigForm({
                 </div>
 
                 {error && (
-                    <p role="alert" className="mx-4 mb-3 text-sm font-medium text-error app-dark:text-primary">
+                    <p role="alert" className="mx-4 mb-3 whitespace-pre-line text-sm font-medium text-error app-dark:text-primary">
                         {error}
                     </p>
                 )}
