@@ -501,6 +501,7 @@
       "exitTourMode": "退出巡演模式",
       "addGig": "新增演出",
       "viewGigPanel": "查看演出",
+      "locateGig": "定位演出",
       "createTour": "建立巡演",
       "clearDates": "清除日期",
       "exit": "退出",
@@ -563,13 +564,15 @@
       "empty": "目前日期範圍內沒有演出",
       "noResults": "沒有符合目前篩選的演出",
       "noTour": "無巡演",
-      "controls": {
-        "selection": "選擇",
-        "filter": "篩選",
-        "filterPlaceholder": "篩選演出",
-        "sort": "排序"
+      "search": {
+        "ariaLabel": "搜尋演出",
+        "placeholder": "搜尋演出"
       },
       "sort": {
+        "label": "排序",
+        "ariaLabel": "演出排序",
+        "optionsLabel": "演出排序選項",
+        "date": "日期",
         "dateAsc": "日期升序",
         "dateDesc": "日期降序",
         "artist": "藝人",

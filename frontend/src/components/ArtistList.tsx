@@ -385,7 +385,7 @@ const ArtistList = ({
                                         tabIndex={0}
                                         onClick={(e) => handleRowClick(artist, e)}
                                         onKeyDown={(e) => handleRowKeyDown(artist, e)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-muted focus:bg-surface-muted focus:outline-none transition-colors cursor-pointer ${isActive ? 'bg-surface-muted' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary focus:bg-surface-secondary focus:outline-none transition-colors cursor-pointer ${isActive ? 'bg-surface-secondary' : ''}`}
                                     >
                                         {/* Avatar */}
                                         <img
@@ -423,7 +423,7 @@ const ArtistList = ({
                                                     aria-label={t('artistList.actions.goToLocation')}
                                                     onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded text-text-secondary hover:bg-primary hover:!text-white app-dark:hover:!text-white"
+                                                    className="rounded text-text-secondary hover:bg-[#E5E7EB] hover:!text-text app-dark:hover:bg-[#3A3A3C] app-dark:hover:!text-text"
                                                     title={t('artistList.actions.goToLocation')}
                                                 >
                                                     <MapPinIcon className="w-4 h-4" />
@@ -434,7 +434,7 @@ const ArtistList = ({
                                                     aria-label={t('artistList.actions.edit')}
                                                     onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
                                                     size="sm"
-                                                    className="rounded text-text-secondary hover:bg-primary hover:!text-white app-dark:hover:!text-white"
+                                                    className="rounded text-text-secondary hover:bg-[#E5E7EB] hover:!text-text app-dark:hover:bg-[#3A3A3C] app-dark:hover:!text-text"
                                                     title={t('artistList.actions.editShort')}
                                                 >
                                                     <EditIcon className="w-4 h-4" />

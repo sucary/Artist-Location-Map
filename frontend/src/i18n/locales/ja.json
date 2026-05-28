@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "Achizu",
     "search": "検索",
@@ -501,6 +501,7 @@
       "exitTourMode": "ツアーモードを終了",
       "addGig": "公演を追加",
       "viewGigPanel": "公演を見る",
+      "locateGig": "公演を表示",
       "createTour": "ツアーを作成",
       "clearDates": "日付をクリア",
       "exit": "終了",
@@ -563,13 +564,15 @@
       "empty": "現在の日付範囲に公演はありません",
       "noResults": "現在の絞り込みに一致する公演はありません",
       "noTour": "ツアーなし",
-      "controls": {
-        "selection": "表示",
-        "filter": "絞り込み",
-        "filterPlaceholder": "公演を絞り込み",
-        "sort": "並び替え"
+      "search": {
+        "ariaLabel": "公演を検索",
+        "placeholder": "公演を検索"
       },
       "sort": {
+        "label": "並べ替え",
+        "ariaLabel": "公演を並べ替え",
+        "optionsLabel": "公演の並べ替えオプション",
+        "date": "日付",
         "dateAsc": "日付 昇順",
         "dateDesc": "日付 降順",
         "artist": "アーティスト",
@@ -626,3 +629,4 @@
     }
   }
 }
+

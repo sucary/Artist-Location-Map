@@ -62,6 +62,8 @@ export default function MapView({
     onEmptyClick,
     focusedArtist,
     onFocusedArtistHandled,
+    focusedGigId,
+    onFocusedGigHandled,
     focusedLocation,
     onFocusedLocationHandled,
     focusedCityId,
@@ -754,6 +756,32 @@ export default function MapView({
             onFocusedArtistHandled?.();
         }, 1700);
     }, [focusedArtist, mapReady, markersRef, onFocusedArtistHandled, openArtistPopup, renderVisibleMarkers, view]);
+
+    // Fly to a focused gig marker and reopen its popup after the animation.
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !mapReady || !focusedGigId || !tourModeActive) return;
+
+        const gigArtist = gigMarkerArtists.find((artist) => artist.gig.id === focusedGigId);
+        if (!gigArtist) return;
+
+        const markerCoordinates = gigArtist.activeLocationDisplayCoordinates;
+        map.flyTo({
+            center: [markerCoordinates.lng, markerCoordinates.lat],
+            zoom: 11,
+            duration: 2000,
+        });
+
+        // Wait for the fly animation before reopening the gig popup.
+        window.setTimeout(() => {
+            renderVisibleMarkers();
+            const marker = markersRef.current.get(`artist-${focusedGigId}`)?.marker;
+            if (marker) {
+                openArtistPopup(gigArtist, marker);
+            }
+            onFocusedGigHandled?.();
+        }, 1700);
+    }, [focusedGigId, gigMarkerArtists, mapReady, markersRef, onFocusedGigHandled, openArtistPopup, renderVisibleMarkers, tourModeActive]);
 
     // Sync selected-city GeoJSON overlays into MapLibre layers.
     useEffect(() => {

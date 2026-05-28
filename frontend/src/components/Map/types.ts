@@ -25,6 +25,8 @@ export interface MapViewProps {
     onEmptyClick?: () => void;
     focusedArtist?: Artist | null;
     onFocusedArtistHandled?: () => void;
+    focusedGigId?: string | null;
+    onFocusedGigHandled?: () => void;
     focusedLocation?: Coordinates | null;
     onFocusedLocationHandled?: () => void;
     focusedCityId?: string | null;

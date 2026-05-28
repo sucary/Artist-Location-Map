@@ -502,6 +502,7 @@
       "exitTourMode": "Exit Tour Mode",
       "addGig": "Add gig",
       "viewGigPanel": "View gigs",
+      "locateGig": "Locate gig",
       "createTour": "Create tour",
       "clearDates": "Clear dates",
       "exit": "Exit",
@@ -564,13 +565,15 @@
       "empty": "No gigs in the current date range",
       "noResults": "No gigs match the current filter",
       "noTour": "No tour",
-      "controls": {
-        "selection": "Selection",
-        "filter": "Filter",
-        "filterPlaceholder": "Filter gigs",
-        "sort": "Sort"
+      "search": {
+        "ariaLabel": "Search gigs",
+        "placeholder": "Search gigs"
       },
       "sort": {
+        "label": "Sort by",
+        "ariaLabel": "Sort gigs",
+        "optionsLabel": "Gig sort options",
+        "date": "Date",
         "dateAsc": "Date ascending",
         "dateDesc": "Date descending",
         "artist": "Artist",

@@ -1,23 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Gig } from '../../types/gig';
-import { CloseButton, IconButton } from '../ui';
-import { ChevronDownIcon, EditIcon, SearchIcon, TrashIcon } from '../icons/GeneralIcons';
+import { CloseButton, IconButton, Input } from '../ui';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, EditIcon, SearchIcon, TrashIcon } from '../icons/GeneralIcons';
+import { MapPinIcon } from '../icons/MapIcons';
 import { useTranslation } from 'react-i18next';
 import { getBrowserDateLocale } from '../../utils/dateFormatting';
 
-type GigPanelView = 'gig' | 'tour' | 'artist' | 'location';
-type GigPanelSort = 'dateAsc' | 'dateDesc' | 'artist' | 'location' | 'tour';
+type GigPanelSort = 'date' | 'artist' | 'location' | 'tour';
+type GigPanelSortDirection = 'asc' | 'desc';
 
 interface GigPanelProps {
     gigs: Gig[];
     onClose: () => void;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
+    onLocateGig?: (gig: Gig) => void;
 }
-
-const sortByDate = (gigs: Gig[]) => (
-    [...gigs].sort((a, b) => a.date.localeCompare(b.date) || a.artist.name.localeCompare(b.artist.name))
-);
 
 const getArtistNames = (gig: Gig) => gig.artists.map((artist) => artist.name).join(', ') || gig.artist.name;
 
@@ -28,25 +26,20 @@ const getProvinceLabel = (gig: Gig) => {
 
 const getCityLabel = (gig: Gig) => gig.location.city || gig.location.displayName || getProvinceLabel(gig);
 
-export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProps) {
+export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }: GigPanelProps) {
     const { i18n, t } = useTranslation();
-    const [view, setView] = useState<GigPanelView>('gig');
     const [filterQuery, setFilterQuery] = useState('');
-    const [sortMode, setSortMode] = useState<GigPanelSort>('dateAsc');
-    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [sortMode, setSortMode] = useState<GigPanelSort>('date');
+    const [sortDirection, setSortDirection] = useState<GigPanelSortDirection>('asc');
     const [isSortOpen, setIsSortOpen] = useState(false);
-    const viewRef = useRef<HTMLDivElement>(null);
+    const [expandedArtistRows, setExpandedArtistRows] = useState<Set<string>>(() => new Set());
     const sortRef = useRef<HTMLDivElement>(null);
-    const viewListboxId = 'gig-panel-view-options';
     const sortListboxId = 'gig-panel-sort-options';
     const dateLocale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-            if (!viewRef.current?.contains(target)) {
-                setIsViewOpen(false);
-            }
             if (!sortRef.current?.contains(target)) {
                 setIsSortOpen(false);
             }
@@ -62,10 +55,15 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
             return { month: '', day: date, weekday: '' };
         }
 
+        const month = new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(parsedDate);
+        const day = new Intl.DateTimeFormat(dateLocale, { day: 'numeric' }).format(parsedDate).replace(/\u65e5$/, '');
+        const weekday = new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(parsedDate).replace(/^\u5468/, '\u661f\u671f');
+
+        // Japanese day suffix stays outside compact date tiles
         return {
-            month: new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(parsedDate).toUpperCase(),
-            day: new Intl.DateTimeFormat(dateLocale, { day: 'numeric' }).format(parsedDate),
-            weekday: new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(parsedDate),
+            month: month.toUpperCase(),
+            day,
+            weekday,
         };
     };
 
@@ -92,89 +90,115 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
     const sortedGigs = useMemo(() => {
         const sorted = [...filteredGigs];
         sorted.sort((a, b) => {
-            if (sortMode === 'dateDesc') {
-                return b.date.localeCompare(a.date) || getArtistNames(a).localeCompare(getArtistNames(b));
-            }
+            let result: number;
+
             if (sortMode === 'artist') {
-                return getArtistNames(a).localeCompare(getArtistNames(b)) || a.date.localeCompare(b.date);
+                result = getArtistNames(a).localeCompare(getArtistNames(b)) || a.date.localeCompare(b.date);
+            } else if (sortMode === 'location') {
+                result = getCityLabel(a).localeCompare(getCityLabel(b)) || a.date.localeCompare(b.date);
+            } else if (sortMode === 'tour') {
+                result = (a.tour?.name ?? '').localeCompare(b.tour?.name ?? '') || a.date.localeCompare(b.date);
+            } else {
+                result = a.date.localeCompare(b.date) || getArtistNames(a).localeCompare(getArtistNames(b));
             }
-            if (sortMode === 'location') {
-                return getCityLabel(a).localeCompare(getCityLabel(b)) || a.date.localeCompare(b.date);
-            }
-            if (sortMode === 'tour') {
-                return (a.tour?.name ?? '').localeCompare(b.tour?.name ?? '') || a.date.localeCompare(b.date);
-            }
-            return a.date.localeCompare(b.date) || getArtistNames(a).localeCompare(getArtistNames(b));
+
+            // Direction toggle mirrors Artist List sorting
+            return sortDirection === 'asc' ? result : -result;
         });
         return sorted;
-    }, [filteredGigs, sortMode]);
+    }, [filteredGigs, sortDirection, sortMode]);
 
-    const groupedGigs = useMemo(() => {
-        if (view === 'gig') return [];
+    const toggleArtistRow = (gigId: string) => {
+        // Expanded state is keyed by gig so sorting and filtering keep row intent
+        setExpandedArtistRows((currentRows) => {
+            const nextRows = new Set(currentRows);
+            if (nextRows.has(gigId)) {
+                nextRows.delete(gigId);
+            } else {
+                nextRows.add(gigId);
+            }
 
-        const groups = new Map<string, { label: string; gigs: Gig[] }>();
-        sortedGigs.forEach((gig) => {
-            const entries = view === 'artist'
-                ? gig.artists.map((artist) => ({ key: artist.id, label: artist.name }))
-                : [{
-                    key: view === 'tour'
-                        ? gig.tour?.id ?? 'no-tour'
-                        : `${gig.location.province || gig.location.city}-${gig.location.country || ''}`,
-                    label: view === 'tour'
-                        ? gig.tour?.name ?? t('tour.panel.noTour')
-                        : getProvinceLabel(gig),
-                }];
-
-            entries.forEach((entry) => {
-                const group = groups.get(entry.key) ?? { label: entry.label, gigs: [] };
-                group.gigs.push(gig);
-                groups.set(entry.key, group);
-            });
+            return nextRows;
         });
-
-        return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
-    }, [sortedGigs, t, view]);
+    };
 
     const renderGigRow = (gig: Gig) => {
         const dateParts = formatDateTile(gig.date);
+        const artistNames = gig.artists.length ? gig.artists : [gig.artist];
+        const isArtistRowExpanded = expandedArtistRows.has(gig.id);
+        const visibleArtists = isArtistRowExpanded ? artistNames : artistNames.slice(0, 2);
+        const hiddenArtistCount = artistNames.length - visibleArtists.length;
+        const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(' \u00b7 ');
+        const title = gig.gigName || gig.tour?.name;
+
+        // Venue rows avoid full-address display names
+        const locationParts = gig.venueName
+            ? [title, gig.venueName]
+            : [title, getCityLabel(gig)];
+        const locationMeta = locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
             <li key={gig.id} className="group">
-                <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-muted">
-                    <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-md border border-border bg-surface text-center">
-                        <span className="text-[10px] font-semibold uppercase leading-none text-text-secondary">{dateParts.month}</span>
-                        <span className="text-2xl font-semibold leading-tight text-text">{dateParts.day}</span>
-                        <span className="text-[10px] font-medium leading-none text-text-muted">{dateParts.weekday}</span>
+                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-4 px-4 py-3">
+                    <div className="flex shrink-0 flex-col items-center justify-center text-center">
+                        <span className="text-xs font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
+                        <span className="text-3xl font-light leading-none text-text-secondary">{dateParts.day}</span>
+                        <span className="mt-0.5 text-[10px] font-medium leading-none text-text-secondary">{dateParts.weekday}</span>
                     </div>
 
-                    <div className="flex min-h-14 min-w-0 flex-col justify-center">
-                        <p className="truncate text-sm font-semibold text-text">{gig.gigName || getArtistNames(gig)}</p>
-                        <p className="mt-1 truncate text-xs text-text-secondary">{getCityLabel(gig)}</p>
-                    </div>
-
-                    <div className="flex min-h-14 w-14 shrink-0 items-center justify-end">
-                        <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                            {onEditGig && (
-                                <IconButton
-                                    aria-label={t('common.edit')}
-                                    onClick={() => onEditGig(gig)}
-                                    size="sm"
-                                    className="rounded text-text-secondary hover:bg-primary hover:!text-white app-dark:hover:!text-white"
-                                    title={t('common.edit')}
+                    <div className="flex min-w-0 flex-col justify-center">
+                        <div className={`flex min-w-0 items-center gap-1.5 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}>
+                            <span className={isArtistRowExpanded ? 'text-sm font-semibold leading-5 text-text' : 'min-w-0 truncate text-sm font-semibold leading-5 text-text'}>
+                                {visibleArtistLabel}
+                            </span>
+                            {(hiddenArtistCount > 0 || isArtistRowExpanded) && (
+                                <button
+                                    type="button"
+                                    onClick={() => toggleArtistRow(gig.id)}
+                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-0.5 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
                                 >
-                                    <EditIcon className="h-4 w-4" />
-                                </IconButton>
+                                    {isArtistRowExpanded ? '-' : `+${hiddenArtistCount}`}
+                                </button>
                             )}
-                            {onDeleteGig && (
-                                <IconButton
-                                    aria-label={t('common.delete')}
-                                    onClick={() => onDeleteGig(gig)}
-                                    size="sm"
-                                    className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:hover:!text-white"
-                                    title={t('common.delete')}
-                                >
-                                    <TrashIcon className="h-4 w-4" />
-                                </IconButton>
+                        </div>
+                        <div className="relative mt-2 min-w-0">
+                            <p className="truncate text-xs text-text-secondary">{locationMeta}</p>
+                            {(onLocateGig || onEditGig || onDeleteGig) && (
+                                <div className="absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 bg-surface opacity-0 transition-opacity group-hover:opacity-100">
+                                    {onLocateGig && (
+                                        <IconButton
+                                            aria-label={t('tour.actions.locateGig')}
+                                            onClick={() => onLocateGig(gig)}
+                                            size="sm"
+                                            className="rounded text-text-secondary hover:bg-surface-muted hover:!text-text app-dark:hover:!text-text"
+                                            title={t('tour.actions.locateGig')}
+                                        >
+                                            <MapPinIcon className="w-4 h-4" />
+                                        </IconButton>
+                                    )}
+                                    {onEditGig && (
+                                        <IconButton
+                                            aria-label={t('common.edit')}
+                                            onClick={() => onEditGig(gig)}
+                                            size="sm"
+                                            className="rounded text-text-secondary hover:bg-surface-muted hover:!text-text app-dark:hover:!text-text"
+                                            title={t('common.edit')}
+                                        >
+                                            <EditIcon className="h-4 w-4" />
+                                        </IconButton>
+                                    )}
+                                    {onDeleteGig && (
+                                        <IconButton
+                                            aria-label={t('common.delete')}
+                                            onClick={() => onDeleteGig(gig)}
+                                            size="sm"
+                                            className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:hover:!text-white"
+                                            title={t('common.delete')}
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </IconButton>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -193,59 +217,30 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                     <CloseButton onClick={onClose} size="md" />
                 </div>
 
-                <div className="space-y-2 border-b border-border px-4 py-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <div ref={viewRef} className="relative">
-                            <span className="mb-1 block text-xs font-medium text-text-secondary">{t('tour.panel.controls.selection')}</span>
+                <div className="px-4 py-2">
+                    <Input
+                        aria-label={t('tour.panel.search.ariaLabel')}
+                        type="text"
+                        name="gig-list-search"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        placeholder={t('tour.panel.search.placeholder')}
+                        value={filterQuery}
+                        onChange={(event) => setFilterQuery(event.target.value)}
+                        rightIcon={<SearchIcon className="w-4 h-4" />}
+                    />
+                    <div className="mt-2 flex min-w-0 items-center gap-2">
+                        <span className="shrink-0 text-sm font-medium text-text-secondary">{t('tour.panel.sort.label')}</span>
+                        <div ref={sortRef} className="relative min-w-0 flex-1">
                             <button
                                 type="button"
-                                aria-label={t('tour.panel.controls.selection')}
-                                aria-haspopup="listbox"
-                                aria-expanded={isViewOpen}
-                                aria-controls={isViewOpen ? viewListboxId : undefined}
-                                onClick={() => setIsViewOpen((open) => !open)}
-                                className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
-                            >
-                                <span className="block truncate">{t(`tour.panel.views.${view}`)}</span>
-                                <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isViewOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {isViewOpen && (
-                                <div
-                                    id={viewListboxId}
-                                    role="listbox"
-                                    aria-label={t('tour.panel.controls.selection')}
-                                    className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
-                                >
-                                {(['gig', 'tour', 'artist', 'location'] as const).map((option) => (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        role="option"
-                                        aria-selected={view === option}
-                                        onClick={() => {
-                                            setView(option);
-                                            setIsViewOpen(false);
-                                        }}
-                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
-                                            view === option ? 'font-medium text-primary-contrast app-dark:text-primary' : 'text-text'
-                                        }`}
-                                    >
-                                        {t(`tour.panel.views.${option}`)}
-                                    </button>
-                                ))}
-                                </div>
-                            )}
-                        </div>
-                        <div ref={sortRef} className="relative">
-                            <span className="mb-1 block text-xs font-medium text-text-secondary">{t('tour.panel.controls.sort')}</span>
-                            <button
-                                type="button"
-                                aria-label={t('tour.panel.controls.sort')}
+                                aria-label={t('tour.panel.sort.ariaLabel')}
                                 aria-haspopup="listbox"
                                 aria-expanded={isSortOpen}
                                 aria-controls={isSortOpen ? sortListboxId : undefined}
                                 onClick={() => setIsSortOpen((open) => !open)}
-                                className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                                className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                             >
                                 <span className="block truncate">{t(`tour.panel.sort.${sortMode}`)}</span>
                                 <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -254,10 +249,10 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                                 <div
                                     id={sortListboxId}
                                     role="listbox"
-                                    aria-label={t('tour.panel.controls.sort')}
+                                    aria-label={t('tour.panel.sort.optionsLabel')}
                                     className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
                                 >
-                                {(['dateAsc', 'dateDesc', 'artist', 'location', 'tour'] as const).map((option) => (
+                                {(['date', 'artist', 'location', 'tour'] as const).map((option) => (
                                     <button
                                         key={option}
                                         type="button"
@@ -268,7 +263,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                                             setIsSortOpen(false);
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
-                                            sortMode === option ? 'font-medium text-primary-contrast app-dark:text-primary' : 'text-text'
+                                            sortMode === option ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
                                         {t(`tour.panel.sort.${option}`)}
@@ -277,18 +272,19 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <div className="relative">
-                        <input
-                            aria-label={t('tour.panel.controls.filter')}
-                            type="text"
-                            autoComplete="off"
-                            value={filterQuery}
-                            onChange={(event) => setFilterQuery(event.target.value)}
-                            placeholder={t('tour.panel.controls.filterPlaceholder')}
-                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-9 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
-                        />
-                        <SearchIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                        <button
+                            type="button"
+                            aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
+                            title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
+                            onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
+                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-2"
+                        >
+                            {sortDirection === 'asc' ? (
+                                <ArrowUpIcon className="w-5 h-5" />
+                            ) : (
+                                <ArrowDownIcon className="w-5 h-5" />
+                            )}
+                        </button>
                     </div>
                 </div>
 
@@ -297,25 +293,10 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig }: GigPanelProp
                         <div className="px-4 py-8 text-center text-sm text-text-secondary">
                             {filterQuery ? t('tour.panel.noResults') : t('tour.panel.empty')}
                         </div>
-                    ) : view === 'gig' ? (
+                    ) : (
                         <ul className="divide-y divide-border">
                             {sortedGigs.map(renderGigRow)}
                         </ul>
-                    ) : (
-                        <div className="divide-y divide-border">
-                            {groupedGigs.map((group) => (
-                                <section key={group.label}>
-                                    <div className="bg-surface-secondary px-4 py-2">
-                                        <h3 className="truncate text-sm font-semibold text-text">
-                                            {group.label} <span className="font-normal text-text-secondary">({group.gigs.length})</span>
-                                        </h3>
-                                    </div>
-                                    <ul className="divide-y divide-border">
-                                        {sortByDate(group.gigs).map(renderGigRow)}
-                                    </ul>
-                                </section>
-                            ))}
-                        </div>
                     )}
                 </div>
             </div>

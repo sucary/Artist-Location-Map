@@ -98,6 +98,7 @@ function App() {
     const [selectionMode, setSelectionMode] = useState<SelectionMode | null>(null);
     const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
     const [focusedArtist, setFocusedArtist] = useState<Artist | null>(null);
+    const [focusedGigId, setFocusedGigId] = useState<string | null>(null);
     const [isCopyingCollection, setIsCopyingCollection] = useState(false);
     const [isMobileLayout, setIsMobileLayout] = useState(getIsMobileLayout);
     const [artistPopupOpen, setArtistPopupOpen] = useState(false);
@@ -794,7 +795,7 @@ function App() {
             {tourMode.active && !showForm && !showGigForm && !showGigPanel && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
                 <ViewGigPanelButton onClick={handleOpenGigPanel} />
             )}
-            {(!isMobileLayout || !showArtistList) && !showGigPanel && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
+            {!tourMode.active && (!isMobileLayout || !showArtistList) && !showGigPanel && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
                 <ViewArtistListButton onClick={() => {
                     if (viewingFeatured) {
                         setShowForm(false);
@@ -841,6 +842,7 @@ function App() {
                     onClose={handleCloseGigPanel}
                     onEditGig={handleEditGig}
                     onDeleteGig={handleDeleteGig}
+                    onLocateGig={(gig) => setFocusedGigId(gig.id)}
                 />
             )}
             {(showArtistList || (viewingFeatured && showFeaturedList)) && (
@@ -900,6 +902,8 @@ function App() {
                 onEmptyClick={showGigPanel ? handleCloseGigPanel : showGigForm ? handleCloseGigForm : showForm ? handleCloseForm : (showArtistList || showFeaturedList) ? handleArtistListEmptyMapClick : undefined}
                 focusedArtist={focusedArtist}
                 onFocusedArtistHandled={() => setFocusedArtist(null)}
+                focusedGigId={focusedGigId}
+                onFocusedGigHandled={() => setFocusedGigId(null)}
                 isAuthenticated={!!user}
                 suppressArtistPopup={isMobileLayout && (showForm || showGigForm || showGigPanel || showArtistList || showFeaturedList || mainSearchResultsOpen)}
                 onArtistPopupOpenChange={handleArtistPopupOpenChange}
