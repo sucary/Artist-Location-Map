@@ -191,7 +191,7 @@ export function VenueLocationSearch({
 
         return (
             <div
-                className="tour-location-search-dropdown fixed z-[9999] overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg"
+                className="tour-location-search-dropdown fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
                 style={{
                     top: `${dropdownPosition.top}px`,
                     left: `${dropdownPosition.left}px`,
@@ -243,11 +243,11 @@ export function VenueLocationSearch({
         );
     };
 
-    const inputClass = 'w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-9 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary';
+    const inputClass = 'w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-9 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary';
 
     return (
-        <div className="relative rounded-md p-1" ref={rootRef}>
-            <label htmlFor={inputId} className="mb-1 block text-sm font-bold text-text">
+        <div className="relative" ref={rootRef}>
+            <label htmlFor={inputId} className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 {t('tour.fields.venueLocation')}
             </label>
             <div className="relative" ref={controlsRef}>

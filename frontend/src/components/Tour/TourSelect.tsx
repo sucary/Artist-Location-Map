@@ -88,7 +88,7 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
                 }}
                 onFocus={() => setIsOpen(true)}
                 placeholder={placeholder}
-                className="w-full border border-border-strong rounded-md bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
             />
             <button
                 aria-label={ariaLabel}
@@ -111,7 +111,7 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
                     role="listbox"
                     aria-label={ariaLabel}
                     ref={dropdownRef}
-                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg"
+                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

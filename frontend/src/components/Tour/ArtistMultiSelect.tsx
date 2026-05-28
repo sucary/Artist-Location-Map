@@ -95,8 +95,8 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     };
 
     return (
-        <div className="rounded-md p-1">
-            <label htmlFor={inputId} className="block text-sm font-bold text-text mb-1">
+        <div>
+            <label htmlFor={inputId} className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 {label}
             </label>
             <div ref={containerRef} className="relative">
@@ -148,7 +148,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                         type="button"
                         aria-label={placeholder}
                         onClick={openArtistField}
-                        className={`grid h-7 place-items-center rounded-full transition-colors ${
+                        className={`grid h-7 place-items-center rounded-full transition-all duration-150 ${
                             selectedArtists.length === 0 ? 'w-full' : 'w-7'
                         } ${
                             isAddingArtist
@@ -179,7 +179,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                             }}
                             onFocus={() => setIsOpen(true)}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                            className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                         />
                         <button
                             aria-label={t('artistForm.yearSelect.label')}
@@ -205,7 +205,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                     role="listbox"
                     aria-label={label}
                     ref={dropdownRef}
-                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-lg"
+                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

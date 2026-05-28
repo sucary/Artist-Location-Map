@@ -13,7 +13,9 @@
     "redirectToMap": "地図へ移動しています",
     "backToMap": "地図に戻る",
     "delete": "削除",
-    "copy": "コピー"
+    "copy": "コピー",
+    "edit": "編集",
+    "optional": "任意"
   },
   "auth": {
     "fields": {
@@ -510,10 +512,12 @@
     "fields": {
       "artist": "アーティスト",
       "artists": "アーティスト",
-      "gigName": "公演名（任意）",
+      "gig": "公演",
+      "gigName": "公演名",
       "date": "日付",
       "tour": "ツアー",
       "addToTour": "ツアーに追加",
+      "partOfTour": "ツアーの一部？",
       "createTour": "ツアーを作成",
       "createTourOptional": "ツアーを作成（任意）",
       "tourName": "ツアー名",
@@ -532,10 +536,10 @@
       "createTour": "ツアーを作成",
       "addArtistToGig": "公演にアーティストを追加",
       "addToExistingTour": "既存のツアーに追加",
-      "createATour": "ツアーを作成",
+      "createATour": "新規ツアー",
       "removeArtist": "{{name}}を削除",
-      "noArtistsFound": "アーティストが見つかりません",
-      "noToursFound": "ツアーが見つかりません",
+      "noArtistsFound": "該当するアーティストはいません",
+      "noToursFound": "該当するツアーはありません",
       "noGigsForTour": "現在の日付範囲に公演はありません",
       "sections": {
         "gig": "公演",
@@ -546,7 +550,7 @@
         "existing": "既存",
         "new": "新規"
       },
-      "preselectedArtist": "{{name}}を選択中",
+      "preselectedArtist": "{{name}} が選択されています",
       "gigNamePlaceholder": "公演名を入力",
       "venuePlaceholder": "会場名を入力",
       "locationPlaceholder": "会場 / 場所を検索",

@@ -54,7 +54,6 @@ export function GigForm({
         queryFn: getTours,
     });
     const [artistIds, setArtistIds] = useState<string[]>(initialGig?.artistIds ?? (initialArtist ? [initialArtist.id] : []));
-    const [isAddingToTour, setIsAddingToTour] = useState(() => !!initialGig?.tourId);
     const [tourMode, setTourMode] = useState<'none' | 'existing' | 'new'>(initialGig?.tourId ? 'existing' : 'none');
     const [tourId, setTourId] = useState(initialGig?.tourId ?? '');
     const [newTourName, setNewTourName] = useState('');
@@ -70,7 +69,6 @@ export function GigForm({
 
     useEffect(() => {
         setArtistIds(initialGig?.artistIds ?? (initialArtist ? [initialArtist.id] : []));
-        setIsAddingToTour(!!initialGig?.tourId);
         setTourMode(initialGig?.tourId ? 'existing' : 'none');
         setTourId(initialGig?.tourId ?? '');
         setNewTourName('');
@@ -97,20 +95,7 @@ export function GigForm({
             .filter((name): name is string => !!name)
             .join(', ')
     ), [artistIds, artists]);
-
-    const toggleTourExpanded = () => {
-        const nextAddingToTour = !isAddingToTour;
-        setIsAddingToTour(nextAddingToTour);
-
-        if (nextAddingToTour) {
-            setTourMode(hasTours ? 'existing' : 'new');
-            return;
-        }
-
-        setTourMode('none');
-        setTourId('');
-        setNewTourName('');
-    };
+    const hasTourAssignment = tourMode !== 'none';
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -132,7 +117,7 @@ export function GigForm({
                 artistIds,
                 tourId: tourMode === 'existing' && tourId ? tourId : null,
                 newTourName: tourMode === 'new' && newTourName.trim() ? newTourName.trim() : undefined,
-                gigName: gigName.trim() || null,
+                gigName: hasTourAssignment ? null : gigName.trim() || null,
                 venueName: venueName?.trim() || null,
                 placeLocationId,
                 location: submitLocation,
@@ -149,10 +134,10 @@ export function GigForm({
     return (
         <form
             onSubmit={(event) => { void handleSubmit(event); }}
-            className="absolute top-20 left-1/2 z-[1050] flex max-h-[calc(100vh-6rem)] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-xl sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0"
+            className="absolute top-20 left-1/2 z-[1050] flex max-h-[calc(100vh-6rem)] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-xl shadow-black/5 ring-1 ring-border/40 sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0"
         >
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <h2 className="text-lg font-semibold text-text">
+            <div className="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
+                <h2 className="text-base font-semibold tracking-tight text-text">
                     {initialGig ? t('tour.form.editTitle') : t('tour.form.addTitle')}
                 </h2>
                 <CloseButton onClick={onCancel} size="md" />
@@ -160,6 +145,7 @@ export function GigForm({
 
             <div className="flex-1 overflow-y-auto">
                 <div className="flex flex-col gap-4 p-4">
+                    {/* Artists section */}
                     <div>
                         <ArtistMultiSelect
                             artists={artists}
@@ -176,14 +162,18 @@ export function GigForm({
                         )}
                     </div>
 
-                    <GigDatePicker
-                        id="gig-date"
-                        label={t('tour.fields.date')}
-                        value={date}
-                        onChange={setDate}
-                    />
+                    {/* Date section */}
+                    <div>
+                        <GigDatePicker
+                            id="gig-date"
+                            label={t('tour.fields.date')}
+                            value={date}
+                            onChange={setDate}
+                        />
+                    </div>
 
-                    <div className="location-search-compact">
+                    {/* Location section */}
+                    <div>
                         <VenueLocationSearch
                             venueName={venueName}
                             location={location}
@@ -197,53 +187,73 @@ export function GigForm({
                         />
                     </div>
 
-                    <div className="rounded-md p-1">
-                        <label htmlFor="gig-name" className="mb-1 block text-sm font-bold text-text">
-                            {t('tour.fields.gigName')}
-                        </label>
-                        <input
-                            id="gig-name"
-                            type="text"
-                            autoComplete="off"
-                            value={gigName}
-                            maxLength={255}
-                            onChange={(event) => setGigName(event.target.value)}
-                            placeholder={t('tour.form.gigNamePlaceholder')}
-                            className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
-                        />
+                    {/* Optional divider */}
+                    <div className="flex items-center gap-2">
+                        <span className="h-px flex-1 bg-border/60" />
+                        <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted">{t('common.optional')}</span>
+                        <span className="h-px flex-1 bg-border/60" />
                     </div>
 
-                    <div className="rounded-md p-1">
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                            <span className="block text-sm font-bold text-text">{t('tour.fields.addToTour')}</span>
-                            <label className="inline-flex items-center">
-                                <span className="sr-only">{t('tour.fields.addToTour')}</span>
+                    {/* Add to tour */}
+                    <div>
+                        <label
+                            className="flex cursor-pointer items-center justify-between gap-3 transition-colors duration-150 hover:bg-surface-secondary/40"
+                        >
+                            <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                {t('tour.fields.addToTour')}
+                            </span>
+                            <span className="relative inline-flex h-6 w-9 shrink-0 items-center">
                                 <input
                                     type="checkbox"
                                     role="switch"
-                                    checked={isAddingToTour}
-                                    onChange={toggleTourExpanded}
+                                    checked={hasTourAssignment}
+                                    onChange={(event) => {
+                                        if (event.target.checked) {
+                                            setTourMode(hasTours ? 'existing' : 'new');
+                                            setGigName('');
+                                        } else {
+                                            setTourMode('none');
+                                            setTourId('');
+                                            setNewTourName('');
+                                        }
+                                    }}
                                     className="sr-only"
                                 />
-                                <span className="relative inline-flex h-6 w-9 cursor-pointer items-center">
-                                    <span className={`absolute left-1 top-1/2 h-3 w-7 -translate-y-1/2 rounded-full transition-colors duration-200 ${isAddingToTour ? 'bg-primary/35' : 'bg-border-strong'}`} />
-                                    <span className={`relative h-5 w-5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition-colors transition-transform duration-200 ${isAddingToTour ? 'translate-x-4 bg-primary' : 'translate-x-0 bg-white app-dark:bg-text-secondary'}`} />
-                                </span>
-                            </label>
-                        </div>
+                                <span className={`absolute left-1 top-1/2 h-3 w-7 -translate-y-1/2 rounded-full transition-colors duration-200 ${hasTourAssignment ? 'bg-primary/35' : 'bg-border-strong'}`} />
+                                <span className={`relative h-5 w-5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition-all duration-200 ${hasTourAssignment ? 'translate-x-4 bg-primary' : 'translate-x-0 bg-white app-dark:bg-text-secondary'}`} />
+                            </span>
+                        </label>
 
-                        {isAddingToTour && (
-                            <div>
+                        {!hasTourAssignment && (
+                            <div className="mt-3">
+                                <label htmlFor="gig-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                    {t('tour.fields.gigName')}
+                                </label>
+                                <input
+                                    id="gig-name"
+                                    type="text"
+                                    autoComplete="off"
+                                    value={gigName}
+                                    maxLength={255}
+                                    onChange={(event) => setGigName(event.target.value)}
+                                    placeholder={t('tour.form.gigNamePlaceholder')}
+                                    className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                                />
+                            </div>
+                        )}
+
+                        {hasTourAssignment && (
+                            <div className="mt-3">
                                 {hasTours && (
-                                    <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-md bg-surface">
+                                    <div className="mb-3 inline-flex rounded-full bg-surface-muted p-0.5">
                                         <button
                                             type="button"
                                             aria-selected={tourMode === 'existing'}
                                             onClick={() => setTourMode('existing')}
-                                            className={`px-3 py-2 text-sm font-medium transition-colors ${
+                                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'existing'
-                                                    ? 'bg-primary text-white app-dark:text-white'
-                                                    : 'text-text-secondary hover:bg-surface-muted hover:text-text'
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-text-secondary hover:text-text'
                                             }`}
                                         >
                                             {t('tour.form.addToExistingTour')}
@@ -255,10 +265,10 @@ export function GigForm({
                                                 setTourMode('new');
                                                 setTourId('');
                                             }}
-                                            className={`px-3 py-2 text-sm font-medium transition-colors ${
+                                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'new'
-                                                    ? 'bg-primary text-white app-dark:text-white'
-                                                    : 'text-text-secondary hover:bg-surface-muted hover:text-text'
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-text-secondary hover:text-text'
                                             }`}
                                         >
                                             {t('tour.form.createATour')}
@@ -283,7 +293,7 @@ export function GigForm({
                                         value={newTourName}
                                         maxLength={255}
                                         onChange={(event) => setNewTourName(event.target.value)}
-                                        className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                                        className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                                     />
                                 )}
                             </div>
@@ -292,17 +302,19 @@ export function GigForm({
                 </div>
 
                 {error && (
-                    <p role="alert" className="mx-4 mb-3 whitespace-pre-line text-sm font-medium text-error app-dark:text-primary">
-                        {error}
-                    </p>
+                    <div role="alert" className="mx-4 mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2.5">
+                        <p className="whitespace-pre-line text-sm font-medium text-error">
+                            {error}
+                        </p>
+                    </div>
                 )}
             </div>
 
-            <div className="flex gap-2 border-t border-border p-4">
-                <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>
+            <div className="flex gap-2.5 border-t border-border/60 px-4 py-3.5">
+                <Button type="button" variant="secondary" className="flex-1 rounded-lg" onClick={onCancel}>
                     {t('common.cancel')}
                 </Button>
-                <Button type="submit" className="flex-1" isLoading={isSaving}>
+                <Button type="submit" className="flex-1 rounded-lg" isLoading={isSaving}>
                     {t('common.save')}
                 </Button>
             </div>

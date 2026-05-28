@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Gig } from '../../types/gig';
-import { CloseButton, IconButton, Input } from '../ui';
+import { CloseButton, Input } from '../ui';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, EditIcon, SearchIcon, TrashIcon } from '../icons/GeneralIcons';
 import { MapPinIcon } from '../icons/MapIcons';
 import { useTranslation } from 'react-i18next';
@@ -32,17 +33,29 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
     const [sortMode, setSortMode] = useState<GigPanelSort>('date');
     const [sortDirection, setSortDirection] = useState<GigPanelSortDirection>('asc');
     const [isSortOpen, setIsSortOpen] = useState(false);
+    const [sortDropdownPos, setSortDropdownPos] = useState({ top: 0, left: 0, width: 0 });
     const [expandedArtistRows, setExpandedArtistRows] = useState<Set<string>>(() => new Set());
     const sortRef = useRef<HTMLDivElement>(null);
+    const sortDropdownRef = useRef<HTMLDivElement>(null);
     const sortListboxId = 'gig-panel-sort-options';
     const dateLocale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
+        if (!isSortOpen || !sortRef.current) return;
+
+        const rect = sortRef.current.getBoundingClientRect();
+        setSortDropdownPos({
+            top: rect.bottom + window.scrollY + 4,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+        });
+    }, [isSortOpen]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-            if (!sortRef.current?.contains(target)) {
-                setIsSortOpen(false);
-            }
+            if (sortRef.current?.contains(target) || sortDropdownRef.current?.contains(target)) return;
+            setIsSortOpen(false);
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -138,15 +151,15 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
         const locationMeta = locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
-            <li key={gig.id} className="group">
-                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-4 px-4 py-3">
+            <li key={gig.id} className="group transition-colors duration-150 hover:bg-surface-secondary/30">
+                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-3">
                     <div className="flex shrink-0 flex-col items-center justify-center text-center">
                         <span className="text-xs font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
                         <span className="text-3xl font-light leading-none text-text-secondary">{dateParts.day}</span>
                         <span className="mt-0.5 text-[10px] font-medium leading-none text-text-secondary">{dateParts.weekday}</span>
                     </div>
 
-                    <div className="flex min-w-0 flex-col justify-center">
+                    <div className="flex min-w-0 flex-col justify-center gap-1.5">
                         <div className={`flex min-w-0 items-center gap-1.5 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}>
                             <span className={isArtistRowExpanded ? 'text-sm font-semibold leading-5 text-text' : 'min-w-0 truncate text-sm font-semibold leading-5 text-text'}>
                                 {visibleArtistLabel}
@@ -161,42 +174,41 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 </button>
                             )}
                         </div>
-                        <div className="relative mt-2 min-w-0">
-                            <p className="truncate text-xs text-text-secondary">{locationMeta}</p>
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="min-w-0 truncate text-xs text-text-secondary">{locationMeta}</p>
                             {(onLocateGig || onEditGig || onDeleteGig) && (
-                                <div className="absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 bg-surface opacity-0 transition-opacity group-hover:opacity-100">
+                                <div className="inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                                     {onLocateGig && (
-                                        <IconButton
+                                        <button
+                                            type="button"
                                             aria-label={t('tour.actions.locateGig')}
                                             onClick={() => onLocateGig(gig)}
-                                            size="sm"
-                                            className="rounded text-text-secondary hover:bg-surface-muted hover:!text-text app-dark:hover:!text-text"
                                             title={t('tour.actions.locateGig')}
+                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
                                         >
-                                            <MapPinIcon className="w-4 h-4" />
-                                        </IconButton>
+                                            <MapPinIcon className="h-4 w-4" />
+                                        </button>
                                     )}
                                     {onEditGig && (
-                                        <IconButton
+                                        <button
+                                            type="button"
                                             aria-label={t('common.edit')}
                                             onClick={() => onEditGig(gig)}
-                                            size="sm"
-                                            className="rounded text-text-secondary hover:bg-surface-muted hover:!text-text app-dark:hover:!text-text"
-                                            title={t('common.edit')}
+                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
                                         >
                                             <EditIcon className="h-4 w-4" />
-                                        </IconButton>
+                                        </button>
                                     )}
                                     {onDeleteGig && (
-                                        <IconButton
+                                        <button
+                                            type="button"
                                             aria-label={t('common.delete')}
                                             onClick={() => onDeleteGig(gig)}
-                                            size="sm"
-                                            className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:hover:!text-white"
                                             title={t('common.delete')}
+                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white"
                                         >
                                             <TrashIcon className="h-4 w-4" />
-                                        </IconButton>
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -208,16 +220,16 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
     };
 
     return (
-        <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0">
-            <div role="region" aria-label={t('tour.panel.title')} className="flex max-h-[calc(100vh-6rem)] w-full flex-col overflow-hidden rounded-lg bg-surface shadow-xl sm:max-h-[calc(100vh-8rem)]">
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                    <h2 className="text-lg font-semibold text-text">
+        <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0">
+            <div role="region" aria-label={t('tour.panel.title')} className="flex max-h-[calc(100vh-6rem)] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40 sm:max-h-[calc(100vh-8rem)]">
+                <div className="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
+                    <h2 className="text-base font-semibold tracking-tight text-text">
                         {t('tour.panel.title')} ({gigs.length})
                     </h2>
                     <CloseButton onClick={onClose} size="md" />
                 </div>
 
-                <div className="px-4 py-2">
+                <div className="px-4 py-3">
                     <Input
                         aria-label={t('tour.panel.search.ariaLabel')}
                         type="text"
@@ -229,9 +241,10 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                         value={filterQuery}
                         onChange={(event) => setFilterQuery(event.target.value)}
                         rightIcon={<SearchIcon className="w-4 h-4" />}
+                        className="rounded-lg"
                     />
-                    <div className="mt-2 flex min-w-0 items-center gap-2">
-                        <span className="shrink-0 text-sm font-medium text-text-secondary">{t('tour.panel.sort.label')}</span>
+                    <div className="mt-2.5 flex min-w-0 items-center gap-2">
+                        <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-text-secondary">{t('tour.panel.sort.label')}</span>
                         <div ref={sortRef} className="relative min-w-0 flex-1">
                             <button
                                 type="button"
@@ -240,17 +253,23 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 aria-expanded={isSortOpen}
                                 aria-controls={isSortOpen ? sortListboxId : undefined}
                                 onClick={() => setIsSortOpen((open) => !open)}
-                                className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                                className="relative w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                             >
                                 <span className="block truncate">{t(`tour.panel.sort.${sortMode}`)}</span>
                                 <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                             </button>
-                            {isSortOpen && (
+                            {isSortOpen && createPortal(
                                 <div
                                     id={sortListboxId}
                                     role="listbox"
+                                    ref={sortDropdownRef}
                                     aria-label={t('tour.panel.sort.optionsLabel')}
-                                    className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
+                                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                                    style={{
+                                        top: `${sortDropdownPos.top}px`,
+                                        left: `${sortDropdownPos.left}px`,
+                                        width: `${sortDropdownPos.width}px`,
+                                    }}
                                 >
                                 {(['date', 'artist', 'location', 'tour'] as const).map((option) => (
                                     <button
@@ -262,14 +281,15 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                             setSortMode(option);
                                             setIsSortOpen(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
+                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-secondary ${
                                             sortMode === option ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
                                         {t(`tour.panel.sort.${option}`)}
                                     </button>
                                 ))}
-                                </div>
+                                </div>,
+                                document.body
                             )}
                         </div>
                         <button
@@ -277,7 +297,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                             aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
                             title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
                             onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
-                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-2"
+                            className="rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-2"
                         >
                             {sortDirection === 'asc' ? (
                                 <ArrowUpIcon className="w-5 h-5" />

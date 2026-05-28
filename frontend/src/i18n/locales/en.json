@@ -14,7 +14,8 @@
     "backToMap": "Back to map",
     "delete": "Delete",
     "copy": "Copy",
-    "edit": "Edit"
+    "edit": "Edit",
+    "optional": "Optional"
   },
   "auth": {
     "fields": {
@@ -511,10 +512,12 @@
     "fields": {
       "artist": "Artist",
       "artists": "Artists",
-      "gigName": "Gig name (optional)",
+      "gig": "Gig",
+      "gigName": "Gig name",
       "date": "Date",
       "tour": "Tour",
       "addToTour": "Add to tour",
+      "partOfTour": "Part of a tour?",
       "createTour": "Create tour",
       "createTourOptional": "Create tour (optional)",
       "tourName": "Tour name",

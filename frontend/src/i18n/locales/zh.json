@@ -13,7 +13,9 @@
     "redirectToMap": "正在跳转到地图",
     "backToMap": "返回地图",
     "delete": "删除",
-    "copy": "复制"
+    "copy": "复制",
+    "edit": "编辑",
+    "optional": "可选"
   },
   "auth": {
     "fields": {
@@ -510,10 +512,12 @@
     "fields": {
       "artist": "艺人",
       "artists": "艺人",
-      "gigName": "演出名称（可选）",
+      "gig": "演出",
+      "gigName": "演出名称",
       "date": "日期",
       "tour": "巡演",
-      "addToTour": "添加到巡演",
+      "addToTour": "添加至巡演",
+      "partOfTour": "属于巡演？",
       "createTour": "创建巡演",
       "createTourOptional": "创建巡演（可选）",
       "tourName": "巡演名称",
@@ -530,9 +534,9 @@
       "selectArtist": "选择艺人",
       "selectTour": "选择巡演",
       "createTour": "创建巡演",
-      "addArtistToGig": "向演出添加艺人",
-      "addToExistingTour": "添加到已有巡演",
-      "createATour": "创建巡演",
+      "addArtistToGig": "添加艺人至演出",
+      "addToExistingTour": "添加至已有巡演",
+      "createATour": "新建巡演",
       "removeArtist": "移除 {{name}}",
       "noArtistsFound": "未找到艺人",
       "noToursFound": "未找到巡演",
@@ -547,11 +551,11 @@
         "new": "新建"
       },
       "preselectedArtist": "已选择 {{name}}",
-      "gigNamePlaceholder": "输入演出名称",
+      "gigNamePlaceholder": "请输入演出名称",
       "venuePlaceholder": "输入场馆名称",
       "locationPlaceholder": "搜索场馆 / 地点",
       "locationSearchHint": "一些较小的场馆可能不会出现在搜索结果中",
-      "tourNamePlaceholder": "输入巡演名称"
+      "tourNamePlaceholder": "请输入巡演名称"
     },
     "banner": {
       "label": "巡演模式",

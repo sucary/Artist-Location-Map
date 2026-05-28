@@ -13,7 +13,9 @@
     "redirectToMap": "正在跳轉到地圖",
     "backToMap": "返回地圖",
     "delete": "刪除",
-    "copy": "複製"
+    "copy": "複製",
+    "edit": "編輯",
+    "optional": "可選"
   },
   "auth": {
     "fields": {
@@ -510,10 +512,12 @@
     "fields": {
       "artist": "藝人",
       "artists": "藝人",
-      "gigName": "演出名稱（選填）",
+      "gig": "演出",
+      "gigName": "演出名稱",
       "date": "日期",
       "tour": "巡演",
       "addToTour": "加入巡演",
+      "partOfTour": "屬於巡演？",
       "createTour": "建立巡演",
       "createTourOptional": "建立巡演（可選）",
       "tourName": "巡演名稱",
@@ -531,8 +535,8 @@
       "selectTour": "選擇巡演",
       "createTour": "建立巡演",
       "addArtistToGig": "向演出新增藝人",
-      "addToExistingTour": "加入已有巡演",
-      "createATour": "建立巡演",
+      "addToExistingTour": "選擇已有巡演",
+      "createATour": "建立新巡演",
       "removeArtist": "移除 {{name}}",
       "noArtistsFound": "找不到藝人",
       "noToursFound": "找不到巡演",
