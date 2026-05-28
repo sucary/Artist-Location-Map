@@ -229,6 +229,10 @@ function withDefaultDateWindow(params: Omit<GigQueryParams, 'userId'>): Omit<Gig
     return { ...params, from, to };
 }
 
+function hasTourAssignment(data: Pick<CreateGigDTO, 'tourId' | 'newTourName'>): boolean {
+    return Boolean(data.tourId || data.newTourName);
+}
+
 export const GigService = {
     getAll: async (params: GigQueryParams): Promise<Gig[]> => {
         return await GigStore.getAll({ ...params, ...withDefaultDateWindow(params) });
@@ -252,6 +256,8 @@ export const GigService = {
         const resolved = await resolveGigLocation(data.location, ownerId);
         const storeData: StoreGigDTO = {
             ...data,
+            // Tour title replaces per-gig title in normal gig display
+            gigName: hasTourAssignment(data) ? null : data.gigName,
             userId: ownerId,
             location: resolved.location,
             locationCityId: resolved.locationCityId,
@@ -271,6 +277,13 @@ export const GigService = {
         await assertTourForOwner(data.tourId, ownerId);
 
         const storeData: UpdateStoreGigDTO = { ...data, userId: ownerId };
+        const nextHasTourAssignment = Boolean(data.newTourName) || (data.tourId === null
+            ? false
+            : Boolean(data.tourId || current.tourId));
+        if (nextHasTourAssignment) {
+            // Tour title replaces per-gig title in normal gig display
+            storeData.gigName = null;
+        }
         if (data.location) {
             const resolved = await resolveGigLocation(data.location, ownerId);
             storeData.location = resolved.location;

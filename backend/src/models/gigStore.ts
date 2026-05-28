@@ -254,6 +254,7 @@ export const GigStore = {
             }, data.userId);
             tourId = tour.id;
         }
+        const gigName = tourId ? null : data.gigName || null;
 
         const result = await pool.query(`
             INSERT INTO artist_gigs (
@@ -276,7 +277,7 @@ export const GigStore = {
         `, [
             data.userId,
             tourId || null,
-            data.gigName || null,
+            gigName,
             data.venueName || null,
             data.location.city,
             data.location.province,
@@ -485,7 +486,7 @@ export const GigStore = {
         if (data.gigIds?.length) {
             const gigs = await pool.query<{ artist_id: string }>(`
                 UPDATE artist_gigs
-                SET tour_id = $1
+                SET tour_id = $1, gig_name = NULL
                 WHERE user_id = $2 AND id = ANY($3::uuid[])
                 RETURNING id
             `, [tourId, userId, data.gigIds]);
@@ -533,7 +534,7 @@ export const GigStore = {
             await pool.query('UPDATE artist_gigs SET tour_id = NULL WHERE tour_id = $1 AND user_id = $2', [id, userId]);
             await pool.query(`
                 UPDATE artist_gigs
-                SET tour_id = $1
+                SET tour_id = $1, gig_name = NULL
                 WHERE user_id = $2 AND id = ANY($3::uuid[])
             `, [id, userId, data.gigIds]);
         }
