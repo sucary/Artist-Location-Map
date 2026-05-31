@@ -73,6 +73,16 @@ const PLACE_SELECT_COLUMNS = `
 `;
 
 export const PlaceLocationStore = {
+    getById: async (id: string): Promise<PlaceLocation | undefined> => {
+        const result = await pool.query(`
+            SELECT ${PLACE_SELECT_COLUMNS}
+            FROM place_locations
+            WHERE id = $1
+        `, [id]);
+
+        return result.rows[0] ? rowToPlaceLocation(result.rows[0]) : undefined;
+    },
+
     search: async (query: string, limit: number): Promise<PlaceLocation[]> => {
         const result = await pool.query(`
             SELECT ${PLACE_SELECT_COLUMNS}

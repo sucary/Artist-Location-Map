@@ -1,4 +1,5 @@
 import pool from '../config/database';
+import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import type { CropArea } from '../types/artist';
 import type { LocalizedChain } from '../types/city';
 import type {
@@ -14,6 +15,10 @@ import type {
 import { parseLocalizedNames } from '../services/cityService';
 
 // Gig columns with aggregated artists and optional tour data
+
+type QueryExecutor = {
+    query: <T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]) => Promise<QueryResult<T>>;
+};
 
 const ARTIST_JSON = `
     jsonb_build_object(
@@ -150,25 +155,72 @@ function rowToTour(row: Record<string, unknown>): Tour {
     };
 }
 
-async function setGigArtists(gigId: string, artistIds: string[]) {
-    await pool.query('DELETE FROM gig_artists WHERE gig_id = $1', [gigId]);
+// Multi-write persistence boundary
+async function withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const result = await work(client);
+        await client.query('COMMIT');
+        return result;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+async function setGigArtists(gigId: string, artistIds: string[], db: QueryExecutor = pool) {
+    await db.query('DELETE FROM gig_artists WHERE gig_id = $1', [gigId]);
     if (artistIds.length === 0) return;
 
-    await pool.query(`
+    await db.query(`
         INSERT INTO gig_artists (gig_id, artist_id)
         SELECT $1, unnest($2::uuid[])
         ON CONFLICT DO NOTHING
     `, [gigId, artistIds]);
 }
 
-async function addTourArtists(tourId: string, artistIds: string[]) {
+async function addTourArtists(tourId: string, artistIds: string[], db: QueryExecutor = pool) {
     if (artistIds.length === 0) return;
 
-    await pool.query(`
+    await db.query(`
         INSERT INTO tour_artists (tour_id, artist_id)
         SELECT $1, unnest($2::uuid[])
         ON CONFLICT DO NOTHING
     `, [tourId, artistIds]);
+}
+
+// Shared tour insert path for direct tours and inline gig creation
+async function createTourRecord(data: CreateTourDTO, userId: string, db: QueryExecutor): Promise<string> {
+    const result = await db.query<{ id: string }>(`
+        INSERT INTO artist_tours (user_id, name)
+        VALUES ($1, $2)
+        RETURNING id
+    `, [userId, data.name]);
+    const tourId = result.rows[0].id;
+    const artistIds = new Set(data.artistIds ?? []);
+
+    if (data.gigIds?.length) {
+        const gigs = await db.query(`
+            UPDATE artist_gigs
+            SET tour_id = $1, gig_name = NULL
+            WHERE user_id = $2 AND id = ANY($3::uuid[])
+            RETURNING id
+        `, [tourId, userId, data.gigIds]);
+        if (gigs.rowCount) {
+            const gigArtists = await db.query<{ artist_id: string }>(`
+                SELECT artist_id
+                FROM gig_artists
+                WHERE gig_id = ANY($1::uuid[])
+            `, [data.gigIds]);
+            gigArtists.rows.forEach((row) => artistIds.add(row.artist_id));
+        }
+    }
+
+    await addTourArtists(tourId, Array.from(artistIds), db);
+    return tourId;
 }
 
 export const GigStore = {
@@ -245,195 +297,216 @@ export const GigStore = {
         return result.rows[0] ? rowToGig(result.rows[0]) : undefined;
     },
 
+    // Owner-scoped gig validation
+    getOwnedGigIds: async (ids: string[], userId: string): Promise<string[]> => {
+        if (ids.length === 0) return [];
+
+        const result = await pool.query<{ id: string }>(`
+            SELECT id
+            FROM artist_gigs
+            WHERE user_id = $1 AND id = ANY($2::uuid[])
+        `, [userId, ids]);
+
+        return result.rows.map((row) => row.id);
+    },
+
     create: async (data: StoreGigDTO): Promise<Gig> => {
-        let tourId = data.tourId;
-        if (!tourId && data.newTourName) {
-            const tour = await GigStore.createTour({
-                name: data.newTourName,
-                artistIds: data.artistIds,
-            }, data.userId);
-            tourId = tour.id;
-        }
-        const gigName = tourId ? null : data.gigName || null;
+        const gigId = await withTransaction(async (client) => {
+            let tourId = data.tourId;
+            if (!tourId && data.newTourName) {
+                tourId = await createTourRecord({
+                    name: data.newTourName,
+                    artistIds: data.artistIds,
+                }, data.userId, client);
+            }
+            const gigName = tourId ? null : data.gigName || null;
 
-        const result = await pool.query(`
-            INSERT INTO artist_gigs (
-                user_id, tour_id, gig_name, venue_name,
-                city, province, country, display_name, city_id, place_location_id,
-                coordinates, display_coordinates,
-                "date", timezone,
-                external_source, external_id, external_artist_id, external_url,
-                imported_at, last_synced_at, raw_external_data
-            ) VALUES (
-                $1, $2, $3, $4,
-                $5, $6, $7, $8, $9, $10,
-                ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
-                ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography,
-                $15::date, $16,
-                $17, $18, $19, $20,
-                $21, $22, $23
-            )
-            RETURNING id
-        `, [
-            data.userId,
-            tourId || null,
-            gigName,
-            data.venueName || null,
-            data.location.city,
-            data.location.province,
-            data.location.country || null,
-            data.location.displayName || null,
-            data.locationCityId || null,
-            data.placeLocationId || null,
-            data.location.coordinates.lng,
-            data.location.coordinates.lat,
-            data.displayCoordinates.lng,
-            data.displayCoordinates.lat,
-            data.date,
-            data.timezone || null,
-            data.externalSource || null,
-            data.externalId || null,
-            data.externalArtistId || null,
-            data.externalUrl || null,
-            data.importedAt || null,
-            data.lastSyncedAt || null,
-            data.rawExternalData === undefined || data.rawExternalData === null ? null : JSON.stringify(data.rawExternalData),
-        ]);
+            const result = await client.query<{ id: string }>(`
+                INSERT INTO artist_gigs (
+                    user_id, tour_id, gig_name, venue_name,
+                    city, province, country, display_name, city_id, place_location_id,
+                    coordinates, display_coordinates,
+                    "date", timezone,
+                    external_source, external_id, external_artist_id, external_url,
+                    imported_at, last_synced_at, raw_external_data
+                ) VALUES (
+                    $1, $2, $3, $4,
+                    $5, $6, $7, $8, $9, $10,
+                    ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography,
+                    $15::date, $16,
+                    $17, $18, $19, $20,
+                    $21, $22, $23
+                )
+                RETURNING id
+            `, [
+                data.userId,
+                tourId || null,
+                gigName,
+                data.venueName || null,
+                data.location.city,
+                data.location.province,
+                data.location.country || null,
+                data.location.displayName || null,
+                data.locationCityId || null,
+                data.placeLocationId || null,
+                data.location.coordinates.lng,
+                data.location.coordinates.lat,
+                data.displayCoordinates.lng,
+                data.displayCoordinates.lat,
+                data.date,
+                data.timezone || null,
+                data.externalSource || null,
+                data.externalId || null,
+                data.externalArtistId || null,
+                data.externalUrl || null,
+                data.importedAt || null,
+                data.lastSyncedAt || null,
+                data.rawExternalData === undefined || data.rawExternalData === null ? null : JSON.stringify(data.rawExternalData),
+            ]);
 
-        await setGigArtists(result.rows[0].id, data.artistIds);
-        if (tourId) {
-            await addTourArtists(tourId, data.artistIds);
-        }
+            await setGigArtists(result.rows[0].id, data.artistIds, client);
+            if (tourId) {
+                await addTourArtists(tourId, data.artistIds, client);
+            }
 
-        return await GigStore.getById(result.rows[0].id) as Gig;
+            return result.rows[0].id;
+        });
+
+        return await GigStore.getById(gigId) as Gig;
     },
 
     update: async (id: string, data: UpdateStoreGigDTO): Promise<Gig | undefined> => {
-        let tourId = data.tourId;
-        if (!tourId && data.newTourName && data.artistIds) {
-            const current = await GigStore.getById(id);
-            const tour = await GigStore.createTour({
-                name: data.newTourName,
-                artistIds: data.artistIds,
-            }, data.userId || current?.userId || '');
-            tourId = tour.id;
-        }
-
-        const updates: string[] = [];
-        const values: unknown[] = [];
-        let paramIndex = 1;
-
-        if (data.userId !== undefined) {
-            updates.push(`user_id = $${paramIndex++}`);
-            values.push(data.userId);
-        }
-
-        if (data.tourId !== undefined || tourId !== undefined) {
-            updates.push(`tour_id = $${paramIndex++}`);
-            values.push(tourId || null);
-        }
-
-        if (data.venueName !== undefined) {
-            updates.push(`venue_name = $${paramIndex++}`);
-            values.push(data.venueName || null);
-        }
-
-        if (data.gigName !== undefined) {
-            updates.push(`gig_name = $${paramIndex++}`);
-            values.push(data.gigName || null);
-        }
-
-        if (data.location) {
-            updates.push(`city = $${paramIndex++}`);
-            values.push(data.location.city);
-            updates.push(`province = $${paramIndex++}`);
-            values.push(data.location.province);
-            updates.push(`country = $${paramIndex++}`);
-            values.push(data.location.country || null);
-            updates.push(`display_name = $${paramIndex++}`);
-            values.push(data.location.displayName || null);
-            updates.push(`coordinates = ST_SetSRID(ST_MakePoint($${paramIndex++}, $${paramIndex++}), 4326)::geography`);
-            values.push(data.location.coordinates.lng, data.location.coordinates.lat);
-        }
-
-        if (data.locationCityId !== undefined) {
-            updates.push(`city_id = $${paramIndex++}`);
-            values.push(data.locationCityId || null);
-        }
-
-        if (data.placeLocationId !== undefined) {
-            updates.push(`place_location_id = $${paramIndex++}`);
-            values.push(data.placeLocationId || null);
-        }
-
-        if (data.displayCoordinates) {
-            updates.push(`display_coordinates = ST_SetSRID(ST_MakePoint($${paramIndex++}, $${paramIndex++}), 4326)::geography`);
-            values.push(data.displayCoordinates.lng, data.displayCoordinates.lat);
-        }
-
-        if (data.date !== undefined) {
-            updates.push(`"date" = $${paramIndex++}::date`);
-            values.push(data.date);
-        }
-
-        if (data.timezone !== undefined) {
-            updates.push(`timezone = $${paramIndex++}`);
-            values.push(data.timezone || null);
-        }
-
-        if (data.externalSource !== undefined) {
-            updates.push(`external_source = $${paramIndex++}`);
-            values.push(data.externalSource || null);
-        }
-
-        if (data.externalId !== undefined) {
-            updates.push(`external_id = $${paramIndex++}`);
-            values.push(data.externalId || null);
-        }
-
-        if (data.externalArtistId !== undefined) {
-            updates.push(`external_artist_id = $${paramIndex++}`);
-            values.push(data.externalArtistId || null);
-        }
-
-        if (data.externalUrl !== undefined) {
-            updates.push(`external_url = $${paramIndex++}`);
-            values.push(data.externalUrl || null);
-        }
-
-        if (data.importedAt !== undefined) {
-            updates.push(`imported_at = $${paramIndex++}`);
-            values.push(data.importedAt || null);
-        }
-
-        if (data.lastSyncedAt !== undefined) {
-            updates.push(`last_synced_at = $${paramIndex++}`);
-            values.push(data.lastSyncedAt || null);
-        }
-
-        if (data.rawExternalData !== undefined) {
-            updates.push(`raw_external_data = $${paramIndex++}`);
-            values.push(data.rawExternalData === null ? null : JSON.stringify(data.rawExternalData));
-        }
-
-        if (updates.length > 0) {
-            values.push(id);
-            const result = await pool.query(`
-                UPDATE artist_gigs
-                SET ${updates.join(', ')}
-                WHERE id = $${paramIndex}
-                RETURNING id
-            `, values);
-            if (!result.rows[0]) return undefined;
-        }
-
-        if (data.artistIds) {
-            await setGigArtists(id, data.artistIds);
-            const currentTourId = tourId ?? (await GigStore.getById(id))?.tourId;
-            if (currentTourId) {
-                await addTourArtists(currentTourId, data.artistIds);
+        const updated = await withTransaction(async (client) => {
+            let tourId = data.tourId;
+            if (!tourId && data.newTourName && data.artistIds) {
+                const current = await GigStore.getById(id);
+                tourId = await createTourRecord({
+                    name: data.newTourName,
+                    artistIds: data.artistIds,
+                }, data.userId || current?.userId || '', client);
             }
-        }
+
+            const updates: string[] = [];
+            const values: unknown[] = [];
+            let paramIndex = 1;
+
+            if (data.userId !== undefined) {
+                updates.push(`user_id = $${paramIndex++}`);
+                values.push(data.userId);
+            }
+
+            if (data.tourId !== undefined || tourId !== undefined) {
+                updates.push(`tour_id = $${paramIndex++}`);
+                values.push(tourId || null);
+            }
+
+            if (data.venueName !== undefined) {
+                updates.push(`venue_name = $${paramIndex++}`);
+                values.push(data.venueName || null);
+            }
+
+            if (data.gigName !== undefined) {
+                updates.push(`gig_name = $${paramIndex++}`);
+                values.push(data.gigName || null);
+            }
+
+            if (data.location) {
+                updates.push(`city = $${paramIndex++}`);
+                values.push(data.location.city);
+                updates.push(`province = $${paramIndex++}`);
+                values.push(data.location.province);
+                updates.push(`country = $${paramIndex++}`);
+                values.push(data.location.country || null);
+                updates.push(`display_name = $${paramIndex++}`);
+                values.push(data.location.displayName || null);
+                updates.push(`coordinates = ST_SetSRID(ST_MakePoint($${paramIndex++}, $${paramIndex++}), 4326)::geography`);
+                values.push(data.location.coordinates.lng, data.location.coordinates.lat);
+            }
+
+            if (data.locationCityId !== undefined) {
+                updates.push(`city_id = $${paramIndex++}`);
+                values.push(data.locationCityId || null);
+            }
+
+            if (data.placeLocationId !== undefined) {
+                updates.push(`place_location_id = $${paramIndex++}`);
+                values.push(data.placeLocationId || null);
+            }
+
+            if (data.displayCoordinates) {
+                updates.push(`display_coordinates = ST_SetSRID(ST_MakePoint($${paramIndex++}, $${paramIndex++}), 4326)::geography`);
+                values.push(data.displayCoordinates.lng, data.displayCoordinates.lat);
+            }
+
+            if (data.date !== undefined) {
+                updates.push(`"date" = $${paramIndex++}::date`);
+                values.push(data.date);
+            }
+
+            if (data.timezone !== undefined) {
+                updates.push(`timezone = $${paramIndex++}`);
+                values.push(data.timezone || null);
+            }
+
+            if (data.externalSource !== undefined) {
+                updates.push(`external_source = $${paramIndex++}`);
+                values.push(data.externalSource || null);
+            }
+
+            if (data.externalId !== undefined) {
+                updates.push(`external_id = $${paramIndex++}`);
+                values.push(data.externalId || null);
+            }
+
+            if (data.externalArtistId !== undefined) {
+                updates.push(`external_artist_id = $${paramIndex++}`);
+                values.push(data.externalArtistId || null);
+            }
+
+            if (data.externalUrl !== undefined) {
+                updates.push(`external_url = $${paramIndex++}`);
+                values.push(data.externalUrl || null);
+            }
+
+            if (data.importedAt !== undefined) {
+                updates.push(`imported_at = $${paramIndex++}`);
+                values.push(data.importedAt || null);
+            }
+
+            if (data.lastSyncedAt !== undefined) {
+                updates.push(`last_synced_at = $${paramIndex++}`);
+                values.push(data.lastSyncedAt || null);
+            }
+
+            if (data.rawExternalData !== undefined) {
+                updates.push(`raw_external_data = $${paramIndex++}`);
+                values.push(data.rawExternalData === null ? null : JSON.stringify(data.rawExternalData));
+            }
+
+            if (updates.length > 0) {
+                values.push(id);
+                const result = await client.query(`
+                    UPDATE artist_gigs
+                    SET ${updates.join(', ')}
+                    WHERE id = $${paramIndex}
+                    RETURNING id
+                `, values);
+                if (!result.rows[0]) return false;
+            }
+
+            if (data.artistIds) {
+                await setGigArtists(id, data.artistIds, client);
+                const currentTourId = tourId ?? (await GigStore.getById(id))?.tourId;
+                if (currentTourId) {
+                    await addTourArtists(currentTourId, data.artistIds, client);
+                }
+            }
+
+            return true;
+        });
+
+        if (!updated) return undefined;
 
         return await GigStore.getById(id);
     },
@@ -475,69 +548,50 @@ export const GigStore = {
     },
 
     createTour: async (data: CreateTourDTO, userId: string): Promise<Tour> => {
-        const result = await pool.query(`
-            INSERT INTO artist_tours (user_id, name)
-            VALUES ($1, $2)
-            RETURNING id
-        `, [userId, data.name]);
-        const tourId = result.rows[0].id as string;
-        const artistIds = new Set(data.artistIds ?? []);
-
-        if (data.gigIds?.length) {
-            const gigs = await pool.query<{ artist_id: string }>(`
-                UPDATE artist_gigs
-                SET tour_id = $1, gig_name = NULL
-                WHERE user_id = $2 AND id = ANY($3::uuid[])
-                RETURNING id
-            `, [tourId, userId, data.gigIds]);
-            if (gigs.rowCount) {
-                const gigArtists = await pool.query<{ artist_id: string }>(`
-                    SELECT artist_id
-                    FROM gig_artists
-                    WHERE gig_id = ANY($1::uuid[])
-                `, [data.gigIds]);
-                gigArtists.rows.forEach((row) => artistIds.add(row.artist_id));
-            }
-        }
-
-        await addTourArtists(tourId, Array.from(artistIds));
+        const tourId = await withTransaction((client) => createTourRecord(data, userId, client));
         return await GigStore.getTourById(tourId) as Tour;
     },
 
     updateTour: async (id: string, data: UpdateTourDTO, userId: string): Promise<Tour | undefined> => {
-        const updates: string[] = [];
-        const values: unknown[] = [];
-        let paramIndex = 1;
+        const updated = await withTransaction(async (client) => {
+            const updates: string[] = [];
+            const values: unknown[] = [];
+            let paramIndex = 1;
 
-        if (data.name !== undefined) {
-            updates.push(`name = $${paramIndex++}`);
-            values.push(data.name);
-        }
+            if (data.name !== undefined) {
+                updates.push(`name = $${paramIndex++}`);
+                values.push(data.name);
+            }
 
-        if (updates.length > 0) {
-            values.push(id, userId);
-            const result = await pool.query(`
-                UPDATE artist_tours
-                SET ${updates.join(', ')}
-                WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
-                RETURNING id
-            `, values);
-            if (!result.rows[0]) return undefined;
-        }
+            if (updates.length > 0) {
+                values.push(id, userId);
+                const result = await client.query(`
+                    UPDATE artist_tours
+                    SET ${updates.join(', ')}
+                    WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
+                    RETURNING id
+                `, values);
+                if (!result.rows[0]) return false;
+            }
 
-        if (data.artistIds) {
-            await pool.query('DELETE FROM tour_artists WHERE tour_id = $1', [id]);
-            await addTourArtists(id, data.artistIds);
-        }
+            if (data.artistIds) {
+                await client.query('DELETE FROM tour_artists WHERE tour_id = $1', [id]);
+                await addTourArtists(id, data.artistIds, client);
+            }
 
-        if (data.gigIds) {
-            await pool.query('UPDATE artist_gigs SET tour_id = NULL WHERE tour_id = $1 AND user_id = $2', [id, userId]);
-            await pool.query(`
-                UPDATE artist_gigs
-                SET tour_id = $1, gig_name = NULL
-                WHERE user_id = $2 AND id = ANY($3::uuid[])
-            `, [id, userId, data.gigIds]);
-        }
+            if (data.gigIds) {
+                await client.query('UPDATE artist_gigs SET tour_id = NULL WHERE tour_id = $1 AND user_id = $2', [id, userId]);
+                await client.query(`
+                    UPDATE artist_gigs
+                    SET tour_id = $1, gig_name = NULL
+                    WHERE user_id = $2 AND id = ANY($3::uuid[])
+                `, [id, userId, data.gigIds]);
+            }
+
+            return true;
+        });
+
+        if (!updated) return undefined;
 
         return await GigStore.getTourById(id);
     },

@@ -2,6 +2,7 @@ import pool from '../config/database';
 import { CityService } from './cityService';
 import { LocationLocalizationService } from './locationLocalizationService';
 import { GigStore } from '../models/gigStore';
+import { PlaceLocationStore } from '../models/placeLocationStore';
 import type { Coordinates, Location } from '../types/artist';
 import type { City } from '../types/city';
 import type {
@@ -140,6 +141,26 @@ async function assertTourForOwner(tourId: string | undefined | null, userId: str
     }
 }
 
+// Provider place references must fail before FK errors
+async function assertPlaceLocationExists(placeLocationId: string | undefined | null): Promise<void> {
+    if (!placeLocationId) return;
+    const place = await PlaceLocationStore.getById(placeLocationId);
+    if (!place) {
+        throw new Error('Place location not found');
+    }
+}
+
+// Tour membership accepts only existing owner gigs
+async function assertGigsForOwner(gigIds: string[] | undefined, userId: string): Promise<void> {
+    if (!gigIds?.length) return;
+
+    const uniqueIds = Array.from(new Set(gigIds));
+    const ownedIds = await GigStore.getOwnedGigIds(uniqueIds, userId);
+    if (ownedIds.length !== uniqueIds.length) {
+        throw new Error('Gig not found');
+    }
+}
+
 async function resolveGigLocation(
     location: Location,
     userId: string
@@ -253,6 +274,7 @@ export const GigService = {
     create: async (data: CreateGigDTO, userId: string, isAdmin: boolean = false): Promise<Gig> => {
         const ownerId = await getOwnerIdForArtists(data.artistIds, userId, isAdmin);
         await assertTourForOwner(data.tourId, ownerId);
+        await assertPlaceLocationExists(data.placeLocationId);
         const resolved = await resolveGigLocation(data.location, ownerId);
         const storeData: StoreGigDTO = {
             ...data,
@@ -275,6 +297,7 @@ export const GigService = {
             ? await getOwnerIdForArtists(data.artistIds, userId, isAdmin)
             : current.userId;
         await assertTourForOwner(data.tourId, ownerId);
+        await assertPlaceLocationExists(data.placeLocationId);
 
         const storeData: UpdateStoreGigDTO = { ...data, userId: ownerId };
         const nextHasTourAssignment = Boolean(data.newTourName) || (data.tourId === null
@@ -308,6 +331,7 @@ export const GigService = {
         if (data.artistIds?.length) {
             await getOwnedArtistIds(data.artistIds, userId, isAdmin);
         }
+        await assertGigsForOwner(data.gigIds, userId);
         return await GigStore.createTour(data, userId);
     },
 
@@ -317,6 +341,7 @@ export const GigService = {
         if (data.artistIds?.length) {
             await getOwnedArtistIds(data.artistIds, current.userId, isAdmin);
         }
+        await assertGigsForOwner(data.gigIds, current.userId);
         return await GigStore.updateTour(id, data, current.userId);
     },
 

@@ -88,6 +88,9 @@ export const createTour = asyncHandler(async (req: AuthenticatedRequest, res: Re
         if (error instanceof Error && error.message.includes('Artist not found')) {
             throw new AppError('Artist not found', 404);
         }
+        if (error instanceof Error && error.message.includes('Gig not found')) {
+            throw new AppError('Gig not found', 404);
+        }
         throw error;
     }
 });
@@ -106,6 +109,9 @@ export const updateTour = asyncHandler(async (req: AuthenticatedRequest, res: Re
         if (error instanceof AppError) throw error;
         if (error instanceof Error && error.message.includes('Artist not found')) {
             throw new AppError('Artist not found', 404);
+        }
+        if (error instanceof Error && error.message.includes('Gig not found')) {
+            throw new AppError('Gig not found', 404);
         }
         throw error;
     }
