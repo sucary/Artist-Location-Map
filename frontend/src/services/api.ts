@@ -483,6 +483,33 @@ export const reverseTourLocation = async (
     return response.data;
 };
 
+interface ManualVenuePayload {
+    name: string;
+    coordinates: { lat: number; lng: number };
+    displayName?: string;
+    city?: string;
+    province?: string;
+    country?: string;
+    cityId?: string;
+}
+
+export const createManualVenue = async (
+    input: ManualVenuePayload,
+    signal?: AbortSignal
+): Promise<TourLocationSearchResult> => {
+    const response = await api.post<TourLocationSearchResult>('/venues/manual-venues', input, { signal });
+    return response.data;
+};
+
+export const updateManualVenue = async (
+    placeLocationId: string,
+    input: ManualVenuePayload,
+    signal?: AbortSignal
+): Promise<TourLocationSearchResult> => {
+    const response = await api.put<TourLocationSearchResult>(`/venues/manual-venues/${placeLocationId}`, input, { signal });
+    return response.data;
+};
+
 // Create a new artist
 export const createArtist = async (artistData: Partial<Artist>): Promise<Artist> => {
     try {

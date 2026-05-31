@@ -83,6 +83,71 @@ export const PlaceLocationStore = {
         return result.rows[0] ? rowToPlaceLocation(result.rows[0]) : undefined;
     },
 
+    getByProviderPlaceId: async (provider: string, providerPlaceId: string): Promise<PlaceLocation | undefined> => {
+        const result = await pool.query(`
+            SELECT ${PLACE_SELECT_COLUMNS}
+            FROM place_locations
+            WHERE provider = $1 AND provider_place_id = $2
+        `, [provider, providerPlaceId]);
+
+        return result.rows[0] ? rowToPlaceLocation(result.rows[0]) : undefined;
+    },
+
+    getVenueByNameAndFormatted: async (name: string, formatted: string, excludeId?: string): Promise<PlaceLocation | undefined> => {
+        const result = await pool.query(`
+            SELECT ${PLACE_SELECT_COLUMNS}
+            FROM place_locations
+            WHERE is_venue = TRUE
+              AND LOWER(name) = LOWER($1)
+              AND LOWER(formatted) = LOWER($2)
+              AND ($3::uuid IS NULL OR id <> $3::uuid)
+            LIMIT 1
+        `, [name, formatted, excludeId || null]);
+
+        return result.rows[0] ? rowToPlaceLocation(result.rows[0]) : undefined;
+    },
+
+    updateManualVenue: async (id: string, place: Omit<UpsertPlaceLocationInput, 'provider' | 'providerPlaceId'>): Promise<PlaceLocation | undefined> => {
+        const result = await pool.query(`
+            UPDATE place_locations
+            SET
+                name = $2,
+                formatted = $3,
+                address_line1 = $4,
+                address_line2 = $5,
+                city = $6,
+                province = $7,
+                country = $8,
+                country_code = $9,
+                coordinates = ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
+                categories = $12,
+                is_venue = $13,
+                timezone = $14,
+                raw_provider_data = $15,
+                updated_at = NOW()
+            WHERE id = $1 AND provider = 'manual'
+            RETURNING ${PLACE_SELECT_COLUMNS}
+        `, [
+            id,
+            place.name,
+            place.formatted || null,
+            place.addressLine1 || null,
+            place.addressLine2 || null,
+            place.city || null,
+            place.province || null,
+            place.country || null,
+            place.countryCode || null,
+            place.coordinates.lng,
+            place.coordinates.lat,
+            place.categories || [],
+            place.isVenue === true,
+            place.timezone || null,
+            place.rawProviderData === undefined ? null : JSON.stringify(place.rawProviderData),
+        ]);
+
+        return result.rows[0] ? rowToPlaceLocation(result.rows[0]) : undefined;
+    },
+
     search: async (query: string, limit: number): Promise<PlaceLocation[]> => {
         const result = await pool.query(`
             SELECT ${PLACE_SELECT_COLUMNS}

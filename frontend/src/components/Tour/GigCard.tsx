@@ -17,6 +17,17 @@ interface GigCardProps {
 
 const getInitial = (name: string) => Array.from(name.trim())[0]?.toUpperCase();
 
+const stripVenuePrefix = (label: string, venueName?: string | null) => {
+    if (!venueName) return label;
+
+    const normalizedVenue = venueName.trim();
+    if (!normalizedVenue) return label;
+
+    // Provider formatted addresses often repeat the venue name first
+    const escapedVenue = normalizedVenue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return label.replace(new RegExp(`^${escapedVenue}\\s*,\\s*`, 'i'), '');
+};
+
 // Artist overflow toggle size invariant
 const artistToggleButtonClass = 'inline-flex h-7 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold leading-none text-text transition-colors hover:bg-surface-secondary';
 const COLLAPSED_CHIP_LIMIT = 2;
@@ -43,7 +54,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
     const visibleArtists = artistsExpanded ? artists : artists.slice(0, collapsedVisibleCount);
     const hiddenArtistCount = artists.length - visibleArtists.length;
     const formattedDate = formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback);
-    const locationLabel = formatLocationLocalized(gig.location, locationLanguage);
+    const locationLabel = stripVenuePrefix(formatLocationLocalized(gig.location, locationLanguage), gig.venueName);
     const hasTitleSection = Boolean(gig.gigName || gig.tour);
     const topSectionGapClass = 'gap-3';
 

@@ -194,6 +194,7 @@ export function GigForm({
                     <div>
                         <VenueLocationSearch
                             venueName={venueName}
+                            placeLocationId={placeLocationId}
                             location={location}
                             rawExternalData={rawExternalData}
                             pendingCoordinates={pendingCoordinates}

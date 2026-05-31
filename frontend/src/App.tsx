@@ -834,7 +834,7 @@ function App() {
                         onSubmit={handleGigFormSubmit}
                         onCancel={handleCloseGigForm}
                         onRequestSelection={handleStartSelection}
-                        pendingCoordinates={selectionMode?.targetField === 'gigLocation' ? pendingCoordinates : null}
+                        pendingCoordinates={pendingCoordinates}
                         onConsumePendingCoordinates={handleConsumeCoordinates}
                     />
                 </div>

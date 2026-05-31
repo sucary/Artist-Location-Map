@@ -4,6 +4,7 @@ import { TextSearch, type LocationLanguage, type SearchResult as LocalSearchResu
 import { PlaceLocationStore, type PlaceLocation, type UpsertPlaceLocationInput } from '../models/placeLocationStore';
 import type { City } from '../types/city';
 import type { Coordinates } from '../types/artist';
+import { createHash } from 'crypto';
 import type {
     TourLocationSearchResponse,
     TourLocationSearchResult,
@@ -14,6 +15,7 @@ import type {
 // Geoapify-backed tour venue and location search
 
 const GEOAPIFY_GEOCODING_URL = 'https://api.geoapify.com/v1/geocode/search';
+const GEOAPIFY_REVERSE_URL = 'https://api.geoapify.com/v1/geocode/reverse';
 const GEOAPIFY_TIMEOUT_MS = 9000;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 20;
@@ -109,6 +111,25 @@ interface SearchInput {
 interface LocalFirstSearchInput extends SearchInput {
     locationLanguage?: LocationLanguage;
     source?: 'auto' | 'geoapify';
+}
+
+interface CreateManualVenueInput {
+    name: string;
+    center: Coordinates;
+    displayName?: string;
+    city?: string;
+    province?: string;
+    country?: string;
+    cityId?: string;
+    createdByUserId: string;
+}
+
+interface UpdateManualVenueInput extends CreateManualVenueInput {
+    placeLocationId: string;
+}
+
+interface ManualVenuePlaceInput extends Omit<UpsertPlaceLocationInput, 'provider' | 'providerPlaceId'> {
+    formatted: string;
 }
 
 function getApiKey(): string {
@@ -267,6 +288,41 @@ function normalizePlaceLocation(place: PlaceLocation): TourLocationSearchResult 
             venueName: place.name,
             rawExternalData: place.rawProviderData,
         } : {}),
+    };
+}
+
+function getManualVenueProviderId(input: Pick<CreateManualVenueInput, 'name' | 'center'>): string {
+    const normalized = `${input.name.trim().toLowerCase()}|${input.center.lat.toFixed(6)}|${input.center.lng.toFixed(6)}`;
+    return createHash('sha256').update(normalized).digest('hex').slice(0, 24);
+}
+
+function getManualVenueCreatorId(place: PlaceLocation): string | undefined {
+    if (!place.rawProviderData || typeof place.rawProviderData !== 'object') return undefined;
+    const rawProviderData = place.rawProviderData as { createdByUserId?: unknown };
+    return typeof rawProviderData.createdByUserId === 'string' ? rawProviderData.createdByUserId : undefined;
+}
+
+async function buildManualVenuePlaceInput(input: CreateManualVenueInput): Promise<ManualVenuePlaceInput> {
+    const localCity = input.cityId ? await CityService.getById(input.cityId) : await resolveLocalCity(input.center);
+    const city = input.city || localCity?.name || input.name;
+    const province = input.province || localCity?.province || city;
+    const country = input.country || localCity?.country || undefined;
+    const addressLabel = input.displayName || [city, province, country].filter(Boolean).join(', ');
+    const formatted = [input.name, addressLabel].filter(Boolean).join(', ');
+
+    return {
+        name: input.name,
+        formatted,
+        city,
+        province,
+        country,
+        coordinates: input.center,
+        categories: ['manual.venue'],
+        isVenue: true,
+        rawProviderData: {
+            source: 'manual',
+            createdByUserId: input.createdByUserId,
+        },
     };
 }
 
@@ -459,6 +515,31 @@ async function fetchGeoapify(
     }
 }
 
+async function fetchGeoapifyReverse(center: Coordinates): Promise<GeoapifyResult | null> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GEOAPIFY_TIMEOUT_MS);
+
+    try {
+        const params = new URLSearchParams({
+            lat: String(center.lat),
+            lon: String(center.lng),
+            format: 'json',
+            apiKey: getApiKey(),
+        });
+        const response = await fetch(`${GEOAPIFY_REVERSE_URL}?${params.toString()}`, {
+            signal: controller.signal,
+        });
+        if (!response.ok) return null;
+
+        const data = await response.json() as GeoapifyResponse;
+        return data.results?.[0] ?? null;
+    } catch {
+        return null;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 export function normalizeResults(
     results: GeoapifyResult[],
     mode: SearchMode,
@@ -535,7 +616,24 @@ export const VenueSearchService = {
 
     reverseLocal: async (center: Coordinates): Promise<TourLocationSearchResult | null> => {
         const localCity = await resolveLocalCity(center);
-        if (!localCity) return null;
+        if (!localCity) {
+            const result = await fetchGeoapifyReverse(center);
+            if (!result) return null;
+
+            return {
+                source: 'geoapify',
+                providerId: getProviderId(result),
+                name: getFallbackCity(result) || getResultName(result),
+                displayName: result.formatted,
+                city: getFallbackCity(result) || getResultName(result),
+                province: getFallbackProvince(result) || getFallbackCity(result) || getResultName(result),
+                country: result.country,
+                countryCode: result.country_code,
+                center,
+                type: result.result_type,
+                isVenue: false,
+            };
+        }
 
         return {
             source: 'local',
@@ -548,5 +646,54 @@ export const VenueSearchService = {
             cityId: localCity.id,
             type: localCity.type,
         };
+    },
+
+    createManualVenue: async (input: CreateManualVenueInput): Promise<TourLocationSearchResult> => {
+        const placeInput = await buildManualVenuePlaceInput(input);
+        const duplicateVenue = await PlaceLocationStore.getVenueByNameAndFormatted(input.name, placeInput.formatted);
+        if (duplicateVenue) {
+            throw new VenueSearchError('A venue with the same name and address already exists.', 409);
+        }
+
+        const providerPlaceId = getManualVenueProviderId(input);
+        const existing = await PlaceLocationStore.getByProviderPlaceId('manual', providerPlaceId);
+        if (existing) return normalizePlaceLocation(existing);
+
+        const [place] = await PlaceLocationStore.upsertMany([{
+            provider: 'manual',
+            providerPlaceId,
+            ...placeInput,
+        }]);
+
+        return normalizePlaceLocation(place);
+    },
+
+    updateManualVenue: async (input: UpdateManualVenueInput): Promise<TourLocationSearchResult> => {
+        const existing = await PlaceLocationStore.getById(input.placeLocationId);
+        if (!existing || existing.provider !== 'manual') {
+            throw new VenueSearchError('Manual venue not found.', 404);
+        }
+
+        // Manual venues are only editable by the user who created the record
+        if (getManualVenueCreatorId(existing) !== input.createdByUserId) {
+            throw new VenueSearchError('Manual venue not found.', 404);
+        }
+
+        const placeInput = await buildManualVenuePlaceInput(input);
+        const duplicateVenue = await PlaceLocationStore.getVenueByNameAndFormatted(
+            input.name,
+            placeInput.formatted,
+            input.placeLocationId
+        );
+        if (duplicateVenue) {
+            throw new VenueSearchError('A venue with the same name and address already exists.', 409);
+        }
+
+        const updated = await PlaceLocationStore.updateManualVenue(input.placeLocationId, placeInput);
+        if (!updated) {
+            throw new VenueSearchError('Manual venue not found.', 404);
+        }
+
+        return normalizePlaceLocation(updated);
     },
 };

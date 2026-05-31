@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { requireApproval, requireAuth } from '../middleware/authMiddleware';
+import type { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CoordinatesSchema } from '../schemas/artistValidation';
 import { VenueSearchError, VenueSearchService } from '../services/venueSearchService';
@@ -27,6 +28,20 @@ const SearchQuerySchema = z.object({
     lang: z.string().trim().regex(/^[a-z]{2}$/i).transform((value) => value.toLowerCase()).optional(),
     nativeName: z.coerce.boolean().optional(),
     source: z.enum(['auto', 'geoapify']).optional(),
+});
+
+const ManualVenueSchema = z.object({
+    name: z.string().trim().min(1, 'Venue name is required').max(255),
+    coordinates: CoordinatesSchema,
+    displayName: z.string().trim().min(1).max(500).optional(),
+    city: z.string().trim().min(1).max(255).optional(),
+    province: z.string().trim().min(1).max(255).optional(),
+    country: z.string().trim().min(1).max(100).optional(),
+    cityId: z.string().uuid().optional(),
+});
+
+const ManualVenueParamsSchema = z.object({
+    placeLocationId: z.string().uuid(),
 });
 
 function toAppError(error: unknown): AppError {
@@ -86,6 +101,49 @@ router.post('/reverse-local', asyncHandler(async (req, res) => {
     }
 
     res.json(result);
+}));
+
+router.post('/manual-venues', asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const input = ManualVenueSchema.parse(req.body);
+    try {
+        const result = await VenueSearchService.createManualVenue({
+            name: input.name,
+            center: input.coordinates,
+            displayName: input.displayName,
+            city: input.city,
+            province: input.province,
+            country: input.country,
+            cityId: input.cityId,
+            createdByUserId: req.user!.id,
+        });
+
+        res.status(201).json(result);
+    } catch (error) {
+        throw toAppError(error);
+    }
+}));
+
+router.put('/manual-venues/:placeLocationId', asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const params = ManualVenueParamsSchema.parse(req.params);
+    const input = ManualVenueSchema.parse(req.body);
+
+    try {
+        const result = await VenueSearchService.updateManualVenue({
+            placeLocationId: params.placeLocationId,
+            name: input.name,
+            center: input.coordinates,
+            displayName: input.displayName,
+            city: input.city,
+            province: input.province,
+            country: input.country,
+            cityId: input.cityId,
+            createdByUserId: req.user!.id,
+        });
+
+        res.json(result);
+    } catch (error) {
+        throw toAppError(error);
+    }
 }));
 
 export default router;
