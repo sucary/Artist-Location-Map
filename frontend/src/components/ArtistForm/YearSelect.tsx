@@ -140,11 +140,11 @@ const YearSelect = ({
     };
 
     return (
-        <div data-tutorial-target={tutorialTarget} className="rounded-md p-1">
+        <div data-tutorial-target={tutorialTarget}>
             {label && (
                 <label 
                     htmlFor={inputId}
-                    className="block text-sm font-bold text-text mb-1"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary"
                 >
                     {label}
                 </label>
@@ -171,7 +171,7 @@ const YearSelect = ({
                     }}
                     onBlur={handleBlur}
                     placeholder={placeholder || t('artistForm.yearSelect.placeholder')}
-                    className="w-full px-3 py-2 pr-8 text-sm border border-border-strong rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                    className="w-full px-3 py-2 pr-8 text-sm border border-border-strong rounded-lg transition-colors duration-150 focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                 />
                 <button
                     aria-label={t('artistForm.yearSelect.label')}
@@ -195,7 +195,7 @@ const YearSelect = ({
                     role="listbox"
                     aria-label={label || t('artistForm.yearSelect.label')}
                     ref={dropdownRef}
-                    className="fixed z-9999 bg-surface border border-border-strong rounded-md shadow-lg max-h-48 overflow-y-auto"
+                    className="fixed z-9999 bg-surface border border-border-strong rounded-lg shadow-lg max-h-48 overflow-y-auto"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,

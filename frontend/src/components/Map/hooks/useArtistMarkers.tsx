@@ -343,9 +343,10 @@ const buildGeometricClusters = (
     artists: Artist[],
     view: LocationView,
     map: maplibregl.Map,
-    mapZoom: number
+    mapZoom: number,
+    keepCollisionClustersAtMaxZoom = false
 ) => {
-    if (mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5) {
+    if (mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5 && !keepCollisionClustersAtMaxZoom) {
         return {
             features: artists.map((artist) => makeArtistPoint(artist, view)),
             leavesByClusterId: new Map<number, ArtistPoint[]>(),
@@ -519,6 +520,7 @@ interface UseArtistMarkersOptions {
     ) => Promise<void> | void;
     highlightedArtistIds?: Set<string>;
     renderPopupContent?: (artist: Artist, showActions: boolean) => ReactNode;
+    keepCollisionClustersAtMaxZoom?: boolean;
 }
 
 export const useArtistMarkers = ({
@@ -541,6 +543,7 @@ export const useArtistMarkers = ({
     onDisplayCoordinateChange,
     highlightedArtistIds,
     renderPopupContent,
+    keepCollisionClustersAtMaxZoom = false,
 }: UseArtistMarkersOptions) => {
     // Marker sets owned by this hook
     const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -1439,7 +1442,13 @@ export const useArtistMarkers = ({
         const mapZoom = map.getZoom();
         const zoom = getClusterZoom(mapZoom);
         const clusterDisabled = mapZoom >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5;
-        const { features: clusters, leavesByClusterId } = buildGeometricClusters(displayArtists, view, map, mapZoom);
+        const { features: clusters, leavesByClusterId } = buildGeometricClusters(
+            displayArtists,
+            view,
+            map,
+            mapZoom,
+            keepCollisionClustersAtMaxZoom
+        );
         clusterLeavesRef.current = leavesByClusterId;
 
         // Counts and zooms from the previous render
@@ -1764,7 +1773,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, highlightedArtistIds, isClusterSourceHidden, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
+    }, [animateMarkerTo, artistNameDisplayMode, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, expandCluster, findNearestPosition, highlightedArtistIds, isClusterSourceHidden, keepCollisionClustersAtMaxZoom, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
         // Compare only fields used by geometric clustering

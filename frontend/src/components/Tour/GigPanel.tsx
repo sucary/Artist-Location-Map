@@ -35,8 +35,11 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [sortDropdownPos, setSortDropdownPos] = useState({ top: 0, left: 0, width: 0 });
     const [expandedArtistRows, setExpandedArtistRows] = useState<Set<string>>(() => new Set());
+    const [artistFitCounts, setArtistFitCounts] = useState<Record<string, number>>({});
     const sortRef = useRef<HTMLDivElement>(null);
     const sortDropdownRef = useRef<HTMLDivElement>(null);
+    const artistRowRefs = useRef(new Map<string, HTMLDivElement>());
+    const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const sortListboxId = 'gig-panel-sort-options';
     const dateLocale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
@@ -121,6 +124,65 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
         return sorted;
     }, [filteredGigs, sortDirection, sortMode]);
 
+    useEffect(() => {
+        const measureArtistText = (text: string) => {
+            measureCanvasRef.current ??= document.createElement('canvas');
+            const context = measureCanvasRef.current.getContext('2d');
+            if (!context) return text.length * 8;
+
+            context.font = '600 14px Arial, sans-serif';
+            return context.measureText(text).width;
+        };
+
+        const updateArtistFitCounts = () => {
+            const nextCounts: Record<string, number> = {};
+
+            sortedGigs.forEach((gig) => {
+                const row = artistRowRefs.current.get(gig.id);
+                const artists = gig.artists.length ? gig.artists : [gig.artist];
+                if (!row || artists.length <= 1) return;
+
+                const availableWidth = row.clientWidth;
+                const toggleWidth = 38;
+                const gapWidth = 6;
+                let fitCount = artists.length;
+
+                for (let count = artists.length; count > 1; count -= 1) {
+                    const label = artists.slice(0, count).map((artist) => artist.name).join(' \u00b7 ');
+                    const hiddenCount = artists.length - count;
+                    const requiredWidth = measureArtistText(label) + (hiddenCount > 0 ? toggleWidth + gapWidth : 0);
+
+                    // Collapse only when measured labels exceed actual row width
+                    if (requiredWidth <= availableWidth) {
+                        fitCount = count;
+                        break;
+                    }
+
+                    fitCount = count - 1;
+                }
+
+                nextCounts[gig.id] = Math.max(1, fitCount);
+            });
+
+            setArtistFitCounts((currentCounts) => {
+                const currentKeys = Object.keys(currentCounts);
+                const nextKeys = Object.keys(nextCounts);
+                if (currentKeys.length === nextKeys.length && nextKeys.every((key) => currentCounts[key] === nextCounts[key])) {
+                    return currentCounts;
+                }
+
+                return nextCounts;
+            });
+        };
+
+        updateArtistFitCounts();
+
+        const resizeObserver = new ResizeObserver(updateArtistFitCounts);
+        artistRowRefs.current.forEach((row) => resizeObserver.observe(row));
+
+        return () => resizeObserver.disconnect();
+    }, [sortedGigs]);
+
     const toggleArtistRow = (gigId: string) => {
         // Expanded state is keyed by gig so sorting and filtering keep row intent
         setExpandedArtistRows((currentRows) => {
@@ -139,8 +201,10 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
         const dateParts = formatDateTile(gig.date);
         const artistNames = gig.artists.length ? gig.artists : [gig.artist];
         const isArtistRowExpanded = expandedArtistRows.has(gig.id);
-        const visibleArtists = isArtistRowExpanded ? artistNames : artistNames.slice(0, 2);
+        const collapsedArtistCount = artistFitCounts[gig.id] ?? Math.min(artistNames.length, 2);
+        const visibleArtists = isArtistRowExpanded ? artistNames : artistNames.slice(0, collapsedArtistCount);
         const hiddenArtistCount = artistNames.length - visibleArtists.length;
+        const canToggleArtistRow = hiddenArtistCount > 0 || (isArtistRowExpanded && collapsedArtistCount < artistNames.length);
         const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(' \u00b7 ');
         const title = gig.gigName || gig.tour?.name;
 
@@ -160,11 +224,20 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                     </div>
 
                     <div className="flex min-w-0 flex-col justify-center gap-1.5">
-                        <div className={`flex min-w-0 items-center gap-1.5 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}>
+                        <div
+                            ref={(node) => {
+                                if (node) {
+                                    artistRowRefs.current.set(gig.id, node);
+                                } else {
+                                    artistRowRefs.current.delete(gig.id);
+                                }
+                            }}
+                            className={`flex min-w-0 items-center gap-1.5 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}
+                        >
                             <span className={isArtistRowExpanded ? 'text-sm font-semibold leading-5 text-text' : 'min-w-0 truncate text-sm font-semibold leading-5 text-text'}>
                                 {visibleArtistLabel}
                             </span>
-                            {(hiddenArtistCount > 0 || isArtistRowExpanded) && (
+                            {canToggleArtistRow && (
                                 <button
                                     type="button"
                                     onClick={() => toggleArtistRow(gig.id)}
@@ -174,10 +247,10 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 </button>
                             )}
                         </div>
-                        <div className="flex items-center justify-between gap-2">
-                            <p className="min-w-0 truncate text-xs text-text-secondary">{locationMeta}</p>
+                        <div className="relative flex min-h-9 min-w-0 items-center">
+                            <p className="min-w-0 truncate text-xs text-text-secondary group-hover:pr-28">{locationMeta}</p>
                             {(onLocateGig || onEditGig || onDeleteGig) && (
-                                <div className="inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                <div className="pointer-events-none absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                                     {onLocateGig && (
                                         <button
                                             type="button"
@@ -230,22 +303,21 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                 </div>
 
                 <div className="px-4 py-3">
-                    <Input
-                        aria-label={t('tour.panel.search.ariaLabel')}
-                        type="text"
-                        name="gig-list-search"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        placeholder={t('tour.panel.search.placeholder')}
-                        value={filterQuery}
-                        onChange={(event) => setFilterQuery(event.target.value)}
-                        rightIcon={<SearchIcon className="w-4 h-4" />}
-                        className="rounded-lg"
-                    />
-                    <div className="mt-2.5 flex min-w-0 items-center gap-2">
-                        <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-text-secondary">{t('tour.panel.sort.label')}</span>
-                        <div ref={sortRef} className="relative min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                        <Input
+                            aria-label={t('tour.panel.search.ariaLabel')}
+                            type="text"
+                            name="gig-list-search"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            placeholder={t('tour.panel.search.placeholder')}
+                            value={filterQuery}
+                            onChange={(event) => setFilterQuery(event.target.value)}
+                            rightIcon={<SearchIcon className="w-4 h-4" />}
+                            className="min-w-0 flex-1 rounded-lg"
+                        />
+                        <div ref={sortRef} className="relative shrink-0">
                             <button
                                 type="button"
                                 aria-label={t('tour.panel.sort.ariaLabel')}
@@ -253,7 +325,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 aria-expanded={isSortOpen}
                                 aria-controls={isSortOpen ? sortListboxId : undefined}
                                 onClick={() => setIsSortOpen((open) => !open)}
-                                className="relative w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                                className="flex min-w-[6.5rem] items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                             >
                                 <span className="block truncate">{t(`tour.panel.sort.${sortMode}`)}</span>
                                 <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -264,7 +336,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                     role="listbox"
                                     ref={sortDropdownRef}
                                     aria-label={t('tour.panel.sort.optionsLabel')}
-                                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                                    className="fixed z-[9999] rounded-lg border border-border-strong bg-surface shadow-lg"
                                     style={{
                                         top: `${sortDropdownPos.top}px`,
                                         left: `${sortDropdownPos.left}px`,
@@ -297,7 +369,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                             aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
                             title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
                             onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
-                            className="rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-2"
+                            className="shrink-0 rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-2"
                         >
                             {sortDirection === 'asc' ? (
                                 <ArrowUpIcon className="w-5 h-5" />

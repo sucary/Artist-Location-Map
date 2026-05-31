@@ -72,6 +72,21 @@ async function hasUsablePlacementBoundary(cityId: string): Promise<boolean> {
     return result.rows[0]?.usable === true;
 }
 
+async function cityContainsCoordinates(cityId: string, coords: Coordinates): Promise<boolean> {
+    const result = await pool.query<{ contains: boolean }>(`
+        SELECT ST_Covers(
+            COALESCE(boundary, raw_boundary)::geometry,
+            ST_SetSRID(ST_MakePoint($2, $3), 4326)
+        ) AS contains
+        FROM locations
+        WHERE id = $1
+          AND COALESCE(boundary, raw_boundary) IS NOT NULL
+          AND NOT ST_IsEmpty(COALESCE(boundary, raw_boundary)::geometry)
+    `, [cityId, coords.lng, coords.lat]);
+
+    return result.rows[0]?.contains === true;
+}
+
 async function resolveContainingLocalCity(coords: Coordinates): Promise<City | null> {
     const results = await CityService.reverseGeocodeAll(coords.lat, coords.lng, 1);
     return results[0] ?? null;
@@ -169,6 +184,26 @@ async function resolveGigLocation(
         const city = await CityService.getById(location.cityId);
         if (!city) {
             throw new Error('Gig location cityId was not found');
+        }
+
+        const containsCoordinates = await cityContainsCoordinates(city.id, location.coordinates);
+        if (!containsCoordinates) {
+            const localCity = await resolveContainingLocalCity(location.coordinates);
+
+            // Provider points may be valid outside our saved boundary catalog
+            return {
+                location: {
+                    ...location,
+                    city: location.city || localCity?.name || city.name,
+                    province: location.province || localCity?.province || city.province,
+                    country: location.country || localCity?.country || city.country || undefined,
+                    displayName: location.displayName || localCity?.displayName || city.displayName,
+                    coordinates: location.coordinates,
+                    cityId: localCity?.id,
+                },
+                locationCityId: localCity?.id ?? null,
+                displayCoordinates: location.coordinates,
+            };
         }
 
         // Tour provider locations already carry their exact marker point

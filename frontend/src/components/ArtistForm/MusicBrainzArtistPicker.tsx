@@ -155,7 +155,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     useEffect(() => {
         if (isOpen && inputWrapRef.current) {
             const rect = inputWrapRef.current.getBoundingClientRect();
-            const formContainer = inputWrapRef.current.closest('.rounded-lg.shadow-xl');
+            const formContainer = inputWrapRef.current.closest('.rounded-xl.shadow-xl');
             const containerBottom = formContainer
                 ? formContainer.getBoundingClientRect().bottom
                 : window.innerHeight;
@@ -324,7 +324,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
     };
 
     return (
-        <div data-tutorial-target="artist-search" className="rounded-md p-1">
+        <div data-tutorial-target="artist-search">
             <div className="mb-1 flex items-center justify-between gap-3">
                 <label className="block text-sm font-bold text-text" htmlFor="musicbrainz-artist-search">
                     {t('artistForm.musicBrainz.artistLabel')}
@@ -394,7 +394,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                         }
                     }}
                     placeholder={t('artistForm.musicBrainz.searchArtist')}
-                    className="w-full px-3 py-2 pr-20 text-sm border border-border-strong rounded-md bg-surface text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                    className="w-full px-3 py-2 pr-20 text-sm border border-border-strong rounded-lg bg-surface text-text transition-colors duration-150 focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                     {isSearching && <Spinner size="sm" className="text-text-muted" />}
@@ -454,7 +454,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                     role="listbox"
                     aria-label={t('artistForm.musicBrainz.resultsLabel')}
                     ref={dropdownRef}
-                    className="fixed z-[9999] overflow-hidden rounded-md border border-border bg-surface shadow-lg"
+                    className="fixed z-[9999] overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
                     style={{
                         top: dropdownPosition.top,
                         left: dropdownPosition.left,

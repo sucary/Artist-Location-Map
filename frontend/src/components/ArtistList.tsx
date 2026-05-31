@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getArtists, getArtistsByUsername, getFeaturedArtists } from '../services/api';
 import { SearchIcon, EditIcon, TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from './icons/GeneralIcons';
 import { MapPinIcon } from './icons/MapIcons';
 import { getAvatarUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized, getSearchableLocationText } from '../utils/locationUtils';
-import { Input, IconButton, Spinner, CloseButton } from './ui';
+import { Input, Spinner, CloseButton } from './ui';
 import ArtistCard from './ArtistCard';
 import type { Artist } from '../types/artist';
 import { useLocationLanguage } from '../context/LocationLanguageContext';
@@ -74,6 +75,7 @@ const ArtistList = ({
     const [sortKey, setSortKey] = useState<SortKey>('dateAdded');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [isSortOpen, setIsSortOpen] = useState(false);
+    const [sortDropdownPos, setSortDropdownPos] = useState({ top: 0, left: 0, width: 0 });
     const [selectedArtistState, setSelectedArtistState] = useState<SelectedArtistState>({
         artist: null,
         closeSignal: closeSelectedSignal
@@ -81,6 +83,7 @@ const ArtistList = ({
     const [cardPosition, setCardPosition] = useState<number>(0);
     const listRef = useRef<HTMLDivElement>(null);
     const sortRef = useRef<HTMLDivElement>(null);
+    const sortDropdownRef = useRef<HTMLDivElement>(null);
     const sortListboxId = 'artist-list-sort-options';
 
     const { data: artists = [], isLoading } = useQuery({
@@ -98,10 +101,20 @@ const ArtistList = ({
         : null;
 
     useEffect(() => {
+        if (!isSortOpen || !sortRef.current) return;
+
+        const rect = sortRef.current.getBoundingClientRect();
+        setSortDropdownPos({
+            top: rect.bottom + window.scrollY + 4,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+        });
+    }, [isSortOpen]);
+
+    useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-                setIsSortOpen(false);
-            }
+            if (sortRef.current?.contains(e.target as Node) || sortDropdownRef.current?.contains(e.target as Node)) return;
+            setIsSortOpen(false);
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -236,7 +249,7 @@ const ArtistList = ({
     };
 
     return (
-        <div ref={listRef} className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0">
+        <div ref={listRef} className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0">
             {/* Artist card - positioned to the left of the list */}
             {selectedArtist && (
                 <div
@@ -255,13 +268,13 @@ const ArtistList = ({
             )}
 
             {/* Main list panel */}
-            <div 
-                role="region" 
+            <div
+                role="region"
                 aria-label={t('artistList.aria.region')}
-                className="w-full bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)]">
+                className="w-full bg-surface rounded-xl shadow-xl shadow-black/5 ring-1 ring-border/40 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)]">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h2 className="text-lg font-semibold text-text">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+                <h2 className="text-base font-semibold tracking-tight text-text">
                     {viewingFeatured ? t('artistList.title.featured') : t('artistList.title.default')} ({artists.length})
                 </h2>
                 <div className="flex items-center gap-2">
@@ -272,7 +285,7 @@ const ArtistList = ({
                             title={t('artistList.actions.copyAll')}
                             disabled={isLoading || artists.length === 0}
                             onClick={() => onCopyCollection(artists.length)}
-                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
+                            className="rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
                         >
                             {isCopyingCollection ? (
                                 <Spinner size="sm" className="w-5 h-5" />
@@ -285,8 +298,9 @@ const ArtistList = ({
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="px-4 py-2">
+            {/* Search & Sort */}
+            <div className="px-4 py-3">
+                <div className="flex items-center gap-2">
                 <Input
                     aria-label={t('artistList.search.ariaLabel')}
                     type="text"
@@ -298,10 +312,9 @@ const ArtistList = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     rightIcon={<SearchIcon className="w-4 h-4" />}
+                    className="min-w-0 flex-1 rounded-lg"
                 />
-                <div className="mt-2 flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-sm font-medium text-text-secondary">{t('artistList.sort.label')}</span>
-                    <div ref={sortRef} className="relative min-w-0 flex-1">
+                    <div ref={sortRef} className="relative shrink-0">
                         <button
                             type="button"
                             aria-label={t('artistList.sort.ariaLabel')}
@@ -309,19 +322,25 @@ const ArtistList = ({
                             aria-expanded={isSortOpen}
                             aria-controls={isSortOpen ? sortListboxId : undefined}
                             onClick={() => setIsSortOpen((open) => !open)}
-                            className="relative w-full rounded-md border border-border-strong bg-surface px-3 py-2 pr-8 text-left text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary"
+                            className="flex min-w-[6.5rem] items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                         >
                             <span className="block truncate">
                                 {selectedSortOption ? t(selectedSortOption.labelKey) : t('artistList.sort.options.dateAdded')}
                             </span>
                             <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        {isSortOpen && (
+                        {isSortOpen && createPortal(
                             <div
                                 id={sortListboxId}
                                 role="listbox"
+                                ref={sortDropdownRef}
                                 aria-label={t('artistList.sort.optionsLabel')}
-                                className="absolute left-0 top-full z-[1200] mt-1 w-full rounded-md border border-border-strong bg-surface shadow-lg"
+                                className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                                style={{
+                                    top: `${sortDropdownPos.top}px`,
+                                    left: `${sortDropdownPos.left}px`,
+                                    width: `${sortDropdownPos.width}px`,
+                                }}
                             >
                                 {sortOptions.map((option) => (
                                     <button
@@ -333,14 +352,15 @@ const ArtistList = ({
                                             setSortKey(option.value);
                                             setIsSortOpen(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
+                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-secondary ${
                                             option.value === sortKey ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
                                         {t(option.labelKey)}
                                     </button>
                                 ))}
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
                     {selectedSortOption?.togglable && (
@@ -349,7 +369,7 @@ const ArtistList = ({
                             aria-label={sortDirection === 'asc' ? t('artistList.sort.ascending') : t('artistList.sort.descending')}
                             title={sortDirection === 'asc' ? t('artistList.sort.ascendingShort') : t('artistList.sort.descendingShort')}
                             onClick={() => setSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
-                            className="rounded text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface p-2"
+                            className="shrink-0 rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-2"
                         >
                             {sortDirection === 'asc' ? (
                                 <ArrowUpIcon className="w-5 h-5" />
@@ -378,14 +398,14 @@ const ArtistList = ({
                                 const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
 
                                 return (
-                                <li key={artist.id} className="group">
+                                <li key={artist.id} className="group transition-colors duration-150 hover:bg-surface-secondary/60">
                                     <div
                                         role="button"
                                         aria-current={isActive ? 'true' : undefined}
                                         tabIndex={0}
                                         onClick={(e) => handleRowClick(artist, e)}
                                         onKeyDown={(e) => handleRowKeyDown(artist, e)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary focus:bg-surface-secondary focus:outline-none transition-colors cursor-pointer ${isActive ? 'bg-surface-secondary' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-5 py-3 focus:outline-none cursor-pointer ${isActive ? 'bg-surface-secondary/50' : ''}`}
                                     >
                                         {/* Avatar */}
                                         <img
@@ -417,41 +437,42 @@ const ArtistList = ({
                                             </p>
                                         </div>
                                         {/* Actions */}
-                                        <div className={`${isActive ? 'flex' : 'hidden'} group-hover:flex group-focus-within:flex gap-1 shrink-0`}>
-                                            {onNavigateToArtist && (
-                                                <IconButton
-                                                    aria-label={t('artistList.actions.goToLocation')}
-                                                    onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
-                                                    size="sm"
-                                                    className="rounded text-text-secondary hover:bg-[#E5E7EB] hover:!text-text app-dark:hover:bg-[#3A3A3C] app-dark:hover:!text-text"
-                                                    title={t('artistList.actions.goToLocation')}
-                                                >
-                                                    <MapPinIcon className="w-4 h-4" />
-                                                </IconButton>
-                                            )}
-                                            {onEditArtist && (
-                                                <IconButton
-                                                    aria-label={t('artistList.actions.edit')}
-                                                    onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
-                                                    size="sm"
-                                                    className="rounded text-text-secondary hover:bg-[#E5E7EB] hover:!text-text app-dark:hover:bg-[#3A3A3C] app-dark:hover:!text-text"
-                                                    title={t('artistList.actions.editShort')}
-                                                >
-                                                    <EditIcon className="w-4 h-4" />
-                                                </IconButton>
-                                            )}
-                                            {onDeleteArtist && (
-                                                <IconButton
-                                                    aria-label={t('artistList.actions.delete')}
-                                                    onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
-                                                    size="sm"
-                                                    className="rounded text-text-secondary hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:hover:!text-white"
-                                                    title={t('artistList.actions.deleteShort')}
-                                                >
-                                                    <TrashIcon className="w-4 h-4" />
-                                                </IconButton>
-                                            )}
-                                        </div>
+                                        {(onNavigateToArtist || onEditArtist || onDeleteArtist) && (
+                                            <div className="inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                                {onNavigateToArtist && (
+                                                    <button
+                                                        type="button"
+                                                        aria-label={t('artistList.actions.goToLocation')}
+                                                        onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
+                                                        title={t('artistList.actions.goToLocation')}
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
+                                                    >
+                                                        <MapPinIcon className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                                {onEditArtist && (
+                                                    <button
+                                                        type="button"
+                                                        aria-label={t('artistList.actions.edit')}
+                                                        onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
+                                                    >
+                                                        <EditIcon className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                                {onDeleteArtist && (
+                                                    <button
+                                                        type="button"
+                                                        aria-label={t('artistList.actions.delete')}
+                                                        onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
+                                                        title={t('artistList.actions.deleteShort')}
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white"
+                                                    >
+                                                        <TrashIcon className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </li>
                                 );

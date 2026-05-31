@@ -833,6 +833,9 @@ function App() {
                         initialArtist={gigFormArtist}
                         onSubmit={handleGigFormSubmit}
                         onCancel={handleCloseGigForm}
+                        onRequestSelection={handleStartSelection}
+                        pendingCoordinates={selectionMode?.targetField === 'gigLocation' ? pendingCoordinates : null}
+                        onConsumePendingCoordinates={handleConsumeCoordinates}
                     />
                 </div>
             )}

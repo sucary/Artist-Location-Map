@@ -525,7 +525,7 @@ const ArtistForm = ({
             </div>
         )}
 
-        <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-80 -translate-x-1/2 bg-surface rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] font-sans sm:top-28 sm:right-2 sm:left-auto sm:w-80 sm:translate-x-0 sm:max-h-[calc(100vh-8rem)]">
+        <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 bg-surface rounded-xl shadow-xl shadow-black/5 ring-1 ring-border/40 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] font-sans sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0 sm:max-h-[calc(100vh-8rem)]">
             <div ref={formScrollRef} className="artist-form-scroll flex-1 overflow-y-auto">
                 <div className="artist-form-scroll-content">
                     {/* Header with background and avatar */}
@@ -608,7 +608,7 @@ const ArtistForm = ({
                         />
                     </div>
 
-                    <div data-tutorial-target="debut-year" className="rounded-md p-1">
+                    <div data-tutorial-target="debut-year">
                         <div className="flex items-end gap-2">
                             <div className="flex-1">
                                 <YearSelect label={t('artistForm.fields.debutYear')} value={formData.debutYear} onChange={handleDebutYearChange} placeholder={t('artistForm.fields.debut')} />
@@ -639,7 +639,7 @@ const ArtistForm = ({
                         <button
                             aria-expanded={isSocialExpanded}  
                             onClick={toggleSocialExpanded}
-                            className={`flex items-center justify-between w-full px-3 py-2 text-sm font-bold text-text bg-surface-secondary hover:bg-surface-muted rounded-md transition-colors ${isSocialExpanded ? 'rounded-b-none' : ''}`}
+                            className={`flex items-center justify-between w-full px-3 py-2 text-sm font-bold text-text bg-surface-secondary hover:bg-surface-muted rounded-lg transition-colors duration-150 ${isSocialExpanded ? 'rounded-b-none' : ''}`}
                             type="button"
 
                         >
@@ -648,7 +648,7 @@ const ArtistForm = ({
                         </button>
 
                         {isSocialExpanded && (
-                            <div className="px-3 py-3 flex flex-col gap-3 bg-surface-secondary rounded-b-md">
+                            <div className="px-3 py-3 flex flex-col gap-3 bg-surface-secondary rounded-b-lg">
                                 {socialFields.map((field) => (
                                     <SocialLinkInput
                                         key={field.key}
@@ -666,11 +666,13 @@ const ArtistForm = ({
             </div>
 
             {/* Footer with error and buttons */}
-            <div className="p-4 border-border bg-surface">
+            <div className="border-t border-border/60 px-4 py-3.5 bg-surface">
                 {error && (
-                    <Alert variant="error" header={t('artistForm.errors.saveArtistFailedHeader')} className="mb-3">{error}</Alert>
+                    <div role="alert" className="mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2.5">
+                        <p className="text-sm font-medium text-error">{error}</p>
+                    </div>
                 )}
-                <div className="flex gap-3">
+                <div className="flex gap-2.5">
                     <Button
                         onClick={() => { void handleCancelForm(); }}
                         disabled={isSaving}

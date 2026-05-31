@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { getArtists, getTours } from '../../services/api';
-import type { Artist, Location } from '../../types/artist';
+import type { Artist, Coordinates, Location, SelectionMode } from '../../types/artist';
 import type { Gig, GigInput } from '../../types/gig';
 import { Button, CloseButton } from '../ui';
 import { VenueLocationSearch } from './VenueLocationSearch';
@@ -16,6 +16,9 @@ interface GigFormProps {
     initialArtist?: Artist | null;
     onSubmit: (input: GigInput, id?: string) => Promise<void> | void;
     onCancel: () => void;
+    onRequestSelection?: (targetField: SelectionMode['targetField']) => void;
+    pendingCoordinates?: Coordinates | null;
+    onConsumePendingCoordinates?: () => void;
 }
 
 // API validation response shape
@@ -43,6 +46,9 @@ export function GigForm({
     initialArtist,
     onSubmit,
     onCancel,
+    onRequestSelection,
+    pendingCoordinates,
+    onConsumePendingCoordinates,
 }: GigFormProps) {
     const { t } = useTranslation();
     const { data: artists = [] } = useQuery({
@@ -96,6 +102,18 @@ export function GigForm({
             .join(', ')
     ), [artistIds, artists]);
     const hasTourAssignment = tourMode !== 'none';
+
+    const handleLocationChange = useCallback((value: {
+        venueName?: string | null;
+        placeLocationId?: string | null;
+        location: Location | null;
+        rawExternalData?: unknown;
+    }) => {
+        setVenueName(value.venueName ?? null);
+        setPlaceLocationId(value.placeLocationId ?? null);
+        setLocation(value.location);
+        setRawExternalData(value.rawExternalData);
+    }, []);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -178,12 +196,10 @@ export function GigForm({
                             venueName={venueName}
                             location={location}
                             rawExternalData={rawExternalData}
-                            onChange={(value) => {
-                                setVenueName(value.venueName ?? null);
-                                setPlaceLocationId(value.placeLocationId ?? null);
-                                setLocation(value.location);
-                                setRawExternalData(value.rawExternalData);
-                            }}
+                            pendingCoordinates={pendingCoordinates}
+                            onManualPin={onRequestSelection ? () => onRequestSelection('gigLocation') : undefined}
+                            onConsumePendingCoordinates={onConsumePendingCoordinates}
+                            onChange={handleLocationChange}
                         />
                     </div>
 

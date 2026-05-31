@@ -381,6 +381,7 @@ export default function MapView({
         onDisplayCoordinateChange,
         highlightedArtistIds: highlightedGigIds,
         renderPopupContent: tourModeActive ? renderPopupContent : undefined,
+        keepCollisionClustersAtMaxZoom: tourModeActive,
     });
 
     useEffect(() => {

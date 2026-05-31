@@ -720,8 +720,9 @@ export const CityService = {
                 ST_Y(center::geometry) as lat,
                 ST_X(center::geometry) as lng
             FROM locations
-            WHERE ST_Contains(boundary::geometry, ST_SetSRID(ST_MakePoint($1, $2), 4326))
-            ORDER BY ST_Area(boundary::geometry) ASC
+            WHERE COALESCE(boundary, raw_boundary) IS NOT NULL
+              AND ST_Covers(COALESCE(boundary, raw_boundary)::geometry, ST_SetSRID(ST_MakePoint($1, $2), 4326))
+            ORDER BY ST_Area(COALESCE(boundary, raw_boundary)::geometry) ASC
             LIMIT $3
         `, [lng, lat, limit]);
 

@@ -78,7 +78,12 @@ const TOUR_SELECT_COLUMNS = `
 function formatDate(value: Date | string | null | undefined): string | undefined {
     if (!value) return undefined;
     if (typeof value === 'string') return value.slice(0, 10);
-    return value.toISOString().slice(0, 10);
+
+    // PostgreSQL DATE values remain calendar dates, not instants
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function parseArtists(value: unknown): GigArtistSummary[] {

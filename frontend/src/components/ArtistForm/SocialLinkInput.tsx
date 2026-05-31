@@ -60,7 +60,7 @@ const SocialLinkInput = ({ field, value, onChange, externalError }: SocialLinkIn
                 autoCorrect="off"
                 spellCheck={false}
                 placeholder={placeholder}
-                className={`w-full pl-9 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-inset ${displayedError ? 'border-error focus:border-error focus:ring-error' : 'border-border focus:border-primary focus:ring-primary'}`}
+                className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-inset ${displayedError ? 'border-error focus:border-error focus:ring-error' : 'border-border focus:border-primary focus:ring-primary'}`}
                 value={value}
                 onChange={(e) => handleChange(e.target.value)}
                 onBlur={handleBlur}

@@ -1,13 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { Location, LocationLanguage } from '../../types/artist';
+import type { Coordinates, Location, LocationLanguage } from '../../types/artist';
 import {
+    reverseTourLocation,
     searchTourLocations,
     type TourLocationSearchResult,
 } from '../../services/api';
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { SearchIcon } from '../icons/GeneralIcons';
+import { MapPinIcon } from '../icons/MapIcons';
 import { Alert, Button, Spinner } from '../ui';
 import { useTranslation } from 'react-i18next';
 
@@ -17,12 +19,26 @@ interface VenueLocationSearchProps {
     venueName?: string | null;
     location: Location | null;
     rawExternalData?: unknown;
+    pendingCoordinates?: Coordinates | null;
+    onManualPin?: () => void;
+    onConsumePendingCoordinates?: () => void;
     onChange: (value: {
         venueName?: string | null;
         placeLocationId?: string | null;
         location: Location | null;
         rawExternalData?: unknown;
     }) => void;
+}
+
+function manualCoordinatesToLocation(coordinates: Coordinates, label: string): Location {
+    return {
+        city: label,
+        province: label,
+        displayName: label,
+        coordinates,
+        source: 'manual',
+        isManualSelection: true,
+    };
 }
 
 const getResultLabel = (result: TourLocationSearchResult) => {
@@ -55,6 +71,9 @@ function resultToLocation(result: TourLocationSearchResult, isManualSelection = 
 export function VenueLocationSearch({
     venueName,
     location,
+    pendingCoordinates,
+    onManualPin,
+    onConsumePendingCoordinates,
     onChange,
 }: VenueLocationSearchProps) {
     const { t } = useTranslation();
@@ -84,6 +103,52 @@ export function VenueLocationSearch({
     useEffect(() => {
         return () => abortRef.current?.abort();
     }, []);
+
+    useEffect(() => {
+        if (!pendingCoordinates) return;
+
+        const controller = new AbortController();
+        abortRef.current?.abort();
+        abortRef.current = controller;
+        setIsLoading(true);
+        setError(null);
+
+        const applyManualLocation = async () => {
+            try {
+                const result = await reverseTourLocation(
+                    pendingCoordinates.lat,
+                    pendingCoordinates.lng,
+                    controller.signal
+                );
+                const nextLocation = resultToLocation(result, true);
+                onChange({
+                    venueName: null,
+                    placeLocationId: result.placeLocationId ?? null,
+                    location: nextLocation,
+                    rawExternalData: null,
+                });
+                setQuery(formatLocationLocalized(nextLocation, locationLanguage));
+            } catch {
+                const label = t('tour.venueSearch.manualLocation', { defaultValue: 'Manual location' });
+                const nextLocation = manualCoordinatesToLocation(pendingCoordinates, label);
+                onChange({
+                    venueName: null,
+                    placeLocationId: null,
+                    location: nextLocation,
+                    rawExternalData: null,
+                });
+                setQuery(formatLocationLocalized(nextLocation, locationLanguage));
+            } finally {
+                if (abortRef.current === controller) {
+                    abortRef.current = null;
+                }
+                setIsLoading(false);
+                onConsumePendingCoordinates?.();
+            }
+        };
+
+        void applyManualLocation();
+    }, [locationLanguage, onChange, onConsumePendingCoordinates, pendingCoordinates, t]);
 
     useEffect(() => {
         if (!isOpen || !controlsRef.current) return;
@@ -250,40 +315,53 @@ export function VenueLocationSearch({
             <label htmlFor={inputId} className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 {t('tour.fields.venueLocation')}
             </label>
-            <div className="relative" ref={controlsRef}>
-                <input
-                    id={inputId}
-                    type="text"
-                    autoComplete="off"
-                    value={query}
-                    onChange={(event) => {
-                        const nextQuery = event.target.value;
-                        setQuery(nextQuery);
-                        clearSelectedLocationForEdit(nextQuery);
-                    }}
-                    onFocus={openResults}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Escape') {
-                            setIsOpen(false);
-                            return;
-                        }
-                        if (event.key === 'Enter') {
-                            event.preventDefault();
-                            void runSearch();
-                        }
-                    }}
-                    placeholder={t('tour.form.locationPlaceholder')}
-                    className={inputClass}
-                />
-                <button
-                    type="button"
-                    aria-label={t('tour.venueSearch.searchLocation', { defaultValue: 'Search location' })}
-                    disabled={query.trim().length < 2 || isLoading || isLoadingMore}
-                    onClick={() => { void runSearch(); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
-                >
-                    {isLoading ? <Spinner size="sm" /> : <SearchIcon className="h-4 w-4" />}
-                </button>
+            <div className="flex gap-2">
+                <div className="relative min-w-0 flex-1" ref={controlsRef}>
+                    <input
+                        id={inputId}
+                        type="text"
+                        autoComplete="off"
+                        value={query}
+                        onChange={(event) => {
+                            const nextQuery = event.target.value;
+                            setQuery(nextQuery);
+                            clearSelectedLocationForEdit(nextQuery);
+                        }}
+                        onFocus={openResults}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Escape') {
+                                setIsOpen(false);
+                                return;
+                            }
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                void runSearch();
+                            }
+                        }}
+                        placeholder={t('tour.form.locationPlaceholder')}
+                        className={inputClass}
+                    />
+                    <button
+                        type="button"
+                        aria-label={t('tour.venueSearch.searchLocation', { defaultValue: 'Search location' })}
+                        disabled={query.trim().length < 2 || isLoading || isLoadingMore}
+                        onClick={() => { void runSearch(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary hover:bg-primary hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+                    >
+                        {isLoading ? <Spinner size="sm" /> : <SearchIcon className="h-4 w-4" />}
+                    </button>
+                </div>
+                {onManualPin && (
+                    <button
+                        type="button"
+                        aria-label={t('artistForm.locationSearch.manualSelect')}
+                        title={t('artistForm.locationSearch.manualSelect')}
+                        onClick={onManualPin}
+                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded text-text-muted transition-colors hover:bg-primary hover:text-white"
+                    >
+                        <MapPinIcon className="h-5 w-5" />
+                    </button>
+                )}
             </div>
             <p className="mx-1 mt-1 text-xs text-text-secondary">
                 {t('tour.form.locationSearchHint')}

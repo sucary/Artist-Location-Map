@@ -168,11 +168,11 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                 <div className={`relative flex flex-col px-5 pb-3 pt-5 ${topSectionGapClass}`}>
                 {hasTitleSection && (
                     <div className="flex flex-col gap-0.5">
-                        <h3 className="min-w-0 truncate text-sm font-medium leading-tight text-text-secondary">
+                        <h3 className="min-w-0 truncate text-xs font-medium leading-tight text-text-secondary">
                             {gig.tour?.name || gig.gigName}
                         </h3>
                         {gig.tour && gig.gigName && (
-                            <p className="min-w-0 truncate text-xs font-medium text-text-muted">{gig.gigName}</p>
+                            <p className="min-w-0 truncate text-[11px] font-medium text-text-muted">{gig.gigName}</p>
                         )}
                     </div>
                 )}

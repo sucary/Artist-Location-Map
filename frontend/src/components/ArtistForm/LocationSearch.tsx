@@ -139,12 +139,12 @@ export const LocationSearch = ({
     return (
         <div>
             <div className="relative" ref={dropdownRef}>
-                <div className="flex items-end gap-2 rounded-md p-1" ref={inputRef} data-tutorial-target={tutorialInputTarget}>
+                <div className="flex items-end gap-2" ref={inputRef} data-tutorial-target={tutorialInputTarget}>
                     <div className="flex-1">
                         {label && (
                             <label
                                 htmlFor={inputId}
-                                className="block text-sm font-bold text-text mb-1"
+                                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary"
                             >
                                 {label}
                             </label>
@@ -165,7 +165,7 @@ export const LocationSearch = ({
                                 spellCheck={false}
                                 type="text"
                                 placeholder={placeholder || t('artistForm.locationSearch.placeholder')}
-                                className={`w-full pl-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${(isLoading || queueSize > 0 || status) ? 'pr-20' : 'pr-9'}`}
+                                className={`w-full pl-3 py-2 border border-border-strong rounded-lg text-sm transition-colors duration-150 focus:outline-none focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary ${(isLoading || queueSize > 0 || status) ? 'pr-20' : 'pr-9'}`}
                                 value={query !== null ? query : displayValue}
                                 onChange={handleInputChange}
                                 onFocus={handleInputFocus}
@@ -234,7 +234,7 @@ export const LocationSearch = ({
             {/* Dropdown Portal */}
             {isOpen && results.length > 0 && createPortal(
                 <div
-                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-md shadow-lg overflow-hidden"
+                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg overflow-hidden"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,
@@ -299,7 +299,7 @@ export const LocationSearch = ({
             {/* No results Portal */}
             {showNoResults && createPortal(
                 <div
-                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-md shadow-lg p-3 text-sm text-text-secondary text-center"
+                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg p-3 text-sm text-text-secondary text-center"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,
