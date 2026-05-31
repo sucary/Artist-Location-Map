@@ -53,6 +53,11 @@ const getResultLabel = (result: TourLocationSearchResult) => {
         .join(', ');
 };
 
+function getVenueAddressLabel(result: TourLocationSearchResult): string {
+    const venueName = result.venueName || result.name;
+    return result.isVenue ? stripLeadingVenueName(getResultLabel(result), venueName) : getResultLabel(result);
+}
+
 // Geoapify accepts 2-character ISO language codes
 function getGeoapifyLanguage(language: LocationLanguage): string | undefined {
     if (language === 'native') return undefined;
@@ -523,7 +528,7 @@ export function VenueLocationSearch({
                                 )}
                             </span>
                             <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-text-secondary">
-                                <span>{getResultLabel(result)}</span>
+                                <span>{getVenueAddressLabel(result)}</span>
                                 {(result.source === 'local' || result.isCached) && (
                                     <span className="shrink-0 rounded bg-secondary/10 px-1.5 py-0.5 text-secondary">DB</span>
                                 )}

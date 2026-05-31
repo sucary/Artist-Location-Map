@@ -17,6 +17,7 @@ export interface PlaceLocation {
     countryCode?: string | null;
     coordinates: Coordinates;
     categories: string[];
+    searchAliases: string[];
     isVenue: boolean;
     timezone?: string | null;
     rawProviderData?: unknown;
@@ -35,6 +36,7 @@ export interface UpsertPlaceLocationInput {
     countryCode?: string;
     coordinates: Coordinates;
     categories?: string[];
+    searchAliases?: string[];
     isVenue?: boolean;
     timezone?: string;
     rawProviderData?: unknown;
@@ -58,6 +60,7 @@ function rowToPlaceLocation(row: Record<string, unknown>): PlaceLocation {
             lng: parseFloat(row.lng as string),
         },
         categories: Array.isArray(row.categories) ? row.categories as string[] : [],
+        searchAliases: Array.isArray(row.search_aliases) ? row.search_aliases as string[] : [],
         isVenue: row.is_venue === true,
         timezone: row.timezone as string | null | undefined,
         rawProviderData: row.raw_provider_data,
@@ -69,7 +72,7 @@ const PLACE_SELECT_COLUMNS = `
     city, province, country, country_code,
     ST_Y(coordinates::geometry) AS lat,
     ST_X(coordinates::geometry) AS lng,
-    categories, is_venue, timezone, raw_provider_data
+    categories, search_aliases, is_venue, timezone, raw_provider_data
 `;
 
 export const PlaceLocationStore = {
@@ -121,9 +124,10 @@ export const PlaceLocationStore = {
                 country_code = $9,
                 coordinates = ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
                 categories = $12,
-                is_venue = $13,
-                timezone = $14,
-                raw_provider_data = $15,
+                search_aliases = $13,
+                is_venue = $14,
+                timezone = $15,
+                raw_provider_data = $16,
                 updated_at = NOW()
             WHERE id = $1 AND provider = 'manual'
             RETURNING ${PLACE_SELECT_COLUMNS}
@@ -140,6 +144,7 @@ export const PlaceLocationStore = {
             place.coordinates.lng,
             place.coordinates.lat,
             place.categories || [],
+            place.searchAliases || [],
             place.isVenue === true,
             place.timezone || null,
             place.rawProviderData === undefined ? null : JSON.stringify(place.rawProviderData),
@@ -155,6 +160,11 @@ export const PlaceLocationStore = {
             WHERE
                 name ILIKE $1
                 OR formatted ILIKE $1
+                OR EXISTS (
+                    SELECT 1
+                    FROM unnest(search_aliases) AS alias
+                    WHERE alias ILIKE $1
+                )
                 OR city ILIKE $1
                 OR province ILIKE $1
                 OR country ILIKE $1
@@ -179,13 +189,13 @@ export const PlaceLocationStore = {
                     provider, provider_place_id, name, formatted,
                     address_line1, address_line2,
                     city, province, country, country_code,
-                    coordinates, categories, is_venue, timezone, raw_provider_data
+                    coordinates, categories, search_aliases, is_venue, timezone, raw_provider_data
                 ) VALUES (
                     $1, $2, $3, $4,
                     $5, $6,
                     $7, $8, $9, $10,
                     ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
-                    $13, $14, $15, $16
+                    $13, $14, $15, $16, $17
                 )
                 ON CONFLICT (provider, provider_place_id) DO UPDATE SET
                     name = EXCLUDED.name,
@@ -198,6 +208,7 @@ export const PlaceLocationStore = {
                     country_code = EXCLUDED.country_code,
                     coordinates = EXCLUDED.coordinates,
                     categories = EXCLUDED.categories,
+                    search_aliases = EXCLUDED.search_aliases,
                     is_venue = EXCLUDED.is_venue,
                     timezone = EXCLUDED.timezone,
                     raw_provider_data = EXCLUDED.raw_provider_data,
@@ -217,6 +228,7 @@ export const PlaceLocationStore = {
                 place.coordinates.lng,
                 place.coordinates.lat,
                 place.categories || [],
+                place.searchAliases || [],
                 place.isVenue === true,
                 place.timezone || null,
                 place.rawProviderData === undefined ? null : JSON.stringify(place.rawProviderData),

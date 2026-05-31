@@ -2,6 +2,7 @@ import { CityService } from './cityService';
 import { SearchCacheService } from './searchCacheService';
 import { TextSearch, type LocationLanguage, type SearchResult as LocalSearchResult } from './searchHelper';
 import { PlaceLocationStore, type PlaceLocation, type UpsertPlaceLocationInput } from '../models/placeLocationStore';
+import { generateVenueSearchAliases } from './venueAliasService';
 import type { City } from '../types/city';
 import type { Coordinates } from '../types/artist';
 import { createHash } from 'crypto';
@@ -309,6 +310,7 @@ async function buildManualVenuePlaceInput(input: CreateManualVenueInput): Promis
     const country = input.country || localCity?.country || undefined;
     const addressLabel = input.displayName || [city, province, country].filter(Boolean).join(', ');
     const formatted = [input.name, addressLabel].filter(Boolean).join(', ');
+    const searchAliases = await generateVenueSearchAliases([input.name, formatted], { country });
 
     return {
         name: input.name,
@@ -318,6 +320,7 @@ async function buildManualVenuePlaceInput(input: CreateManualVenueInput): Promis
         country,
         coordinates: input.center,
         categories: ['manual.venue'],
+        searchAliases,
         isVenue: true,
         rawProviderData: {
             source: 'manual',
@@ -371,10 +374,10 @@ function dedupeTourLocationResults(results: TourLocationSearchResult[]): TourLoc
     });
 }
 
-function geoapifyResultToPlaceInput(
+async function geoapifyResultToPlaceInput(
     result: GeoapifyResult,
     options: { nameLanguage?: NameLanguage } = {}
-): UpsertPlaceLocationInput | null {
+): Promise<UpsertPlaceLocationInput | null> {
     if (!Number.isFinite(result.lat) || !Number.isFinite(result.lon)) return null;
 
     const providerId = getProviderId(result);
@@ -383,6 +386,18 @@ function geoapifyResultToPlaceInput(
     const center = { lat: Number(result.lat), lng: Number(result.lon) };
     const categories = getCategories(result) || [];
     const name = getResultName(result, options.nameLanguage);
+    const searchAliases = await generateVenueSearchAliases([
+        name,
+        result.name,
+        result.address_line1,
+        result.formatted,
+        result.other_names?.name,
+        result.other_names?.['name:en'],
+        result.other_names?.['name:ja'],
+        result.other_names?.['name:zh'],
+        result.other_names?.['name:zh-Hans'],
+        result.other_names?.['name:zh-Hant'],
+    ], { country: result.country, countryCode: result.country_code });
 
     return {
         provider: 'geoapify',
@@ -397,6 +412,7 @@ function geoapifyResultToPlaceInput(
         countryCode: result.country_code,
         coordinates: center,
         categories,
+        searchAliases,
         isVenue: isGigVenueLike(result, categories),
         timezone: getTimezoneName(result.timezone),
         rawProviderData: getRawExternalData(result, center, categories),
@@ -407,9 +423,8 @@ async function persistGeoapifyPlaces(
     results: GeoapifyResult[],
     options: { nameLanguage?: NameLanguage } = {}
 ): Promise<Map<string, PlaceLocation>> {
-    const places = results
-        .map((result) => geoapifyResultToPlaceInput(result, options))
-        .filter((place): place is UpsertPlaceLocationInput => !!place);
+    const placeResults = await Promise.all(results.map((result) => geoapifyResultToPlaceInput(result, options)));
+    const places = placeResults.filter((place): place is UpsertPlaceLocationInput => !!place);
     const saved = await PlaceLocationStore.upsertMany(places);
     return new Map(saved.map((place) => [place.providerPlaceId, place]));
 }
