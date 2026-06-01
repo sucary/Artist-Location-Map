@@ -490,7 +490,7 @@ export function VenueLocationSearch({
     };
 
     const renderResults = () => {
-        if (!isOpen || results.length === 0) return null;
+        if (!isOpen) return null;
 
         return (
             <div
@@ -502,7 +502,11 @@ export function VenueLocationSearch({
                     maxHeight: `${dropdownPosition.maxHeight}px`,
                 }}
             >
-                {results.map((result, index) => {
+                {results.length === 0 ? (
+                    <div className="px-3 py-3 text-sm text-text-secondary">
+                        {t('artistForm.locationSearch.noResults', { defaultValue: 'No results found' })}
+                    </div>
+                ) : results.map((result, index) => {
                     const key = `${result.providerId || result.name}-${index}`;
                     const primaryLabel = result.isVenue ? result.venueName || result.name : result.name;
                     const userCreatedVenue = isUserCreatedVenue(result);
@@ -771,7 +775,7 @@ export function VenueLocationSearch({
                 </Alert>
             )}
 
-            {isOpen && results.length > 0 && createPortal(renderResults(), document.body)}
+            {isOpen && createPortal(renderResults(), document.body)}
         </div>
     );
 }

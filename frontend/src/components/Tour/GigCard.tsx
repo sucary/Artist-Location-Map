@@ -3,9 +3,9 @@ import type { Gig } from '../../types/gig';
 import type { LocationLanguage } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../../utils/locationUtils';
-import { EditIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedDateValue } from '../../utils/dateFormatting';
+import { InlineActionMenu } from '../ui';
 
 // Gig marker popup display
 
@@ -43,7 +43,6 @@ const getArtistToggleButtonClass = (isStackToggle: boolean, hiddenCount: number)
 export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: GigCardProps) => {
     const { i18n, t } = useTranslation();
     const [artistsExpanded, setArtistsExpanded] = useState(false);
-    const [actionsVisible, setActionsVisible] = useState(false);
     const artists = gig.artists.length ? gig.artists : [gig.artist];
     const topSectionBackgroundUrl = getAvatarUrl(artists[0]?.sourceImage, artists[0]?.avatarCrop) || artists[0]?.sourceImage;
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
@@ -152,16 +151,6 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
         setArtistsExpanded(false);
     };
 
-    const revealActions = (event: MouseEvent<HTMLDivElement>) => {
-        if (!showActions || actionsVisible) return;
-        if ((event.target as HTMLElement).closest('[data-action]')) return;
-
-        // First touch reveals bottom actions without activating them
-        event.preventDefault();
-        event.stopPropagation();
-        setActionsVisible(true);
-    };
-
     return (
         <div className="flex w-80 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-lg ring-1 ring-border/40">
             <div className="relative overflow-hidden bg-surface">
@@ -247,7 +236,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                 </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-b-xl" onMouseLeave={() => setActionsVisible(false)}>
+            <div className="group relative overflow-hidden rounded-b-xl">
                 <div className="flex flex-col gap-3 border-t border-border/40 px-5 pb-4 pt-3">
                     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5">
                         <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
@@ -262,46 +251,29 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                                 <span className="min-w-0 break-words leading-5">{locationLabel}</span>
                             </span>
                         </div>
-                        <div className="-mt-0.5 flex shrink-0 items-start justify-end">
+                        <div className={`-mt-0.5 flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
                             {renderInfoBadge(formattedDate)}
                         </div>
                     </div>
                 </div>
                 {showActions && (
-                    <div
-                        className="relative grid h-4 place-items-center bg-surface"
-                        onMouseEnter={() => setActionsVisible(true)}
-                        onClick={revealActions}
-                        aria-label={t('artistCard.actions.edit')}
-                        title={t('artistCard.actions.edit')}
-                    >
-                        <div className="flex w-8 flex-col gap-0.5">
-                            <span className="h-0.5 rounded-full bg-text-muted" />
-                            <span className="h-0.5 rounded-full bg-text-muted" />
-                        </div>
-                    </div>
-                )}
-                {showActions && (
-                    <div
-                        className={`absolute inset-0 z-10 flex transform-gpu overflow-hidden rounded-b-xl backdrop-blur-sm transition-transform duration-200 ease-out ${actionsVisible ? 'pointer-events-auto translate-y-0' : 'pointer-events-none translate-y-full'}`}
-                    >
-                        <div
-                            className="flex flex-1 cursor-pointer items-center justify-center bg-black/50 hover:bg-black/65"
-                            data-action="edit"
-                            aria-label={t('artistCard.actions.edit')}
-                            title={t('artistCard.actions.edit')}
-                        >
-                            <EditIcon className="h-6 w-6 text-white" />
-                        </div>
-                        <div
-                            className="flex w-1/5 cursor-pointer items-center justify-center bg-[rgb(220,38,38)]/85 hover:bg-[rgb(220,38,38)]"
-                            data-action="delete"
-                            aria-label={t('artistCard.actions.delete')}
-                            title={t('artistCard.actions.delete')}
-                        >
-                            <TrashIcon className="h-5 w-5 text-white" />
-                        </div>
-                    </div>
+                    <InlineActionMenu
+                        className="right-5 top-3"
+                        actions={[
+                            {
+                                key: 'edit',
+                                label: t('artistCard.actions.edit'),
+                                title: t('artistCard.actions.edit'),
+                                dataAction: 'edit',
+                            },
+                            {
+                                key: 'delete',
+                                label: t('artistCard.actions.delete'),
+                                title: t('artistCard.actions.delete'),
+                                dataAction: 'delete',
+                            },
+                        ]}
+                    />
                 )}
             </div>
         </div>

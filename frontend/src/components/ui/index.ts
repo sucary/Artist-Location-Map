@@ -26,3 +26,5 @@ export { ConfirmDialog } from './ConfirmDialog';
 export type { ConfirmDialogVariant } from './ConfirmDialog';
 
 export { PageLayout, PageSection } from './PageLayout';
+
+export { InlineActionMenu } from './InlineActionMenu';

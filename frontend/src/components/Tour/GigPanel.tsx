@@ -1,9 +1,8 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Gig } from '../../types/gig';
-import { CloseButton, Input } from '../ui';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, EditIcon, SearchIcon, TrashIcon } from '../icons/GeneralIcons';
-import { MapPinIcon } from '../icons/MapIcons';
+import { CloseButton, InlineActionMenu, Input } from '../ui';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, SearchIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { getBrowserDateLocale } from '../../utils/dateFormatting';
 
@@ -249,42 +248,27 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                         </div>
                         <div className="relative flex min-h-9 min-w-0 items-center">
                             <p className="min-w-0 truncate text-xs text-text-secondary group-hover:pr-28">{locationMeta}</p>
-                            {(onLocateGig || onEditGig || onDeleteGig) && (
-                                <div className="pointer-events-none absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
-                                    {onLocateGig && (
-                                        <button
-                                            type="button"
-                                            aria-label={t('tour.actions.locateGig')}
-                                            onClick={() => onLocateGig(gig)}
-                                            title={t('tour.actions.locateGig')}
-                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
-                                        >
-                                            <MapPinIcon className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                    {onEditGig && (
-                                        <button
-                                            type="button"
-                                            aria-label={t('common.edit')}
-                                            onClick={() => onEditGig(gig)}
-                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
-                                        >
-                                            <EditIcon className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                    {onDeleteGig && (
-                                        <button
-                                            type="button"
-                                            aria-label={t('common.delete')}
-                                            onClick={() => onDeleteGig(gig)}
-                                            title={t('common.delete')}
-                                            className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white"
-                                        >
-                                            <TrashIcon className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                            <InlineActionMenu
+                                actions={[
+                                    ...(onLocateGig ? [{
+                                        key: 'locate' as const,
+                                        label: t('tour.actions.locateGig'),
+                                        title: t('tour.actions.locateGig'),
+                                        onClick: () => onLocateGig(gig),
+                                    }] : []),
+                                    ...(onEditGig ? [{
+                                        key: 'edit' as const,
+                                        label: t('common.edit'),
+                                        onClick: () => onEditGig(gig),
+                                    }] : []),
+                                    ...(onDeleteGig ? [{
+                                        key: 'delete' as const,
+                                        label: t('common.delete'),
+                                        title: t('common.delete'),
+                                        onClick: () => onDeleteGig(gig),
+                                    }] : []),
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>
