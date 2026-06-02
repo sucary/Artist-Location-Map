@@ -218,7 +218,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
 
         return (
             <li key={gig.id} className="group transition-colors duration-150 hover:bg-surface-secondary/30">
-                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-2.5">
+                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-2">
                     <div className="grid min-h-14 w-12 shrink-0 grid-rows-[auto_auto_auto_1fr_auto] justify-items-center text-center">
                         <span className="text-[10px] font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
                         <span className="text-[1.7rem] font-light leading-none text-text-secondary">{dateParts.day}</span>
@@ -238,7 +238,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                     artistRowRefs.current.delete(gig.id);
                                 }
                             }}
-                            className={`flex min-w-0 items-center gap-1.5 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}
+                            className={`flex min-w-0 items-center gap-2 ${isArtistRowExpanded ? 'flex-wrap' : 'overflow-hidden'}`}
                         >
                             <span className={isArtistRowExpanded ? 'text-sm font-semibold leading-5 text-text' : 'min-w-0 truncate text-sm font-semibold leading-5 text-text'}>
                                 {visibleArtistLabel}
@@ -247,7 +247,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 <button
                                     type="button"
                                     onClick={() => toggleArtistRow(gig.id)}
-                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-0.5 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-1 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
                                 >
                                     {isArtistRowExpanded ? '-' : `+${hiddenArtistCount}`}
                                 </button>
@@ -295,7 +295,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
     return (
         <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 font-sans sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0">
             <div role="region" aria-label={t('tour.panel.title')} className="flex max-h-[calc(100vh-6rem)] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40 sm:max-h-[calc(100vh-8rem)]">
-                <div className="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
+                <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                     <h2 className="text-base font-semibold tracking-tight text-text">
                         {t('tour.panel.title')} ({gigs.length})
                     </h2>
@@ -325,7 +325,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 aria-expanded={isSortOpen}
                                 aria-controls={isSortOpen ? sortListboxId : undefined}
                                 onClick={() => setIsSortOpen((open) => !open)}
-                                className="flex min-w-[6.5rem] items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                                className="flex min-w-[6.5rem] items-center justify-between gap-2 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                             >
                                 <span className="block truncate">{t(`tour.panel.sort.${sortMode}`)}</span>
                                 <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />

@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 // Shared button variants for primary, secondary, and low-emphasis actions
 
 const buttonVariants = cva(
-    `font-medium rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed 
+    `font-medium rounded-lg transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed 
     focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface`,
     {
         variants: {
@@ -15,7 +15,7 @@ const buttonVariants = cva(
                 ghost: 'bg-transparent text-text-muted hover:text-primary-contrast app-dark:hover:text-primary border-none',
             },
             size: {
-                sm: 'px-3 py-1.5 text-xs',
+                sm: 'px-3 py-1 text-xs',
                 md: 'px-4 py-2 text-sm',
                 lg: 'px-6 py-3 text-base',
             },

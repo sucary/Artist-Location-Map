@@ -307,7 +307,7 @@ const VenueClusterGigList = ({
     ));
 
     return (
-        <div className="flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-lg ring-1 ring-border/40">
+        <div className="flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5">
                 <h3 className="min-w-0 truncate text-base font-semibold tracking-tight text-text">{venueName}</h3>
                 <p className="shrink-0 text-xs font-medium text-text-secondary">{gigs.length} gigs</p>

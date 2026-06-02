@@ -154,7 +154,7 @@ const ArtistCard = ({
             </div>
 
             {/* Content section */}
-            <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2 px-4 pb-3 pt-3">
                 {/* Origin row */}
                 <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
                     <span className="w-11 justify-self-start whitespace-nowrap px-0.5 py-0.5 text-center text-xs font-semibold leading-tight bg-primary-contrast text-white border border-primary-contrast rounded">
@@ -182,7 +182,7 @@ const ArtistCard = ({
                 <div className="flex items-center justify-between min-h-7">
                     {/* Year */}
                     {artist.debutYear && (
-                        <div className="flex items-center gap-0.5 text-sm text-text-secondary font-sans">
+                        <div className="flex items-center gap-1 text-sm text-text-secondary font-sans">
                             <span className="font-medium">{artist.debutYear}</span>
                             <svg aria-hidden="true" focusable="false" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="9 18 15 12 9 6" />

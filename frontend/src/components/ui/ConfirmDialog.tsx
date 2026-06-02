@@ -70,7 +70,7 @@ export function ConfirmDialog({
                 aria-modal="true"
                 aria-labelledby="confirm-dialog-title"
                 tabIndex={-1}
-                className="relative w-[calc(100vw-1rem)] max-w-80 rounded-lg border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80"
+                className="relative w-[calc(100vw-1rem)] max-w-80 rounded-xl border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80"
             >
                 <h2 id="confirm-dialog-title" className={cn('text-base font-semibold', variantLabelClasses[variant])}>
                     {title}

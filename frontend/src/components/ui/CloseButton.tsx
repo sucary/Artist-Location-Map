@@ -11,7 +11,7 @@ const closeButtonVariants = cva(
         variants: {
             size: {
                 sm: 'p-1',
-                md: 'p-1.5',
+                md: 'p-2',
                 lg: 'p-2',
             },
         },

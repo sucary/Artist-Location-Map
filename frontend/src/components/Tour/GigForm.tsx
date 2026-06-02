@@ -158,7 +158,7 @@ export function GigForm({
             onSubmit={(event) => { void handleSubmit(event); }}
             className="absolute top-20 left-1/2 z-[1050] flex max-h-[calc(100vh-6rem)] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-xl shadow-black/5 ring-1 ring-border/40 sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0"
         >
-            <div className="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
+            <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                 <h2 className="text-base font-semibold tracking-tight text-text">
                     {initialGig ? t('tour.form.editTitle') : t('tour.form.addTitle')}
                 </h2>
@@ -253,7 +253,7 @@ export function GigForm({
 
                         {!hasTourAssignment && (
                             <div className="mt-3">
-                                <label htmlFor="gig-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                <label htmlFor="gig-name" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                     {t('tour.fields.gigName')}
                                 </label>
                                 <input
@@ -272,12 +272,12 @@ export function GigForm({
                         {hasTourAssignment && (
                             <div className="mt-3">
                                 {hasTours && (
-                                    <div className="mb-3 inline-flex rounded-full bg-surface-muted p-0.5">
+                                    <div className="mb-3 inline-flex rounded-full bg-surface-muted p-1">
                                         <button
                                             type="button"
                                             aria-selected={tourMode === 'existing'}
                                             onClick={() => setTourMode('existing')}
-                                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+                                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'existing'
                                                     ? 'bg-primary-contrast text-white shadow-sm'
                                                     : 'text-text-secondary hover:text-text'
@@ -292,7 +292,7 @@ export function GigForm({
                                                 setTourMode('new');
                                                 setTourId('');
                                             }}
-                                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+                                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'new'
                                                     ? 'bg-primary-contrast text-white shadow-sm'
                                                     : 'text-text-secondary hover:text-text'
@@ -329,7 +329,7 @@ export function GigForm({
                 </div>
 
                 {error && (
-                    <div role="alert" className="mx-4 mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2.5">
+                    <div role="alert" className="mx-4 mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2">
                         <p className="whitespace-pre-line text-sm font-medium text-error">
                             {error}
                         </p>
@@ -337,7 +337,7 @@ export function GigForm({
                 )}
             </div>
 
-            <div className="flex gap-2.5 border-t border-border/60 px-4 py-3.5">
+            <div className="flex gap-3 border-t border-border/60 px-4 py-4">
                 <Button type="button" variant="secondary" className="flex-1 rounded-lg" onClick={onCancel}>
                     {t('common.cancel')}
                 </Button>

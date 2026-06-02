@@ -136,7 +136,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
     };
 
     const renderInfoBadge = (value: string) => (
-        <span className="inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary">
+        <span className="inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-1 text-sm font-medium leading-5 text-text-secondary">
             <span className="min-w-0 truncate">{value}</span>
         </span>
     );
@@ -152,7 +152,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
     };
 
     return (
-        <div className="flex w-80 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-lg ring-1 ring-border/40">
+        <div className="flex w-80 flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
             <div className="relative overflow-hidden bg-surface">
                 {topSectionBackgroundUrl && (
                     <>
@@ -167,7 +167,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                 )}
                 <div className={`relative flex flex-col px-5 pb-3 pt-5 ${topSectionGapClass}`}>
                 {hasTitleSection && (
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-1">
                         <h3 className="min-w-0 truncate text-xs font-medium leading-tight text-text-secondary">
                             {gig.tour?.name || gig.gigName}
                         </h3>
@@ -180,7 +180,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                     renderPrimaryArtist(artists[0])
                 ) : artists.length === 2 && !artistsExpanded ? (
                     <div className="flex min-w-0 items-center justify-between gap-3">
-                        <div className="flex min-w-0 flex-col gap-1.5">
+                        <div className="flex min-w-0 flex-col gap-2">
                             {artists.map(renderSecondaryArtistName)}
                         </div>
                         <div className="flex shrink-0 items-center">
@@ -236,7 +236,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                 </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-b-xl">
+            <div className="group relative overflow-hidden rounded-b-lg">
                 <div className="flex flex-col gap-3 border-t border-border/40 px-5 pb-4 pt-3">
                     <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
                         <svg aria-hidden="true" focusable="false" className="mt-0.5 h-4 w-4 text-text-muted" viewBox="0 0 24 24" fill="none">
@@ -244,11 +244,11 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
                             <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="2" />
                         </svg>
                         <span className="flex min-w-0 flex-col">
-                            <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5">
+                            <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                                 {gig.venueName && (
                                     <span className="min-w-0 break-words font-semibold leading-5 text-text">{gig.venueName}</span>
                                 )}
-                                <span className={`-mt-0.5 flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
+                                <span className={`flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
                                     {renderInfoBadge(formattedDate)}
                                 </span>
                             </span>
