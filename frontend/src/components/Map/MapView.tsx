@@ -97,7 +97,7 @@ export default function MapView({
     const restoreDoubleClickZoomTimerRef = useRef<number | null>(null);
     const interactionsDisabledRef = useRef(interactionsDisabled);
     const desktopViewportRef = useRef(false);
-    const previousTourModeActiveRef = useRef(false);
+    const previousMarkerModeRef = useRef<string | null>(null);
 
     const isAdmin = profile?.isAdmin ?? false;
     const [mapReady, setMapReady] = useState(false);
@@ -117,6 +117,13 @@ export default function MapView({
     const canUseClusterDebugControls = isAdmin && clusterDebugControlsEnabled;
     const activeClusterColorDebugEnabled = canUseClusterDebugControls && clusterColorDebugEnabled;
     const tourModeActive = tourMode?.active ?? false;
+    const markerMode = tourModeActive
+        ? 'tour'
+        : viewingFeatured
+            ? 'featured'
+            : username
+                ? `user:${username}`
+                : 'default';
 
     const isArtistPopupActive = useCallback(() => {
         const lifecycle = artistPopupLifecycleRef.current;
@@ -385,13 +392,13 @@ export default function MapView({
     });
 
     useEffect(() => {
-        if (previousTourModeActiveRef.current !== tourModeActive) {
-            // Mode-specific popups and expanded clusters cannot cross map modes
+        if (previousMarkerModeRef.current !== null && previousMarkerModeRef.current !== markerMode) {
+            // Mode-specific popups and expanded clusters cannot cross marker datasets
             closeActiveArtistPopup();
             collapseExpandedClusters(false);
         }
-        previousTourModeActiveRef.current = tourModeActive;
-    }, [closeActiveArtistPopup, collapseExpandedClusters, tourModeActive]);
+        previousMarkerModeRef.current = markerMode;
+    }, [closeActiveArtistPopup, collapseExpandedClusters, markerMode]);
 
     useEffect(() => {
         if (canUseClusterDebugControls) return;

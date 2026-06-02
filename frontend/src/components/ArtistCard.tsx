@@ -137,7 +137,7 @@ const ArtistCard = ({
                     style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
                 >
                     <h3
-                        className="pointer-events-auto w-fit max-w-full cursor-text select-text truncate text-lg font-semibold leading-none text-white"
+                        className="pointer-events-auto w-fit max-w-full cursor-text select-text truncate text-lg font-semibold leading-tight text-white"
                         onClick={(event) => event.stopPropagation()}
                     >
                         {displayName.primary}
