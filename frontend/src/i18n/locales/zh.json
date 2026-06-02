@@ -555,7 +555,7 @@
       "gigNamePlaceholder": "请输入演出名称",
       "venuePlaceholder": "输入场馆名称",
       "locationPlaceholder": "搜索场馆 / 地点",
-      "locationSearchHint": "一些较小的场馆可能不会出现在搜索结果中",
+      "locationSearchHint": "如果找不到场馆，请改用场馆创建功能添加",
       "tourNamePlaceholder": "请输入巡演名称"
     },
     "banner": {

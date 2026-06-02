@@ -578,8 +578,8 @@ export function VenueLocationSearch({
         : '';
 
     const segmentClass = (active: boolean) =>
-        `rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
-            active ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-text'
+        `relative z-10 rounded-full px-3 py-2 text-center text-xs font-medium transition-colors duration-150 ${
+            active ? 'text-white' : 'text-text-secondary hover:text-text'
         }`;
 
     return (
@@ -589,7 +589,11 @@ export function VenueLocationSearch({
             </label>
 
             <div className="rounded-lg border border-border p-3">
-                <div className="inline-flex rounded-full bg-surface-muted p-0.5">
+                <div className="relative inline-grid grid-cols-2 rounded-full transition-colors duration-150 hover:bg-surface-muted">
+                    <span
+                        aria-hidden="true"
+                        className={`absolute inset-y-0 z-0 w-1/2 rounded-full bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${venueCreationOn ? 'translate-x-full' : 'translate-x-0'}`}
+                    />
                     <button
                         type="button"
                         aria-selected={!venueCreationOn}

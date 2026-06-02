@@ -555,7 +555,7 @@
       "gigNamePlaceholder": "Enter gig name",
       "venuePlaceholder": "Enter venue name",
       "locationPlaceholder": "Search venue / location",
-      "locationSearchHint": "Some smaller venues may not appear in search results",
+      "locationSearchHint": "If the venue does not appear, create it from the venue tab instead",
       "tourNamePlaceholder": "Enter tour name"
     },
     "timePicker": {

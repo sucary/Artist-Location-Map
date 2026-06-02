@@ -7,11 +7,11 @@
   --font-sans: 'Inter', 'Noto Sans', 'Noto Sans JP', 'Noto Sans SC', sans-serif;
 
   /* Brand colors */
-  --color-primary: #FA233B;
+  --color-primary: #E72035;
   --color-primary-contrast: #E72035;
   --color-primary-contrast-hover: #C91C2E;
   --color-primary-hover: #E11D38;
-  --color-primary-ring: #FA233B;
+  --color-primary-ring: #E72035;
   --color-primary-light:#FF4E6B;
   --color-primary-text-dark: #FF6B7A;
   --color-decor: #00C9A7;
@@ -114,7 +114,7 @@ html[data-theme="dark"] .artist-banner-placeholder {
 }
 
 .gig-marker-highlighted > div {
-  box-shadow: 0 0 0 3px var(--color-primary), 0 0 18px rgba(250, 35, 59, 0.55);
+  box-shadow: 0 0 0 3px var(--color-primary), 0 0 18px rgba(231, 32, 53, 0.55);
   transform: scale(1.12);
 }
 

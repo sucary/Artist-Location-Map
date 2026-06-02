@@ -275,21 +275,21 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
 
     const renderPickerActions = () => (
         <div className="border-t border-border">
-            <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 px-6 py-3">
+            <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 px-4 py-2">
                 <button
                     type="button"
                     aria-label={mode === 'dial'
                         ? t('tour.timePicker.manual', { defaultValue: 'Manual input' })
                         : t('tour.timePicker.dial', { defaultValue: 'Dial' })}
                     onClick={toggleMode}
-                    className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                    className="grid h-10 w-10 place-items-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
                 >
-                    {mode === 'dial' ? <KeyboardIcon className="h-4 w-4" /> : <ClockIcon className="h-4 w-4" />}
+                    {mode === 'dial' ? <KeyboardIcon className="h-5 w-5" /> : <ClockIcon className="h-5 w-5" />}
                 </button>
                 <button
                     type="button"
                     onClick={clearTime}
-                    className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                    className="h-10 rounded-md px-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
                 >
                     {t('tour.timePicker.clear')}
                 </button>
@@ -298,7 +298,7 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
                     type="button"
                     onClick={confirmTime}
                     size="sm"
-                    className="min-w-20"
+                    className="h-10 min-w-24 px-3 py-0 text-sm"
                 >
                     {t('common.ok')}
                 </Button>
@@ -334,7 +334,7 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
                     ref={dropdownRef}
                     role="dialog"
                     aria-label={label}
-                    className="fixed z-[9999] overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
+                    className="fixed z-[9999] overflow-hidden rounded-xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

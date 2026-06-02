@@ -555,7 +555,7 @@
       "gigNamePlaceholder": "公演名を入力",
       "venuePlaceholder": "会場名を入力",
       "locationPlaceholder": "会場 / 場所を検索",
-      "locationSearchHint": "小規模な会場は検索結果に表示されない場合があります",
+      "locationSearchHint": "会場が見つからない場合は、会場作成タブから追加してください",
       "tourNamePlaceholder": "ツアー名を入力"
     },
     "timePicker": {

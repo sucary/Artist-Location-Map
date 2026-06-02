@@ -272,14 +272,18 @@ export function GigForm({
                         {hasTourAssignment && (
                             <div className="mt-3">
                                 {hasTours && (
-                                    <div className="mb-3 inline-flex rounded-full bg-surface-muted p-1">
+                                    <div className="relative mb-3 inline-grid grid-cols-2 rounded-full transition-colors duration-150 hover:bg-surface-muted">
+                                        <span
+                                            aria-hidden="true"
+                                            className={`absolute inset-y-0 z-0 w-1/2 rounded-full bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${tourMode === 'new' ? 'translate-x-full' : 'translate-x-0'}`}
+                                        />
                                         <button
                                             type="button"
                                             aria-selected={tourMode === 'existing'}
                                             onClick={() => setTourMode('existing')}
-                                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all duration-150 ${
+                                            className={`relative z-10 rounded-full px-3 py-2 text-center text-xs font-medium transition-colors duration-150 ${
                                                 tourMode === 'existing'
-                                                    ? 'bg-primary-contrast text-white shadow-sm'
+                                                    ? 'text-white'
                                                     : 'text-text-secondary hover:text-text'
                                             }`}
                                         >
@@ -292,9 +296,9 @@ export function GigForm({
                                                 setTourMode('new');
                                                 setTourId('');
                                             }}
-                                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all duration-150 ${
+                                            className={`relative z-10 rounded-full px-3 py-2 text-center text-xs font-medium transition-colors duration-150 ${
                                                 tourMode === 'new'
-                                                    ? 'bg-primary-contrast text-white shadow-sm'
+                                                    ? 'text-white'
                                                     : 'text-text-secondary hover:text-text'
                                             }`}
                                         >
