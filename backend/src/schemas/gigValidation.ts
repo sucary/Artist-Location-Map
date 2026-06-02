@@ -4,6 +4,12 @@ import { CoordinatesSchema } from './artistValidation';
 // Gig request validation schemas
 
 const ISO_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format');
+const LOCAL_TIME = z.string()
+    .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Time must use HH:MM format')
+    .refine((value) => {
+        const [hour, minute, second = 0] = value.split(':').map(Number);
+        return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59;
+    }, 'Time must be a valid local time');
 
 const OPTIONAL_URL = z.string()
     .trim()
@@ -69,6 +75,7 @@ const GigBaseSchema = z.object({
     placeLocationId: z.string().uuid().optional().nullable(),
     location: GigLocationSchema,
     date: ISO_DATE,
+    time: LOCAL_TIME.optional().nullable().transform((value) => value || null),
     timezone: clearableText,
     externalSource: clearableText,
     externalId: clearableText,

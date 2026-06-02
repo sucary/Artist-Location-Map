@@ -31,6 +31,36 @@ describe('GigInputSchema', () => {
         expect(parsed.gigName).toBe('Album release show');
     });
 
+    it('accepts optional local gig times', () => {
+        const parsed = GigInputSchema.parse({
+            ...baseGig,
+            time: '19:30',
+            location: {
+                city: 'Bunkyo',
+                province: 'Tokyo',
+                country: 'Japan',
+                coordinates: { lat: 35.7055706, lng: 139.7519705 },
+                source: 'geoapify',
+            },
+        });
+
+        expect(parsed.time).toBe('19:30');
+    });
+
+    it('rejects invalid local gig times', () => {
+        expect(() => GigInputSchema.parse({
+            ...baseGig,
+            time: '29:99',
+            location: {
+                city: 'Bunkyo',
+                province: 'Tokyo',
+                country: 'Japan',
+                coordinates: { lat: 35.7055706, lng: 139.7519705 },
+                source: 'geoapify',
+            },
+        })).toThrow();
+    });
+
     it('normalizes empty optional gig names to null', () => {
         const parsed = GigInputSchema.parse({
             ...baseGig,

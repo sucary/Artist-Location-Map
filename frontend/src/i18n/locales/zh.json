@@ -515,6 +515,7 @@
       "gig": "演出",
       "gigName": "演出名称",
       "date": "日期",
+      "time": "时间",
       "tour": "巡演",
       "addToTour": "添加至巡演",
       "partOfTour": "属于巡演？",
@@ -609,6 +610,17 @@
       "previousMonth": "上个月",
       "nextMonth": "下个月",
       "today": "今天"
+    },
+    "timePicker": {
+      "enterTime": "输入时间",
+      "selectTime": "选择时间",
+      "selectHour": "选择小时",
+      "selectMinute": "选择分钟",
+      "dial": "表盘",
+      "manual": "手动输入",
+      "hour": "小时",
+      "minute": "分钟",
+      "clear": "清除"
     }
   },
   "app": {

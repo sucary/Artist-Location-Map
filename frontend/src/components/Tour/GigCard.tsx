@@ -4,7 +4,7 @@ import type { LocationLanguage } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
-import { formatLocalizedDateValue } from '../../utils/dateFormatting';
+import { formatGigDateTimeValue } from '../../utils/dateFormatting';
 import { InlineActionMenu } from '../ui';
 
 // Gig marker popup display
@@ -52,7 +52,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
         : COLLAPSED_CHIP_LIMIT;
     const visibleArtists = artistsExpanded ? artists : artists.slice(0, collapsedVisibleCount);
     const hiddenArtistCount = artists.length - visibleArtists.length;
-    const formattedDate = formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback);
+    const formattedDate = formatGigDateTimeValue(gig.date, gig.time, dateFallback);
     const locationLabel = stripVenuePrefix(formatLocationLocalized(gig.location, locationLanguage), gig.venueName);
     const hasTitleSection = Boolean(gig.gigName || gig.tour);
     const topSectionGapClass = 'gap-3';
@@ -238,22 +238,22 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
 
             <div className="group relative overflow-hidden rounded-b-xl">
                 <div className="flex flex-col gap-3 border-t border-border/40 px-5 pb-4 pt-3">
-                    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5">
-                        <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
-                            <svg aria-hidden="true" focusable="false" className="mt-0.5 h-4 w-4 text-text-muted" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 21s7-5.1 7-11a7 7 0 10-14 0c0 5.9 7 11 7 11z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="2" />
-                            </svg>
-                            <span className="flex min-w-0 flex-col">
+                    <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
+                        <svg aria-hidden="true" focusable="false" className="mt-0.5 h-4 w-4 text-text-muted" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 21s7-5.1 7-11a7 7 0 10-14 0c0 5.9 7 11 7 11z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        <span className="flex min-w-0 flex-col">
+                            <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5">
                                 {gig.venueName && (
                                     <span className="min-w-0 break-words font-semibold leading-5 text-text">{gig.venueName}</span>
                                 )}
-                                <span className="min-w-0 break-words leading-5">{locationLabel}</span>
+                                <span className={`-mt-0.5 flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
+                                    {renderInfoBadge(formattedDate)}
+                                </span>
                             </span>
-                        </div>
-                        <div className={`-mt-0.5 flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
-                            {renderInfoBadge(formattedDate)}
-                        </div>
+                            <span className="min-w-0 break-words leading-5">{locationLabel}</span>
+                        </span>
                     </div>
                 </div>
                 {showActions && (

@@ -32,3 +32,21 @@ export function formatLocalizedDateValue(value: string, options?: Intl.DateTimeF
     // Date-only API values stay timezone-free
     return formatLocalizedDate(date, options, fallback);
 }
+
+export function formatLocalizedTimeValue(value?: string | null, fallback?: string): string {
+    if (!value || !/^\d{2}:\d{2}(:\d{2})?$/.test(value)) return '';
+
+    const [hour, minute, second = 0] = value.split(':').map(Number);
+    const date = new Date(2000, 0, 1, hour, minute, second);
+    if (date.getHours() !== hour || date.getMinutes() !== minute || date.getSeconds() !== second) return '';
+
+    // Time-only API values stay date-independent
+    return formatLocalizedTime(date, { hour: 'numeric', minute: '2-digit' }, fallback);
+}
+
+export function formatGigDateTimeValue(date: string, time?: string | null, fallback?: string): string {
+    const formattedDate = formatLocalizedDateValue(date, { year: 'numeric', month: '2-digit', day: '2-digit' }, fallback);
+    const formattedTime = formatLocalizedTimeValue(time, fallback);
+
+    return [formattedDate, formattedTime].filter(Boolean).join(' ');
+}

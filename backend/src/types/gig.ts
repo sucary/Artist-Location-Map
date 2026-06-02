@@ -1,6 +1,8 @@
 import type { Location, Coordinates, CropArea } from './artist';
 import type { LocalizedChain } from './city';
 
+// Gig and tour API contracts
+
 export interface GigArtistSummary {
     id: string;
     name: string;
@@ -29,6 +31,7 @@ export interface Gig {
     placeLocationId?: string | null;
     displayCoordinates: Coordinates;
     date: string;
+    time?: string | null;
     timezone?: string | null;
     externalSource?: string | null;
     externalId?: string | null;
@@ -86,6 +89,7 @@ export interface CreateGigDTO {
     placeLocationId?: string | null;
     location: Location;
     date: string;
+    time?: string | null;
     timezone?: string | null;
     externalSource?: string | null;
     externalId?: string | null;
@@ -105,6 +109,7 @@ export interface UpdateGigDTO {
     placeLocationId?: string | null;
     location?: Location;
     date?: string;
+    time?: string | null;
     timezone?: string | null;
     externalSource?: string | null;
     externalId?: string | null;

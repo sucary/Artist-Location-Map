@@ -515,6 +515,7 @@
       "gig": "公演",
       "gigName": "公演名",
       "date": "日付",
+      "time": "時刻",
       "tour": "ツアー",
       "addToTour": "ツアーに追加",
       "partOfTour": "ツアーの一部？",
@@ -556,6 +557,17 @@
       "locationPlaceholder": "会場 / 場所を検索",
       "locationSearchHint": "小規模な会場は検索結果に表示されない場合があります",
       "tourNamePlaceholder": "ツアー名を入力"
+    },
+    "timePicker": {
+      "enterTime": "時刻を入力",
+      "selectTime": "時刻を選択",
+      "selectHour": "時を選択",
+      "selectMinute": "分を選択",
+      "dial": "ダイヤル",
+      "manual": "手入力",
+      "hour": "時",
+      "minute": "分",
+      "clear": "クリア"
     },
     "banner": {
       "label": "ツアーモード",
@@ -633,4 +645,3 @@
     }
   }
 }
-

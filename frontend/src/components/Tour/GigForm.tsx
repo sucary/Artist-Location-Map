@@ -9,6 +9,7 @@ import { VenueLocationSearch } from './VenueLocationSearch';
 import { ArtistMultiSelect } from './ArtistMultiSelect';
 import { TourSelect } from './TourSelect';
 import { GigDatePicker } from './GigDatePicker';
+import { GigTimePicker } from './GigTimePicker';
 import { useTranslation } from 'react-i18next';
 
 interface GigFormProps {
@@ -65,6 +66,7 @@ export function GigForm({
     const [newTourName, setNewTourName] = useState('');
     const [gigName, setGigName] = useState(initialGig?.gigName ?? '');
     const [date, setDate] = useState(initialGig?.date ?? '');
+    const [time, setTime] = useState(initialGig?.time ?? '');
     const [location, setLocation] = useState<Location | null>(initialGig?.location ?? null);
     const [venueName, setVenueName] = useState<string | null>(initialGig?.venueName ?? null);
     const [placeLocationId, setPlaceLocationId] = useState<string | null>(initialGig?.placeLocationId ?? null);
@@ -80,6 +82,7 @@ export function GigForm({
         setNewTourName('');
         setGigName(initialGig?.gigName ?? '');
         setDate(initialGig?.date ?? '');
+        setTime(initialGig?.time ?? '');
         setLocation(initialGig?.location ?? null);
         setVenueName(initialGig?.venueName ?? null);
         setPlaceLocationId(initialGig?.placeLocationId ?? null);
@@ -140,6 +143,7 @@ export function GigForm({
                 placeLocationId,
                 location: submitLocation,
                 date,
+                time: time || null,
                 rawExternalData: venueName ? rawExternalData : null,
             }, initialGig?.id);
         } catch (submitError) {
@@ -180,13 +184,19 @@ export function GigForm({
                         )}
                     </div>
 
-                    {/* Date section */}
-                    <div>
+                    {/* Schedule fields */}
+                    <div className="grid grid-cols-[minmax(0,1fr)_8.75rem] gap-3">
                         <GigDatePicker
                             id="gig-date"
                             label={t('tour.fields.date')}
                             value={date}
                             onChange={setDate}
+                        />
+                        <GigTimePicker
+                            id="gig-time"
+                            label={t('tour.fields.time')}
+                            value={time}
+                            onChange={setTime}
                         />
                     </div>
 
@@ -269,7 +279,7 @@ export function GigForm({
                                             onClick={() => setTourMode('existing')}
                                             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'existing'
-                                                    ? 'bg-primary text-white shadow-sm'
+                                                    ? 'bg-primary-contrast text-white shadow-sm'
                                                     : 'text-text-secondary hover:text-text'
                                             }`}
                                         >
@@ -284,7 +294,7 @@ export function GigForm({
                                             }}
                                             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
                                                 tourMode === 'new'
-                                                    ? 'bg-primary text-white shadow-sm'
+                                                    ? 'bg-primary-contrast text-white shadow-sm'
                                                     : 'text-text-secondary hover:text-text'
                                             }`}
                                         >

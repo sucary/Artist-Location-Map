@@ -37,7 +37,7 @@ const GIG_SELECT_COLUMNS = `
     ST_X(g.coordinates::geometry) AS lng,
     ST_Y(g.display_coordinates::geometry) AS display_lat,
     ST_X(g.display_coordinates::geometry) AS display_lng,
-    g."date", g.timezone,
+    g."date", g."time", g.timezone,
     g.external_source, g.external_id, g.external_artist_id, g.external_url,
     g.imported_at, g.last_synced_at, g.raw_external_data,
     g.created_at, g.updated_at,
@@ -86,6 +86,11 @@ function formatDate(value: Date | string | null | undefined): string | undefined
     return `${year}-${month}-${day}`;
 }
 
+function formatTime(value: string | null | undefined): string | null {
+    if (!value) return null;
+    return value.slice(0, 5);
+}
+
 function parseArtists(value: unknown): GigArtistSummary[] {
     if (Array.isArray(value)) return value as GigArtistSummary[];
     if (typeof value === 'string') return JSON.parse(value) as GigArtistSummary[];
@@ -130,6 +135,7 @@ function rowToGig(row: Record<string, unknown>): Gig {
             lng: parseFloat(row.display_lng as string),
         },
         date: formatDate(row.date as Date | string)!,
+        time: formatTime(row.time as string | null | undefined),
         timezone: row.timezone as string | undefined,
         externalSource: row.external_source as string | undefined,
         externalId: row.external_id as string | undefined,
@@ -279,7 +285,7 @@ export const GigStore = {
             LEFT JOIN place_locations pl ON g.place_location_id = pl.id
             WHERE ${conditions.join(' AND ')}
             GROUP BY g.id, t.id, l.localized_names, pl.id
-            ORDER BY g."date" ASC, g.created_at ASC
+            ORDER BY g."date" ASC, g."time" ASC NULLS LAST, g.created_at ASC
         `, values);
 
         return result.rows.map(rowToGig);
@@ -331,7 +337,7 @@ export const GigStore = {
                     user_id, tour_id, gig_name, venue_name,
                     city, province, country, display_name, city_id, place_location_id,
                     coordinates, display_coordinates,
-                    "date", timezone,
+                    "date", "time", timezone,
                     external_source, external_id, external_artist_id, external_url,
                     imported_at, last_synced_at, raw_external_data
                 ) VALUES (
@@ -339,9 +345,9 @@ export const GigStore = {
                     $5, $6, $7, $8, $9, $10,
                     ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography,
                     ST_SetSRID(ST_MakePoint($13, $14), 4326)::geography,
-                    $15::date, $16,
-                    $17, $18, $19, $20,
-                    $21, $22, $23
+                    $15::date, $16::time, $17,
+                    $18, $19, $20, $21,
+                    $22, $23, $24
                 )
                 RETURNING id
             `, [
@@ -360,6 +366,7 @@ export const GigStore = {
                 data.displayCoordinates.lng,
                 data.displayCoordinates.lat,
                 data.date,
+                data.time || null,
                 data.timezone || null,
                 data.externalSource || null,
                 data.externalId || null,
@@ -447,6 +454,11 @@ export const GigStore = {
             if (data.date !== undefined) {
                 updates.push(`"date" = $${paramIndex++}::date`);
                 values.push(data.date);
+            }
+
+            if (data.time !== undefined) {
+                updates.push(`"time" = $${paramIndex++}::time`);
+                values.push(data.time || null);
             }
 
             if (data.timezone !== undefined) {

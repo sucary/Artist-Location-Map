@@ -4,7 +4,7 @@ import type { Gig } from '../../types/gig';
 import { CloseButton, InlineActionMenu, Input } from '../ui';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, SearchIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
-import { getBrowserDateLocale } from '../../utils/dateFormatting';
+import { formatLocalizedTimeValue, getBrowserDateLocale } from '../../utils/dateFormatting';
 
 type GigPanelSort = 'date' | 'artist' | 'location' | 'tour';
 type GigPanelSortDirection = 'asc' | 'desc';
@@ -40,7 +40,8 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
     const artistRowRefs = useRef(new Map<string, HTMLDivElement>());
     const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const sortListboxId = 'gig-panel-sort-options';
-    const dateLocale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
 
     useEffect(() => {
         if (!isSortOpen || !sortRef.current) return;
@@ -96,6 +97,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                 gig.location.province,
                 gig.location.country,
                 gig.date,
+                gig.time,
             ].filter(Boolean).join(' ').toLowerCase();
 
             return searchText.includes(normalizedQuery);
@@ -108,13 +110,13 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
             let result: number;
 
             if (sortMode === 'artist') {
-                result = getArtistNames(a).localeCompare(getArtistNames(b)) || a.date.localeCompare(b.date);
+                result = getArtistNames(a).localeCompare(getArtistNames(b)) || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
             } else if (sortMode === 'location') {
-                result = getCityLabel(a).localeCompare(getCityLabel(b)) || a.date.localeCompare(b.date);
+                result = getCityLabel(a).localeCompare(getCityLabel(b)) || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
             } else if (sortMode === 'tour') {
-                result = (a.tour?.name ?? '').localeCompare(b.tour?.name ?? '') || a.date.localeCompare(b.date);
+                result = (a.tour?.name ?? '').localeCompare(b.tour?.name ?? '') || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
             } else {
-                result = a.date.localeCompare(b.date) || getArtistNames(a).localeCompare(getArtistNames(b));
+                result = a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '') || getArtistNames(a).localeCompare(getArtistNames(b));
             }
 
             // Direction toggle mirrors Artist List sorting
@@ -198,6 +200,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
 
     const renderGigRow = (gig: Gig) => {
         const dateParts = formatDateTile(gig.date);
+        const formattedTime = formatLocalizedTimeValue(gig.time, dateFallback);
         const artistNames = gig.artists.length ? gig.artists : [gig.artist];
         const isArtistRowExpanded = expandedArtistRows.has(gig.id);
         const collapsedArtistCount = artistFitCounts[gig.id] ?? Math.min(artistNames.length, 2);
@@ -215,14 +218,18 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
 
         return (
             <li key={gig.id} className="group transition-colors duration-150 hover:bg-surface-secondary/30">
-                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-3">
-                    <div className="flex shrink-0 flex-col items-center justify-center text-center">
-                        <span className="text-xs font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
-                        <span className="text-3xl font-light leading-none text-text-secondary">{dateParts.day}</span>
-                        <span className="mt-0.5 text-[10px] font-medium leading-none text-text-secondary">{dateParts.weekday}</span>
+                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-2.5">
+                    <div className="grid min-h-14 w-12 shrink-0 grid-rows-[auto_auto_auto_1fr_auto] justify-items-center text-center">
+                        <span className="text-[10px] font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
+                        <span className="text-[1.7rem] font-light leading-none text-text-secondary">{dateParts.day}</span>
+                        <span className="text-[10px] font-medium leading-none text-text-secondary">{dateParts.weekday}</span>
+                        <span aria-hidden="true" />
+                        {formattedTime && (
+                            <span className="text-[10px] font-semibold leading-none text-text-secondary">{formattedTime}</span>
+                        )}
                     </div>
 
-                    <div className="flex min-w-0 flex-col justify-center gap-1.5">
+                    <div className="flex min-w-0 flex-col justify-center gap-1">
                         <div
                             ref={(node) => {
                                 if (node) {
@@ -236,7 +243,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                             <span className={isArtistRowExpanded ? 'text-sm font-semibold leading-5 text-text' : 'min-w-0 truncate text-sm font-semibold leading-5 text-text'}>
                                 {visibleArtistLabel}
                             </span>
-                            {canToggleArtistRow && (
+                            {canToggleArtistRow && !isArtistRowExpanded && (
                                 <button
                                     type="button"
                                     onClick={() => toggleArtistRow(gig.id)}
@@ -246,7 +253,16 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 </button>
                             )}
                         </div>
-                        <div className="relative flex min-h-9 min-w-0 items-center">
+                        {canToggleArtistRow && isArtistRowExpanded && (
+                            <button
+                                type="button"
+                                onClick={() => toggleArtistRow(gig.id)}
+                                className="inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-transparent text-[11px] font-semibold leading-none text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                            >
+                                -
+                            </button>
+                        )}
+                        <div className="relative flex min-h-8 min-w-0 items-center">
                             <p className="min-w-0 truncate text-xs text-text-secondary group-hover:pr-28">{locationMeta}</p>
                             <InlineActionMenu
                                 actions={[

@@ -159,4 +159,16 @@ html[data-theme="dark"] .artist-banner-placeholder {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+@layer utilities {
+  /* Scrollable wheel controls without browser chrome */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}

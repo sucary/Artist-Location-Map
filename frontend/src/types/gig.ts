@@ -1,5 +1,7 @@
 import type { Artist, Coordinates, CropArea, Location } from './artist';
 
+// Gig and tour API contracts
+
 export interface GigArtistSummary {
     id: string;
     name: string;
@@ -24,6 +26,7 @@ export interface Gig {
     placeLocationId?: string | null;
     displayCoordinates: Coordinates;
     date: string;
+    time?: string | null;
     timezone?: string;
     externalSource?: string;
     externalId?: string;
@@ -55,6 +58,7 @@ export interface GigInput {
     placeLocationId?: string | null;
     location: Location;
     date: string;
+    time?: string | null;
     timezone?: string;
     externalSource?: string | null;
     externalId?: string | null;

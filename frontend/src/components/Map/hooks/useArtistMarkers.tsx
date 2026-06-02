@@ -31,7 +31,7 @@ import type {
     ArtistPopupLifecycleState,
 } from '../types';
 import { getCityById } from '../../../services/api';
-import { formatLocalizedDateValue } from '../../../utils/dateFormatting';
+import { formatGigDateTimeValue } from '../../../utils/dateFormatting';
 
 const markerMoveDuration = 260;
 const mergedClusterAppearDelay = markerMoveDuration;
@@ -165,7 +165,7 @@ const VenueClusterGigRow = ({
     const artistRowRef = useRef<HTMLDivElement | null>(null);
     const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const artistNames = useMemo(() => gig.artists.length ? gig.artists : [gig.artist], [gig.artist, gig.artists]);
-    const formattedDate = formatLocalizedDateValue(gig.date, { year: 'numeric', month: '2-digit', day: '2-digit' }, dateFallback);
+    const formattedDate = formatGigDateTimeValue(gig.date, gig.time, dateFallback);
     const title = gig.gigName || gig.tour?.name || '';
 
     useEffect(() => {
@@ -303,7 +303,7 @@ const VenueClusterGigList = ({
     const { i18n } = useTranslation();
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const sortedGigs = [...gigs].sort((first, second) => (
-        first.date.localeCompare(second.date) || getGigArtistNames(first).localeCompare(getGigArtistNames(second))
+        first.date.localeCompare(second.date) || (first.time ?? '').localeCompare(second.time ?? '') || getGigArtistNames(first).localeCompare(getGigArtistNames(second))
     ));
 
     return (

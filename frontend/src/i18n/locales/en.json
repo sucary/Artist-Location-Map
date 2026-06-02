@@ -515,6 +515,7 @@
       "gig": "Gig",
       "gigName": "Gig name",
       "date": "Date",
+      "time": "Time",
       "tour": "Tour",
       "addToTour": "Add to tour",
       "partOfTour": "Part of a tour?",
@@ -556,6 +557,17 @@
       "locationPlaceholder": "Search venue / location",
       "locationSearchHint": "Some smaller venues may not appear in search results",
       "tourNamePlaceholder": "Enter tour name"
+    },
+    "timePicker": {
+      "enterTime": "Enter time",
+      "selectTime": "Select time",
+      "selectHour": "Select hour",
+      "selectMinute": "Select minute",
+      "dial": "Dial",
+      "manual": "Manual input",
+      "hour": "Hour",
+      "minute": "Minute",
+      "clear": "Clear"
     },
     "banner": {
       "label": "Tour Mode",
