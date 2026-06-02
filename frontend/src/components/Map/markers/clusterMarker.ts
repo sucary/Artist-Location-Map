@@ -261,10 +261,7 @@ export const createClusterMarkerElement = (
         metrics.radius
     );
     const size = radius * 2;
-    const visualSize = Math.min(
-        120,
-        Math.max(CLUSTER_CONFIG.minClusterSize, size)
-    );
+    const visualSize = Math.max(CLUSTER_CONFIG.minClusterSize, size);
     const fontSize = Math.max(13, Math.min(35, visualSize * 0.3));
 
     const element = document.createElement('button');
