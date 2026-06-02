@@ -13,6 +13,9 @@ export type ClusterVisualMetrics = {
 type ClusterVisualColors = {
     background: string;
     border: string;
+    text: string;
+    shadow: string;
+    textShadow: string;
     centerFill: string;
     centerRing: string;
     debugFill: string;
@@ -28,6 +31,18 @@ type ClusterMarkerOptions = {
 
 const VENUE_CLUSTER_PIN_COLOR = '#D94F3D';
 
+const CLUSTER_WARM_RANGE = [
+    { maxCount: 3, fill: 'rgba(92,119,151,0.72)', border: 'rgba(53,72,104,0.94)' },
+    { maxCount: 9, fill: 'rgba(82,132,123,0.76)', border: 'rgba(45,88,82,0.94)' },
+    { maxCount: 24, fill: 'rgba(137,111,67,0.80)', border: 'rgba(86,63,32,0.94)' },
+    { maxCount: 54, fill: 'rgba(139,86,94,0.84)', border: 'rgba(91,45,55,0.94)' },
+    { maxCount: Infinity, fill: 'rgba(91,76,117,0.88)', border: 'rgba(52,41,76,0.94)' },
+];
+
+const getWarmClusterColor = (count: number) => (
+    CLUSTER_WARM_RANGE.find((range) => count <= range.maxCount) ?? CLUSTER_WARM_RANGE[CLUSTER_WARM_RANGE.length - 1]
+);
+
 const generateHue = (lng: number, lat: number) => {
     // Stable cluster color from geographic position
     const hash = Math.sin(lat * 1234.5) * Math.cos(lng * 5678.9) * 10000;
@@ -42,10 +57,14 @@ const getClusterVisualColors = (count: number, center: [number, number]): Cluste
     const lightness = isDarkTheme ? 62 - countFactor * 18 : 50 - countFactor * 20;
     const hue = generateHue(centerLng, centerLat);
     const borderLightness = isDarkTheme ? lightness + 18 : lightness - 10;
+    const themeColor = getWarmClusterColor(count);
 
     return {
-        background: `hsla(${hue},${saturation}%,${lightness}%,0.4)`,
-        border: `hsla(${hue},${saturation}%,${borderLightness}%,0.6)`,
+        background: themeColor.fill,
+        border: themeColor.border,
+        text: '#FFFAF0',
+        shadow: '0 4px 10px rgba(35,40,38,0.26)',
+        textShadow: '0 1px 2px rgba(25,25,25,0.55)',
         centerFill: `hsl(${hue},${Math.min(95, saturation + 20)}%,${isDarkTheme ? 74 : 34}%)`,
         centerRing: isDarkTheme ? '#ffffff' : '#111827',
         debugFill: `hsl(${hue},${saturation}%,${lightness}%)`,
@@ -243,10 +262,10 @@ export const createClusterMarkerElement = (
     );
     const size = radius * 2;
     const visualSize = Math.min(
-        CLUSTER_CONFIG.maxClusterSize,
+        120,
         Math.max(CLUSTER_CONFIG.minClusterSize, size)
     );
-    const fontSize = Math.max(12, Math.min(28, visualSize / 5));
+    const fontSize = Math.max(13, Math.min(35, visualSize * 0.3));
 
     const element = document.createElement('button');
 
@@ -268,12 +287,15 @@ export const createClusterMarkerElement = (
     } else {
         const bubble = document.createElement('div');
 
-        bubble.className = 'flex items-center justify-center rounded-full font-bold border-2 shadow-lg cursor-pointer text-white';
+        bubble.className = 'flex items-center justify-center rounded-full border-[3px] font-extrabold cursor-pointer';
         bubble.style.width = `${visualSize}px`;
         bubble.style.height = `${visualSize}px`;
         bubble.style.background = debugSolid ? colors.debugFill : colors.background;
         bubble.style.borderColor = debugSolid ? colors.coverageRing : colors.border;
+        bubble.style.color = debugSolid ? '#ffffff' : colors.text;
         bubble.style.fontSize = `${fontSize}px`;
+        bubble.style.boxShadow = colors.shadow;
+        bubble.style.textShadow = colors.textShadow;
         bubble.textContent = String(count);
         element.appendChild(bubble);
     }
