@@ -385,12 +385,13 @@ export default function MapView({
     });
 
     useEffect(() => {
-        if (previousTourModeActiveRef.current && !tourModeActive) {
-            // Gig popup content must not survive the Tour Mode boundary
+        if (previousTourModeActiveRef.current !== tourModeActive) {
+            // Mode-specific popups and expanded clusters cannot cross map modes
             closeActiveArtistPopup();
+            collapseExpandedClusters(false);
         }
         previousTourModeActiveRef.current = tourModeActive;
-    }, [closeActiveArtistPopup, tourModeActive]);
+    }, [closeActiveArtistPopup, collapseExpandedClusters, tourModeActive]);
 
     useEffect(() => {
         if (canUseClusterDebugControls) return;
