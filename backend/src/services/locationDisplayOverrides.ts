@@ -13,14 +13,23 @@ export const TOKYO_23_WARDS_DISPLAY = {
     localizedNames: {
         city: {
             en: 'Tokyo',
+            ja: '東京',
+            zhHans: '东京',
+            zhHant: '東京',
             native: 'Tokyo',
         },
         province: {
             en: 'Tokyo',
+            ja: '東京都',
+            zhHans: '东京都',
+            zhHant: '東京都',
             native: 'Tokyo',
         },
         country: {
             en: 'Japan',
+            ja: '日本',
+            zhHans: '日本',
+            zhHant: '日本',
             native: 'Japan',
         },
     } satisfies LocalizedChain,
