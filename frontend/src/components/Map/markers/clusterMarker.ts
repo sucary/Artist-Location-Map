@@ -155,6 +155,7 @@ const createVenueClusterMarkerElement = (
     wrapper.style.overflow = 'visible';
     wrapper.style.left = `calc(50% - ${pinSize / 2}px)`;
     wrapper.style.transform = 'translateY(-50%)';
+    wrapper.style.transformOrigin = `${pinSize / 2}px 50%`;
 
     pin.className = 'relative flex items-center justify-center border-2 border-white app-dark:border-border-strong font-bold text-white shadow-lg shadow-black/20';
     pin.style.width = `${pinSize}px`;

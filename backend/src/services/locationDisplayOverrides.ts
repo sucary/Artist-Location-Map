@@ -10,6 +10,7 @@ export const TOKYO_23_WARDS_DISPLAY = {
     province: 'Tokyo',
     country: 'Japan',
     displayName: 'Tokyo, Tokyo, Japan',
+    type: 'city',
     localizedNames: {
         city: {
             en: 'Tokyo',
@@ -47,7 +48,7 @@ export function getLocationDisplayOverride(osmId: number | string, osmType: stri
     return null;
 }
 
-export function applyLocationDisplayOverride<T extends Pick<NominatimResponse, 'osm_id' | 'osm_type' | 'address' | 'display_name' | 'name'>>(data: T): T {
+export function applyLocationDisplayOverride<T extends Pick<NominatimResponse, 'osm_id' | 'osm_type' | 'address' | 'display_name' | 'name' | 'type'>>(data: T): T {
     const override = getLocationDisplayOverride(data.osm_id, data.osm_type);
 
     if (!override) {
@@ -58,6 +59,7 @@ export function applyLocationDisplayOverride<T extends Pick<NominatimResponse, '
         ...data,
         name: override.name,
         display_name: override.displayName,
+        type: override.type,
         address: {
             ...data.address,
             city: override.name,

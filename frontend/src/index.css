@@ -104,12 +104,17 @@ html[data-theme="dark"] .artist-banner-placeholder {
 
 /* Artist marker focus */
 .custom-artist-marker.marker-focused,
-.custom-artist-marker:has(+ .maplibregl-popup) {
+.custom-artist-marker:has(+ .maplibregl-popup),
+.custom-venue-cluster-marker.marker-focused {
   z-index: 1000 !important;
 }
 .custom-artist-marker.marker-focused > div,
 .custom-artist-marker:has(+ .maplibregl-popup) > div {
   transform: scale(1.25);
+  transition: transform 0.15s ease-out;
+}
+.custom-venue-cluster-marker.marker-focused > div {
+  transform: translateY(-50%) scale(1.25) !important;
   transition: transform 0.15s ease-out;
 }
 

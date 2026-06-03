@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 interface GigFormProps {
     initialGig?: Gig | null;
     initialArtist?: Artist | null;
+    initialDate?: string;
     onSubmit: (input: GigInput, id?: string) => Promise<void> | void;
     onCancel: () => void;
     onRequestSelection?: (targetField: SelectionMode['targetField']) => void;
@@ -45,6 +46,7 @@ function getSubmitErrorMessage(error: unknown, fallback: string): string {
 export function GigForm({
     initialGig,
     initialArtist,
+    initialDate = '',
     onSubmit,
     onCancel,
     onRequestSelection,
@@ -65,7 +67,7 @@ export function GigForm({
     const [tourId, setTourId] = useState(initialGig?.tourId ?? '');
     const [newTourName, setNewTourName] = useState('');
     const [gigName, setGigName] = useState(initialGig?.gigName ?? '');
-    const [date, setDate] = useState(initialGig?.date ?? '');
+    const [date, setDate] = useState(initialGig?.date ?? initialDate);
     const [time, setTime] = useState(initialGig?.time ?? '');
     const [location, setLocation] = useState<Location | null>(initialGig?.location ?? null);
     const [venueName, setVenueName] = useState<string | null>(initialGig?.venueName ?? null);
@@ -81,14 +83,14 @@ export function GigForm({
         setTourId(initialGig?.tourId ?? '');
         setNewTourName('');
         setGigName(initialGig?.gigName ?? '');
-        setDate(initialGig?.date ?? '');
+        setDate(initialGig?.date ?? initialDate);
         setTime(initialGig?.time ?? '');
         setLocation(initialGig?.location ?? null);
         setVenueName(initialGig?.venueName ?? null);
         setPlaceLocationId(initialGig?.placeLocationId ?? null);
         setRawExternalData(initialGig?.rawExternalData ?? undefined);
         setError(null);
-    }, [initialArtist?.id, initialGig]);
+    }, [initialArtist?.id, initialDate, initialGig]);
 
     useEffect(() => {
         if (!toursFetched || hasTours || tourMode === 'new') return;

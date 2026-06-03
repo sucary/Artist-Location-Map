@@ -43,6 +43,7 @@ const debugClusterCenterZIndex = debugClusterRingZIndex + 1;
 const focusedMarkerZIndex = 1000;
 const selectedMarkerZIndex = focusedMarkerZIndex - 1;
 const maxRandomMarkerZIndex = selectedMarkerZIndex - 1;
+const markerPopupOffset = 32;
 
 const markerAnimations = new WeakMap<maplibregl.Marker, number>();
 const displayCoordinateDragHandlers = new WeakMap<maplibregl.Marker, {
@@ -215,7 +216,7 @@ const VenueClusterGigRow = ({
             let fitCount = artistNames.length;
 
             for (let count = artistNames.length; count > 1; count -= 1) {
-                const label = artistNames.slice(0, count).map((artist) => artist.name).join(' \u00b7 ');
+                const label = artistNames.slice(0, count).map((artist) => artist.name).join(', ');
                 const hiddenCount = artistNames.length - count;
                 const requiredWidth = measureArtistText(label) + (hiddenCount > 0 ? toggleWidth + gapWidth : 0);
 
@@ -248,7 +249,7 @@ const VenueClusterGigRow = ({
     const visibleArtists = isArtistRowExpanded ? artistNames : artistNames.slice(0, collapsedArtistCount);
     const hiddenArtistCount = artistNames.length - visibleArtists.length;
     const canToggleArtistRow = hiddenArtistCount > 0 || (isArtistRowExpanded && collapsedArtistCount < artistNames.length);
-    const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(' \u00b7 ');
+    const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(', ');
 
     return (
         <li className="group transition-colors duration-150 hover:bg-surface-secondary/30">
@@ -1451,7 +1452,7 @@ export const useArtistMarkers = ({
             closeOnClick: false,
             className: 'artist-popup',
             maxWidth: '320px',
-            offset: 18,
+            offset: markerPopupOffset,
         })
             .setDOMContent(popupContainer)
             .setLngLat(marker.getLngLat())
@@ -1562,7 +1563,7 @@ export const useArtistMarkers = ({
             closeOnClick: false,
             className: 'artist-popup',
             maxWidth: '320px',
-            offset: 18,
+            offset: markerPopupOffset,
         })
             .setDOMContent(popupContainer)
             .setLngLat(center)

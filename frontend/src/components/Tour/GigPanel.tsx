@@ -151,7 +151,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                 let fitCount = artists.length;
 
                 for (let count = artists.length; count > 1; count -= 1) {
-                    const label = artists.slice(0, count).map((artist) => artist.name).join(' \u00b7 ');
+                    const label = artists.slice(0, count).map((artist) => artist.name).join(', ');
                     const hiddenCount = artists.length - count;
                     const requiredWidth = measureArtistText(label) + (hiddenCount > 0 ? toggleWidth + gapWidth : 0);
 
@@ -209,7 +209,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
         const visibleArtists = isArtistRowExpanded ? artistNames : artistNames.slice(0, collapsedArtistCount);
         const hiddenArtistCount = artistNames.length - visibleArtists.length;
         const canToggleArtistRow = hiddenArtistCount > 0 || (isArtistRowExpanded && collapsedArtistCount < artistNames.length);
-        const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(' \u00b7 ');
+        const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(', ');
         const title = gig.gigName || gig.tour?.name;
         const isStarred = starredGigIds?.has(gig.id) ?? false;
 

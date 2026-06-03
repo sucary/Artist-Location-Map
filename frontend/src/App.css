@@ -1,5 +1,5 @@
 .maplibregl-popup.artist-popup {
-  z-index: 1200;
+  z-index: 900;
 }
 
 .maplibregl-popup.artist-popup .maplibregl-popup-content {

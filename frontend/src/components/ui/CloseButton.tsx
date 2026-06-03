@@ -51,7 +51,7 @@ export function CloseButton({ size = 'md', className, ...props }: CloseButtonPro
                 <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M6 18L18 6M6 6l12 12"
                 />
             </svg>

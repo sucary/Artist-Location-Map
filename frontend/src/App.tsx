@@ -114,6 +114,7 @@ function App() {
     const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
     const [editingGig, setEditingGig] = useState<Gig | null>(null);
     const [gigFormArtist, setGigFormArtist] = useState<Artist | null>(null);
+    const [gigFormInitialDate, setGigFormInitialDate] = useState('');
     const [selectionMode, setSelectionMode] = useState<SelectionMode | null>(null);
     const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
     const [focusedArtist, setFocusedArtist] = useState<Artist | null>(null);
@@ -368,6 +369,7 @@ function App() {
         setShowGigForm(false);
         setEditingGig(null);
         setGigFormArtist(null);
+        setGigFormInitialDate('');
         setSelectionMode(null);
         setPendingCoordinates(null);
     };
@@ -487,7 +489,7 @@ function App() {
         updateTourParams({ active: true, from: null, to: null, day: null });
     };
 
-    const handleAddGigClick = () => {
+    const handleAddGigClick = (initialDate = '') => {
         if (!user) {
             setShowAuthModal(true);
             return;
@@ -501,6 +503,7 @@ function App() {
         setMainSearchCloseSignal((signal) => signal + 1);
         setEditingGig(null);
         setGigFormArtist(null);
+        setGigFormInitialDate(initialDate);
         setShowGigForm(true);
         updateTourParams({ active: true });
     };
@@ -516,6 +519,25 @@ function App() {
         setShowGigCalendar(false);
         setEditingGig(null);
         setGigFormArtist(artist);
+        setGigFormInitialDate('');
+        setShowGigForm(true);
+        updateTourParams({ active: true });
+    };
+
+    const handleAddGigFromCalendar = (date: string) => {
+        if (!user) {
+            setShowAuthModal(true);
+            return;
+        }
+
+        setShowForm(false);
+        setShowArtistList(false);
+        setShowFeaturedList(false);
+        setShowGigPanel(false);
+        setMainSearchCloseSignal((signal) => signal + 1);
+        setEditingGig(null);
+        setGigFormArtist(null);
+        setGigFormInitialDate(date);
         setShowGigForm(true);
         updateTourParams({ active: true });
     };
@@ -526,6 +548,7 @@ function App() {
         setShowGigCalendar(false);
         setEditingGig(gig);
         setGigFormArtist(null);
+        setGigFormInitialDate('');
         setShowGigForm(true);
     };
 
@@ -908,6 +931,7 @@ function App() {
                     <GigForm
                         initialGig={editingGig}
                         initialArtist={gigFormArtist}
+                        initialDate={gigFormInitialDate}
                         onSubmit={handleGigFormSubmit}
                         onCancel={handleCloseGigForm}
                         onRequestSelection={handleStartSelection}
@@ -933,6 +957,7 @@ function App() {
                     selectedDay={tourMode.selectedDay}
                     onSelectDay={handleSelectCalendarDay}
                     onClose={handleCloseGigCalendar}
+                    onAddGig={handleAddGigFromCalendar}
                     starredGigIds={starredGigIds}
                     onToggleGigStar={handleToggleGigStar}
                 />

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Gig } from '../../types/gig';
 import { CloseButton } from '../ui';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, StarIcon } from '../icons/GeneralIcons';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, PlusIcon, StarIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { getBrowserDateLocale } from '../../utils/dateFormatting';
 import { buildClusterPalette, getStableColorHash } from '../../utils/generatedClusterPalette';
@@ -14,6 +14,7 @@ interface GigCalendarProps {
     selectedDay: string | null;
     onSelectDay: (date: string | null) => void;
     onClose: () => void;
+    onAddGig?: (date: string) => void;
     starredGigIds?: Set<string>;
     onToggleGigStar?: (gig: Gig) => void;
 }
@@ -22,6 +23,14 @@ interface CalendarDay {
     date: Date;
     value: string;
     inMonth: boolean;
+}
+
+interface DayPopoverState {
+    dateValue: string;
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
 }
 
 const dayKey = (date: Date) => {
@@ -103,7 +112,7 @@ const formatCalendarDayLabel = (date: Date, dateLocale?: Intl.LocalesArgument) =
     return `${monthLabel} ${localizedDayLabel}`;
 };
 
-export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGigIds, onToggleGigStar }: GigCalendarProps) {
+export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig, starredGigIds, onToggleGigStar }: GigCalendarProps) {
     const { i18n, t } = useTranslation();
     const titleButtonRef = useRef<HTMLButtonElement>(null);
     const datePickerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +123,8 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const [datePickerMode, setDatePickerMode] = useState<'month' | 'year'>('year');
     const [datePickerPosition, setDatePickerPosition] = useState({ top: 0, left: 0, width: 300, maxHeight: 520 });
+    const [dayPopover, setDayPopover] = useState<DayPopoverState | null>(null);
+    const dayPopoverRef = useRef<HTMLDivElement>(null);
     const todayValue = dayKey(new Date());
     const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
     const weekdayLabels = useMemo(() => {
@@ -173,6 +184,21 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
     }, []);
 
     useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (dayPopoverRef.current?.contains(target)) return;
+            setDayPopover(null);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        setDayPopover(null);
+    }, [visibleMonth]);
+
+    useEffect(() => {
         if (!isDatePickerOpen || !titleButtonRef.current) return;
 
         const rect = titleButtonRef.current.getBoundingClientRect();
@@ -226,6 +252,22 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
         setIsDatePickerOpen(false);
     };
 
+    const openDayPopover = (event: React.MouseEvent<HTMLButtonElement>, dateValue: string) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const width = Math.min(300, window.innerWidth - 16);
+        const left = Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+        const maxHeight = Math.min(520, window.innerHeight - 16);
+
+        // Full-day popover anchors near the collapsed count row
+        setDayPopover({
+            dateValue,
+            top: Math.min(Math.max(8, rect.top - 110), window.innerHeight - maxHeight - 8),
+            left,
+            width,
+            maxHeight,
+        });
+    };
+
     const renderGigEvent = (gig: Gig) => {
         const eventLabel = getArtistNames(gig);
         const eventMeta = getGigMeta(gig);
@@ -250,9 +292,95 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
         );
     };
 
+    const renderAddGigButton = (dateValue: string, placement: 'center' | 'row' | 'stack') => {
+        if (!onAddGig) return null;
+
+        const label = t('tour.actions.addGig');
+
+        if (placement === 'center') {
+            return (
+                <button
+                    type="button"
+                    aria-label={label}
+                    title={label}
+                    onClick={() => onAddGig(dateValue)}
+                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-[#E5E7EB] app-dark:hover:bg-[#3A3A3C]"
+                >
+                    <span className="grid h-9 w-9 place-items-center text-text-secondary opacity-0 transition-opacity group-hover/add-cell:opacity-100">
+                        <PlusIcon className="h-5 w-5" />
+                    </span>
+                </button>
+            );
+        }
+
+        if (placement === 'row') {
+            return (
+                <button
+                    type="button"
+                    aria-label={label}
+                    title={label}
+                    onClick={() => onAddGig(dateValue)}
+                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-[#F3F4F6] text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-[#E5E7EB] group-hover/day-row:opacity-100 app-dark:bg-[#2C2C2E] app-dark:hover:bg-[#3A3A3C] sm:left-2 sm:right-2"
+                >
+                    <PlusIcon className="h-3.5 w-3.5" />
+                </button>
+            );
+        }
+
+        return (
+            <button
+                type="button"
+                aria-label={label}
+                title={label}
+                onClick={() => onAddGig(dateValue)}
+                className="group/add-stack flex items-start justify-center rounded"
+            >
+                <span className="grid h-9 w-full place-items-center rounded bg-[#F3F4F6] text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:group-hover/add-stack:bg-[#3A3A3C]">
+                    <PlusIcon className="h-4 w-4" />
+                </span>
+            </button>
+        );
+    };
+
+    const renderDayPopover = () => {
+        if (!dayPopover) return null;
+
+        const popoverDate = parseDateValue(dayPopover.dateValue);
+        const dayGigs = gigsByDate.get(dayPopover.dateValue) ?? [];
+        if (!popoverDate || dayGigs.length === 0) return null;
+
+        const weekdayLabel = new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(popoverDate);
+        const dayLabel = new Intl.DateTimeFormat(dateLocale, { day: 'numeric' }).format(popoverDate).replace(/\u65e5$/, '');
+
+        return createPortal(
+            <div
+                ref={dayPopoverRef}
+                role="dialog"
+                aria-label={`${weekdayLabel} ${dayLabel}`}
+                className="fixed z-[9999] overflow-hidden rounded-xl border border-border/70 bg-surface shadow-xl shadow-black/15"
+                style={{
+                    top: `${dayPopover.top}px`,
+                    left: `${dayPopover.left}px`,
+                    width: `${dayPopover.width}px`,
+                    maxHeight: `${dayPopover.maxHeight}px`,
+                }}
+            >
+                <div className="relative px-4 pb-3 pt-4 text-center">
+                    <p className="text-xs font-semibold text-text-secondary">{weekdayLabel}</p>
+                    <p className="mt-2 text-3xl font-light leading-none text-text">{dayLabel}</p>
+                    <CloseButton onClick={() => setDayPopover(null)} size="md" className="absolute right-3 top-3" />
+                </div>
+                <div className="flex max-h-[420px] min-w-0 flex-col gap-0.5 overflow-y-auto px-3 pb-4">
+                    {dayGigs.map(renderGigEvent)}
+                </div>
+            </div>,
+            document.body
+        );
+    };
+
     return (
-        <div className="absolute inset-x-2 top-20 z-[1050] mx-auto w-[calc(100vw-1rem)] max-w-5xl font-sans sm:top-24">
-            <div role="region" aria-label={t('tour.calendar.title')} className="mx-auto flex h-[min(760px,calc(100vh-8rem))] min-h-[520px] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40">
+        <div className="absolute inset-x-2 top-20 z-[1050] mx-auto flex w-[min(1280px,calc(100vw-1rem),calc((100vh-8rem)*1.6))] justify-center font-sans sm:top-24">
+            <div role="region" aria-label={t('tour.calendar.title')} className="flex aspect-[16/10] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
                     <div className="flex min-w-0 items-center gap-2">
                         <button
@@ -395,29 +523,48 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
                     {calendarDays.map((day) => {
                         const dayGigs = gigsByDate.get(day.value) ?? [];
                         const isToday = todayValue === day.value;
-                        const visibleGigs = dayGigs.slice(0, 4);
+                        const visibleGigs = dayGigs.length >= 3 ? dayGigs.slice(0, 2) : dayGigs;
                         const hiddenGigCount = dayGigs.length - visibleGigs.length;
+                        const showCenteredAdd = dayGigs.length === 0;
+                        const showStackAdd = dayGigs.length > 0 && dayGigs.length <= 2;
+                        const showRowAdd = dayGigs.length >= 3;
 
                         return (
                             <div
                                 key={day.value}
-                                className={`min-h-0 border-b border-r border-border/60 bg-surface pb-1 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:pb-2 ${
+                                className={`flex min-h-0 flex-col overflow-hidden border-b border-r border-border/60 bg-surface pb-1 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:pb-2 ${
                                     day.inMonth ? 'text-text' : 'text-text-muted bg-surface-secondary/25'
                                 } hover:bg-surface-secondary/50`}
                             >
-                                <span
-                                    className={`mb-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-semibold leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 ${
-                                        isToday ? 'bg-primary text-white' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
-                                    }`}
-                                >
-                                    {formatCalendarDayLabel(day.date, dateLocale)}
-                                </span>
-                                <span className="flex min-w-0 flex-col gap-1 overflow-hidden px-1 sm:px-2">
-                                    {visibleGigs.map(renderGigEvent)}
-                                    {hiddenGigCount > 0 && (
-                                        <span className="truncate px-1 text-xs font-semibold text-primary-contrast">
-                                            {t('tour.calendar.more', { count: hiddenGigCount })}
+                                <div className={`relative mb-0.5 flex min-h-5 items-start gap-1 ${showRowAdd ? 'group/day-row' : ''}`}>
+                                    <span
+                                        className={`relative z-10 inline-flex h-5 min-w-5 self-start items-center justify-center rounded-full px-1 text-xs font-semibold leading-none transition-colors group-hover/day-row:opacity-0 focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 ${
+                                            isToday ? 'bg-primary text-white' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
+                                        }`}
+                                    >
+                                        {formatCalendarDayLabel(day.date, dateLocale)}
+                                    </span>
+                                    {showRowAdd && renderAddGigButton(day.value, 'row')}
+                                </div>
+                                <span className="flex min-h-0 min-w-0 flex-1 flex-col gap-0.5 overflow-hidden px-1 sm:px-2">
+                                    {showCenteredAdd ? (
+                                        <span className="flex flex-1 items-center justify-center">
+                                            {renderAddGigButton(day.value, 'center')}
                                         </span>
+                                    ) : (
+                                        <>
+                                            {visibleGigs.map(renderGigEvent)}
+                                            {showStackAdd && renderAddGigButton(day.value, 'stack')}
+                                            {hiddenGigCount > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(event) => openDayPopover(event, day.value)}
+                                                    className="truncate rounded bg-[#F3F4F6] px-1 py-1 text-left text-xs font-semibold text-text-secondary transition-colors hover:bg-[#E5E7EB] hover:text-text app-dark:bg-[#2C2C2E] app-dark:hover:bg-[#3A3A3C]"
+                                                >
+                                                    {t('tour.calendar.remainingEvents', { count: hiddenGigCount, defaultValue: '{{count}} more events' })}
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                 </span>
                             </div>
@@ -425,6 +572,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGi
                     })}
                 </div>
             </div>
+            {renderDayPopover()}
         </div>
     );
 }

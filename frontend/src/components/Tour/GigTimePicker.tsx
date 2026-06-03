@@ -29,7 +29,7 @@ function parseTimeValue(value: string): TimeParts {
 }
 
 function formatTimeParts(time: TimeParts): string {
-    return `${time.hour}:${time.minute}`;
+    return `${time.hour.padStart(2, '0')}:${time.minute.padStart(2, '0')}`;
 }
 
 function normalizeTwoDigitNumber(value: string, max: number): string | null {
@@ -38,7 +38,13 @@ function normalizeTwoDigitNumber(value: string, max: number): string | null {
 
     const numericValue = Number(digits);
     if (Number.isNaN(numericValue) || numericValue > max) return null;
-    return digits.padStart(2, '0');
+    return digits;
+}
+
+function finalizeTimePart(value: string, max: number): string {
+    const normalizedValue = normalizeTwoDigitNumber(value, max);
+    if (normalizedValue === null || normalizedValue === '') return '00';
+    return normalizedValue.padStart(2, '0');
 }
 
 export function GigTimePicker({ id, label, value, onChange, disabled = false }: GigTimePickerProps) {
@@ -105,6 +111,13 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
         });
     };
 
+    const finalizeManualPart = (part: DialPhase) => {
+        setDraft({
+            ...draftTime,
+            [part]: finalizeTimePart(draftTime[part], part === 'hour' ? 23 : 59),
+        });
+    };
+
     const confirmTime = () => {
         if (draftCleared) {
             onChange('');
@@ -133,6 +146,8 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
                         inputMode="numeric"
                         value={draftCleared ? '' : draftTime.hour}
                         onChange={(event) => updateManualPart('hour', event.target.value)}
+                        onBlur={() => finalizeManualPart('hour')}
+                        onFocus={(event) => event.currentTarget.select()}
                         className="h-16 w-full rounded-md border border-border-strong bg-surface-muted px-3 text-center text-4xl font-semibold leading-none text-text tabular-nums focus:border-primary-contrast focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-contrast"
                     />
                     <span className="mt-1 block text-xs font-medium text-text-secondary">{t('tour.timePicker.hour', { defaultValue: 'Hour' })}</span>
@@ -144,6 +159,8 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
                         inputMode="numeric"
                         value={draftCleared ? '' : draftTime.minute}
                         onChange={(event) => updateManualPart('minute', event.target.value)}
+                        onBlur={() => finalizeManualPart('minute')}
+                        onFocus={(event) => event.currentTarget.select()}
                         className="h-16 w-full rounded-md border border-border-strong bg-surface-muted px-3 text-center text-4xl font-semibold leading-none text-text tabular-nums focus:border-primary-contrast focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-contrast"
                     />
                     <span className="mt-1 block text-xs font-medium text-text-secondary">{t('tour.timePicker.minute', { defaultValue: 'Minute' })}</span>

@@ -25,6 +25,21 @@ interface LocationSearchProps {
     statusMessage?: string;
 }
 
+function getLocationTypeLabel(result: SearchResult, cityLabel: string): string | null {
+    const rawType = result.type?.trim();
+    if (!rawType) return null;
+
+    const normalizedType = rawType.toLowerCase();
+    const isAdministrativeBoundary = normalizedType === 'administrative' || normalizedType === 'boundary';
+
+    // Local boundary rows represent selectable city-level app locations
+    if (isAdministrativeBoundary && (result.isLocal || result.localizedChain?.city || result.id)) {
+        return cityLabel;
+    }
+
+    return rawType.replace(/_/g, ' ');
+}
+
 export const LocationSearch = ({
     displayValue = '',
     onChange,
@@ -76,6 +91,7 @@ export const LocationSearch = ({
     const inputRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+    const cityTypeLabel = t('common.city', { defaultValue: 'City' });
 
     // Update dropdown position when opening
     useEffect(() => {
@@ -243,33 +259,37 @@ export const LocationSearch = ({
                     }}
                 >
                     <div id={listboxId} role="listbox" aria-label={label || t('artistForm.locationSearch.placeholder')} className="overflow-y-auto" style={{ maxHeight: `${dropdownPosition.maxHeight - 2}px` }}>
-                        {results.map((result, index) => (
-                            <button
-                                role="option"
-                                aria-selected="false"
-                                key={`${result.osmId}-${index}`}
-                                onClick={() => handleSelect(result)}
-                                type="button"
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted border-b border-border last:border-b-0"
-                            >
-                                <div className="font-medium text-text flex items-start">
-                                    {profile?.isAdmin && result.isPriority && (
-                                        <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 mt-1.5" />
-                                    )}
-                                    {result.localizedChain
-                                        ? formatLocationLocalized({ localizedChain: result.localizedChain }, locationLanguage)
-                                        : result.displayName}
-                                </div>
-                                <div className="flex items-center justify-between mt-0.5">
-                                    {result.type && (
-                                        <span className="text-xs text-text-secondary capitalize">{result.type}</span>
-                                    )}
-                                    {profile?.isAdmin && result.isLocal && (
-                                        <span className="text-xs text-secondary bg-secondary/10 px-1.5 py-0.5 rounded ml-auto">DB</span>
-                                    )}
-                                </div>
-                            </button>
-                        ))}
+                        {results.map((result, index) => {
+                            const typeLabel = getLocationTypeLabel(result, cityTypeLabel);
+
+                            return (
+                                <button
+                                    role="option"
+                                    aria-selected="false"
+                                    key={`${result.osmId}-${index}`}
+                                    onClick={() => handleSelect(result)}
+                                    type="button"
+                                    className="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted border-b border-border last:border-b-0"
+                                >
+                                    <div className="font-medium text-text flex items-start">
+                                        {profile?.isAdmin && result.isPriority && (
+                                            <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 mt-1.5" />
+                                        )}
+                                        {result.localizedChain
+                                            ? formatLocationLocalized({ localizedChain: result.localizedChain }, locationLanguage)
+                                            : result.displayName}
+                                    </div>
+                                    <div className="flex items-center justify-between mt-0.5">
+                                        {typeLabel && (
+                                            <span className="text-xs text-text-secondary capitalize">{typeLabel}</span>
+                                        )}
+                                        {profile?.isAdmin && result.isLocal && (
+                                            <span className="text-xs text-secondary bg-secondary/10 px-1.5 py-0.5 rounded ml-auto">DB</span>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
                         {hasMore && (
                             <Button
                                 onClick={handleSearchMore}

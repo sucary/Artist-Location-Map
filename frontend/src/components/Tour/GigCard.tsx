@@ -122,8 +122,10 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
         );
     };
 
-    const renderSecondaryArtistName = (artist: typeof artists[number]) => (
-        <span key={artist.id} className="min-w-0 truncate text-lg font-semibold leading-7 text-text">{artist.name}</span>
+    const renderCommaSeparatedArtistNames = () => (
+        <span className="min-w-0 truncate text-lg font-semibold leading-7 text-text">
+            {artists.map((artist) => artist.name).join(', ')}
+        </span>
     );
 
     const renderSecondaryArtistAvatar = (artist: typeof artists[number], index: number) => {
@@ -205,8 +207,8 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
                     renderPrimaryArtist(artists[0])
                 ) : artists.length === 2 && !artistsExpanded ? (
                     <div className="flex min-w-0 items-center justify-between gap-3">
-                        <div className="flex min-w-0 flex-col gap-2">
-                            {artists.map(renderSecondaryArtistName)}
+                        <div className="flex min-w-0">
+                            {renderCommaSeparatedArtistNames()}
                         </div>
                         <div className="flex shrink-0 items-center">
                             {artists.map(renderSecondaryArtistAvatar)}

@@ -624,10 +624,11 @@
       "selectDate": "Select date",
       "selectMonth": "Select month",
       "previousMonth": "Previous month",
-      "nextMonth": "Next month",
-      "today": "Today",
-      "more": "+{{count}} more"
-    }
+        "nextMonth": "Next month",
+        "today": "Today",
+        "more": "+{{count}} more",
+        "remainingEvents": "{{count}} more events"
+      }
   },
   "app": {
     "dialogs": {
