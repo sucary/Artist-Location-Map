@@ -589,7 +589,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                 setNotificationAudience('all');
                                                 setSelectedRecipient(null);
                                             }}
-                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'all' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'all' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-muted'}`}
                                         >
                                             All users
                                         </button>
@@ -598,7 +598,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                             role="radio"
                                             aria-checked={notificationAudience === 'user'}
                                             onClick={() => setNotificationAudience('user')}
-                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-secondary'}`}
+                                            className={`px-3 py-2 rounded-md border text-sm font-medium ${notificationAudience === 'user' ? 'bg-primary-contrast text-white border-primary-contrast' : 'bg-surface text-text border-border-strong hover:bg-surface-muted'}`}
                                         >
                                             Specific user
                                         </button>

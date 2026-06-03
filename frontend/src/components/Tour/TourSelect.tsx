@@ -126,7 +126,7 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
                             aria-selected={tour.id === value}
                             onMouseDown={(event) => event.preventDefault()}
                             onClick={() => handleSelect(tour)}
-                            className={`w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-secondary ${tour.id === value ? 'bg-surface-muted' : ''}`}
+                            className={`w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${tour.id === value ? 'bg-surface-muted' : ''}`}
                         >
                             <span className="block truncate font-medium">{tour.name}</span>
                         </button>

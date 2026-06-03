@@ -21,6 +21,7 @@ import {
     getClusterDebugColor,
     getClusterVisualMetrics,
 } from '../markers/clusterMarker';
+import { buildClusterPalette, getStableColorHash } from '../../../utils/generatedClusterPalette';
 import type {
     ArtistPoint,
     ArtistPointProperties,
@@ -100,6 +101,20 @@ const getClusterLeafKey = (leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointPro
         .join('|')
 );
 
+const getLeafIdSet = (leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointProperties>[]) => (
+    new Set(leaves.map((leaf) => leaf.properties.artistId))
+);
+
+const isLeafSubset = (candidate: Set<string>, parent: Set<string>) => {
+    if (candidate.size > parent.size) return false;
+
+    for (const artistId of candidate) {
+        if (!parent.has(artistId)) return false;
+    }
+
+    return true;
+};
+
 const getGigArtistNames = (gig: Gig) => gig.artists.map((artist) => artist.name).join(', ') || gig.artist.name;
 
 const getGigVenueClusterKey = (artist: Artist) => {
@@ -153,20 +168,29 @@ const VenueClusterGigRow = ({
     dateFallback,
     onEditGig,
     onDeleteGig,
+    isStarred,
+    onToggleGigStar,
 }: {
     gig: Gig;
     dateFallback?: string;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
+    isStarred?: boolean;
+    onToggleGigStar?: (gig: Gig) => void;
 }) => {
     const { t } = useTranslation();
     const [isArtistRowExpanded, setIsArtistRowExpanded] = useState(false);
     const [artistFitCount, setArtistFitCount] = useState<number | null>(null);
+    const [optimisticStarred, setOptimisticStarred] = useState(isStarred);
     const artistRowRef = useRef<HTMLDivElement | null>(null);
     const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const artistNames = useMemo(() => gig.artists.length ? gig.artists : [gig.artist], [gig.artist, gig.artists]);
     const formattedDate = formatGigDateTimeValue(gig.date, gig.time, dateFallback);
     const title = gig.gigName || gig.tour?.name || '';
+
+    useEffect(() => {
+        setOptimisticStarred(isStarred);
+    }, [isStarred]);
 
     useEffect(() => {
         const measureArtistText = (text: string) => {
@@ -241,7 +265,7 @@ const VenueClusterGigRow = ({
                                 <button
                                     type="button"
                                     onClick={() => setIsArtistRowExpanded(false)}
-                                    className="inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-transparent text-[11px] font-semibold leading-none text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                                    className="inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-transparent text-[11px] font-semibold leading-none text-text-secondary transition-colors hover:border-transparent hover:bg-surface-muted hover:text-text"
                                 >
                                     -
                                 </button>
@@ -256,7 +280,7 @@ const VenueClusterGigRow = ({
                                 <button
                                     type="button"
                                     onClick={() => setIsArtistRowExpanded(true)}
-                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-0.5 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-0.5 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-surface-muted hover:text-text"
                                 >
                                     +{hiddenArtistCount}
                                 </button>
@@ -265,12 +289,22 @@ const VenueClusterGigRow = ({
                     )}
                     <p className="min-w-0 truncate text-xs leading-4 text-text-secondary">{title}</p>
                 </div>
-                <span className={`inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary transition-opacity ${isArtistRowExpanded ? 'mt-0.5' : ''} ${(onEditGig || onDeleteGig) ? 'group-hover:opacity-0' : ''}`}>
+                <span className={`inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary transition-opacity ${isArtistRowExpanded ? 'mt-0.5' : ''} ${(onToggleGigStar || onEditGig || onDeleteGig) ? 'group-hover:opacity-0' : ''}`}>
                     <span className="min-w-0 truncate">{formattedDate}</span>
                 </span>
                 <InlineActionMenu
                     className="right-5 top-1/2 -translate-y-1/2"
                     actions={[
+                        ...(onToggleGigStar ? [{
+                            key: 'star' as const,
+                            label: optimisticStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig'),
+                            title: optimisticStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig'),
+                            active: optimisticStarred,
+                            onClick: () => {
+                                setOptimisticStarred((currentStarred) => !currentStarred);
+                                onToggleGigStar(gig);
+                            },
+                        }] : []),
                         ...(onEditGig ? [{
                             key: 'edit' as const,
                             label: t('common.edit'),
@@ -294,11 +328,15 @@ const VenueClusterGigList = ({
     gigs,
     onEditGig,
     onDeleteGig,
+    starredGigIds,
+    onToggleGigStar,
 }: {
     venueName: string;
     gigs: Gig[];
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
+    starredGigIds?: Set<string>;
+    onToggleGigStar?: (gig: Gig) => void;
 }) => {
     const { i18n } = useTranslation();
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
@@ -320,6 +358,8 @@ const VenueClusterGigList = ({
                         dateFallback={dateFallback}
                         onEditGig={onEditGig}
                         onDeleteGig={onDeleteGig}
+                        isStarred={starredGigIds?.has(gig.id) ?? false}
+                        onToggleGigStar={onToggleGigStar}
                     />
                 ))}
             </ul>
@@ -737,6 +777,8 @@ interface UseArtistMarkersOptions {
     ) => Promise<void> | void;
     highlightedArtistIds?: Set<string>;
     renderPopupContent?: (artist: Artist, showActions: boolean) => ReactNode;
+    starredGigIds?: Set<string>;
+    onToggleGigStar?: (gig: Gig) => void;
     keepCollisionClustersAtMaxZoom?: boolean;
 }
 
@@ -760,6 +802,8 @@ export const useArtistMarkers = ({
     onDisplayCoordinateChange,
     highlightedArtistIds,
     renderPopupContent,
+    starredGigIds,
+    onToggleGigStar,
     keepCollisionClustersAtMaxZoom = false,
 }: UseArtistMarkersOptions) => {
     // Marker sets owned by this hook
@@ -768,6 +812,8 @@ export const useArtistMarkers = ({
     const collapsingClusterHidesRef = useRef<Map<string, Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>>>(new Map());
     const visibleClustersRef = useRef<ClusterPoint[]>([]);
     const visibleClusterRadiiRef = useRef<Map<number, number>>(new Map());
+    const clusterColorRecordsRef = useRef<Map<string, { color: string; leafIds: Set<string>; size: number }>>(new Map());
+    const clusterColorSeedRef = useRef(Math.floor(Math.random() * 0xffffffff));
 
     // Current map data and popup handles
     const clusterLeavesRef = useRef<Map<number, ArtistPoint[]>>(new Map());
@@ -782,6 +828,8 @@ export const useArtistMarkers = ({
         onDeleteArtist,
         view,
         renderPopupContent,
+        starredGigIds,
+        onToggleGigStar,
     });
     const displayCoordinateEditOptionsRef = useRef({
         canAdjustDisplayCoordinates,
@@ -804,6 +852,79 @@ export const useArtistMarkers = ({
     const clusterTransitionUntilRef = useRef(0);
     const [hasExpandedClusters, setHasExpandedClusters] = useState(false);
 
+    const assignClusterColors = useCallback((
+        visibleClusters: ClusterPoint[],
+        leavesByClusterId: Map<number, ArtistPoint[]>
+    ) => {
+        const previousRecords = clusterColorRecordsRef.current;
+        const nextRecords = new Map<string, { color: string; leafIds: Set<string>; size: number }>();
+        const clusterEntries = visibleClusters.map((cluster) => {
+            const leaves = leavesByClusterId.get(cluster.properties.cluster_id) ?? [];
+            const leafKey = getClusterLeafKey(leaves);
+            const leafIds = getLeafIdSet(leaves);
+
+            return {
+                cluster,
+                leafKey,
+                leafIds,
+                size: leaves.length,
+            };
+        });
+        const inheritedLeafKeys = new Set<string>();
+
+        clusterEntries.forEach((entry) => {
+            const previousRecord = previousRecords.get(entry.leafKey);
+            if (!previousRecord) return;
+
+            nextRecords.set(entry.leafKey, {
+                color: previousRecord.color,
+                leafIds: entry.leafIds,
+                size: entry.size,
+            });
+            inheritedLeafKeys.add(entry.leafKey);
+        });
+
+        previousRecords.forEach((record) => {
+            const splitChildren = clusterEntries
+                .filter((entry) => !inheritedLeafKeys.has(entry.leafKey) && isLeafSubset(entry.leafIds, record.leafIds))
+                .sort((first, second) => second.size - first.size || first.leafKey.localeCompare(second.leafKey));
+            const inheritingChild = splitChildren[0];
+            if (!inheritingChild) return;
+
+            nextRecords.set(inheritingChild.leafKey, {
+                color: record.color,
+                leafIds: inheritingChild.leafIds,
+                size: inheritingChild.size,
+            });
+            inheritedLeafKeys.add(inheritingChild.leafKey);
+        });
+
+        const seededPalette = buildClusterPalette(Math.max(1, clusterEntries.length), clusterColorSeedRef.current, { distinguishableRatio: 0.45 });
+        const usedColors = new Set(Array.from(nextRecords.values()).map((record) => record.color));
+        const availableColors = seededPalette.filter((color) => !usedColors.has(color));
+        let colorCursor = 0;
+
+        clusterEntries
+            .filter((entry) => !nextRecords.has(entry.leafKey))
+            .sort((first, second) => (
+                getStableColorHash(`${clusterColorSeedRef.current}:${first.leafKey}`)
+                - getStableColorHash(`${clusterColorSeedRef.current}:${second.leafKey}`)
+            ))
+            .forEach((entry) => {
+                const color = availableColors[colorCursor] ?? seededPalette[colorCursor % seededPalette.length];
+                colorCursor += 1;
+
+                nextRecords.set(entry.leafKey, {
+                    color,
+                    leafIds: entry.leafIds,
+                    size: entry.size,
+                });
+            });
+
+        clusterColorRecordsRef.current = nextRecords;
+        return nextRecords;
+    }, []);
+
     useEffect(() => {
         // Popup callbacks update independently from marker reconciliation
         popupOptionsRef.current = {
@@ -812,8 +933,10 @@ export const useArtistMarkers = ({
             onDeleteArtist,
             view,
             renderPopupContent,
+            starredGigIds,
+            onToggleGigStar,
         };
-    }, [locationLanguage, onDeleteArtist, onEditArtist, renderPopupContent, view]);
+    }, [locationLanguage, onDeleteArtist, onEditArtist, onToggleGigStar, renderPopupContent, starredGigIds, view]);
 
     useEffect(() => {
         displayCoordinateEditOptionsRef.current = {
@@ -1401,7 +1524,7 @@ export const useArtistMarkers = ({
         activePopupRef.current = null;
         markersRef.current.forEach((entry) => entry.marker.getElement().classList.remove('marker-focused'));
 
-        const { onEditArtist, onDeleteArtist } = popupOptionsRef.current;
+        const { onEditArtist, onDeleteArtist, starredGigIds, onToggleGigStar } = popupOptionsRef.current;
         const getGigMarkerArtist = (gig: Gig) => (
             Array.from(artistsByIdRef.current.values()).find((artist) => (
                 (artist as Partial<GigMarkerArtist>).gig?.id === gig.id
@@ -1428,6 +1551,8 @@ export const useArtistMarkers = ({
                 gigs={venueCluster.gigs}
                 onEditGig={handleEditGig}
                 onDeleteGig={handleDeleteGig}
+                starredGigIds={starredGigIds}
+                onToggleGigStar={onToggleGigStar}
             />
         );
 
@@ -1977,6 +2102,7 @@ export const useArtistMarkers = ({
 
         const visibleClusters = clusters.filter((feature): feature is ClusterPoint => !!feature.properties.cluster);
         const useStableArtistStackOrder = clusterDisabled || visibleClusters.length === 0;
+        const clusterColorRecords = assignClusterColors(visibleClusters, leavesByClusterId);
         const clusterVisuals = new Map<number, ReturnType<typeof getClusterVisualMetrics>>();
         const nextClusterDebugColors = new Map<string, string>();
 
@@ -1985,7 +2111,8 @@ export const useArtistMarkers = ({
             const clusterId = cluster.properties.cluster_id;
             const leaves = leavesByClusterId.get(clusterId) ?? [];
             const visual = getClusterVisualMetrics(cluster, leaves, map);
-            const debugColor = getClusterDebugColor(cluster, leaves, map);
+            const leafKey = getClusterLeafKey(leaves);
+            const debugColor = clusterColorRecords.get(leafKey)?.color ?? getClusterDebugColor(cluster, leaves, map);
             clusterVisuals.set(clusterId, visual);
             leaves.forEach((leaf) => {
                 nextClusterDebugColors.set(leaf.properties.artistId, debugColor);
@@ -2049,12 +2176,14 @@ export const useArtistMarkers = ({
                 // Load images for artists inside this cluster
                 const leaves = leavesByClusterId.get(feature.properties.cluster_id) ?? [];
                 const sameVenue = getSameVenueGigCluster(leaves, artistsByIdRef.current);
+                const leafKey = getClusterLeafKey(leaves);
+                const clusterColor = clusterColorRecords.get(leafKey)?.color;
                 const { element, center } = createClusterMarkerElement(
                     feature,
                     leaves,
                     map,
                     clusterColorDebugEnabled,
-                    sameVenue ? { style: 'venue', venueName: sameVenue.name } : undefined
+                    sameVenue ? { style: 'venue', venueName: sameVenue.name } : { color: clusterColor }
                 );
                 const clusterArtists = leaves
                     .map((leaf) => artistsByIdRef.current.get(leaf.properties.artistId))
@@ -2062,7 +2191,6 @@ export const useArtistMarkers = ({
                 preloadArtistMarkerImages(clusterArtists);
                 const key = `cluster-${feature.properties.cluster_id}`;
                 const existingEntry = markersRef.current.get(key);
-                const leafKey = getClusterLeafKey(leaves);
                 const canReuseClusterEntry = existingEntry?.kind === 'cluster' && existingEntry.leafKey === leafKey;
                 const isExpandedSourceCluster = isClusterSourceHidden(key, leafKey);
 

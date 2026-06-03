@@ -2,7 +2,7 @@
 import { createPortal } from 'react-dom';
 import type { Gig } from '../../types/gig';
 import { CloseButton, InlineActionMenu, Input } from '../ui';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, SearchIcon } from '../icons/GeneralIcons';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, SearchIcon, StarIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedTimeValue, getBrowserDateLocale } from '../../utils/dateFormatting';
 
@@ -15,6 +15,8 @@ interface GigPanelProps {
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
     onLocateGig?: (gig: Gig) => void;
+    starredGigIds?: Set<string>;
+    onToggleGigStar?: (gig: Gig) => void;
 }
 
 const getArtistNames = (gig: Gig) => gig.artists.map((artist) => artist.name).join(', ') || gig.artist.name;
@@ -26,7 +28,7 @@ const getProvinceLabel = (gig: Gig) => {
 
 const getCityLabel = (gig: Gig) => gig.location.city || gig.location.displayName || getProvinceLabel(gig);
 
-export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }: GigPanelProps) {
+export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, starredGigIds, onToggleGigStar }: GigPanelProps) {
     const { i18n, t } = useTranslation();
     const [filterQuery, setFilterQuery] = useState('');
     const [sortMode, setSortMode] = useState<GigPanelSort>('date');
@@ -209,6 +211,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
         const canToggleArtistRow = hiddenArtistCount > 0 || (isArtistRowExpanded && collapsedArtistCount < artistNames.length);
         const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(' \u00b7 ');
         const title = gig.gigName || gig.tour?.name;
+        const isStarred = starredGigIds?.has(gig.id) ?? false;
 
         // Venue rows avoid full-address display names
         const locationParts = gig.venueName
@@ -217,7 +220,21 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
         const locationMeta = locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
-            <li key={gig.id} className="group transition-colors duration-150 hover:bg-surface-secondary/30">
+            <li key={gig.id} className="group relative transition-colors duration-150 hover:bg-surface-secondary/30">
+                {onToggleGigStar && (
+                    <button
+                        type="button"
+                        aria-label={isStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
+                        title={isStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onToggleGigStar(gig);
+                        }}
+                        className={`absolute right-4 top-2 z-10 grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-surface-muted ${isStarred ? 'text-primary-contrast app-dark:text-primary' : 'text-text-muted hover:text-text'}`}
+                    >
+                        <StarIcon className="h-3.5 w-3.5" filled={isStarred} />
+                    </button>
+                )}
                 <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-2">
                     <div className="grid min-h-14 w-12 shrink-0 grid-rows-[auto_auto_auto_1fr_auto] justify-items-center text-center">
                         <span className="text-[10px] font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
@@ -229,7 +246,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                         )}
                     </div>
 
-                    <div className="flex min-w-0 flex-col justify-center gap-1">
+                    <div className="flex min-w-0 flex-col justify-center gap-1 pr-8">
                         <div
                             ref={(node) => {
                                 if (node) {
@@ -247,7 +264,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                 <button
                                     type="button"
                                     onClick={() => toggleArtistRow(gig.id)}
-                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-1 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                                    className="shrink-0 rounded-full border border-border-strong bg-transparent px-2 py-1 text-[11px] font-semibold leading-4 text-text-secondary transition-colors hover:border-transparent hover:bg-surface-muted hover:text-text"
                                 >
                                     {isArtistRowExpanded ? '-' : `+${hiddenArtistCount}`}
                                 </button>
@@ -257,7 +274,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                             <button
                                 type="button"
                                 onClick={() => toggleArtistRow(gig.id)}
-                                className="inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-transparent text-[11px] font-semibold leading-none text-text-secondary transition-colors hover:border-transparent hover:bg-[#F3F4F6] hover:text-text app-dark:hover:bg-[#2C2C2E] app-dark:hover:text-text"
+                                className="inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-transparent text-[11px] font-semibold leading-none text-text-secondary transition-colors hover:border-transparent hover:bg-surface-muted hover:text-text"
                             >
                                 -
                             </button>
@@ -353,7 +370,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig }:
                                             setSortMode(option);
                                             setIsSortOpen(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-secondary ${
+                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-muted ${
                                             sortMode === option ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >

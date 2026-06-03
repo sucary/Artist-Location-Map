@@ -503,11 +503,14 @@
       "exitTourMode": "Exit Tour Mode",
       "addGig": "Add gig",
       "viewGigPanel": "View gigs",
+      "viewCalendar": "View calendar",
       "locateGig": "Locate gig",
       "createTour": "Create tour",
       "clearDates": "Clear dates",
       "exit": "Exit",
-      "viewEvent": "View event"
+      "viewEvent": "View event",
+      "starGig": "Star gig",
+      "unstarGig": "Unstar gig"
     },
     "fields": {
       "artist": "Artist",
@@ -617,10 +620,13 @@
       "deleteFailedMessage": "Failed to delete gig. Please try again"
     },
     "calendar": {
+      "title": "Gig calendar",
       "selectDate": "Select date",
+      "selectMonth": "Select month",
       "previousMonth": "Previous month",
       "nextMonth": "Next month",
-      "today": "Today"
+      "today": "Today",
+      "more": "+{{count}} more"
     }
   },
   "app": {

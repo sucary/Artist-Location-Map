@@ -503,11 +503,14 @@
       "exitTourMode": "退出巡演模式",
       "addGig": "添加演出",
       "viewGigPanel": "查看演出",
+      "viewCalendar": "查看日历",
       "locateGig": "定位演出",
       "createTour": "创建巡演",
       "clearDates": "清除日期",
       "exit": "退出",
-      "viewEvent": "查看活动"
+      "viewEvent": "查看活动",
+      "starGig": "标星演出",
+      "unstarGig": "取消标星演出"
     },
     "fields": {
       "artist": "艺人",
@@ -606,10 +609,13 @@
       "deleteFailedMessage": "删除演出失败。请重试"
     },
     "calendar": {
+      "title": "演出日历",
       "selectDate": "选择日期",
+      "selectMonth": "选择月份",
       "previousMonth": "上个月",
       "nextMonth": "下个月",
-      "today": "今天"
+      "today": "今天",
+      "more": "另有 {{count}} 项"
     },
     "timePicker": {
       "enterTime": "输入时间",

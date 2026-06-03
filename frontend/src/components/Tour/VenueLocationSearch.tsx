@@ -516,7 +516,7 @@ export function VenueLocationSearch({
                             key={key}
                             type="button"
                             onClick={() => selectResult(result)}
-                            className="w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-secondary"
+                            className="w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-muted"
                         >
                             <span className="flex items-center gap-2 font-medium text-text">
                                 <span>{primaryLabel}</span>

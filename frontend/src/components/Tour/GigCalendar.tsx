@@ -1,0 +1,430 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { Gig } from '../../types/gig';
+import { CloseButton } from '../ui';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, StarIcon } from '../icons/GeneralIcons';
+import { useTranslation } from 'react-i18next';
+import { getBrowserDateLocale } from '../../utils/dateFormatting';
+import { buildClusterPalette, getStableColorHash } from '../../utils/generatedClusterPalette';
+
+// Month calendar for gig events
+
+interface GigCalendarProps {
+    gigs: Gig[];
+    selectedDay: string | null;
+    onSelectDay: (date: string | null) => void;
+    onClose: () => void;
+    starredGigIds?: Set<string>;
+    onToggleGigStar?: (gig: Gig) => void;
+}
+
+interface CalendarDay {
+    date: Date;
+    value: string;
+    inMonth: boolean;
+}
+
+const dayKey = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const parseDateValue = (value?: string | null) => {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    // Reject rollover dates from invalid API values
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+    return date;
+};
+
+const getArtistNames = (gig: Gig) => gig.artists.map((artist) => artist.name).join(', ') || gig.artist.name;
+
+const getGigMeta = (gig: Gig) => {
+    // Venue hides broader location labels
+    return gig.venueName || gig.location.city || gig.location.province || gig.location.country || gig.location.displayName || '';
+};
+
+const JAPAN_PROVINCE_COLOR_ALIASES: Record<string, string> = {
+    tokyo: 'tokyo',
+    'tokyo metropolis': 'tokyo',
+    東京都: 'tokyo',
+    東京: 'tokyo',
+};
+
+const normalizeProvinceColorKey = (value: string) => {
+    const normalized = value.trim().toLowerCase();
+    return JAPAN_PROVINCE_COLOR_ALIASES[normalized] ?? normalized;
+};
+
+const getProvinceColorKey = (gig: Gig) => {
+    const provinceNames = gig.location.localizedChain?.province;
+    const provinceKey = provinceNames?.en || provinceNames?.native || provinceNames?.ja || gig.location.province;
+    const fallbackKey = gig.location.country || gig.location.city || gig.location.displayName || 'unknown';
+
+    return normalizeProvinceColorKey(provinceKey || fallbackKey);
+};
+
+const getCalendarDays = (monthDate: Date): CalendarDay[] => {
+    const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const startDate = new Date(firstDay);
+    const mondayOffset = (firstDay.getDay() + 6) % 7;
+    startDate.setDate(firstDay.getDate() - mondayOffset);
+
+    // Five-week month surface keeps the calendar panel compact
+    return Array.from({ length: 35 }, (_, index) => {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + index);
+
+        return {
+            date,
+            value: dayKey(date),
+            inMonth: date.getMonth() === monthDate.getMonth(),
+        };
+    });
+};
+
+const isMonthBoundaryDay = (date: Date) => {
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    return date.getDate() === 1 || date.getDate() === lastDay;
+};
+
+const formatCalendarDayLabel = (date: Date, dateLocale?: Intl.LocalesArgument) => {
+    const localizedDayLabel = new Intl.DateTimeFormat(dateLocale, { day: 'numeric' }).format(date);
+    if (!isMonthBoundaryDay(date)) return localizedDayLabel.replace(/\u65e5$/, '');
+
+    const monthLabel = new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(date);
+    return `${monthLabel} ${localizedDayLabel}`;
+};
+
+export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, starredGigIds, onToggleGigStar }: GigCalendarProps) {
+    const { i18n, t } = useTranslation();
+    const titleButtonRef = useRef<HTMLButtonElement>(null);
+    const datePickerRef = useRef<HTMLDivElement>(null);
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
+    const initialMonth = parseDateValue(selectedDay) ?? parseDateValue(gigs[0]?.date) ?? new Date();
+    const [visibleMonth, setVisibleMonth] = useState(() => new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1));
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [datePickerMode, setDatePickerMode] = useState<'month' | 'year'>('year');
+    const [datePickerPosition, setDatePickerPosition] = useState({ top: 0, left: 0, width: 300, maxHeight: 520 });
+    const todayValue = dayKey(new Date());
+    const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
+    const weekdayLabels = useMemo(() => {
+        const monday = new Date(2026, 5, 1);
+
+        // Fixed Monday anchor keeps weekday order independent of current date
+        return Array.from({ length: 7 }, (_, index) => {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + index);
+            return new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(date);
+        });
+    }, [dateLocale]);
+    const gigsByDate = useMemo(() => {
+        const grouped = new Map<string, Gig[]>();
+
+        gigs.forEach((gig) => {
+            const dayGigs = grouped.get(gig.date) ?? [];
+            dayGigs.push(gig);
+            grouped.set(gig.date, dayGigs);
+        });
+
+        grouped.forEach((dayGigs) => {
+            dayGigs.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? '') || getArtistNames(a).localeCompare(getArtistNames(b)));
+        });
+
+        return grouped;
+    }, [gigs]);
+    const provinceEventColors = useMemo(() => {
+        const provinceKeys = Array.from(new Set(gigs.map(getProvinceColorKey)))
+            .sort((first, second) => getStableColorHash(first) - getStableColorHash(second));
+        const palette = buildClusterPalette(Math.max(1, provinceKeys.length), 0, { strict: true });
+
+        // Visible province set receives spread-out colors
+        return new Map(provinceKeys.map((provinceKey, index) => [provinceKey, palette[index]]));
+    }, [gigs]);
+    const monthLabel = new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'long' }).format(visibleMonth);
+    const pickerTitle = new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'long' }).format(visibleMonth);
+    const monthNames = useMemo(() => (
+        Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(new Date(2026, index, 1)))
+    ), [dateLocale]);
+    const pickerYears = useMemo(() => {
+        const baseYear = visibleMonth.getFullYear() - 4;
+
+        // Year grid centers near the currently visible calendar year
+        return Array.from({ length: 12 }, (_, index) => baseYear + index);
+    }, [visibleMonth]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (titleButtonRef.current?.contains(target) || datePickerRef.current?.contains(target)) return;
+            setIsDatePickerOpen(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (!isDatePickerOpen || !titleButtonRef.current) return;
+
+        const rect = titleButtonRef.current.getBoundingClientRect();
+        const width = Math.min(window.innerWidth - 16, 300);
+        const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+        const availableBelow = window.innerHeight - rect.bottom - 10;
+
+        // Portal position follows the clickable title trigger
+        setDatePickerPosition({
+            top: rect.bottom + 10,
+            left,
+            width,
+            maxHeight: Math.max(360, Math.min(560, availableBelow)),
+        });
+    }, [isDatePickerOpen, datePickerMode, visibleMonth]);
+
+    const moveMonth = (offset: number) => {
+        setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
+    };
+
+    const handleToday = () => {
+        const today = new Date();
+
+        // Today also acts as a broad jump back to the current month
+        setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+        onSelectDay(todayValue);
+        setIsDatePickerOpen(false);
+    };
+
+    const handleTitleClick = (event: { currentTarget: HTMLButtonElement }) => {
+        if (isDatePickerOpen) {
+            // Closed picker should not leave active title styling
+            event.currentTarget.blur();
+            setIsDatePickerOpen(false);
+            return;
+        }
+
+        setDatePickerMode('year');
+        setIsDatePickerOpen(true);
+    };
+
+    const handleYearSelect = (year: number) => {
+        setVisibleMonth((currentMonth) => new Date(year, currentMonth.getMonth(), 1));
+        setDatePickerMode('month');
+        onSelectDay(null);
+    };
+
+    const handleMonthSelect = (month: number) => {
+        setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), month, 1));
+        onSelectDay(null);
+        setIsDatePickerOpen(false);
+    };
+
+    const renderGigEvent = (gig: Gig) => {
+        const eventLabel = getArtistNames(gig);
+        const eventMeta = getGigMeta(gig);
+        const isStarred = starredGigIds?.has(gig.id) ?? false;
+
+        return (
+            <button
+                key={gig.id}
+                type="button"
+                aria-label={isStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
+                onClick={() => onToggleGigStar?.(gig)}
+                className="relative min-w-0 rounded px-2 py-1 text-left text-xs font-semibold leading-4 text-white shadow-sm transition duration-150 hover:brightness-90 hover:shadow-md"
+                style={{ backgroundColor: provinceEventColors.get(getProvinceColorKey(gig)) ?? buildClusterPalette(1)[0] }}
+                title={eventMeta ? `${eventLabel} - ${eventMeta}` : eventLabel}
+            >
+                <span className="block truncate">{eventLabel}</span>
+                {eventMeta && <span className="block truncate text-[11px] font-medium text-white/80">{eventMeta}</span>}
+                {onToggleGigStar && (
+                    <StarIcon className={`absolute right-1 top-1 h-3 w-3 ${isStarred ? 'text-white' : 'text-white/70'}`} filled={isStarred} />
+                )}
+            </button>
+        );
+    };
+
+    return (
+        <div className="absolute inset-x-2 top-20 z-[1050] mx-auto w-[calc(100vw-1rem)] max-w-5xl font-sans sm:top-24">
+            <div role="region" aria-label={t('tour.calendar.title')} className="mx-auto flex h-[min(760px,calc(100vh-8rem))] min-h-[520px] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handleToday}
+                            className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-muted focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                            {t('tour.calendar.today')}
+                        </button>
+                        <button
+                            type="button"
+                            aria-label={t('tour.calendar.previousMonth')}
+                            title={t('tour.calendar.previousMonth')}
+                            onClick={() => moveMonth(-1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        >
+                            <ArrowUpIcon className="h-5 w-5 -rotate-90" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label={t('tour.calendar.nextMonth')}
+                            title={t('tour.calendar.nextMonth')}
+                            onClick={() => moveMonth(1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        >
+                            <ArrowDownIcon className="h-5 w-5 -rotate-90" />
+                        </button>
+                        <button
+                            ref={titleButtonRef}
+                            type="button"
+                            aria-haspopup="dialog"
+                            aria-expanded={isDatePickerOpen}
+                            onClick={handleTitleClick}
+                            className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-left text-lg font-semibold tracking-tight text-text transition-colors hover:bg-surface-muted focus:bg-primary focus:text-white focus:outline-none sm:text-xl"
+                        >
+                            <span className="min-w-0 truncate">
+                                {monthLabel}
+                            </span>
+                            <ChevronDownIcon className={`h-4 w-4 shrink-0 text-text-secondary transition-transform group-focus:text-white ${isDatePickerOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isDatePickerOpen && createPortal(
+                            <div
+                                ref={datePickerRef}
+                                role="dialog"
+                                aria-label={t('tour.calendar.selectDate')}
+                                className="fixed z-[9999] overflow-y-auto rounded-xl border border-border-strong bg-surface shadow-xl shadow-black/10"
+                                style={{
+                                    top: `${datePickerPosition.top}px`,
+                                    left: `${datePickerPosition.left}px`,
+                                    width: `${datePickerPosition.width}px`,
+                                    maxHeight: `${datePickerPosition.maxHeight}px`,
+                                }}
+                            >
+                                <div className="border-b border-border/60 px-5 pb-4 pt-5">
+                                    <p className="text-xs font-semibold text-text-secondary">{t('tour.calendar.selectDate')}</p>
+                                    <p className="mt-4 text-3xl font-light tracking-normal text-text">{pickerTitle}</p>
+                                </div>
+                                <div className="px-5 py-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDatePickerMode((mode) => mode === 'year' ? 'month' : 'year')}
+                                        className="mb-4 inline-flex items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                                    >
+                                        <span>{monthLabel}</span>
+                                        <ChevronDownIcon className={`h-4 w-4 transition-transform ${datePickerMode === 'year' ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {datePickerMode === 'year' ? (
+                                        <>
+                                            <div className="mb-3 grid grid-cols-3 gap-y-2 text-center">
+                                                {pickerYears.map((year) => (
+                                                    <button
+                                                        key={year}
+                                                        type="button"
+                                                        onClick={() => handleYearSelect(year)}
+                                                        className={`mx-auto grid h-10 min-w-16 place-items-center rounded-full px-3 text-base font-medium transition-colors ${
+                                                            year === visibleMonth.getFullYear()
+                                                                ? 'bg-primary text-white'
+                                                                : 'text-text-secondary hover:bg-surface-muted hover:text-text'
+                                                        }`}
+                                                    >
+                                                        {year}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="grid grid-cols-3 gap-y-2">
+                                            {monthNames.map((monthName, index) => (
+                                                <button
+                                                    key={monthName}
+                                                    type="button"
+                                                    onClick={() => handleMonthSelect(index)}
+                                                    className={`mx-auto grid h-10 min-w-16 place-items-center rounded-full px-3 text-sm font-semibold transition-colors ${
+                                                        index === visibleMonth.getMonth()
+                                                            ? 'bg-primary text-white'
+                                                            : 'text-text-secondary hover:bg-surface-muted hover:text-text'
+                                                    }`}
+                                                >
+                                                    {monthName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-end gap-2 border-t border-border/60 px-5 py-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDatePickerOpen(false)}
+                                        className="rounded-md px-3 py-2 text-sm font-semibold text-primary-contrast transition-colors hover:bg-surface-muted"
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleToday}
+                                        className="rounded-md px-3 py-2 text-sm font-semibold text-primary-contrast transition-colors hover:bg-surface-muted"
+                                    >
+                                        {t('tour.calendar.today')}
+                                    </button>
+                                </div>
+                            </div>,
+                            document.body
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <CloseButton onClick={onClose} size="md" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-7 bg-surface-secondary/40 text-center text-xs font-semibold uppercase text-text-secondary">
+                    {weekdayLabels.map((label) => (
+                        <div key={label} className="px-2 py-2">
+                            {label}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid flex-1 grid-cols-7 grid-rows-5 overflow-hidden">
+                    {calendarDays.map((day) => {
+                        const dayGigs = gigsByDate.get(day.value) ?? [];
+                        const isToday = todayValue === day.value;
+                        const visibleGigs = dayGigs.slice(0, 4);
+                        const hiddenGigCount = dayGigs.length - visibleGigs.length;
+
+                        return (
+                            <div
+                                key={day.value}
+                                className={`min-h-0 border-b border-r border-border/60 bg-surface pb-1 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:pb-2 ${
+                                    day.inMonth ? 'text-text' : 'text-text-muted bg-surface-secondary/25'
+                                } hover:bg-surface-secondary/50`}
+                            >
+                                <span
+                                    className={`mb-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-semibold leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 ${
+                                        isToday ? 'bg-primary text-white' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
+                                    }`}
+                                >
+                                    {formatCalendarDayLabel(day.date, dateLocale)}
+                                </span>
+                                <span className="flex min-w-0 flex-col gap-1 overflow-hidden px-1 sm:px-2">
+                                    {visibleGigs.map(renderGigEvent)}
+                                    {hiddenGigCount > 0 && (
+                                        <span className="truncate px-1 text-xs font-semibold text-primary-contrast">
+                                            {t('tour.calendar.more', { count: hiddenGigCount })}
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}

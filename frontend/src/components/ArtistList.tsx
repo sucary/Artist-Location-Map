@@ -352,7 +352,7 @@ const ArtistList = ({
                                             setSortKey(option.value);
                                             setIsSortOpen(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-secondary ${
+                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-muted ${
                                             option.value === sortKey ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
@@ -445,7 +445,7 @@ const ArtistList = ({
                                                         aria-label={t('artistList.actions.goToLocation')}
                                                         onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                         title={t('artistList.actions.goToLocation')}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-text"
                                                     >
                                                         <MapPinIcon className="h-4 w-4" />
                                                     </button>
@@ -455,7 +455,7 @@ const ArtistList = ({
                                                         type="button"
                                                         aria-label={t('artistList.actions.edit')}
                                                         onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-text"
                                                     >
                                                         <EditIcon className="h-4 w-4" />
                                                     </button>

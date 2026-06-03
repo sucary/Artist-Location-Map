@@ -1,4 +1,13 @@
 // Map clustering distance and marker layout thresholds
+
+export const CLUSTER_COLOR_PALETTE = [
+  '#5C7797',
+  '#52847B',
+  '#896F43',
+  '#8B565E',
+  '#5B4C75',
+] as const;
+
 export const CLUSTER_CONFIG = {
   disableClusteringAtZoomLevel: 8,
   maxClusterRadius: 100,

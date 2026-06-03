@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import type { Gig } from '../../types/gig';
 import type { LocationLanguage } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
@@ -6,6 +6,7 @@ import { formatLocationLocalized } from '../../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
 import { formatGigDateTimeValue } from '../../utils/dateFormatting';
 import { InlineActionMenu } from '../ui';
+import { StarIcon } from '../icons/GeneralIcons';
 
 // Gig marker popup display
 
@@ -13,6 +14,8 @@ interface GigCardProps {
     gig: Gig;
     locationLanguage?: LocationLanguage;
     showActions?: boolean;
+    isStarred?: boolean;
+    onToggleStar?: (gig: Gig) => void;
 }
 
 const getInitial = (name: string) => Array.from(name.trim())[0]?.toUpperCase();
@@ -40,9 +43,10 @@ const getArtistToggleButtonClass = (isStackToggle: boolean, hiddenCount: number)
     return `inline-flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-surface-muted ${textClass} font-bold leading-none text-text transition-colors hover:bg-surface-secondary`;
 };
 
-export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: GigCardProps) => {
+export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isStarred = false, onToggleStar }: GigCardProps) => {
     const { i18n, t } = useTranslation();
     const [artistsExpanded, setArtistsExpanded] = useState(false);
+    const [optimisticStarred, setOptimisticStarred] = useState(isStarred);
     const artists = gig.artists.length ? gig.artists : [gig.artist];
     const topSectionBackgroundUrl = getAvatarUrl(artists[0]?.sourceImage, artists[0]?.avatarCrop) || artists[0]?.sourceImage;
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
@@ -56,6 +60,10 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
     const locationLabel = stripVenuePrefix(formatLocationLocalized(gig.location, locationLanguage), gig.venueName);
     const hasTitleSection = Boolean(gig.gigName || gig.tour);
     const topSectionGapClass = 'gap-3';
+
+    useEffect(() => {
+        setOptimisticStarred(isStarred);
+    }, [isStarred]);
 
     const renderArtistChip = (artist: typeof artists[number]) => {
         const avatarUrl = getAvatarUrl(artist.sourceImage, artist.avatarCrop);
@@ -151,9 +159,26 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true }: Gi
         setArtistsExpanded(false);
     };
 
+    const handleToggleStar = (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setOptimisticStarred((currentStarred) => !currentStarred);
+        onToggleStar?.(gig);
+    };
+
     return (
         <div className="flex w-80 flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
             <div className="relative overflow-hidden bg-surface">
+                {onToggleStar && (
+                    <button
+                        type="button"
+                        aria-label={optimisticStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
+                        title={optimisticStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
+                        onClick={handleToggleStar}
+                        className={`absolute right-2 top-2 z-10 grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-surface-muted ${optimisticStarred ? 'text-text-secondary' : 'text-text-muted hover:text-text'}`}
+                    >
+                        <StarIcon className="h-3.5 w-3.5" filled={optimisticStarred} />
+                    </button>
+                )}
                 {topSectionBackgroundUrl && (
                     <>
                         <img

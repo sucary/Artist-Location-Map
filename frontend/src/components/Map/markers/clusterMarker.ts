@@ -1,6 +1,7 @@
 import type maplibregl from 'maplibre-gl';
 import { CLUSTER_CONFIG } from '../../../constants/mapCluster';
 import i18n from '../../../i18n';
+import { getGeneratedClusterColor, getStableColorHash } from '../../../utils/generatedClusterPalette';
 import type { ArtistPoint, ClusterPoint, ClusterVisual } from '../types';
 
 // Cluster marker sizing and DOM construction
@@ -27,21 +28,10 @@ type ClusterVisualColors = {
 type ClusterMarkerOptions = {
     style?: 'default' | 'venue';
     venueName?: string;
+    color?: string;
 };
 
 const VENUE_CLUSTER_PIN_COLOR = '#D94F3D';
-
-const CLUSTER_WARM_RANGE = [
-    { maxCount: 3, fill: 'rgba(92,119,151,0.72)', border: 'rgba(53,72,104,0.94)' },
-    { maxCount: 9, fill: 'rgba(82,132,123,0.76)', border: 'rgba(45,88,82,0.94)' },
-    { maxCount: 24, fill: 'rgba(137,111,67,0.80)', border: 'rgba(86,63,32,0.94)' },
-    { maxCount: 54, fill: 'rgba(139,86,94,0.84)', border: 'rgba(91,45,55,0.94)' },
-    { maxCount: Infinity, fill: 'rgba(91,76,117,0.88)', border: 'rgba(52,41,76,0.94)' },
-];
-
-const getWarmClusterColor = (count: number) => (
-    CLUSTER_WARM_RANGE.find((range) => count <= range.maxCount) ?? CLUSTER_WARM_RANGE[CLUSTER_WARM_RANGE.length - 1]
-);
 
 const generateHue = (lng: number, lat: number) => {
     // Stable cluster color from geographic position
@@ -49,7 +39,43 @@ const generateHue = (lng: number, lat: number) => {
     return Math.abs(hash % 360);
 };
 
-const getClusterVisualColors = (count: number, center: [number, number]): ClusterVisualColors => {
+const hexToRgb = (hex: string) => {
+    const normalized = hex.replace('#', '');
+    return [
+        parseInt(normalized.slice(0, 2), 16),
+        parseInt(normalized.slice(2, 4), 16),
+        parseInt(normalized.slice(4, 6), 16),
+    ] as const;
+};
+
+const rgbToHex = (red: number, green: number, blue: number) => (
+    `#${[red, green, blue].map((channel) => Math.min(255, Math.max(0, channel)).toString(16).padStart(2, '0')).join('')}`
+);
+
+const shiftHexColor = (hex: string, amount: number) => {
+    const [red, green, blue] = hexToRgb(hex);
+    return rgbToHex(red + amount, green + amount, blue + amount);
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+    const [red, green, blue] = hexToRgb(hex);
+    return `rgba(${red},${green},${blue},${alpha})`;
+};
+
+const getSoftClusterColor = (center: [number, number], countFactor: number, isDarkTheme: boolean, color?: string) => {
+    const [lng, lat] = center;
+    const colorKey = `${lng.toFixed(4)}:${lat.toFixed(4)}:${getStableColorHash(`${lng}:${lat}`)}`;
+    const baseColor = color ?? getGeneratedClusterColor(colorKey);
+    const fillAlpha = isDarkTheme ? 0.80 : 0.70 + countFactor * 0.12;
+    const borderShift = isDarkTheme ? -24 : -42;
+
+    return {
+        fill: hexToRgba(baseColor, fillAlpha),
+        border: hexToRgba(shiftHexColor(baseColor, borderShift), 0.94),
+    };
+};
+
+const getClusterVisualColors = (count: number, center: [number, number], color?: string): ClusterVisualColors => {
     const [centerLng, centerLat] = center;
     const countFactor = Math.min(1, count / 10);
     const isDarkTheme = document.documentElement.dataset.theme === 'dark';
@@ -57,7 +83,7 @@ const getClusterVisualColors = (count: number, center: [number, number]): Cluste
     const lightness = isDarkTheme ? 62 - countFactor * 18 : 50 - countFactor * 20;
     const hue = generateHue(centerLng, centerLat);
     const borderLightness = isDarkTheme ? lightness + 18 : lightness - 10;
-    const themeColor = getWarmClusterColor(count);
+    const themeColor = getSoftClusterColor(center, countFactor, isDarkTheme, color);
 
     return {
         background: themeColor.fill,
@@ -67,7 +93,7 @@ const getClusterVisualColors = (count: number, center: [number, number]): Cluste
         textShadow: '0 1px 2px rgba(25,25,25,0.55)',
         centerFill: `hsl(${hue},${Math.min(95, saturation + 20)}%,${isDarkTheme ? 74 : 34}%)`,
         centerRing: isDarkTheme ? '#ffffff' : '#111827',
-        debugFill: `hsl(${hue},${saturation}%,${lightness}%)`,
+        debugFill: color ?? `hsl(${hue},${saturation}%,${lightness}%)`,
         coverageRing: `hsla(${hue},${saturation}%,${borderLightness}%,0.95)`,
         coverageFill: `hsla(${hue},${saturation}%,${lightness}%,0.08)`,
         pullRing: `hsla(${hue},${saturation}%,${isDarkTheme ? 84 : 28}%,0.95)`,
@@ -255,7 +281,7 @@ export const createClusterMarkerElement = (
     const markerStyle = options.style ?? 'default';
     const metrics = getClusterVisualMetrics(feature, leaves, map);
     const [centerLng, centerLat] = metrics.center;
-    const colors = getClusterVisualColors(count, metrics.center);
+    const colors = getClusterVisualColors(count, metrics.center, options.color);
     const radius = Math.max(
         CLUSTER_CONFIG.minClusterSize / 2,
         metrics.radius

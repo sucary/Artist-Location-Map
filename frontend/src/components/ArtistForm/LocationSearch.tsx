@@ -250,7 +250,7 @@ export const LocationSearch = ({
                                 key={`${result.osmId}-${index}`}
                                 onClick={() => handleSelect(result)}
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary border-b border-border last:border-b-0"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-surface-muted border-b border-border last:border-b-0"
                             >
                                 <div className="font-medium text-text flex items-start">
                                     {profile?.isAdmin && result.isPriority && (

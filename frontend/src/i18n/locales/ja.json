@@ -503,11 +503,14 @@
       "exitTourMode": "ツアーモードを終了",
       "addGig": "公演を追加",
       "viewGigPanel": "公演を見る",
+      "viewCalendar": "カレンダーを見る",
       "locateGig": "公演を表示",
       "createTour": "ツアーを作成",
       "clearDates": "日付をクリア",
       "exit": "終了",
-      "viewEvent": "イベントを見る"
+      "viewEvent": "イベントを見る",
+      "starGig": "公演にスターを付ける",
+      "unstarGig": "公演のスターを外す"
     },
     "fields": {
       "artist": "アーティスト",
@@ -617,10 +620,13 @@
       "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください"
     },
     "calendar": {
+      "title": "公演カレンダー",
       "selectDate": "日付を選択",
+      "selectMonth": "月を選択",
       "previousMonth": "前の月",
       "nextMonth": "次の月",
-      "today": "今日"
+      "today": "今日",
+      "more": "他 {{count}} 件"
     }
   },
   "app": {

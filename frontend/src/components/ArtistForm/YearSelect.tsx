@@ -215,7 +215,7 @@ const YearSelect = ({
                                 aria-selected={isSelected}
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => handleSelect(year)}
-                                className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-secondary ${
+                                className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-muted ${
                                     isSelected ? 'text-primary-contrast app-dark:text-primary font-medium' :
                                     isFocused ? 'bg-surface-muted' : 'text-text'
                                 }`}

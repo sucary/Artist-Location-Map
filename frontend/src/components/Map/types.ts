@@ -22,6 +22,8 @@ export interface MapViewProps {
     onDeleteArtist?: (artist: Artist) => void;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
+    starredGigIds?: Set<string>;
+    onToggleGigStar?: (gig: Gig) => void;
     onEmptyClick?: () => void;
     focusedArtist?: Artist | null;
     onFocusedArtistHandled?: () => void;

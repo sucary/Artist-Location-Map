@@ -220,7 +220,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                             aria-selected={false}
                             onMouseDown={(event) => event.preventDefault()}
                             onClick={() => addArtist(artist.id)}
-                            className="w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-secondary"
+                            className="w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted"
                         >
                             <span className="block truncate font-medium">{artist.name}</span>
                             {artist.romanizedName && (

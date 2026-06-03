@@ -59,6 +59,8 @@ export default function MapView({
     onDeleteArtist,
     onEditGig,
     onDeleteGig,
+    starredGigIds,
+    onToggleGigStar,
     onEmptyClick,
     focusedArtist,
     onFocusedArtistHandled,
@@ -235,9 +237,11 @@ export default function MapView({
                 gig={gig}
                 showActions={showActions}
                 locationLanguage={locationLanguage}
+                isStarred={starredGigIds?.has(gig.id) ?? false}
+                onToggleStar={onToggleGigStar}
             />
         );
-    }, [locationLanguage, tourModeActive]);
+    }, [locationLanguage, onToggleGigStar, starredGigIds, tourModeActive]);
 
     const { data: selectedCity } = useQuery({
         queryKey: ['city', selectedCityId],
@@ -388,6 +392,8 @@ export default function MapView({
         onDisplayCoordinateChange,
         highlightedArtistIds: highlightedGigIds,
         renderPopupContent: tourModeActive ? renderPopupContent : undefined,
+        starredGigIds,
+        onToggleGigStar,
         keepCollisionClustersAtMaxZoom: tourModeActive,
     });
 

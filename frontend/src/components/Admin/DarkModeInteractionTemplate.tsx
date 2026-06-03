@@ -302,7 +302,7 @@ export function DarkModeInteractionTemplate() {
                                 </button>
                             </div>
                             <div className="rounded-md border border-border-strong bg-surface shadow-lg">
-                                <button type="button" className="w-full border-b border-border px-3 py-2 text-left text-sm hover:bg-surface-secondary">
+                                <button type="button" className="w-full border-b border-border px-3 py-2 text-left text-sm hover:bg-surface-muted">
                                     <div className="font-medium text-text">Tokyo, Japan</div>
                                     <div className="mt-0.5 text-xs text-text-secondary">city</div>
                                 </button>
@@ -340,7 +340,7 @@ export function DarkModeInteractionTemplate() {
                                 <button className="flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted">Return</button>
                             </div>
                         </div>
-                        <button type="button" onClick={() => setShowDialogPreview(true)} className="w-fit rounded-md border border-border-strong bg-surface px-4 py-2 text-sm text-text hover:bg-surface-secondary">
+                        <button type="button" onClick={() => setShowDialogPreview(true)} className="w-fit rounded-md border border-border-strong bg-surface px-4 py-2 text-sm text-text hover:bg-surface-muted">
                             Show confirm dialog
                         </button>
                         <div className="relative h-28 overflow-hidden rounded-md border border-border">

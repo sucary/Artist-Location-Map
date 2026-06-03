@@ -4,6 +4,10 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
     className?: string;
 }
 
+interface StarIconProps extends IconProps {
+    filled?: boolean;
+}
+
 export const SearchIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -40,6 +44,12 @@ export const CalendarIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...pr
     <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
+export const StarIcon: React.FC<StarIconProps> = ({ className = "w-5 h-5", filled = false, ...props }) => (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M12 2L14.81 8.63L22 9.24L16.54 13.97L18.18 21L12 17.27L5.82 21L7.46 13.97L2 9.24L9.19 8.63L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
     </svg>
 );
 
