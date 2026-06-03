@@ -24,20 +24,21 @@ app.set('trust proxy', 1);
 // Security Headers
 app.use(helmet());
 
-// Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500,
-    message: 'Too many requests from this IP, please try again later'
-});
-app.use(limiter);
-
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500,
+    message: 'Too many requests from this IP, please try again later',
+    skip: (req) => req.method === 'OPTIONS'
+});
+app.use(limiter);
 app.use(express.json());
 
 app.use('/api/artists', artistRoutes);
