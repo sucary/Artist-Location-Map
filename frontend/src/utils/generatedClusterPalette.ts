@@ -64,9 +64,9 @@ const hasReadableWhiteText = (hex: string) => (
 );
 
 const getLightnessRangeForSaturation = (saturation: number) => {
-    const saturationOffset = saturation - 35;
-    const minLightness = Math.round(35 - saturationOffset * 0.2);
-    const maxLightness = Math.round(38 - saturationOffset * 0.24);
+    const saturationOffset = saturation - 28;
+    const minLightness = Math.round(35 - saturationOffset * 0.16);
+    const maxLightness = Math.round(39 - saturationOffset * 0.22);
 
     // Higher saturation needs lower lightness; lower saturation avoids muddy darks
     return {
@@ -83,7 +83,7 @@ const getClusterColorCandidates = () => {
     for (let hueIndex = 0; hueIndex < DEFAULT_CLUSTER_COLOR_RANGE_SIZE; hueIndex += 1) {
         const hue = (hueIndex / DEFAULT_CLUSTER_COLOR_RANGE_SIZE) * 360;
 
-        for (let saturation = 35; saturation <= 60; saturation += 5) {
+        for (let saturation = 28; saturation <= 44; saturation += 4) {
             const { min, max } = getLightnessRangeForSaturation(saturation);
             for (let lightness = min; lightness <= max; lightness += 1) {
                 const hex = hslToHex(hue, saturation, lightness);
@@ -113,7 +113,7 @@ export function buildClusterPalette(count: number, seed = 0, options: ClusterPal
     const normalizedCount = Math.max(1, Math.floor(count));
     const normalizedSeed = Math.abs(Math.floor(seed));
     const distinguishableDistanceRatio = options.strict ? 1 : options.distinguishableRatio ?? DISTINGUISHABLE_DISTANCE_RATIO;
-    const cacheKey = `${normalizedCount}:${normalizedSeed}:${distinguishableDistanceRatio}:s35-60:l30-40:white4.5`;
+    const cacheKey = `${normalizedCount}:${normalizedSeed}:${distinguishableDistanceRatio}:s28-44:l30-40:white4.5`;
     const cachedPalette = paletteCache.get(cacheKey);
     if (cachedPalette) return cachedPalette;
 
