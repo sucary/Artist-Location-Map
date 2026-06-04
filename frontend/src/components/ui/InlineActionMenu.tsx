@@ -14,6 +14,7 @@ type InlineAction = {
 interface InlineActionMenuProps {
     actions: InlineAction[];
     className?: string;
+    alwaysVisible?: boolean;
 }
 
 const actionIcon: Record<InlineAction['key'], ReactNode> = {
@@ -31,11 +32,11 @@ const getActionClassName = (action: InlineAction) => {
     return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[#D1D5DB] hover:text-text app-dark:hover:bg-[#3A3A3C]';
 };
 
-export function InlineActionMenu({ actions, className = 'right-0 top-1/2 -translate-y-1/2' }: InlineActionMenuProps) {
+export function InlineActionMenu({ actions, className = 'right-0 top-1/2 -translate-y-1/2', alwaysVisible = false }: InlineActionMenuProps) {
     if (actions.length === 0) return null;
 
     return (
-        <div className={`pointer-events-none absolute inline-flex items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 ${className}`}>
+        <div className={`${alwaysVisible ? 'inline-flex' : 'pointer-events-none absolute inline-flex opacity-0 group-hover:pointer-events-auto group-hover:opacity-100'} items-center rounded-full bg-surface-muted p-0.5 transition-opacity ${className}`}>
             {actions.map((action) => (
                 <button
                     key={action.key}

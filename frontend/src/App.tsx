@@ -34,6 +34,7 @@ import { GigPanel } from './components/Tour/GigPanel';
 import { GigCalendar } from './components/Tour/GigCalendar';
 import { TourControls } from './components/Tour/TourControls';
 import { TourBanner } from './components/Tour/TourBanner';
+import { SelectionPrompt } from './components/Map/SelectionPrompt';
 import { formatGigDateTimeValue } from './utils/dateFormatting';
 
 interface AppDialogState {
@@ -850,7 +851,11 @@ function App() {
             </div>
 
             {/* Bottom center: Viewing banner, Featured banner, or Anonymous banner */}
-            {isViewingOther && username ? (
+            {selectionMode?.active ? (
+                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
+                    <SelectionPrompt onCancel={handleLocationPick} />
+                </div>
+            ) : isViewingOther && username ? (
                 <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
                     <ViewingUserBanner username={username} />
                 </div>
@@ -1029,7 +1034,7 @@ function App() {
                 interactionsDisabled={mapInteractionsDisabled}
                 canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !tourMode.active && !!user}
                 onDisplayCoordinateChange={handleDisplayCoordinateChange}
-                tourControlSlot={tourMode.active && !showGigForm && !showGigPanel && !showGigCalendar ? (
+                tourControlSlot={tourMode.active ? (
                     <TourControls
                         tourMode={tourMode}
                         onIntervalChange={handleTourIntervalChange}

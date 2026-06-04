@@ -74,8 +74,8 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
             setIsOpen(false);
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
     useEffect(() => {

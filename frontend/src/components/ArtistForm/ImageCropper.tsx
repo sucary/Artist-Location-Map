@@ -168,15 +168,15 @@ const ImageCropper = ({
             className="fixed inset-0 z-cropper flex items-center justify-center bg-black/70 focus:outline-none">
             <div className="bg-surface rounded-lg shadow-xl w-[90vw] max-w-md overflow-hidden">
                 {/* Tabs */}
-                <div className="flex border-b border-border">
+                <div className="grid grid-cols-2 gap-2 border-b border-border bg-surface px-3 py-2">
                     <button
                         aria-selected={mode === 'avatar'}
                         type="button"
                         onClick={() => switchMode('avatar')}
-                        className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
                             mode === 'avatar'
-                                ? 'text-primary-contrast app-dark:text-primary border-b-2 border-primary -mb-px'
-                                : 'text-text-secondary hover:text-text'
+                                ? 'bg-primary-contrast text-white shadow-sm'
+                                : 'text-text-secondary hover:bg-surface-muted hover:text-text'
                         }`}
                     >
                         {t('artistForm.cropper.avatar')}
@@ -185,10 +185,10 @@ const ImageCropper = ({
                         aria-selected={mode === 'profile'}
                         type="button"
                         onClick={() => switchMode('profile')}
-                        className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
                             mode === 'profile'
-                                ? 'text-primary-contrast app-dark:text-primary border-b-2 border-primary -mb-px'
-                                : 'text-text-secondary hover:text-text'
+                                ? 'bg-primary-contrast text-white shadow-sm'
+                                : 'text-text-secondary hover:bg-surface-muted hover:text-text'
                         }`}
                     >
                         {t('artistForm.cropper.banner')}

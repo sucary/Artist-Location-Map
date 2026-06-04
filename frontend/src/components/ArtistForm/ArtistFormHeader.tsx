@@ -5,8 +5,6 @@ import { useTranslation } from 'react-i18next';
 
 // Artist form visual header
 
-type HoverTarget = 'name' | 'avatar' | null;
-
 interface ArtistFormHeaderProps {
     name: string;
     avatarUrl?: string;
@@ -27,7 +25,6 @@ const ArtistFormHeader = ({
     onNameChange,
 }: ArtistFormHeaderProps) => {
     const [isEditingName, setIsEditingName] = useState(false);
-    const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
     const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
     const { t } = useTranslation();
 
@@ -96,8 +93,8 @@ const ArtistFormHeader = ({
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 via-black/20 to-transparent pointer-events-none" />
 
             {/* Hover overlay */}
-            <div className={`absolute inset-0 transition-colors flex items-center justify-center ${!hoverTarget ? 'group-hover/profile:bg-black/30' : ''}`}>
-                <EditIcon aria-hidden="true" className={`w-6 h-6 text-white transition-opacity ${!hoverTarget ? 'opacity-0 group-hover/profile:opacity-100' : 'opacity-0'}`} />
+            <div className="absolute inset-0 flex items-center justify-center transition-colors group-hover/profile:bg-black/30">
+                <EditIcon aria-hidden="true" className="w-6 h-6 text-white opacity-0 transition-opacity group-hover/profile:opacity-100" />
             </div>
 
             {/* Avatar */}
@@ -107,8 +104,6 @@ const ArtistFormHeader = ({
                 className="absolute -bottom-8 left-4 w-20 h-20 rounded-full border-4 border-surface bg-border overflow-hidden z-10 shadow-md group/avatar cursor-pointer"
                 onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
                 onClick={handleAvatarClick}
-                onMouseEnter={() => setHoverTarget('avatar')}
-                onMouseLeave={() => setHoverTarget(null)}
             >
                 {isUploading ? (
                     <div className="w-full h-full flex items-center justify-center bg-border-strong">
@@ -135,7 +130,7 @@ const ArtistFormHeader = ({
                         ) : (
                             <div className="w-full h-full bg-surface-muted" />
                         )}
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity group-hover/avatar:opacity-100 group-hover/profile:opacity-100">
                             <EditIcon aria-hidden="true" className="w-6 h-6 text-white" />
                         </div>
                     </>
@@ -146,8 +141,6 @@ const ArtistFormHeader = ({
             <div
                 className="absolute bottom-2 left-28 right-4 z-10"
                 onClick={(e) => e.stopPropagation()}
-                onMouseEnter={() => setHoverTarget('name')}
-                onMouseLeave={() => setHoverTarget(null)}
             >
                 {isEditingName ? (
                     <input

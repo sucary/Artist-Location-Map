@@ -13,10 +13,10 @@ const AddGigButton = ({ onClick }: AddGigButtonProps) => {
             <button
                 aria-label={t('tour.actions.addGig')}
                 onClick={onClick}
-                className="bg-surface p-3 rounded-md shadow-md hover:bg-primary hover:text-white active:bg-primary active:text-white transition-colors text-text"
+                className="group flex h-12 w-12 items-center justify-center rounded-full bg-primary-contrast text-white shadow-md transition-colors hover:bg-primary-contrast-hover active:bg-primary"
                 title={t('tour.actions.addGig')}
             >
-                <PlusIcon className="h-6 w-6" />
+                <PlusIcon className="h-6 w-6 transition-transform duration-200 ease-out group-hover:rotate-90 group-hover:scale-110 group-active:scale-95" />
             </button>
         </div>
     );

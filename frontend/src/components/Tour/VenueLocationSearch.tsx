@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import type { Coordinates, Location, LocationLanguage } from '../../types/artist';
@@ -15,7 +15,7 @@ import { formatLocationLocalized } from '../../utils/locationUtils';
 import { useLocationLanguage } from '../../context/LocationLanguageContext';
 import { SearchIcon } from '../icons/GeneralIcons';
 import { MapPinIcon } from '../icons/MapIcons';
-import { Alert, Button, Spinner } from '../ui';
+import { Alert, Button, InlineActionMenu, Spinner } from '../ui';
 import { useTranslation } from 'react-i18next';
 
 // Tour-only Geoapify venue and location picker
@@ -577,6 +577,26 @@ export function VenueLocationSearch({
         ? stripLeadingVenueName(createdVenue.displayName || getResultLabel(createdVenue), createdVenueName)
         : '';
 
+    const handleVenueCreationEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key !== 'Enter') return;
+
+        // Venue creation owns Enter while nested inside the gig form
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!canCreateVenue || isCreatingVenue) return;
+        void handleCreateManualVenue();
+    };
+
+    const openVenueCreation = () => {
+        setVenueCreationOn(true);
+
+        // Cached manual venues must be re-applied after search edits clear the parent location
+        if (createdVenue && !isEditingCreatedVenue) {
+            selectResult(createdVenue);
+        }
+    };
+
     const segmentClass = (active: boolean) =>
         `relative z-10 rounded-full px-3 py-2 text-center text-xs font-medium transition-colors duration-150 ${
             active ? 'text-white' : 'text-text-secondary hover:text-text'
@@ -605,7 +625,7 @@ export function VenueLocationSearch({
                     <button
                         type="button"
                         aria-selected={venueCreationOn}
-                        onClick={() => setVenueCreationOn(true)}
+                        onClick={openVenueCreation}
                         className={segmentClass(venueCreationOn)}
                     >
                         {t('tour.venueSearch.createVenueName', { defaultValue: 'Create venue' })}
@@ -649,43 +669,41 @@ export function VenueLocationSearch({
                     </>
                 ) : createdVenue && !isEditingCreatedVenue ? (
                     <div className="mt-3">
-                        <div className="space-y-1">
-                            <p className="break-words text-sm font-semibold leading-5 text-text">
-                                {createdVenueName}
-                            </p>
-                            <p className="break-words text-xs leading-5 text-text-secondary">
-                                {createdVenueAddress}
-                            </p>
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1 space-y-1">
+                                <p className="break-words text-sm font-semibold leading-5 text-text">
+                                    {createdVenueName}
+                                </p>
+                                <p className="break-words text-xs leading-5 text-text-secondary">
+                                    {createdVenueAddress}
+                                </p>
+                            </div>
+                            <InlineActionMenu
+                                alwaysVisible
+                                className="shrink-0"
+                                actions={[
+                                    {
+                                        key: 'edit',
+                                        label: t('common.edit', { defaultValue: 'Edit' }),
+                                        title: t('common.edit', { defaultValue: 'Edit' }),
+                                        onClick: () => setIsEditingCreatedVenue(true),
+                                    },
+                                    {
+                                        key: 'delete',
+                                        label: t('common.delete', { defaultValue: 'Delete' }),
+                                        title: t('common.delete', { defaultValue: 'Delete' }),
+                                        onClick: deleteCreatedVenueSelection,
+                                    },
+                                ]}
+                            />
                         </div>
-                        <div className="mt-3 flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={deleteCreatedVenueSelection}
-                                className="h-8 rounded-md px-3 text-xs text-error"
-                            >
-                                {t('common.delete', { defaultValue: 'Delete' })}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => setIsEditingCreatedVenue(true)}
-                                className="h-8 rounded-md px-3 text-xs"
-                            >
-                                {t('common.edit', { defaultValue: 'Edit' })}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => {
-                                    clearCreatedVenue();
-                                    onChange({ venueName: null, placeLocationId: null, location: null, rawExternalData: null });
-                                }}
-                                className="h-8 rounded-md px-3 text-xs"
-                            >
-                                {t('common.create', { defaultValue: 'Create' })}
-                            </Button>
-                        </div>
+                        <Alert
+                            variant="success"
+                            header={t('tour.venueSearch.venueCreated', { defaultValue: 'Venue created and applied' })}
+                            className="mt-2"
+                        >
+                            <></>
+                        </Alert>
                     </div>
                 ) : (
                     <div className="mt-3 flex flex-col gap-3">
@@ -700,6 +718,7 @@ export function VenueLocationSearch({
                                 value={venueNameInput}
                                 maxLength={255}
                                 onChange={(event) => setVenueNameInput(event.target.value)}
+                                onKeyDown={handleVenueCreationEnter}
                                 placeholder={t('tour.venueSearch.venueNamePlaceholder', { defaultValue: 'Venue name' })}
                                 className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                             />
@@ -727,6 +746,11 @@ export function VenueLocationSearch({
                                         onKeyDown={(event) => {
                                             if (event.key === 'Enter') {
                                                 event.preventDefault();
+                                                event.stopPropagation();
+                                                if (canCreateVenue && !isCreatingVenue) {
+                                                    void handleCreateManualVenue();
+                                                    return;
+                                                }
                                                 void runCreationLocationSearch();
                                             }
                                         }}

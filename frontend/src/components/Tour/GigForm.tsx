@@ -8,7 +8,7 @@ import { Button, CloseButton } from '../ui';
 import { VenueLocationSearch } from './VenueLocationSearch';
 import { ArtistMultiSelect } from './ArtistMultiSelect';
 import { TourSelect } from './TourSelect';
-import { GigDatePicker } from './GigDatePicker';
+import { GigDatePicker, parseDateValue } from './GigDatePicker';
 import { GigTimePicker } from './GigTimePicker';
 import { useTranslation } from 'react-i18next';
 
@@ -43,6 +43,11 @@ function getSubmitErrorMessage(error: unknown, fallback: string): string {
     return validationMessages?.length ? validationMessages.join('\n') : data?.message || fallback;
 }
 
+function formatMissingFieldList(fields: string[], locale?: string): string {
+    if (typeof Intl.ListFormat === 'undefined') return fields.join(', ');
+    return new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(fields);
+}
+
 export function GigForm({
     initialGig,
     initialArtist,
@@ -53,7 +58,7 @@ export function GigForm({
     pendingCoordinates,
     onConsumePendingCoordinates,
 }: GigFormProps) {
-    const { t } = useTranslation();
+    const { i18n, t } = useTranslation();
     const { data: artists = [] } = useQuery({
         queryKey: ['artists'],
         queryFn: () => getArtists(),
@@ -124,8 +129,19 @@ export function GigForm({
         event.preventDefault();
         setError(null);
 
-        if (artistIds.length === 0 || !date || !location) {
-            setError(t('tour.errors.requiredFields'));
+        const missingDate = !parseDateValue(date);
+
+        if (artistIds.length === 0 || missingDate || !location) {
+            const missingFields = [
+                artistIds.length === 0 ? t('tour.fields.artists') : null,
+                missingDate ? t('tour.fields.date') : null,
+                !location ? t('tour.fields.venueLocation') : null,
+            ].filter((field): field is string => !!field);
+
+            setError(t('tour.errors.missingRequiredFields', {
+                defaultValue: 'Please add {{fields}}',
+                fields: formatMissingFieldList(missingFields, i18n.resolvedLanguage || i18n.language || undefined),
+            }));
             return;
         }
 

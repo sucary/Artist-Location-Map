@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { MapControls } from './MapControls';
 import type { GigMapFilterState } from './MapControls';
 import { MapErrorOverlay } from './MapErrorOverlay';
-import { SelectionPrompt } from './SelectionPrompt';
 import {
     canUseDarkTiles,
     getMapStyleUrl,
@@ -962,7 +961,6 @@ export default function MapView({
                 onGigFilterChange={tourModeActive ? setGigMapFilter : undefined}
             />
 
-            {selectionMode?.active && <SelectionPrompt onCancel={onLocationPick} />}
             {(mapError || artistsError || gigsError) && (
                 <MapErrorOverlay message={mapError || t(tourModeActive ? 'tour.errors.loadGigs' : 'map.error.loadArtistsError')} />
             )}

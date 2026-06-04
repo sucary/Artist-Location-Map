@@ -105,6 +105,38 @@ export function MapControls({
 
     const { t } = useTranslation();
 
+    // Shared tile theme switch for map and tour controls
+    const mapThemeToggle = (
+        <div role="group" aria-label={t('map.buttons.mapControls.toggleMapTheme')} className="relative inline-grid w-32 grid-cols-2 overflow-hidden rounded-md bg-surface shadow-md">
+            <span
+                aria-hidden="true"
+                className={`absolute inset-y-0 z-0 w-1/2 rounded-md bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${tileTheme === 'dark' ? 'translate-x-full' : 'translate-x-0'}`}
+            />
+            <button
+                type="button"
+                aria-pressed={tileTheme === 'light'}
+                onClick={() => setTileTheme('light')}
+                className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${tileTheme === 'light' ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+            >
+                <span className="truncate">{t('map.buttons.mapControls.light')}</span>
+            </button>
+            <button
+                type="button"
+                aria-pressed={tileTheme === 'dark'}
+                disabled={!canUseDarkTiles}
+                title={canUseDarkTiles ? t('map.buttons.mapControls.useDarkTiles') : t('map.buttons.mapControls.cannotUseDarkTiles')}
+                onClick={() => {
+                    if (canUseDarkTiles) setTileTheme('dark');
+                }}
+                className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-40 ${
+                    tileTheme === 'dark' && canUseDarkTiles ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary disabled:hover:bg-transparent'
+                }`}
+            >
+                <span className="truncate">{t('map.buttons.mapControls.dark')}</span>
+            </button>
+        </div>
+    );
+
     useEffect(() => {
         const mediaQuery = window.matchMedia('(max-width: 639px)');
         const syncMobileState = () => setIsMobile(mediaQuery.matches);
@@ -258,10 +290,7 @@ export function MapControls({
                                 aria-haspopup="dialog"
                                 aria-label={t('map.buttons.mapControls.gigFilter.open')}
                                 onClick={() => setGigFilterOpen((open) => !open)}
-                                className={gigFilterActive
-                                    ? 'flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-primary-contrast shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:text-primary-text-dark app-dark:hover:bg-transparent app-dark:hover:text-primary'
-                                    : 'flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-transparent app-dark:hover:text-primary'
-                                }
+                                className="flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-transparent app-dark:hover:text-primary"
                                 title={t('map.buttons.mapControls.gigFilter.open')}
                             >
                                 <FilterIcon className="h-4 w-4" />
@@ -333,12 +362,16 @@ export function MapControls({
                                         </button>
                                     </div>
 
-                                    <div role="group" aria-label={t('map.buttons.mapControls.gigFilter.starredLabel')} className="mb-3 flex bg-surface rounded-md overflow-hidden shadow-md">
+                                    <div role="group" aria-label={t('map.buttons.mapControls.gigFilter.starredLabel')} className="relative grid grid-cols-2 overflow-hidden rounded-md bg-surface">
+                                        <span
+                                            aria-hidden="true"
+                                            className={`absolute inset-y-0 z-0 w-1/2 rounded-md bg-primary-contrast transition-transform duration-200 ease-out ${gigFilter.starredOnly ? 'translate-x-full' : 'translate-x-0'}`}
+                                        />
                                         <button
                                             type="button"
                                             aria-pressed={!gigFilter.starredOnly}
                                             onClick={() => updateGigFilter({ starredOnly: false })}
-                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${!gigFilter.starredOnly ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                            className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${!gigFilter.starredOnly ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
                                         >
                                             <span className="truncate">{t('map.buttons.mapControls.gigFilter.allGigs')}</span>
                                         </button>
@@ -346,34 +379,12 @@ export function MapControls({
                                             type="button"
                                             aria-pressed={gigFilter.starredOnly}
                                             onClick={() => updateGigFilter({ starredOnly: true })}
-                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${gigFilter.starredOnly ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                            className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${gigFilter.starredOnly ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
                                         >
                                             <span className="truncate">{t('map.buttons.mapControls.gigFilter.starredGigs')}</span>
                                         </button>
                                     </div>
 
-                                    <div role="group" aria-label={t('map.buttons.mapControls.toggleMapTheme')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
-                                        <button
-                                            aria-pressed={tileTheme === 'light'}
-                                            onClick={() => setTileTheme('light')}
-                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${tileTheme === 'light' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
-                                        >
-                                            <span className="truncate">{t('map.buttons.mapControls.light')}</span>
-                                        </button>
-                                        <button
-                                            aria-pressed={tileTheme === 'dark'}
-                                            disabled={!canUseDarkTiles}
-                                            title={canUseDarkTiles ? t('map.buttons.mapControls.useDarkTiles') : t('map.buttons.mapControls.cannotUseDarkTiles')}
-                                            onClick={() => {
-                                                if (canUseDarkTiles) setTileTheme('dark');
-                                            }}
-                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-40 ${
-                                                tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary disabled:hover:bg-transparent'
-                                            }`}
-                                        >
-                                            <span className="truncate">{t('map.buttons.mapControls.dark')}</span>
-                                        </button>
-                                    </div>
                                 </div>,
                                 document.body
                             )}
@@ -383,23 +394,29 @@ export function MapControls({
                     {tourControlSlot}
 
                     {showViewToggle && (
-                        <div role="group" aria-label={t('map.buttons.mapControls.toggleLocationView')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
+                        <div role="group" aria-label={t('map.buttons.mapControls.toggleLocationView')} className="relative inline-grid w-32 grid-cols-2 overflow-hidden rounded-md bg-surface shadow-md">
+                            <span
+                                aria-hidden="true"
+                                className={`absolute inset-y-0 z-0 w-1/2 rounded-md bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${view === 'active' ? 'translate-x-full' : 'translate-x-0'}`}
+                            />
                             <button
                                 aria-pressed={view === 'original'}
                                 onClick={() => setView('original')}
-                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'original' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors ${view === 'original' ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
                             >
-                                {t('map.buttons.mapControls.origin')}
+                                <span className="truncate">{t('map.buttons.mapControls.origin')}</span>
                             </button>
                             <button
                                 aria-pressed={view === 'active'}
                                 onClick={() => setView('active')}
-                                className={`w-16 py-2 text-sm font-medium transition-colors ${view === 'active' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                className={`relative z-10 flex h-9 min-w-0 items-center justify-center px-2 text-sm font-medium transition-colors ${view === 'active' ? 'text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
                             >
-                                {t('map.buttons.mapControls.active')}
+                                <span className="truncate">{t('map.buttons.mapControls.active')}</span>
                             </button>
                         </div>
                     )}
+
+                    {mapThemeToggle}
 
                 </div>
 
