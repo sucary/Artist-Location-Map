@@ -47,6 +47,20 @@ export const CalendarIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...pr
     </svg>
 );
 
+export const FilterIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
+export const TourModeIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="4" cy="20" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="20" cy="4" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9.5 20H18C20.2091 20 22 18.2091 22 16C22 13.7909 20.2091 12 18 12H6C3.79086 12 2 10.2091 2 8C2 5.79086 3.79086 4 6 4H16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="0.5 3.5"/>
+    </svg>
+);
+
 export const StarIcon: React.FC<StarIconProps> = ({ className = "w-5 h-5", filled = false, ...props }) => (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <path d="M12 2L14.81 8.63L22 9.24L16.54 13.97L18.18 21L12 17.27L5.82 21L7.46 13.97L2 9.24L9.19 8.63L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>

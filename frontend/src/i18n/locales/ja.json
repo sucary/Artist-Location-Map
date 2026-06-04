@@ -416,7 +416,19 @@
         "resetMapDirection": "地図の向きをリセット",
         "locateMe": "現在地へ移動",
         "zoomIn": "拡大",
-        "zoomOut": "縮小"
+        "zoomOut": "縮小",
+        "gigFilter": {
+          "open": "地図の公演を絞り込み",
+          "title": "地図表示",
+          "starredLabel": "公演の表示",
+          "allGigs": "すべて",
+          "starredGigs": "スター付き",
+          "tourLabel": "ツアー",
+          "all": "すべて",
+          "allTours": "すべてのツアー",
+          "artistLabel": "アーティスト",
+          "allArtists": "すべてのアーティスト"
+        }
       }
     },
     "error": {

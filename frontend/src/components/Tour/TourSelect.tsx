@@ -1,26 +1,39 @@
 import { useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
-import type { Tour } from '../../types/gig';
 import { ChevronDownIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 
+interface TourSelectOption {
+    id: string;
+    name: string;
+}
+
 interface TourSelectProps {
-    tours: Tour[];
+    id?: string;
+    tours: TourSelectOption[];
     value: string;
     placeholder: string;
     ariaLabel: string;
+    emptyLabel?: string;
+    dropdownMaxHeight?: number;
     onChange: (tourId: string) => void;
 }
 
-export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: TourSelectProps) {
-    const inputId = useId();
+export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabel, dropdownMaxHeight = 192, onChange }: TourSelectProps) {
+    const generatedInputId = useId();
+    const inputId = id ?? generatedInputId;
     const listboxId = `${inputId}-tours`;
     const containerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+    const [dropdownPosition, setDropdownPosition] = useState({
+        top: 0,
+        left: 0,
+        width: 0,
+        maxHeight: dropdownMaxHeight,
+    });
 
     const selectedTour = useMemo(() => (
         tours.find((tour) => tour.id === value)
@@ -38,12 +51,23 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
 
         // Portal menu follows the input inside map overlays
         const rect = containerRef.current.getBoundingClientRect();
+        const gap = 4;
+        const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gap - 8);
+        const maxHeight = Math.min(dropdownMaxHeight, availableBelow);
+        const dropdownWidth = Math.min(rect.width, window.innerWidth - 16);
+        const dropdownLeft = Math.min(
+            Math.max(8, rect.left),
+            window.innerWidth - dropdownWidth - 8
+        );
+
+        // Portal dropdown stays within the viewport when used inside map overlays
         setDropdownPosition({
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.left + window.scrollX,
-            width: rect.width,
+            top: rect.bottom + gap,
+            left: dropdownLeft,
+            width: dropdownWidth,
+            maxHeight,
         });
-    }, [isOpen, query]);
+    }, [dropdownMaxHeight, isOpen, query]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -62,7 +86,7 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
         setQuery(selectedTour?.name ?? '');
     }, [selectedTour?.name]);
 
-    const handleSelect = (tour: Tour) => {
+    const handleSelect = (tour: TourSelectOption) => {
         onChange(tour.id);
         setQuery(tour.name);
         setIsOpen(false);
@@ -111,11 +135,13 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
                     role="listbox"
                     aria-label={ariaLabel}
                     ref={dropdownRef}
-                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                    data-tour-select-dropdown="true"
+                    className="fixed z-9999 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,
                         width: `${dropdownPosition.width}px`,
+                        maxHeight: `${dropdownPosition.maxHeight}px`,
                     }}
                 >
                     {filteredTours.map((tour) => (
@@ -133,7 +159,7 @@ export function TourSelect({ tours, value, placeholder, ariaLabel, onChange }: T
                     ))}
                     {filteredTours.length === 0 && (
                         <div className="px-3 py-3 text-sm text-text-secondary">
-                            {t('tour.form.noToursFound')}
+                            {emptyLabel ?? t('tour.form.noToursFound')}
                         </div>
                     )}
                 </div>,

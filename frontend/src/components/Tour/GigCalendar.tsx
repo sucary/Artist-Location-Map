@@ -539,7 +539,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                                 <div className={`relative mb-0.5 flex min-h-5 items-start gap-1 ${showRowAdd ? 'group/day-row' : ''}`}>
                                     <span
                                         className={`relative z-10 inline-flex h-5 min-w-5 self-start items-center justify-center rounded-full px-1 text-xs font-semibold leading-none transition-colors group-hover/day-row:opacity-0 focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 ${
-                                            isToday ? 'bg-primary text-white' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
+                                            isToday ? 'bg-surface-muted text-text' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
                                         }`}
                                     >
                                         {formatCalendarDayLabel(day.date, dateLocale)}

@@ -416,7 +416,19 @@
         "resetMapDirection": "重置地图方向",
         "locateMe": "显示你的位置",
         "zoomIn": "放大",
-        "zoomOut": "缩小"
+        "zoomOut": "缩小",
+        "gigFilter": {
+          "open": "筛选地图上的演出",
+          "title": "地图视图",
+          "starredLabel": "演出显示",
+          "allGigs": "全部演出",
+          "starredGigs": "已标星",
+          "tourLabel": "巡演",
+          "all": "全部",
+          "allTours": "全部巡演",
+          "artistLabel": "艺人",
+          "allArtists": "全部艺人"
+        }
       }
     },
     "error": {

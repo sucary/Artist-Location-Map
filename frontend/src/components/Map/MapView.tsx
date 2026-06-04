@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useQuery } from '@tanstack/react-query';
 import { MapControls } from './MapControls';
+import type { GigMapFilterState } from './MapControls';
 import { MapErrorOverlay } from './MapErrorOverlay';
 import { SelectionPrompt } from './SelectionPrompt';
 import {
@@ -115,6 +116,7 @@ export default function MapView({
     const [clusterDebugControlsEnabled, setClusterDebugControlsEnabled] = useState(getStoredClusterDebugControlsEnabled);
     const [rawClusterDebugExpanded, setRawClusterDebugExpanded] = useState(false);
     const [activeAdjustmentCityId, setActiveAdjustmentCityId] = useState<string | null>(null);
+    const [gigMapFilter, setGigMapFilter] = useState<GigMapFilterState>({ starredOnly: false, tourId: '', artistId: '' });
     const { t } = useTranslation();
     const canUseClusterDebugControls = isAdmin && clusterDebugControlsEnabled;
     const activeClusterColorDebugEnabled = canUseClusterDebugControls && clusterColorDebugEnabled;
@@ -182,7 +184,51 @@ export default function MapView({
         enabled: tourModeActive,
     });
 
-    const gigMarkerArtists = useMemo<GigMarkerArtist[]>(() => (gigs || []).map((gig) => ({
+    const gigFilterOptions = useMemo(() => {
+        const tourOptions = new Map<string, string>();
+        const artistOptions = new Map<string, string>();
+
+        (gigs || []).forEach((gig) => {
+            if (gig.tourId && gig.tour?.name) {
+                tourOptions.set(gig.tourId, gig.tour.name);
+            }
+
+            const gigArtists = gig.artists.length > 0 ? gig.artists : [gig.artist];
+            gigArtists.forEach((artist) => {
+                artistOptions.set(artist.id, artist.name);
+            });
+        });
+
+        // Stable dropdown ordering for repeated map filtering.
+        return {
+            tours: Array.from(tourOptions, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+            artists: Array.from(artistOptions, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+        };
+    }, [gigs]);
+
+    const filteredGigs = useMemo(() => (
+        (gigs || []).filter((gig) => {
+            if (gigMapFilter.starredOnly && !starredGigIds?.has(gig.id)) return false;
+            if (gigMapFilter.tourId && gig.tourId !== gigMapFilter.tourId) return false;
+            if (gigMapFilter.artistId && !gig.artistIds.includes(gigMapFilter.artistId) && gig.artist.id !== gigMapFilter.artistId) return false;
+            return true;
+        })
+    ), [gigMapFilter.artistId, gigMapFilter.starredOnly, gigMapFilter.tourId, gigs, starredGigIds]);
+
+    useEffect(() => {
+        if (!tourModeActive) {
+            setGigMapFilter({ starredOnly: false, tourId: '', artistId: '' });
+            return;
+        }
+
+        setGigMapFilter((currentFilter) => ({
+            starredOnly: currentFilter.starredOnly,
+            tourId: currentFilter.tourId && gigFilterOptions.tours.some((tour) => tour.id === currentFilter.tourId) ? currentFilter.tourId : '',
+            artistId: currentFilter.artistId && gigFilterOptions.artists.some((artist) => artist.id === currentFilter.artistId) ? currentFilter.artistId : '',
+        }));
+    }, [gigFilterOptions.artists, gigFilterOptions.tours, tourModeActive]);
+
+    const gigMarkerArtists = useMemo<GigMarkerArtist[]>(() => filteredGigs.map((gig) => ({
         id: gig.id,
         userId: gig.userId,
         name: gig.artist.name,
@@ -199,7 +245,7 @@ export default function MapView({
         originalCityId: gig.locationCityId ?? '',
         activeCityId: gig.locationCityId ?? '',
         gig,
-    })), [gigs]);
+    })), [filteredGigs]);
 
     const displayArtists = useMemo(() => (
         tourModeActive ? gigMarkerArtists : artists || []
@@ -208,10 +254,10 @@ export default function MapView({
     const highlightedGigIds = useMemo(() => {
         if (!tourMode?.selectedDay) return undefined;
         const selectedDay = tourMode.selectedDay;
-        return new Set((gigs || [])
+        return new Set(filteredGigs
             .filter((gig) => gig.date === selectedDay)
             .map((gig) => gig.id));
-    }, [gigs, tourMode?.selectedDay]);
+    }, [filteredGigs, tourMode?.selectedDay]);
 
     const handleMarkerEdit = useCallback((artist: Artist) => {
         if (tourModeActive) {
@@ -911,6 +957,9 @@ export default function MapView({
                 onRequestMobileOpen={closeAttribution}
                 showViewToggle={isAuthenticated && !viewingFeatured && !tourModeActive}
                 tourControlSlot={tourControlSlot}
+                gigFilter={tourModeActive ? gigMapFilter : undefined}
+                gigFilterOptions={tourModeActive ? gigFilterOptions : undefined}
+                onGigFilterChange={tourModeActive ? setGigMapFilter : undefined}
             />
 
             {selectionMode?.active && <SelectionPrompt onCancel={onLocationPick} />}

@@ -82,7 +82,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
         if (!isOpen || !rootRef.current) return;
 
         const rect = rootRef.current.getBoundingClientRect();
-        const gap = 10;
+        const gap = 8;
         const availableBelow = window.innerHeight - rect.bottom - gap;
         const availableAbove = rect.top - gap;
         const opensAbove = availableBelow < 380 && availableAbove > availableBelow;
@@ -254,7 +254,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="rounded-md bg-primary-contrast px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            className="rounded-lg bg-primary-contrast px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                         >
                             {t('common.apply', { defaultValue: 'Apply' })}
                         </button>

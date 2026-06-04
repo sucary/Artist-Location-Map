@@ -416,7 +416,19 @@
         "resetMapDirection": "Reset map direction",
         "locateMe": "Locate me",
         "zoomIn": "Zoom in",
-        "zoomOut": "Zoom out"
+        "zoomOut": "Zoom out",
+        "gigFilter": {
+          "open": "Filter gigs on map",
+          "title": "Map view",
+          "starredLabel": "Gig visibility",
+          "allGigs": "All gigs",
+          "starredGigs": "Starred",
+          "tourLabel": "Tour",
+          "all": "All",
+          "allTours": "All tours",
+          "artistLabel": "Artist",
+          "allArtists": "All artists"
+        }
       }
     },
     "error": {

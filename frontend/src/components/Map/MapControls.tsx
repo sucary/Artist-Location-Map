@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ReactNode, TouchEvent } from 'react';
 import type { LocationView } from '../../types/artist';
 import type { MapTileTheme } from './config/mapStyles';
 import { LocationIcon, NorthIcon, ExpandIcon, CollapseIcon } from '../icons/MapIcons';
+import { FilterIcon } from '../icons/GeneralIcons';
+import { TourSelect } from '../Tour/TourSelect';
 import { useTranslation } from 'react-i18next';
 
 // Floating map control drawer and map actions
@@ -30,6 +33,25 @@ interface MapControlsProps {
     onRequestMobileOpen?: () => void;
     showViewToggle?: boolean;
     tourControlSlot?: ReactNode;
+    gigFilter?: GigMapFilterState;
+    gigFilterOptions?: GigMapFilterOptions;
+    onGigFilterChange?: (filter: GigMapFilterState) => void;
+}
+
+export interface GigMapFilterState {
+    starredOnly: boolean;
+    tourId: string;
+    artistId: string;
+}
+
+export interface GigMapFilterOption {
+    id: string;
+    name: string;
+}
+
+export interface GigMapFilterOptions {
+    tours: GigMapFilterOption[];
+    artists: GigMapFilterOption[];
 }
 
 export function MapControls({
@@ -55,8 +77,22 @@ export function MapControls({
     onRequestMobileOpen,
     showViewToggle = true,
     tourControlSlot,
+    gigFilter,
+    gigFilterOptions,
+    onGigFilterChange,
 }: MapControlsProps) {
     const [isMobile, setIsMobile] = useState(false);
+    const [gigFilterOpen, setGigFilterOpen] = useState(false);
+    const gigFilterButtonRef = useRef<HTMLButtonElement>(null);
+    const gigFilterDropdownRef = useRef<HTMLDivElement>(null);
+    const [gigFilterDropdownPosition, setGigFilterDropdownPosition] = useState({
+        top: null as number | null,
+        right: 0,
+        bottom: null as number | null,
+        width: 288,
+        maxHeight: 420,
+        opensAbove: true,
+    });
     const [closedOffset, setClosedOffset] = useState(0);
     const drawerRef = useRef<HTMLDivElement>(null);
     const touchStartXRef = useRef<number | null>(null);
@@ -64,6 +100,8 @@ export function MapControls({
     const [dragOffset, setDragOffset] = useState<number | null>(null);
     const mobileVisibleTipWidth = 3.8; // Visible portion of the map controls when closed on mobile view
     const mapButtonClass = 'bg-surface w-10 h-10 flex items-center justify-center hover:text-primary transition-colors text-text';
+    const showGigFilter = !!gigFilter && !!gigFilterOptions && !!onGigFilterChange;
+    const gigFilterActive = !!gigFilter && (gigFilter.starredOnly || !!gigFilter.tourId || !!gigFilter.artistId);
 
     const { t } = useTranslation();
 
@@ -138,6 +176,53 @@ export function MapControls({
         return () => window.removeEventListener('resize', syncClosedOffset);
     }, [isMobile, showViewToggle]);
 
+    useEffect(() => {
+        if (showGigFilter) return;
+        setGigFilterOpen(false);
+    }, [showGigFilter]);
+
+    useEffect(() => {
+        if (!gigFilterOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (target instanceof Element && target.closest('[data-tour-select-dropdown="true"]')) return;
+            if (drawerRef.current?.contains(target) || gigFilterDropdownRef.current?.contains(target)) return;
+            setGigFilterOpen(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [gigFilterOpen]);
+
+    useEffect(() => {
+        if (!gigFilterOpen || !gigFilterButtonRef.current) return;
+
+        const rect = gigFilterButtonRef.current.getBoundingClientRect();
+        const gap = 10;
+        const availableBelow = window.innerHeight - rect.bottom - gap;
+        const availableAbove = rect.top - gap;
+        const opensAbove = availableBelow < 300 && availableAbove > availableBelow;
+        const maxHeight = Math.max(280, Math.min(420, opensAbove ? availableAbove : availableBelow));
+        const width = Math.min(window.innerWidth - 16, 288);
+        const right = Math.max(8, window.innerWidth - rect.right);
+
+        // Edge anchoring keeps the panel physically attached to the trigger
+        setGigFilterDropdownPosition({
+            top: opensAbove ? null : rect.bottom + gap,
+            right,
+            bottom: opensAbove ? window.innerHeight - rect.top + gap : null,
+            width,
+            maxHeight,
+            opensAbove,
+        });
+    }, [gigFilterOpen]);
+
+    const updateGigFilter = (updates: Partial<GigMapFilterState>) => {
+        if (!gigFilter || !onGigFilterChange) return;
+        onGigFilterChange({ ...gigFilter, ...updates });
+    };
+
     return (
         <>
             {mobileSwipeZoneVisible && (
@@ -162,8 +247,139 @@ export function MapControls({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            <div className="flex gap-2 items-end">
+            <div className="flex items-end gap-2">
                 <div className="relative flex flex-col gap-2 items-end">
+                    {showGigFilter && gigFilter && gigFilterOptions && (
+                        <div className="relative">
+                            <button
+                                ref={gigFilterButtonRef}
+                                aria-pressed={gigFilterActive}
+                                aria-expanded={gigFilterOpen}
+                                aria-haspopup="dialog"
+                                aria-label={t('map.buttons.mapControls.gigFilter.open')}
+                                onClick={() => setGigFilterOpen((open) => !open)}
+                                className={gigFilterActive
+                                    ? 'flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-primary-contrast shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:text-primary-text-dark app-dark:hover:bg-transparent app-dark:hover:text-primary'
+                                    : 'flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-transparent app-dark:hover:text-primary'
+                                }
+                                title={t('map.buttons.mapControls.gigFilter.open')}
+                            >
+                                <FilterIcon className="h-4 w-4" />
+                                <span className="truncate">{t('map.buttons.mapControls.gigFilter.title')}</span>
+                            </button>
+
+                            {gigFilterOpen && createPortal(
+                                <div
+                                    ref={gigFilterDropdownRef}
+                                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 pb-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
+                                    style={{
+                                        top: gigFilterDropdownPosition.top === null ? undefined : `${gigFilterDropdownPosition.top}px`,
+                                        right: `${gigFilterDropdownPosition.right}px`,
+                                        bottom: gigFilterDropdownPosition.bottom === null ? undefined : `${gigFilterDropdownPosition.bottom}px`,
+                                        width: `${gigFilterDropdownPosition.width}px`,
+                                        maxHeight: `${gigFilterDropdownPosition.maxHeight}px`,
+                                    }}
+                                >
+                                    <div className="mb-2 text-sm font-semibold text-text">
+                                        {t('map.buttons.mapControls.gigFilter.title')}
+                                    </div>
+
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary" htmlFor="map-gig-filter-artist">
+                                        {t('map.buttons.mapControls.gigFilter.artistLabel')}
+                                    </label>
+                                    <div className="mb-3 grid grid-cols-[minmax(0,1fr)_3.5rem] gap-2">
+                                        <div className="min-w-0">
+                                            <TourSelect
+                                                id="map-gig-filter-artist"
+                                                tours={gigFilterOptions.artists}
+                                                value={gigFilter.artistId}
+                                                placeholder={t('map.buttons.mapControls.gigFilter.allArtists')}
+                                                ariaLabel={t('map.buttons.mapControls.gigFilter.artistLabel')}
+                                                emptyLabel={t('tour.form.noArtistsFound')}
+                                                dropdownMaxHeight={160}
+                                                onChange={(artistId) => updateGigFilter({ artistId })}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => updateGigFilter({ artistId: '' })}
+                                            className="w-14 shrink-0 rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                                        >
+                                            {t('map.buttons.mapControls.gigFilter.all')}
+                                        </button>
+                                    </div>
+
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary" htmlFor="map-gig-filter-tour">
+                                        {t('map.buttons.mapControls.gigFilter.tourLabel')}
+                                    </label>
+                                    <div className="mb-3 grid grid-cols-[minmax(0,1fr)_3.5rem] gap-2">
+                                        <div className="min-w-0">
+                                            <TourSelect
+                                                id="map-gig-filter-tour"
+                                                tours={gigFilterOptions.tours}
+                                                value={gigFilter.tourId}
+                                                placeholder={t('map.buttons.mapControls.gigFilter.allTours')}
+                                                ariaLabel={t('map.buttons.mapControls.gigFilter.tourLabel')}
+                                                dropdownMaxHeight={160}
+                                                onChange={(tourId) => updateGigFilter({ tourId })}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => updateGigFilter({ tourId: '' })}
+                                            className="w-14 shrink-0 rounded-md bg-surface-muted px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                                        >
+                                            {t('map.buttons.mapControls.gigFilter.all')}
+                                        </button>
+                                    </div>
+
+                                    <div role="group" aria-label={t('map.buttons.mapControls.gigFilter.starredLabel')} className="mb-3 flex bg-surface rounded-md overflow-hidden shadow-md">
+                                        <button
+                                            type="button"
+                                            aria-pressed={!gigFilter.starredOnly}
+                                            onClick={() => updateGigFilter({ starredOnly: false })}
+                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${!gigFilter.starredOnly ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                        >
+                                            <span className="truncate">{t('map.buttons.mapControls.gigFilter.allGigs')}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-pressed={gigFilter.starredOnly}
+                                            onClick={() => updateGigFilter({ starredOnly: true })}
+                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${gigFilter.starredOnly ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                        >
+                                            <span className="truncate">{t('map.buttons.mapControls.gigFilter.starredGigs')}</span>
+                                        </button>
+                                    </div>
+
+                                    <div role="group" aria-label={t('map.buttons.mapControls.toggleMapTheme')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
+                                        <button
+                                            aria-pressed={tileTheme === 'light'}
+                                            onClick={() => setTileTheme('light')}
+                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${tileTheme === 'light' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
+                                        >
+                                            <span className="truncate">{t('map.buttons.mapControls.light')}</span>
+                                        </button>
+                                        <button
+                                            aria-pressed={tileTheme === 'dark'}
+                                            disabled={!canUseDarkTiles}
+                                            title={canUseDarkTiles ? t('map.buttons.mapControls.useDarkTiles') : t('map.buttons.mapControls.cannotUseDarkTiles')}
+                                            onClick={() => {
+                                                if (canUseDarkTiles) setTileTheme('dark');
+                                            }}
+                                            className={`flex h-9 min-w-0 w-1/2 items-center justify-center px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-40 ${
+                                                tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary disabled:hover:bg-transparent'
+                                            }`}
+                                        >
+                                            <span className="truncate">{t('map.buttons.mapControls.dark')}</span>
+                                        </button>
+                                    </div>
+                                </div>,
+                                document.body
+                            )}
+                        </div>
+                    )}
+
                     {tourControlSlot}
 
                     {showViewToggle && (
@@ -185,31 +401,9 @@ export function MapControls({
                         </div>
                     )}
 
-                    <div role="group" aria-label={t('map.buttons.mapControls.toggleMapTheme')} className="flex bg-surface rounded-md overflow-hidden shadow-md">
-                        <button
-                            aria-pressed={tileTheme === 'light'}
-                            onClick={() => setTileTheme('light')}
-                            className={`w-16 py-2 text-sm font-medium transition-colors ${tileTheme === 'light' ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary'}`}
-                        >
-                            {t('map.buttons.mapControls.light')}
-                        </button>
-                        <button
-                            aria-pressed={tileTheme === 'dark'}
-                            disabled={!canUseDarkTiles}
-                            title={canUseDarkTiles ? t('map.buttons.mapControls.useDarkTiles') : t('map.buttons.mapControls.cannotUseDarkTiles')}
-                            onClick={() => {
-                                if (canUseDarkTiles) setTileTheme('dark');
-                            }}
-                            className={`w-16 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                                tileTheme === 'dark' && canUseDarkTiles ? 'bg-primary-contrast text-white' : 'text-text hover:bg-surface-muted app-dark:hover:bg-transparent app-dark:hover:text-primary disabled:hover:bg-transparent'
-                            }`}
-                        >
-                            {t('map.buttons.mapControls.dark')}
-                        </button>
-                    </div>
                 </div>
 
-                <div className="flex flex-col gap-2 items-end">
+                <div className="flex flex-col items-end justify-end gap-2">
                     <button
                         aria-label={hasExpandedClusters ? t('map.buttons.mapControls.collapseAllClusters') : t('map.buttons.mapControls.expandAllClusters')}
                         onClick={onToggleClusters}
