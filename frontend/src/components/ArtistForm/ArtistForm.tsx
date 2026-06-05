@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useId, useState, useRef } from 'react';
 import { ArrowDownIcon, MusicNoteIcon, SleepIcon } from '../icons/FormIcons';
 import { CheckCircleIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from '../icons/SocialIcons';
@@ -17,6 +17,7 @@ import type { Artist } from '../../types/artist';
 import type { MusicBrainzCatalogArtist } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 // Artist creation and editing form experience
 
@@ -39,6 +40,185 @@ const SOCIAL_FIELD_CONFIG: Omit<SocialLinkField, 'placeholder'>[] = [
     { key: 'appleMusic', icon: MusicIcon },
     { key: 'youtube', icon: YoutubeIcon },
 ];
+
+const dialogActionButtonClass = 'inline-flex min-h-10 min-w-16 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface';
+const dialogCancelButtonClass = `${dialogActionButtonClass} text-text-secondary hover:bg-surface-muted hover:text-text`;
+const dialogConfirmButtonClass = `${dialogActionButtonClass} text-primary-contrast hover:bg-primary-contrast/10`;
+
+interface MediaWarningDialogProps {
+    warning: {
+        mode: 'avatar' | 'profile';
+        status: ArtistMediaAssetStatus;
+    };
+    onCancel: () => void;
+    onContinue: () => void;
+}
+
+function MediaWarningDialog({ warning, onCancel, onContinue }: MediaWarningDialogProps) {
+    const { t } = useTranslation();
+    const dialogRef = useDialogAccessibility(onCancel);
+    const titleId = useId();
+    const descriptionId = useId();
+
+    return (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center px-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={onCancel} />
+            <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={descriptionId}
+                tabIndex={-1}
+                className="relative w-full max-w-sm rounded-xl border border-border bg-surface p-4 shadow-xl focus:outline-none"
+            >
+                <h2 id={titleId} className="text-base font-semibold text-text">
+                    {warning.status.requiresReview ? t('artistForm.mediaReview.requiresReviewTitle') : t('artistForm.mediaReview.replaceSharedTitle')}
+                </h2>
+                <p id={descriptionId} className="mt-2 text-sm text-text-secondary">
+                    {warning.status.requiresReview
+                        ? t('artistForm.mediaReview.requiresReviewDescription')
+                        : t('artistForm.mediaReview.replaceSharedDescription')}
+                </p>
+                {warning.status.sourceImage && (
+                    <div className="mt-3">
+                        <p className="mb-1 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.currentImage')}</p>
+                        <img
+                            src={warning.status.sourceImage}
+                            alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
+                            className="aspect-video w-full rounded border border-border bg-surface-muted object-cover"
+                        />
+                    </div>
+                )}
+                <div className="mt-4 flex justify-end gap-2">
+                    <button
+                        type="button"
+                        className={dialogCancelButtonClass}
+                        onClick={onCancel}
+                    >
+                        {t('artistForm.buttons.cancel')}
+                    </button>
+                    <button
+                        type="button"
+                        className={dialogConfirmButtonClass}
+                        onClick={onContinue}
+                    >
+                        {t('artistForm.buttons.continue')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+interface PreUploadSelectionDialogProps {
+    warning: {
+        artist: MusicBrainzCatalogArtist;
+        status: ArtistMediaAssetStatus;
+    };
+    uploadedSourceImage?: string;
+    uploadedProfileCrop?: Artist['profileCrop'];
+    choice: 'shared' | 'upload';
+    onChoiceChange: (choice: 'shared' | 'upload') => void;
+    onCancel: () => void;
+    onConfirm: () => void;
+}
+
+function PreUploadSelectionDialog({ warning, uploadedSourceImage, uploadedProfileCrop, choice, onChoiceChange, onCancel, onConfirm }: PreUploadSelectionDialogProps) {
+    const { t } = useTranslation();
+    const dialogRef = useDialogAccessibility(onCancel);
+    const titleId = useId();
+    const descriptionId = useId();
+
+    return (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center px-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={onCancel} />
+            <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={descriptionId}
+                tabIndex={-1}
+                className="relative w-full max-w-md rounded-xl border border-border bg-surface p-4 shadow-xl focus:outline-none"
+            >
+                <h2 id={titleId} className="text-base font-semibold text-text">{t('artistForm.mediaReview.artistImageExistsTitle')}</h2>
+                <div id={descriptionId}>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        {t('artistForm.mediaReview.sharedImageRecommendation')}
+                    </p>
+                    <p className="mt-1 text-sm text-text-secondary">
+                        {t('artistForm.mediaReview.submitForReviewDescription')}
+                    </p>
+                    <p className="mt-4 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.chooseImage')}</p>
+                </div>
+                <div className="mt-4 space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => onChoiceChange('shared')}
+                        className={`relative block w-full overflow-hidden rounded-md transition-all ${
+                            choice === 'shared'
+                                ? 'shadow-md ring-2 ring-text-secondary'
+                                : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
+                        }`}
+                    >
+                        <img
+                            src={getProfileUrl(
+                                warning.status.sourceImage || undefined,
+                                warning.status.profileCrop || undefined
+                            )}
+                            alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
+                            className="block aspect-[3/1] w-full bg-surface-muted object-cover"
+                        />
+                        {choice === 'shared' && (
+                            <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
+                                <CheckCircleIcon className="h-5 w-5" />
+                            </span>
+                        )}
+                        <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
+                            choice === 'shared' ? 'bg-text-secondary' : 'bg-text-secondary/80'
+                        }`}>
+                            {t('artistForm.mediaReview.sharedImage')}
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onChoiceChange('upload')}
+                        className={`relative block w-full overflow-hidden rounded-md transition-all ${
+                            choice === 'upload'
+                                ? 'shadow-md ring-2 ring-text-secondary'
+                                : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
+                        }`}
+                    >
+                        <img
+                            src={getProfileUrl(uploadedSourceImage, uploadedProfileCrop)}
+                            alt={t('artistForm.mediaReview.yourUploadedArtistAlt')}
+                            className="block aspect-[3/1] w-full bg-surface-muted object-cover"
+                        />
+                        {choice === 'upload' && (
+                            <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
+                                <CheckCircleIcon className="h-5 w-5" />
+                            </span>
+                        )}
+                        <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
+                            choice === 'upload' ? 'bg-text-secondary' : 'bg-text-secondary/80'
+                        }`}>
+                            {t('artistForm.mediaReview.yourUpload')}
+                        </span>
+                    </button>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" className={dialogCancelButtonClass} onClick={onCancel}>
+                        {t('artistForm.buttons.cancel')}
+                    </button>
+                    <button type="button" className={dialogConfirmButtonClass} onClick={onConfirm}>
+                        {t('artistForm.buttons.confirm')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const ArtistForm = ({
     initialData,
@@ -401,128 +581,23 @@ const ArtistForm = ({
         )}
 
         {mediaWarning && (
-            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
-                <div className="w-full max-w-sm rounded-lg bg-surface p-4 shadow-xl border border-border">
-                    <h2 className="text-base font-semibold text-text">
-                        {mediaWarning.status.requiresReview ? t('artistForm.mediaReview.requiresReviewTitle') : t('artistForm.mediaReview.replaceSharedTitle')}
-                    </h2>
-                    <p className="mt-2 text-sm text-text-secondary">
-                        {mediaWarning.status.requiresReview
-                            ? t('artistForm.mediaReview.requiresReviewDescription')
-                            : t('artistForm.mediaReview.replaceSharedDescription')}
-                    </p>
-                    {mediaWarning.status.sourceImage && (
-                        <div className="mt-3">
-                            <p className="mb-1 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.currentImage')}</p>
-                            <img
-                                src={mediaWarning.status.sourceImage}
-                                alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
-                                className="w-full aspect-video rounded border border-border object-cover bg-surface-muted"
-                            />
-                        </div>
-                    )}
-                    <div className="mt-4 flex gap-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            className="flex-1"
-                            onClick={() => setMediaWarning(null)}
-                        >
-                            {t('artistForm.buttons.cancel')}
-                        </Button>
-                        <Button
-                            type="button"
-                            className="flex-1"
-                            onClick={continueAfterMediaWarning}
-                        >
-                            {t('artistForm.buttons.continue')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            <MediaWarningDialog
+                warning={mediaWarning}
+                onCancel={() => setMediaWarning(null)}
+                onContinue={continueAfterMediaWarning}
+            />
         )}
 
         {preUploadSelectionWarning && (
-            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/30">
-                <div className="w-full max-w-md rounded-lg bg-surface p-4 shadow-xl border border-border">
-                    <h2 className="text-base font-semibold text-text">{t('artistForm.mediaReview.artistImageExistsTitle')}</h2>
-                    <p className="mt-2 text-sm text-text-secondary">
-                        {t('artistForm.mediaReview.sharedImageRecommendation')}
-                    </p>
-                    <p className="mt-1 text-sm text-text-secondary">
-                        {t('artistForm.mediaReview.submitForReviewDescription')}
-                    </p>
-                    <p className="mt-4 text-xs font-medium text-text-secondary">{t('artistForm.mediaReview.chooseImage')}</p>
-                    <div className="mt-4 space-y-3">
-                        <div>
-                            <button
-                                type="button"
-                                onClick={() => setPreUploadImageChoice('shared')}
-                                className={`relative block w-full overflow-hidden rounded-md transition-all ${
-                                    preUploadImageChoice === 'shared'
-                                        ? 'shadow-md ring-2 ring-text-secondary'
-                                        : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
-                                }`}
-                            >
-                                <img
-                                    src={getProfileUrl(
-                                        preUploadSelectionWarning.status.sourceImage || undefined,
-                                        preUploadSelectionWarning.status.profileCrop || undefined
-                                    )}
-                                    alt={t('artistForm.mediaReview.currentSharedArtistAlt')}
-                                    className="block w-full aspect-[3/1] object-cover bg-surface-muted"
-                                />
-                                {preUploadImageChoice === 'shared' && (
-                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
-                                        <CheckCircleIcon className="h-5 w-5" />
-                                    </span>
-                                )}
-                                <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
-                                    preUploadImageChoice === 'shared' ? 'bg-text-secondary' : 'bg-text-secondary/80'
-                                }`}>
-                                    {t('artistForm.mediaReview.sharedImage')}
-                                </span>
-                            </button>
-                        </div>
-                        <div>
-                            <button
-                                type="button"
-                                onClick={() => setPreUploadImageChoice('upload')}
-                                className={`relative block w-full overflow-hidden rounded-md transition-all ${
-                                    preUploadImageChoice === 'upload'
-                                        ? 'shadow-md ring-2 ring-text-secondary'
-                                        : 'opacity-80 shadow-none hover:opacity-100 hover:ring-1 hover:ring-border'
-                                }`}
-                            >
-                                <img
-                                    src={getProfileUrl(formData.sourceImage, formData.profileCrop)}
-                                    alt={t('artistForm.mediaReview.yourUploadedArtistAlt')}
-                                    className="block w-full aspect-[3/1] object-cover bg-surface-muted"
-                                />
-                                {preUploadImageChoice === 'upload' && (
-                                    <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-text shadow">
-                                        <CheckCircleIcon className="h-5 w-5" />
-                                    </span>
-                                )}
-                                <span className={`absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium leading-none text-white shadow-sm ${
-                                    preUploadImageChoice === 'upload' ? 'bg-text-secondary' : 'bg-text-secondary/80'
-                                }`}>
-                                    {t('artistForm.mediaReview.yourUpload')}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                    <div className="mt-4">
-                        <Button
-                            type="button"
-                            className="w-full"
-                            onClick={confirmPreUploadImageChoice}
-                        >
-                            {t('artistForm.buttons.confirm')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            <PreUploadSelectionDialog
+                warning={preUploadSelectionWarning}
+                uploadedSourceImage={formData.sourceImage}
+                uploadedProfileCrop={formData.profileCrop}
+                choice={preUploadImageChoice}
+                onChoiceChange={setPreUploadImageChoice}
+                onCancel={() => setPreUploadSelectionWarning(null)}
+                onConfirm={confirmPreUploadImageChoice}
+            />
         )}
 
         <div className="absolute top-20 left-1/2 z-[1050] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 bg-surface rounded-xl shadow-xl shadow-black/5 ring-1 ring-border/40 overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] font-sans sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0 sm:max-h-[calc(100vh-8rem)]">

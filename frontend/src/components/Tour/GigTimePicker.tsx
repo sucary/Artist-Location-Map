@@ -331,7 +331,6 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
             <button
                 id={id}
                 type="button"
-                aria-haspopup="dialog"
                 aria-expanded={isOpen}
                 disabled={disabled}
                 onClick={() => setIsOpen((open) => !open)}
@@ -349,9 +348,9 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
             {isOpen && !disabled && createPortal(
                 <div
                     ref={dropdownRef}
-                    role="dialog"
+                    role="region"
                     aria-label={label}
-                    className="fixed z-[9999] overflow-hidden rounded-xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
+                    className="fixed z-[9999] overflow-hidden rounded-xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

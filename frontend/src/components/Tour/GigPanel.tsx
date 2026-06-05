@@ -425,7 +425,7 @@ export function GigPanel({
                                     type="button"
                                     aria-label={t('tour.management.deleteTour', { name: tour.name })}
                                     onClick={() => onDeleteTour(tour)}
-                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[#F3F4F6] px-3 text-sm font-semibold text-[rgb(220,38,38)] transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:text-white app-dark:bg-[#2C2C2E] app-dark:hover:bg-[rgb(220,38,38)] app-dark:hover:text-white"
+                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-surface-muted px-3 text-sm font-semibold text-text transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:bg-surface-secondary app-dark:hover:bg-[rgb(220,38,38)] app-dark:hover:!text-white"
                                 >
                                     <TrashIcon className="h-4 w-4" />
                                     {t('tour.management.deleteAction')}
@@ -435,7 +435,7 @@ export function GigPanel({
                                 <button
                                     type="button"
                                     onClick={() => onAddGigToTour(tour, mainArtistId)}
-                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[#F3F4F6] px-3 text-sm font-semibold text-text transition-colors duration-150 hover:border-primary hover:bg-primary hover:text-white app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:border-primary app-dark:hover:bg-primary app-dark:hover:text-white"
+                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-surface-muted px-3 text-sm font-semibold text-text transition-colors duration-150 hover:border-primary hover:bg-primary hover:text-white app-dark:bg-surface-secondary app-dark:hover:border-primary app-dark:hover:bg-primary app-dark:hover:text-white"
                                 >
                                     <PlusIcon className="h-4 w-4" />
                                     {t('tour.actions.addGig')}
@@ -638,7 +638,7 @@ export function GigPanel({
                                     role="listbox"
                                     ref={sortDropdownRef}
                                     aria-label={t(isManagingTours ? 'tour.management.sort.optionsLabel' : 'tour.panel.sort.optionsLabel')}
-                                    className="fixed z-[9999] rounded-lg border border-border-strong bg-surface shadow-lg"
+                                    className="fixed z-[9999] rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                                     style={{
                                         top: `${sortDropdownPos.top}px`,
                                         left: `${sortDropdownPos.left}px`,

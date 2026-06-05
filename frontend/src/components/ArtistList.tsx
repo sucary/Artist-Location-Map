@@ -335,7 +335,7 @@ const ArtistList = ({
                                 role="listbox"
                                 ref={sortDropdownRef}
                                 aria-label={t('artistList.sort.optionsLabel')}
-                                className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                                className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                                 style={{
                                     top: `${sortDropdownPos.top}px`,
                                     left: `${sortDropdownPos.left}px`,
@@ -445,7 +445,7 @@ const ArtistList = ({
                                                         aria-label={t('artistList.actions.goToLocation')}
                                                         onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                         title={t('artistList.actions.goToLocation')}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-text"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary"
                                                     >
                                                         <MapPinIcon className="h-4 w-4" />
                                                     </button>
@@ -455,7 +455,7 @@ const ArtistList = ({
                                                         type="button"
                                                         aria-label={t('artistList.actions.edit')}
                                                         onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-text"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary"
                                                     >
                                                         <EditIcon className="h-4 w-4" />
                                                     </button>

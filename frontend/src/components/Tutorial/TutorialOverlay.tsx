@@ -190,8 +190,7 @@ export function TutorialOverlay({ steps, stepIndex, onSkip, onNext }: TutorialOv
         <div className="fixed inset-0 z-[1400] pointer-events-none">
             <section
                 ref={panelRef}
-                role="dialog"
-                aria-modal="false"
+                role="region"
                 aria-labelledby="tutorial-title"
                 className="absolute pointer-events-auto rounded-lg border border-border bg-surface p-4 shadow-xl"
                 style={panelPosition}

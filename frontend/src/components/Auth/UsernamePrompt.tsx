@@ -15,7 +15,7 @@ function UsernamePromptError({ message }: { message: string }) {
         <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error app-dark:text-primary app-dark:font-bold">
             <svg
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-[#ef4444] app-dark:text-primary"
+                className="h-4 w-4 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -174,17 +174,19 @@ export function UsernamePrompt({ onComplete }: UsernamePromptProps) {
     const isAvailable = !error && username.length >= 1 && availableUsername === username && !checking;
 
     return (
-        <div className="fixed inset-0 z-[1200] pointer-events-none">
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center px-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" />
             <div
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="username-prompt-title"
+                aria-describedby="username-prompt-description"
                 tabIndex={-1}
-                className="absolute right-2 top-16 w-[calc(100vw-1rem)] max-w-[340px] rounded-lg bg-surface p-5 shadow-xl pointer-events-auto focus:outline-none"
+                className="relative max-h-[calc(100vh-3rem)] w-full max-w-[340px] overflow-y-auto rounded-xl bg-surface p-5 shadow-xl focus:outline-none"
             >
                 <h2 id="username-prompt-title" className="text-xl font-bold text-text mb-2">{t('auth.userNamePrompt.title')}</h2>
-                <p className="text-sm text-text-secondary mb-4">
+                <p id="username-prompt-description" className="text-sm text-text-secondary mb-4">
                     {t('auth.userNamePrompt.description')}
                     <br />
                     {t('auth.userNamePrompt.subdescription')}

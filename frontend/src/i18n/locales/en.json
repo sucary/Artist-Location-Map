@@ -648,8 +648,8 @@
       },
       "deleteTour": {
         "title": "Delete tour",
-        "message_one": "Delete {{name}} and its {{count}} gig? This cannot be undone.",
-        "message_other": "Delete {{name}} and all {{count}} gigs? This cannot be undone."
+        "message_one": "Delete <name>{{name}}</name> and its {{count}} gig? This cannot be undone.",
+        "message_other": "Delete <name>{{name}}</name> and all {{count}} gigs? This cannot be undone."
       }
     },
     "errors": {

@@ -3,6 +3,9 @@ import { useEffect, useRef } from 'react';
 export function useDialogAccessibility(onClose: () => void) {
     const dialogRef = useRef<HTMLDivElement>(null);
     const onCloseRef = useRef(onClose);
+    const previousFocusRef = useRef<HTMLElement | null>(
+        typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
+    );
 
     useEffect(() => {
         onCloseRef.current = onClose;
@@ -10,8 +13,20 @@ export function useDialogAccessibility(onClose: () => void) {
 
     useEffect(() => {
         const dialog = dialogRef.current;
+        const previousFocus = previousFocusRef.current;
         if (!dialog) return;
-        dialog.focus();
+
+        // Preserve explicit autofocus inside the modal.
+        if (!dialog.contains(document.activeElement)) {
+            dialog.focus();
+        }
+
+        return () => {
+            // Restore keyboard context after modal teardown.
+            if (previousFocus?.isConnected) {
+                previousFocus.focus({ preventScroll: true });
+            }
+        };
     }, []);
 
     useEffect(() => {

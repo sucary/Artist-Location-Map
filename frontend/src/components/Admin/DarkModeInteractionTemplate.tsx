@@ -13,15 +13,15 @@ import type { MapTileTheme } from '../Map/config/mapStyles';
 // Achizu map and frontend interaction inventory
 
 const darkVars = {
-    '--color-background': '#1C1C1E',
-    '--color-surface': '#1C1C1E',
-    '--color-surface-secondary': '#2C2C2E',
-    '--color-surface-muted': '#313134',
+    '--color-background': '#161618',
+    '--color-surface': '#202023',
+    '--color-surface-secondary': '#2A2A2D',
+    '--color-surface-muted': '#343438',
     '--color-text': '#F2F2F7',
     '--color-text-secondary': '#C7C7CC',
     '--color-text-muted': '#8E8E93',
-    '--color-border': '#38383A',
-    '--color-border-strong': '#48484A',
+    '--color-border': '#3A3A3D',
+    '--color-border-strong': '#505054',
     '--color-error': '#E35A66',
 } as CSSProperties;
 
@@ -319,7 +319,7 @@ export function DarkModeInteractionTemplate() {
                                     <div className="absolute inset-8 rounded-full border-2 border-text/70" />
                                 </div>
                                 <div className="flex gap-3 border-t border-border p-4">
-                                    <button type="button" className="flex-1 rounded-md border border-transparent bg-[#F3F4F6] px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:bg-[#3A3A3C]">Cancel</button>
+                                    <button type="button" className="flex-1 rounded-md border border-transparent bg-surface-muted px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-border app-dark:bg-surface-secondary app-dark:text-text app-dark:hover:bg-surface-muted">Cancel</button>
                                     <button type="button" className="flex-1 rounded-md border border-transparent bg-primary-contrast px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-contrast-hover disabled:cursor-not-allowed disabled:opacity-50">Save</button>
                                 </div>
                             </div>
@@ -348,13 +348,13 @@ export function DarkModeInteractionTemplate() {
                         </div>
                         {showDialogPreview && (
                             <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
-                                <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={() => setShowDialogPreview(false)} />
-                                <section role="dialog" aria-modal="true" className="relative w-[calc(100%-1rem)] max-w-80 rounded-lg border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80">
-                                    <h2 className="text-base font-semibold text-error app-dark:text-primary app-dark:font-bold">Delete artist</h2>
+                                <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={() => setShowDialogPreview(false)} />
+                                <section role="dialog" aria-modal="true" aria-label="Delete artist" className="relative w-[calc(100%-1rem)] max-w-80 rounded-lg border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80">
+                                    <h2 className="text-base font-semibold text-text">Delete artist</h2>
                                     <div className="mt-3 text-sm leading-5 text-text-secondary">ConfirmDialog surface and actions, contained inside this preview frame.</div>
-                                    <div className="mt-4 flex gap-3">
-                                        <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowDialogPreview(false)}>Cancel</Button>
-                                        <Button type="button" className="flex-1 bg-error hover:bg-error/90" onClick={() => setShowDialogPreview(false)}>Delete</Button>
+                                    <div className="mt-4 flex justify-end gap-2">
+                                        <button type="button" className="inline-flex min-h-10 min-w-16 items-center justify-center rounded-md px-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface" onClick={() => setShowDialogPreview(false)}>Cancel</button>
+                                        <button type="button" className="inline-flex min-h-10 min-w-16 items-center justify-center rounded-md px-3 text-sm font-semibold text-[#DC2626] transition-colors hover:bg-[#DC2626]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface" onClick={() => setShowDialogPreview(false)}>Delete</button>
                                     </div>
                                 </section>
                             </div>

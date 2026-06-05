@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthModal } from './AuthModal';
 import { UserMenu } from './UserMenu';
@@ -12,8 +13,15 @@ interface AccountButtonProps {
 }
 
 export function AccountButton({ showAuthModal, onOpenAuthModal, onCloseAuthModal, onOpenAdminDashboard, onMenuOpenChange }: AccountButtonProps) {
-    const { user, loading } = useAuth();
+    const { user, profile, loading } = useAuth();
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (!loading && user && profile) return;
+
+        // Anonymous auth states cannot leave a stale user-menu map lock behind
+        onMenuOpenChange?.(false);
+    }, [loading, onMenuOpenChange, profile, user]);
 
     if (loading) {
         return null;
@@ -21,7 +29,7 @@ export function AccountButton({ showAuthModal, onOpenAuthModal, onCloseAuthModal
 
     return (
         <>
-            {user ? (
+            {user && profile ? (
                 <UserMenu onOpenAdminDashboard={onOpenAdminDashboard} onOpenChange={onMenuOpenChange} />
             ) : (
                 <button

@@ -287,7 +287,6 @@ export function MapControls({
                                 ref={gigFilterButtonRef}
                                 aria-pressed={gigFilterActive}
                                 aria-expanded={gigFilterOpen}
-                                aria-haspopup="dialog"
                                 aria-label={t('map.buttons.mapControls.gigFilter.open')}
                                 onClick={() => setGigFilterOpen((open) => !open)}
                                 className="flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-transparent app-dark:hover:text-primary"
@@ -300,7 +299,7 @@ export function MapControls({
                             {gigFilterOpen && createPortal(
                                 <div
                                     ref={gigFilterDropdownRef}
-                                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 pb-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
+                                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 pb-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                                     style={{
                                         top: gigFilterDropdownPosition.top === null ? undefined : `${gigFilterDropdownPosition.top}px`,
                                         right: `${gigFilterDropdownPosition.right}px`,

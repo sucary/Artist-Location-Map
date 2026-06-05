@@ -29,7 +29,7 @@ const getActionClassName = (action: InlineAction) => {
         return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white';
     }
 
-    return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[#D1D5DB] hover:text-text app-dark:hover:bg-[#3A3A3C]';
+    return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary';
 };
 
 export function InlineActionMenu({ actions, className = 'right-0 top-1/2 -translate-y-1/2', alwaysVisible = false }: InlineActionMenuProps) {

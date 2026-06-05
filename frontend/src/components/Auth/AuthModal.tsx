@@ -19,7 +19,7 @@ function AuthErrorBox({ message }: { message: string }) {
         <div role="alert" className="mt-1.5 flex items-center gap-2 rounded-lg bg-error/10 px-3 py-2 text-[12.5px] font-medium leading-[1.4] text-error app-dark:text-primary app-dark:font-bold">
             <svg
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-[#ef4444] app-dark:text-primary"
+                className="h-4 w-4 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -272,16 +272,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[1200] pointer-events-none">
-            <div aria-hidden="true" className="absolute inset-0 pointer-events-auto" onClick={handleClose} />
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center px-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={handleClose} />
 
             <div
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="auth-title"
+                aria-describedby={message ? 'auth-message-description' : isForgotPassword ? 'auth-reset-description' : undefined}
                 tabIndex={-1}
-                className="absolute right-2 top-16 w-[calc(100vw-1rem)] max-w-[340px] rounded-lg bg-surface p-5 shadow-xl pointer-events-auto focus:outline-none"
+                className="relative max-h-[calc(100vh-3rem)] w-full max-w-[340px] overflow-y-auto rounded-xl bg-surface p-5 shadow-xl focus:outline-none"
             >
                 {!message && (
                     <CloseButton onClick={handleClose} size="lg" className="absolute top-4 right-4" />
@@ -290,7 +291,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {message ? (
                     <div className="text-center">
                         <h2 id="auth-title" className="text-xl font-bold text-text mb-2">{t('auth.emailCheck.title')}</h2>
-                        <p className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
+                        <p id="auth-message-description" className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
                         {error && <Alert variant="error" header={t('auth.errors.resendEmailFailed')} onClose={() => setError(null)} className="mb-4">{error}</Alert>}
                         <div className="flex gap-3">
                             <Button onClick={handleResendEmail} variant="secondary" isLoading={resendLoading} className="flex-1">{t('auth.buttons.resend')}</Button>
@@ -305,7 +306,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 {isForgotPassword ? (
                     <>
-                        <p className="text-sm text-text-secondary mb-6">
+                        <p id="auth-reset-description" className="text-sm text-text-secondary mb-6">
                             {t('auth.resetPassword.description')}
                         </p>
                         <form onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }} className="space-y-4" noValidate>

@@ -637,8 +637,8 @@
       },
       "deleteTour": {
         "title": "删除巡演",
-        "message_one": "删除 {{name}} 及其中的 {{count}} 场演出吗？此操作无法撤销。",
-        "message_other": "删除 {{name}} 及其中的全部 {{count}} 场演出吗？此操作无法撤销。"
+        "message_one": "删除 <name>{{name}}</name> 及其中的 {{count}} 场演出吗？此操作无法撤销。",
+        "message_other": "删除 <name>{{name}}</name> 及其中的全部 {{count}} 场演出吗？此操作无法撤销。"
       }
     },
     "errors": {

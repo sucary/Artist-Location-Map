@@ -454,7 +454,7 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
                     role="listbox"
                     aria-label={t('artistForm.musicBrainz.resultsLabel')}
                     ref={dropdownRef}
-                    className="fixed z-[9999] overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
+                    className="fixed z-[9999] overflow-hidden rounded-lg border border-border bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: dropdownPosition.top,
                         left: dropdownPosition.left,

@@ -149,7 +149,6 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
             <button
                 id="tour-date-range"
                 type="button"
-                aria-haspopup="dialog"
                 aria-expanded={isOpen}
                 onPointerDown={markInternalPointerDown}
                 onClick={() => setIsOpen((open) => !open)}
@@ -178,7 +177,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 <div
                     ref={dropdownRef}
                     onPointerDown={markInternalPointerDown}
-                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-5 pb-5 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
+                    className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-5 pb-5 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: dropdownPosition.top === null ? undefined : `${dropdownPosition.top}px`,
                         right: `${dropdownPosition.right}px`,

@@ -195,7 +195,7 @@ const YearSelect = ({
                     role="listbox"
                     aria-label={label || t('artistForm.yearSelect.label')}
                     ref={dropdownRef}
-                    className="fixed z-9999 bg-surface border border-border-strong rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                    className="fixed z-9999 bg-surface border border-border-strong rounded-lg shadow-lg max-h-48 overflow-y-auto app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,

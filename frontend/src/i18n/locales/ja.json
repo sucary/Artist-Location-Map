@@ -648,8 +648,8 @@
       },
       "deleteTour": {
         "title": "ツアーを削除",
-        "message_one": "{{name}}と公演{{count}}件を削除しますか？この操作は元に戻せません。",
-        "message_other": "{{name}}と公演{{count}}件をすべて削除しますか？この操作は元に戻せません。"
+        "message_one": "<name>{{name}}</name>と公演{{count}}件を削除しますか？この操作は元に戻せません。",
+        "message_other": "<name>{{name}}</name>と公演{{count}}件をすべて削除しますか？この操作は元に戻せません。"
       }
     },
     "errors": {

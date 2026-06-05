@@ -27,7 +27,6 @@ import {
     storeTileTheme,
 } from './config/mapStorage';
 import { useArtistMarkers } from './hooks/useArtistMarkers';
-import { getClusterZoom } from './clusters/clusterIndex';
 import { patchMapLabelLanguage } from './layers/labelLanguage';
 import { syncCityBoundaryLayers } from './layers/cityBoundaryLayers';
 import { syncChinaClaimedBorderLayers } from './layers/chinaClaimedBorderLayers';
@@ -660,16 +659,7 @@ export default function MapView({
             // Keep the cluster open while drag inertia settles.
             suppressClusterCollapseUntilRef.current = performance.now() + 600;
         };
-        const logZoomLevel = () => {
-            const mapZoom = map.getZoom();
-            // Debug zoom pair after a completed zoom gesture
-            console.log('[cluster-debug] zoom level', {
-                mapZoom,
-                clusterZoom: getClusterZoom(mapZoom),
-            });
-        };
         const handleZoomEnd = () => {
-            logZoomLevel();
             // Zoom changes cluster membership, so stale expanded markers are cleared.
             collapseExpandedClusters(false);
             renderVisibleMarkers();
@@ -889,13 +879,6 @@ export default function MapView({
 
     const handleToggleRawClusters = useCallback(() => {
         if (!canUseClusterDebugControls) return;
-
-        const mapZoom = mapRef.current?.getZoom() ?? null;
-        // Debug zoom pair for checking rendered radius against cluster buckets
-        console.log('[cluster-debug] zoom level', {
-            mapZoom,
-            clusterZoom: mapZoom === null ? null : getClusterZoom(mapZoom),
-        });
 
         if (hasExpandedClusters) {
             collapseExpandedClusters();

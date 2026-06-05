@@ -205,7 +205,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                     role="listbox"
                     aria-label={label}
                     ref={dropdownRef}
-                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

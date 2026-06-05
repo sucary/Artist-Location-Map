@@ -297,7 +297,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     aria-label={label}
                     title={label}
                     onClick={() => onAddGig(dateValue)}
-                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-[#E5E7EB] app-dark:hover:bg-[#3A3A3C]"
+                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-border app-dark:hover:bg-surface-muted"
                 >
                     <span className="grid h-9 w-9 place-items-center text-text-secondary opacity-0 transition-opacity group-hover/add-cell:opacity-100">
                         <PlusIcon className="h-5 w-5" />
@@ -313,7 +313,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     aria-label={label}
                     title={label}
                     onClick={() => onAddGig(dateValue)}
-                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-[#F3F4F6] text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-[#E5E7EB] group-hover/day-row:opacity-100 app-dark:bg-[#2C2C2E] app-dark:hover:bg-[#3A3A3C] sm:left-2 sm:right-2"
+                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-border group-hover/day-row:opacity-100 app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted sm:left-2 sm:right-2"
                 >
                     <PlusIcon className="h-3.5 w-3.5" />
                 </button>
@@ -328,7 +328,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                 onClick={() => onAddGig(dateValue)}
                 className="group/add-stack flex items-start justify-center rounded"
             >
-                <span className="grid h-9 w-full place-items-center rounded bg-[#F3F4F6] text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:group-hover/add-stack:bg-[#3A3A3C]">
+                <span className="grid h-9 w-full place-items-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-border app-dark:bg-surface-secondary app-dark:group-hover/add-stack:bg-surface-muted">
                     <PlusIcon className="h-4 w-4" />
                 </span>
             </button>
@@ -348,9 +348,9 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
         return createPortal(
             <div
                 ref={dayPopoverRef}
-                role="dialog"
+                role="region"
                 aria-label={`${weekdayLabel} ${dayLabel}`}
-                className="fixed z-[9999] overflow-hidden rounded-xl border border-border/70 bg-surface shadow-xl shadow-black/15"
+                className="fixed z-[9999] overflow-hidden rounded-xl border border-border/70 bg-surface shadow-xl shadow-black/15 app-dark:shadow-[0_18px_36px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                 style={{
                     top: `${dayPopover.top}px`,
                     left: `${dayPopover.left}px`,
@@ -404,7 +404,6 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                         <button
                             ref={titleButtonRef}
                             type="button"
-                            aria-haspopup="dialog"
                             aria-expanded={isDatePickerOpen}
                             onClick={handleTitleClick}
                             className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-left text-lg font-semibold tracking-tight text-text transition-colors hover:bg-surface-muted focus:bg-primary focus:text-white focus:outline-none sm:text-xl"
@@ -417,9 +416,9 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                         {isDatePickerOpen && createPortal(
                             <div
                                 ref={datePickerRef}
-                                role="dialog"
+                                role="region"
                                 aria-label={t('tour.calendar.selectDate')}
-                                className="fixed z-[9999] overflow-y-auto rounded-xl border border-border-strong bg-surface shadow-xl shadow-black/10"
+                                className="fixed z-[9999] overflow-y-auto rounded-xl border border-border-strong bg-surface shadow-xl shadow-black/10 app-dark:shadow-[0_18px_36px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                                 style={{
                                     top: `${datePickerPosition.top}px`,
                                     left: `${datePickerPosition.left}px`,
@@ -552,7 +551,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                                                 <button
                                                     type="button"
                                                     onClick={(event) => openDayPopover(event, day.value)}
-                                                    className="truncate rounded bg-[#F3F4F6] px-1 py-1 text-left text-xs font-semibold text-text-secondary transition-colors hover:bg-[#E5E7EB] hover:text-text app-dark:bg-[#2C2C2E] app-dark:hover:bg-[#3A3A3C]"
+                                                    className="truncate rounded bg-surface-muted px-1 py-1 text-left text-xs font-semibold text-text-secondary transition-colors hover:bg-border hover:text-text app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted"
                                                 >
                                                     {t('tour.calendar.remainingEvents', { count: hiddenGigCount, defaultValue: '{{count}} more events' })}
                                                 </button>

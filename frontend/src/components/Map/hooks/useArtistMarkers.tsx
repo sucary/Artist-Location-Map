@@ -1774,33 +1774,6 @@ export const useArtistMarkers = ({
                 CLUSTER_CONFIG.outerCollisionDistance,
                 obstacleEntries
             );
-        console.info('[Achizu map] expanded cluster layout', {
-            clusterId,
-            leafCount: leaves.length,
-            obstacleCount: obstacleEntries.length,
-            expandedClusterCount: expandedRef.current.size,
-            preserveArtistLocations,
-        });
-        console.table(expandedItems.map((item, index) => {
-            const origin = getExpandedItemOrigin(item);
-            const targetPixel = { x: clusterPixel.x + positions[index].x, y: clusterPixel.y + positions[index].y };
-            const target = map.unproject([targetPixel.x, targetPixel.y]);
-
-            return {
-                index,
-                kind: item.kind,
-                label: item.kind === 'venue' ? item.venueCluster.name : item.artist.name,
-                leafCount: item.leaves.length,
-                originLng: origin[0],
-                originLat: origin[1],
-                rawOffsetX: rawOffsets[index].x,
-                rawOffsetY: rawOffsets[index].y,
-                resolvedOffsetX: positions[index].x,
-                resolvedOffsetY: positions[index].y,
-                targetLng: target.lng,
-                targetLat: target.lat,
-            };
-        }));
 
         // Expanded marker and connector collections
         const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
@@ -1862,92 +1835,7 @@ export const useArtistMarkers = ({
 
                 preloadArtistMarkerImages(item.artists);
                 marker.getElement().classList.add('expanded-cluster-marker');
-                animateMarkerTo(marker, markerTarget, () => {
-                    const actual = getMarkerCoordinates(marker);
-                    const targetPixel = map.project(markerTarget);
-                    const actualPixel = map.project(actual);
-                    const canvasRect = map.getCanvas().getBoundingClientRect();
-                    const containerRect = map.getContainer().getBoundingClientRect();
-                    const markerParentRect = marker.getElement().parentElement?.getBoundingClientRect();
-                    const markerRect = marker.getElement().getBoundingClientRect();
-                    const circleRect = marker.getElement().querySelector('[data-expanded-venue-circle="true"]')?.getBoundingClientRect();
-                    const circleCenterInCanvas = circleRect ? {
-                        x: circleRect.left + circleRect.width / 2 - canvasRect.left,
-                        y: circleRect.top + circleRect.height / 2 - canvasRect.top,
-                    } : null;
-                    const circleCenterInContainer = circleRect ? {
-                        x: circleRect.left + circleRect.width / 2 - containerRect.left,
-                        y: circleRect.top + circleRect.height / 2 - containerRect.top,
-                    } : null;
-
-                    // Settled geometry verifies marker anchor against connector target
-                    console.info('[Achizu map] expanded venue marker settled', {
-                        clusterId,
-                        venueName: item.venueCluster.name,
-                        markerTarget,
-                        actual,
-                        screenDelta: {
-                            x: actualPixel.x - targetPixel.x,
-                            y: actualPixel.y - targetPixel.y,
-                        },
-                        circleToTargetDelta: circleCenterInContainer ? {
-                            x: circleCenterInContainer.x - targetPixel.x,
-                            y: circleCenterInContainer.y - targetPixel.y,
-                        } : null,
-                        canvasCircleToTargetDelta: circleCenterInCanvas ? {
-                            x: circleCenterInCanvas.x - targetPixel.x,
-                            y: circleCenterInCanvas.y - targetPixel.y,
-                        } : null,
-                        connectorEndpoints: item.leaves.map((leaf) => {
-                            const endpoint = leaf.geometry.coordinates as [number, number];
-                            const endpointPixel = map.project(endpoint);
-
-                            return {
-                                artistId: leaf.properties.artistId,
-                                lng: endpoint[0],
-                                lat: endpoint[1],
-                                screenX: endpointPixel.x,
-                                screenY: endpointPixel.y,
-                            };
-                        }),
-                        markerRect: {
-                            left: markerRect.left,
-                            top: markerRect.top,
-                            width: markerRect.width,
-                            height: markerRect.height,
-                        },
-                        elementMetrics: {
-                            offsetWidth: marker.getElement().offsetWidth,
-                            offsetHeight: marker.getElement().offsetHeight,
-                            clientWidth: marker.getElement().clientWidth,
-                            clientHeight: marker.getElement().clientHeight,
-                        },
-                        containerRect: {
-                            left: containerRect.left,
-                            top: containerRect.top,
-                            width: containerRect.width,
-                            height: containerRect.height,
-                        },
-                        canvasRect: {
-                            left: canvasRect.left,
-                            top: canvasRect.top,
-                            width: canvasRect.width,
-                            height: canvasRect.height,
-                        },
-                        markerParentRect: markerParentRect ? {
-                            left: markerParentRect.left,
-                            top: markerParentRect.top,
-                            width: markerParentRect.width,
-                            height: markerParentRect.height,
-                        } : null,
-                        circleRect: circleRect ? {
-                            left: circleRect.left,
-                            top: circleRect.top,
-                            width: circleRect.width,
-                            height: circleRect.height,
-                        } : null,
-                    });
-                });
+                animateMarkerTo(marker, markerTarget);
                 marker.getElement().addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();

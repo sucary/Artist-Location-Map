@@ -165,34 +165,42 @@ const ImageCropper = ({
             aria-modal="true"
             aria-label={t('artistForm.cropper.title')}
             tabIndex={-1}
-            className="fixed inset-0 z-cropper flex items-center justify-center bg-black/70 focus:outline-none">
+            className="fixed inset-0 z-cropper flex items-center justify-center bg-black/30 focus:outline-none">
             <div className="bg-surface rounded-lg shadow-xl w-[90vw] max-w-md overflow-hidden">
-                {/* Tabs */}
-                <div className="grid grid-cols-2 gap-2 border-b border-border bg-surface px-3 py-2">
-                    <button
-                        aria-selected={mode === 'avatar'}
-                        type="button"
-                        onClick={() => switchMode('avatar')}
-                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
-                            mode === 'avatar'
-                                ? 'bg-primary-contrast text-white shadow-sm'
-                                : 'text-text-secondary hover:bg-surface-muted hover:text-text'
-                        }`}
-                    >
-                        {t('artistForm.cropper.avatar')}
-                    </button>
-                    <button
-                        aria-selected={mode === 'profile'}
-                        type="button"
-                        onClick={() => switchMode('profile')}
-                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
-                            mode === 'profile'
-                                ? 'bg-primary-contrast text-white shadow-sm'
-                                : 'text-text-secondary hover:bg-surface-muted hover:text-text'
-                        }`}
-                    >
-                        {t('artistForm.cropper.banner')}
-                    </button>
+                {/* Crop mode toggle */}
+                <div className="border-b border-border bg-surface px-3 py-2">
+                    <div role="group" aria-label={t('artistForm.cropper.title')} className="relative grid grid-cols-2 rounded-full transition-colors duration-150 hover:bg-surface-muted">
+                        <span
+                            aria-hidden="true"
+                            className={`absolute inset-y-0 z-0 w-1/2 rounded-full bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${
+                                mode === 'profile' ? 'translate-x-full' : 'translate-x-0'
+                            }`}
+                        />
+                        <button
+                            aria-selected={mode === 'avatar'}
+                            type="button"
+                            onClick={() => switchMode('avatar')}
+                            className={`relative z-10 flex h-9 min-w-0 items-center justify-center rounded-full px-3 text-sm font-medium transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+                                mode === 'avatar'
+                                    ? 'text-white'
+                                    : 'text-text-secondary hover:text-text'
+                            }`}
+                        >
+                            <span className="truncate">{t('artistForm.cropper.avatar')}</span>
+                        </button>
+                        <button
+                            aria-selected={mode === 'profile'}
+                            type="button"
+                            onClick={() => switchMode('profile')}
+                            className={`relative z-10 flex h-9 min-w-0 items-center justify-center rounded-full px-3 text-sm font-medium transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+                                mode === 'profile'
+                                    ? 'text-white'
+                                    : 'text-text-secondary hover:text-text'
+                            }`}
+                        >
+                            <span className="truncate">{t('artistForm.cropper.banner')}</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Crop area */}
@@ -272,7 +280,7 @@ const ImageCropper = ({
                 <div className="flex gap-3 p-4 border-t border-border">
                     <button
                         onClick={onCancel}
-                        className="flex-1 rounded-md border border-transparent bg-[#F3F4F6] px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-[#E5E7EB] app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:bg-[#3A3A3C]"
+                        className="flex-1 rounded-md border border-transparent bg-surface-muted px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-border app-dark:bg-surface-secondary app-dark:text-text app-dark:hover:bg-surface-muted"
                         type="button"
                     >
                         {t('artistForm.buttons.cancel')}

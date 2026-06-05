@@ -157,7 +157,7 @@ export function LocalizationEditor() {
                             <button
                                 key={r.id || i}
                                 onClick={() => handleSelect(r)}
-                                className="w-full text-left px-3 py-2 rounded hover:bg-surface-hover text-sm text-text border border-border flex items-center justify-between"
+                                className="w-full text-left px-3 py-2 rounded hover:bg-surface-muted text-sm text-text border border-border flex items-center justify-between"
                             >
                                 <span>
                                     <span className="font-medium">{r.name}</span>

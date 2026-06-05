@@ -250,7 +250,7 @@ export const LocationSearch = ({
             {/* Dropdown Portal */}
             {isOpen && results.length > 0 && createPortal(
                 <div
-                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg overflow-hidden"
+                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg overflow-hidden app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,
@@ -284,7 +284,7 @@ export const LocationSearch = ({
                                             <span className="text-xs text-text-secondary capitalize">{typeLabel}</span>
                                         )}
                                         {profile?.isAdmin && result.isLocal && (
-                                            <span className="text-xs text-secondary bg-secondary/10 px-1.5 py-0.5 rounded ml-auto">DB</span>
+                                            <span className="ml-auto rounded bg-success/10 px-1.5 py-0.5 text-xs text-success">DB</span>
                                         )}
                                     </div>
                                 </button>
@@ -319,7 +319,7 @@ export const LocationSearch = ({
             {/* No results Portal */}
             {showNoResults && createPortal(
                 <div
-                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg p-3 text-sm text-text-secondary text-center"
+                    className="location-search-dropdown fixed z-[9999] bg-surface border border-border-strong rounded-lg shadow-lg p-3 text-sm text-text-secondary text-center app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top + 4}px`,
                         left: `${dropdownPosition.left}px`,

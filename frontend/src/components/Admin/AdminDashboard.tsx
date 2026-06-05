@@ -51,6 +51,7 @@ interface AdminDialogState {
 }
 
 const dialogTestVariants: ConfirmDialogVariant[] = ['default', 'danger', 'warning', 'success', 'error'];
+const destructiveActionButtonClass = 'bg-surface-muted text-text hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:bg-surface-secondary app-dark:hover:bg-[rgb(220,38,38)] app-dark:hover:!text-white';
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { user, profile } = useAuth();
@@ -127,17 +128,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             window.clearTimeout(timeoutId);
         };
     }, [notificationAudience, recipientQuery, selectedRecipient]);
-
-    // Close the modal when Escape is pressed.
-    useEffect(() => {
-        function handleKeyDown(event: KeyboardEvent) {
-            if (event.key === 'Escape') {
-                onClose();
-            }
-        }
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
 
     const getAuthHeaders = async () => {
         const { supabase } = await import('../../lib/supabase');
@@ -368,10 +358,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
     return (
         <>
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center">
-            {/* Backdrop */}
-            <div aria-hidden="true" className="absolute inset-0" onClick={onClose} />
-
+        <div className="fixed inset-0 z-[1200]">
             {/* Dashboard Window */}
             <div
                 ref={dialogRef}
@@ -379,7 +366,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 aria-modal="true"
                 aria-labelledby="admin-title"
                 tabIndex={-1}
-                className="relative bg-surface rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[80vh] overflow-hidden flex flex-col focus:outline-none"
+                className="relative flex h-full w-full flex-col overflow-hidden bg-surface focus:outline-none"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -446,7 +433,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                     </Button>
                                                     <Button
                                                         onClick={() => handleReject(user.id)}
-                                                        className="bg-error hover:bg-error/90"
+                                                        className={destructiveActionButtonClass}
                                                     >
                                                         Reject
                                                     </Button>
@@ -515,7 +502,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                                         </Button>
                                                         <Button
                                                             onClick={() => handleMediaReview(review.id, 'reject')}
-                                                            className="bg-error hover:bg-error/90"
+                                                            className={destructiveActionButtonClass}
                                                         >
                                                             Reject
                                                         </Button>
@@ -861,7 +848,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                                 <div className="flex flex-wrap gap-2">
                                     <button type="button" className="rounded-md bg-primary-contrast px-3 py-1.5 text-xs font-medium text-white">Primary action</button>
                                     <button type="button" className="rounded-md bg-success px-3 py-1.5 text-xs font-medium text-white">Approve</button>
-                                    <button type="button" className="rounded-md bg-[rgb(220,38,38)] px-3 py-1.5 text-xs font-medium text-white">Reject</button>
+                                    <button type="button" className="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-medium text-text transition-colors hover:bg-[rgb(220,38,38)] hover:text-white app-dark:bg-surface-secondary app-dark:hover:bg-[rgb(220,38,38)]">Reject</button>
                                 </div>
                             </div>
                         )}

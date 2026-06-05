@@ -317,7 +317,6 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 aria-label={t('notifications.buttonLabel', { count: notificationCount })}
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? menuId : undefined}
-                aria-haspopup="dialog"
                 onClick={() => {
                     if (!usesHoverMenu) setIsOpen((open) => !open);
                 }}
@@ -334,7 +333,7 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
                 )}
             </button>
             {isOpen && (
-                <div id={menuId} role="dialog" aria-modal="false" aria-labelledby="notifications-title" className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
+                <div id={menuId} role="region" aria-labelledby="notifications-title" className="fixed top-16 left-2 right-2 bg-surface rounded-lg shadow-lg border border-border z-[1250] overflow-hidden sm:top-2 sm:left-auto sm:right-[calc(12rem+1rem)] sm:w-80">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                         <h3 id="notifications-title" className="text-lg font-semibold text-text">{t('notifications.title')}</h3>
                         <div className="flex items-center gap-1">

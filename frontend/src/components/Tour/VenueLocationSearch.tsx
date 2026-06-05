@@ -494,7 +494,7 @@ export function VenueLocationSearch({
 
         return (
             <div
-                className="tour-location-search-dropdown fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg"
+                className="tour-location-search-dropdown fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                 style={{
                     top: `${dropdownPosition.top}px`,
                     left: `${dropdownPosition.left}px`,
@@ -534,7 +534,7 @@ export function VenueLocationSearch({
                             <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-text-secondary">
                                 <span>{getVenueAddressLabel(result)}</span>
                                 {(result.source === 'local' || result.isCached) && (
-                                    <span className="shrink-0 rounded bg-secondary/10 px-1.5 py-0.5 text-secondary">DB</span>
+                                    <span className="shrink-0 rounded bg-success/10 px-1.5 py-0.5 text-success">DB</span>
                                 )}
                             </span>
                         </button>

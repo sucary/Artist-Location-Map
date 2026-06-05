@@ -52,15 +52,16 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
 
     return (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-            <div aria-hidden="true" className="absolute inset-0 bg-black/50" onClick={onClose} />
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={onClose} />
 
             <div
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="reset-password-title"
+                aria-describedby={success ? 'reset-password-success-description' : undefined}
                 tabIndex={-1}
-                className="relative bg-surface rounded-lg shadow-xl w-full max-w-md mx-4 p-6 focus:outline-none"
+                className="relative mx-4 max-h-[calc(100vh-3rem)] w-full max-w-md overflow-y-auto rounded-xl bg-surface p-6 shadow-xl focus:outline-none"
             >
                 <CloseButton onClick={onClose} size="lg" className="absolute top-4 right-4" />
                 {success ? (
@@ -68,8 +69,8 @@ export function ResetPasswordModal({ onClose }: ResetPasswordModalProps) {
                         <svg aria-hidden="true" className="w-12 h-12 text-success mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <h2 className="text-xl font-bold text-text mb-2">{t('auth.resetPassword.passwordUpdated')}</h2>
-                        <p className="text-sm text-text-secondary">{t('common.redirectToMap')}</p>
+                        <h2 id="reset-password-title" className="text-xl font-bold text-text mb-2">{t('auth.resetPassword.passwordUpdated')}</h2>
+                        <p id="reset-password-success-description" className="text-sm text-text-secondary">{t('common.redirectToMap')}</p>
                     </div>
                 ) : (
                     <>

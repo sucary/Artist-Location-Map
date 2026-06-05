@@ -143,6 +143,7 @@ function App() {
     }));
     const [starredGigIds, setStarredGigIds] = useState<Set<string>>(readStoredStarredGigs);
     const tutorialSteps = useTutorialText();
+    const canManageOwnMap = !!user && !!profile?.isApproved;
 
     // Featured mode from URL param
     const viewingFeatured = searchParams.get('view') === 'featured';
@@ -436,7 +437,7 @@ function App() {
                 <Trans
                     i18nKey="app.dialogs.deleteArtist.message"
                     values={{ name: artist.name }}
-                    components={{ strong: <TransStrong className="font-semibold text-[rgb(220,38,38)] app-dark:text-primary app-dark:font-bold" /> }}
+                    components={{ strong: <TransStrong className="font-semibold text-primary-contrast app-dark:text-text" /> }}
                 />
             ),
             variant: 'danger',
@@ -694,10 +695,14 @@ function App() {
     const handleDeleteTour = (tour: Tour) => {
         setAppDialog({
             title: t('tour.dialogs.deleteTour.title'),
-            message: t('tour.dialogs.deleteTour.message', {
-                count: tour.gigCount,
-                name: tour.name,
-            }),
+            message: (
+                <Trans
+                    i18nKey="tour.dialogs.deleteTour.message"
+                    count={tour.gigCount}
+                    values={{ count: tour.gigCount, name: tour.name }}
+                    components={{ name: <TransStrong className="font-semibold text-primary-contrast app-dark:text-text" /> }}
+                />
+            ),
             variant: 'danger',
             confirmLabel: t('common.delete'),
             cancelLabel: t('common.cancel'),
@@ -813,15 +818,15 @@ function App() {
         setShowFeaturedList(false);
     }, [isMobileLayout]);
 
-    // Lock map gestures under modal-like mobile panels and open menus.
+    // User-only menu locks must not survive into anonymous map browsing
     const mapInteractionsDisabled = (isMobileLayout && showArtistList)
         || (isMobileLayout && showFeaturedList)
         || (isMobileLayout && showGigForm)
         || (isMobileLayout && showGigPanel)
         || (isMobileLayout && showGigCalendar)
-        || mainSearchResultsOpen
-        || notificationMenuOpen
-        || accountMenuOpen;
+        || (!!user && mainSearchResultsOpen)
+        || (!!user && notificationMenuOpen)
+        || (!!user && accountMenuOpen);
 
     const handleCopyArtistCollection = async (artistCount: number) => {
         if (!username || !user || !profile?.isApproved || isCopyingCollection) {
@@ -929,7 +934,7 @@ function App() {
                                     </svg>
                                 </button>
                             )}
-                            {!isViewingOther && profile?.isApproved && (
+                            {!isViewingOther && canManageOwnMap && (
                                 <TourModeButton
                                     active={tourMode.active}
                                     onClick={tourMode.active ? handleExitTourMode : handleEnterTourMode}
@@ -963,7 +968,7 @@ function App() {
                 <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
                     <ViewingUserBanner username={username} />
                 </div>
-            ) : tourMode.active && user ? (
+            ) : tourMode.active && canManageOwnMap ? (
                 <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
                     <TourBanner
                         tourMode={tourMode}
@@ -992,16 +997,16 @@ function App() {
                 }} />
             )}
 
-            {!showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && !tourMode.active && (
+            {!showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && canManageOwnMap && !isViewingOther && !viewingFeatured && !tourMode.active && (
                 <AddArtistButton onClick={handleAddArtistClick} />
             )}
-            {!showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && tourMode.active && (
+            {!showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && canManageOwnMap && !isViewingOther && tourMode.active && (
                 <AddGigButton onClick={handleAddGigClick} />
             )}
-            {tourMode.active && !showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
+            {tourMode.active && !showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && canManageOwnMap && !isViewingOther && !viewingFeatured && (
                 <ViewGigPanelButton onClick={handleOpenGigPanel} />
             )}
-            {tourMode.active && !showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && user && profile?.isApproved && !isViewingOther && !viewingFeatured && (
+            {tourMode.active && !showForm && !showGigForm && !showGigPanel && !showGigCalendar && (!isMobileLayout || !showArtistList) && !(isMobileLayout && artistPopupOpen) && canManageOwnMap && !isViewingOther && !viewingFeatured && (
                 <ViewGigCalendarButton onClick={handleOpenGigCalendar} />
             )}
             {!tourMode.active && (!isMobileLayout || !showArtistList) && !showGigPanel && !showGigCalendar && !(isMobileLayout && artistPopupOpen) && user && (!viewingFeatured || !showFeaturedList || !isMobileLayout) && (
@@ -1138,11 +1143,11 @@ function App() {
                 onFocusedArtistHandled={() => setFocusedArtist(null)}
                 focusedGigId={focusedGigId}
                 onFocusedGigHandled={() => setFocusedGigId(null)}
-                isAuthenticated={!!user}
+                isAuthenticated={canManageOwnMap}
                 suppressArtistPopup={isMobileLayout && (showForm || showGigForm || showGigPanel || showGigCalendar || showArtistList || showFeaturedList || mainSearchResultsOpen)}
                 onArtistPopupOpenChange={handleArtistPopupOpenChange}
                 interactionsDisabled={mapInteractionsDisabled}
-                canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !tourMode.active && !!user}
+                canAdjustDisplayCoordinates={!isViewingOther && !viewingFeatured && !tourMode.active && canManageOwnMap}
                 onDisplayCoordinateChange={handleDisplayCoordinateChange}
                 tourControlSlot={tourMode.active ? (
                     <TourControls
