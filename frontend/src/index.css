@@ -113,8 +113,12 @@ html[data-theme="dark"] .artist-banner-placeholder {
   transform: scale(1.25);
   transition: transform 0.15s ease-out;
 }
-.custom-venue-cluster-marker.marker-focused > div {
+.custom-venue-cluster-marker.marker-focused:not(.custom-expanded-venue-cluster-marker) > div > div {
   transform: translateY(-50%) scale(1.25) !important;
+  transition: transform 0.15s ease-out;
+}
+.custom-expanded-venue-cluster-marker.marker-focused [data-expanded-venue-circle="true"] {
+  transform: scale(1.25);
   transition: transform 0.15s ease-out;
 }
 

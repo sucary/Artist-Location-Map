@@ -5,7 +5,7 @@ import { CloseButton } from '../ui';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, PlusIcon, StarIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { getBrowserDateLocale } from '../../utils/dateFormatting';
-import { buildClusterPalette, getStableColorHash } from '../../utils/generatedClusterPalette';
+import { getGigProvinceColor, getGigProvinceColorMap } from '../../utils/gigProvinceColors';
 
 // Month calendar for gig events
 
@@ -60,19 +60,19 @@ const getGigMeta = (gig: Gig) => {
     return gig.venueName || gig.location.city || gig.location.province || gig.location.country || gig.location.displayName || '';
 };
 
-const JAPAN_PROVINCE_COLOR_ALIASES: Record<string, string> = {
+export const JAPAN_PROVINCE_COLOR_ALIASES: Record<string, string> = {
     tokyo: 'tokyo',
     'tokyo metropolis': 'tokyo',
     東京都: 'tokyo',
     東京: 'tokyo',
 };
 
-const normalizeProvinceColorKey = (value: string) => {
+export const normalizeProvinceColorKey = (value: string) => {
     const normalized = value.trim().toLowerCase();
     return JAPAN_PROVINCE_COLOR_ALIASES[normalized] ?? normalized;
 };
 
-const getProvinceColorKey = (gig: Gig) => {
+export const getProvinceColorKey = (gig: Gig) => {
     const provinceNames = gig.location.localizedChain?.province;
     const provinceKey = provinceNames?.en || provinceNames?.native || provinceNames?.ja || gig.location.province;
     const fallbackKey = gig.location.country || gig.location.city || gig.location.displayName || 'unknown';
@@ -152,14 +152,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
 
         return grouped;
     }, [gigs]);
-    const provinceEventColors = useMemo(() => {
-        const provinceKeys = Array.from(new Set(gigs.map(getProvinceColorKey)))
-            .sort((first, second) => getStableColorHash(first) - getStableColorHash(second));
-        const palette = buildClusterPalette(Math.max(1, provinceKeys.length), 0, { strict: true });
-
-        // Visible province set receives spread-out colors
-        return new Map(provinceKeys.map((provinceKey, index) => [provinceKey, palette[index]]));
-    }, [gigs]);
+    const provinceEventColors = useMemo(() => getGigProvinceColorMap(gigs), [gigs]);
     const monthLabel = new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'long' }).format(visibleMonth);
     const pickerTitle = new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'long' }).format(visibleMonth);
     const monthNames = useMemo(() => (
@@ -280,7 +273,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                 aria-label={isStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
                 onClick={() => onToggleGigStar?.(gig)}
                 className="relative min-w-0 rounded px-2 py-1 text-left text-xs font-semibold leading-4 text-white shadow-sm transition duration-150 hover:brightness-90 hover:shadow-md"
-                style={{ backgroundColor: provinceEventColors.get(getProvinceColorKey(gig)) ?? buildClusterPalette(1)[0] }}
+                style={{ backgroundColor: getGigProvinceColor(gig, provinceEventColors) }}
                 title={eventMeta ? `${eventLabel} - ${eventMeta}` : eventLabel}
             >
                 <span className="block truncate">{eventLabel}</span>

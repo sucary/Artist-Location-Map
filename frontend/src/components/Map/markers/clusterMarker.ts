@@ -27,11 +27,13 @@ type ClusterVisualColors = {
 
 type ClusterMarkerOptions = {
     style?: 'default' | 'venue';
+    venueShape?: 'pin' | 'circle';
     venueName?: string;
     color?: string;
 };
 
 const VENUE_CLUSTER_PIN_COLOR = '#D94F3D';
+export const EXPANDED_VENUE_CLUSTER_MARKER_SIZE = 34;
 
 const generateHue = (lng: number, lat: number) => {
     // Stable cluster color from geographic position
@@ -140,7 +142,9 @@ const createVenueClusterMarkerElement = (
     venueName: string,
     visualSize: number,
     colors: ClusterVisualColors,
-    debugSolid: boolean
+    debugSolid: boolean,
+    shape: 'pin' | 'circle' = 'pin',
+    markerColor = VENUE_CLUSTER_PIN_COLOR
 ) => {
     const wrapper = document.createElement('div');
     const pin = document.createElement('div');
@@ -160,18 +164,18 @@ const createVenueClusterMarkerElement = (
     pin.className = 'relative flex items-center justify-center border-2 border-white app-dark:border-border-strong font-bold text-white shadow-lg shadow-black/20';
     pin.style.width = `${pinSize}px`;
     pin.style.height = `${pinSize}px`;
-    pin.style.borderRadius = '50% 50% 50% 18%';
-    pin.style.background = debugSolid ? colors.debugFill : VENUE_CLUSTER_PIN_COLOR;
-    pin.style.transform = 'rotate(-45deg)';
+    pin.style.borderRadius = shape === 'circle' ? '9999px' : '50% 50% 50% 18%';
+    pin.style.background = debugSolid ? colors.debugFill : markerColor;
+    pin.style.transform = shape === 'circle' ? 'none' : 'rotate(-45deg)';
     pin.style.transformOrigin = 'center';
 
     countText.className = 'absolute left-1/2 top-1/2 inline-flex items-center justify-center';
     countText.style.fontSize = `${Math.max(12, Math.min(15, pinSize * 0.45))}px`;
-    countText.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+    countText.style.transform = shape === 'circle' ? 'translate(-50%, -50%)' : 'translate(-50%, -50%) rotate(45deg)';
     countText.textContent = String(count);
 
     label.className = 'ml-2 max-w-48 whitespace-normal text-left text-sm font-semibold leading-tight';
-    label.style.color = VENUE_CLUSTER_PIN_COLOR;
+    label.style.color = debugSolid ? colors.debugFill : markerColor;
     label.style.textShadow = '0 2px 0 var(--color-surface), 2px 0 0 var(--color-surface), -2px 0 0 var(--color-surface), 0 -2px 0 var(--color-surface), 1px 1px 0 var(--color-surface), -1px 1px 0 var(--color-surface), 1px -1px 0 var(--color-surface), -1px -1px 0 var(--color-surface)';
     label.textContent = venueName;
 
@@ -305,9 +309,12 @@ export const createClusterMarkerElement = (
 
     element.dataset.clusterDebugColor = colors.debugFill;
     if (markerStyle === 'venue' && options.venueName) {
-        element.style.position = 'relative';
+        const positioner = document.createElement('div');
+
+        positioner.className = 'relative h-full w-full';
         element.style.overflow = 'visible';
-        element.appendChild(createVenueClusterMarkerElement(count, options.venueName, visualSize, colors, debugSolid));
+        positioner.appendChild(createVenueClusterMarkerElement(count, options.venueName, visualSize, colors, debugSolid, options.venueShape, options.color));
+        element.appendChild(positioner);
     } else {
         const bubble = document.createElement('div');
 
@@ -328,4 +335,45 @@ export const createClusterMarkerElement = (
         element,
         center: [centerLng, centerLat],
     };
+};
+
+export const createExpandedVenueClusterMarkerElement = (
+    count: number,
+    venueName: string,
+    markerColor = VENUE_CLUSTER_PIN_COLOR
+) => {
+    const element = document.createElement('button');
+    const positioner = document.createElement('div');
+    const circle = document.createElement('div');
+    const countText = document.createElement('span');
+    const size = EXPANDED_VENUE_CLUSTER_MARKER_SIZE;
+
+    // Anchor box is only the visible venue circle
+    element.type = 'button';
+    element.className = 'artist-maplibre-cluster custom-cluster-marker custom-venue-cluster-marker custom-expanded-venue-cluster-marker';
+    element.setAttribute('aria-label', `${venueName} ${i18n.t('map.markers.clusterArtists', { count })}`);
+    element.style.width = `${size}px`;
+    element.style.height = `${size}px`;
+    element.style.overflow = 'visible';
+    element.ondblclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    element.dataset.clusterDebugColor = markerColor;
+
+    positioner.className = 'relative h-full w-full';
+
+    circle.dataset.expandedVenueCircle = 'true';
+    circle.className = 'absolute inset-0 flex items-center justify-center rounded-full border-2 border-white app-dark:border-border-strong font-bold text-white shadow-lg shadow-black/20';
+    circle.style.background = markerColor;
+
+    countText.className = 'inline-flex items-center justify-center text-sm font-bold leading-none';
+    countText.textContent = String(count);
+
+    circle.appendChild(countText);
+    positioner.appendChild(circle);
+    element.appendChild(positioner);
+
+    return element;
 };

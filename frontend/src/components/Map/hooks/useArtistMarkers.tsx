@@ -17,11 +17,13 @@ import {
 } from '../markers/artistMarker';
 import {
     createClusterDebugRingElements,
+    createExpandedVenueClusterMarkerElement,
     createClusterMarkerElement,
     getClusterDebugColor,
     getClusterVisualMetrics,
 } from '../markers/clusterMarker';
 import { buildClusterPalette, getStableColorHash } from '../../../utils/generatedClusterPalette';
+import { getGigProvinceColor, getGigProvinceColorMap } from '../../../utils/gigProvinceColors';
 import type {
     ArtistPoint,
     ArtistPointProperties,
@@ -33,6 +35,7 @@ import type {
 } from '../types';
 import { getCityById } from '../../../services/api';
 import { formatGigDateTimeValue } from '../../../utils/dateFormatting';
+import { getAvatarUrl } from '../../../utils/cloudinaryUrl';
 
 const markerMoveDuration = 260;
 const mergedClusterAppearDelay = markerMoveDuration;
@@ -327,6 +330,7 @@ const VenueClusterGigRow = ({
 const VenueClusterGigList = ({
     venueName,
     gigs,
+    venueColor,
     onEditGig,
     onDeleteGig,
     starredGigIds,
@@ -334,6 +338,7 @@ const VenueClusterGigList = ({
 }: {
     venueName: string;
     gigs: Gig[];
+    venueColor?: string;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
     starredGigIds?: Set<string>;
@@ -344,12 +349,34 @@ const VenueClusterGigList = ({
     const sortedGigs = [...gigs].sort((first, second) => (
         first.date.localeCompare(second.date) || (first.time ?? '').localeCompare(second.time ?? '') || getGigArtistNames(first).localeCompare(getGigArtistNames(second))
     ));
+    const primaryArtist = gigs[0]?.artists[0] ?? gigs[0]?.artist;
+    const headerBackgroundUrl = getAvatarUrl(primaryArtist?.sourceImage, primaryArtist?.avatarCrop) || primaryArtist?.sourceImage;
+    const headerPrimaryColor = venueColor ?? buildClusterPalette(1, getStableColorHash(`venue-header:${venueName}`))[0];
+    const headerLightColor = `color-mix(in srgb, ${headerPrimaryColor} 42%, white)`;
+    const headerMidColor = `color-mix(in srgb, ${headerPrimaryColor} 62%, white)`;
+    const headerColorField = `linear-gradient(115deg, ${headerLightColor} 0%, ${headerMidColor} 42%, ${headerPrimaryColor} 100%)`;
 
     return (
         <div className="flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5">
-                <h3 className="min-w-0 truncate text-base font-semibold tracking-tight text-text">{venueName}</h3>
-                <p className="shrink-0 text-xs font-medium text-text-secondary">{gigs.length} gigs</p>
+            <div className="relative flex items-center justify-between gap-3 overflow-hidden border-b border-border/60 bg-surface px-5 py-3.5">
+                {headerBackgroundUrl && (
+                    <>
+                        <img
+                            aria-hidden="true"
+                            src={headerBackgroundUrl}
+                            alt=""
+                            className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl"
+                        />
+                    </>
+                )}
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-3 opacity-35 blur-lg"
+                    style={{ background: headerColorField }}
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-surface/40" />
+                <h3 className="relative z-10 min-w-0 truncate text-base font-semibold tracking-tight text-text">{venueName}</h3>
+                <p className="relative z-10 shrink-0 text-xs font-medium text-text-secondary">{gigs.length} gigs</p>
             </div>
             <ul className="max-h-[18rem] overflow-y-auto divide-y divide-border">
                 {sortedGigs.map((gig) => (
@@ -403,11 +430,6 @@ type ScreenCluster = {
 type ScreenObstacle = {
     center: ScreenPixel;
     radius: number;
-};
-
-type ExpandedClusterObstacle = {
-    group: ScreenObstacle | null;
-    markers: ScreenObstacle[];
 };
 
 const getPointDistance = (first: ScreenPixel, second: ScreenPixel) => {
@@ -560,41 +582,6 @@ const resolveMarkerCollisions = (
     }
 
     return positions;
-};
-
-const getExpandedClusterObstacle = (
-    state: ExpandedClusterState,
-    map: maplibregl.Map,
-    originPixel: ScreenPixel,
-    markerRadius: number
-): ExpandedClusterObstacle => {
-    const markerPixels = state.markerTargets.map((target) => map.project(target));
-
-    const markers = markerPixels.map((pixel) => ({
-        center: { x: pixel.x - originPixel.x, y: pixel.y - originPixel.y },
-        radius: markerRadius,
-    }));
-
-    if (markerPixels.length === 0) {
-        return { group: null, markers };
-    }
-
-    // Expanded footprint blocks nearby clusters from interleaving
-    const groupCenter = markerPixels.reduce(
-        (center, pixel) => ({ x: center.x + pixel.x / markerPixels.length, y: center.y + pixel.y / markerPixels.length }),
-        { x: 0, y: 0 }
-    );
-    const groupRadius = markerPixels.reduce((radius, pixel) => (
-        Math.max(radius, getPointDistance(groupCenter, pixel) + markerRadius)
-    ), markerRadius);
-
-    return {
-        group: {
-            center: { x: groupCenter.x - originPixel.x, y: groupCenter.y - originPixel.y },
-            radius: groupRadius,
-        },
-        markers,
-    };
 };
 
 const buildGeometricClusters = (
@@ -852,6 +839,12 @@ export const useArtistMarkers = ({
     const pendingMergeTimersRef = useRef<Set<number>>(new Set());
     const clusterTransitionUntilRef = useRef(0);
     const [hasExpandedClusters, setHasExpandedClusters] = useState(false);
+    const displayGigs = useMemo(() => (
+        displayArtists
+            .map((artist) => (artist as Partial<GigMarkerArtist>).gig)
+            .filter((gig): gig is Gig => !!gig)
+    ), [displayArtists]);
+    const gigProvinceColors = useMemo(() => getGigProvinceColorMap(displayGigs), [displayGigs]);
 
     const assignClusterColors = useCallback((
         visibleClusters: ClusterPoint[],
@@ -1546,10 +1539,14 @@ export const useArtistMarkers = ({
 
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
+        const venueColor = venueCluster.gigs[0]
+            ? getGigProvinceColor(venueCluster.gigs[0], gigProvinceColors)
+            : undefined;
         root.render(
             <VenueClusterGigList
                 venueName={venueCluster.name}
                 gigs={venueCluster.gigs}
+                venueColor={venueColor}
                 onEditGig={handleEditGig}
                 onDeleteGig={handleDeleteGig}
                 starredGigIds={starredGigIds}
@@ -1581,7 +1578,7 @@ export const useArtistMarkers = ({
             }
             setArtistPopupLifecycle(false);
         });
-    }, [mapRef, setArtistPopupLifecycle]);
+    }, [gigProvinceColors, mapRef, setArtistPopupLifecycle]);
 
     // Open a cluster into separate artist markers
     const expandCluster = useCallback((
@@ -1682,12 +1679,15 @@ export const useArtistMarkers = ({
             });
         });
         expandedRef.current.forEach((state) => {
-            const expandedObstacle = getExpandedClusterObstacle(state, map, clusterPixel, markerObstacleRadius);
+            state.markerTargets.forEach((target) => {
+                const pixel = map.project(target);
 
-            if (expandedObstacle.group) {
-                obstacleEntries.push(expandedObstacle.group);
-            }
-            obstacleEntries.push(...expandedObstacle.markers);
+                // Existing expanded markers block new expanded marker targets
+                obstacleEntries.push({
+                    center: { x: pixel.x - clusterPixel.x, y: pixel.y - clusterPixel.y },
+                    radius: markerObstacleRadius,
+                });
+            });
         });
         type ExpandedDisplayItem = {
             kind: 'artist';
@@ -1750,10 +1750,18 @@ export const useArtistMarkers = ({
                 artist,
             }];
         });
+        const getExpandedItemOrigin = (item: ExpandedDisplayItem): [number, number] => {
+            if (item.kind === 'artist') {
+                return item.leaves[0].geometry.coordinates as [number, number];
+            }
+
+            // Grouped venues share the same measured center as their rendered marker
+            return getClusterVisualMetrics(feature, item.leaves, map).center;
+        };
 
         // Space expanded display items in screen pixels
         const rawOffsets = expandedItems.map((item) => {
-            const [lng, lat] = item.leaves[0].geometry.coordinates;
+            const [lng, lat] = getExpandedItemOrigin(item);
             const pixel = map.project([lng, lat]);
             return { x: pixel.x - clusterPixel.x, y: pixel.y - clusterPixel.y };
         });
@@ -1766,6 +1774,33 @@ export const useArtistMarkers = ({
                 CLUSTER_CONFIG.outerCollisionDistance,
                 obstacleEntries
             );
+        console.info('[Achizu map] expanded cluster layout', {
+            clusterId,
+            leafCount: leaves.length,
+            obstacleCount: obstacleEntries.length,
+            expandedClusterCount: expandedRef.current.size,
+            preserveArtistLocations,
+        });
+        console.table(expandedItems.map((item, index) => {
+            const origin = getExpandedItemOrigin(item);
+            const targetPixel = { x: clusterPixel.x + positions[index].x, y: clusterPixel.y + positions[index].y };
+            const target = map.unproject([targetPixel.x, targetPixel.y]);
+
+            return {
+                index,
+                kind: item.kind,
+                label: item.kind === 'venue' ? item.venueCluster.name : item.artist.name,
+                leafCount: item.leaves.length,
+                originLng: origin[0],
+                originLat: origin[1],
+                rawOffsetX: rawOffsets[index].x,
+                rawOffsetY: rawOffsets[index].y,
+                resolvedOffsetX: positions[index].x,
+                resolvedOffsetY: positions[index].y,
+                targetLng: target.lng,
+                targetLat: target.lat,
+            };
+        }));
 
         // Expanded marker and connector collections
         const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
@@ -1777,7 +1812,7 @@ export const useArtistMarkers = ({
         // Build markers and connector lines in display-item order
         expandedItems.forEach((item, index) => {
             const position = positions[index];
-            const itemOriginLngLat = item.leaves[0].geometry.coordinates as [number, number];
+            const itemOriginLngLat = getExpandedItemOrigin(item);
             const expandedLngLat = preserveArtistLocations
                 ? { lng: itemOriginLngLat[0], lat: itemOriginLngLat[1] }
                 : map.unproject([clusterPixel.x + position.x, clusterPixel.y + position.y]);
@@ -1809,25 +1844,13 @@ export const useArtistMarkers = ({
                 });
                 expandedMarkers.push(marker);
             } else if (renderExpandedArtistMarkers && item.kind === 'venue') {
-                const venueFeature: ClusterPoint = {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: itemOriginLngLat,
-                    },
-                    properties: {
-                        cluster: true,
-                        cluster_id: Number(`${clusterId}${index}`),
-                        point_count: item.leaves.length,
-                        point_count_abbreviated: item.leaves.length,
-                    },
-                };
-                const { element } = createClusterMarkerElement(
-                    venueFeature,
-                    item.leaves,
-                    map,
-                    clusterColorDebugEnabled,
-                    { style: 'venue', venueName: item.venueCluster.name }
+                const venueColor = item.venueCluster.gigs[0]
+                    ? getGigProvinceColor(item.venueCluster.gigs[0], gigProvinceColors)
+                    : undefined;
+                const element = createExpandedVenueClusterMarkerElement(
+                    item.leaves.length,
+                    item.venueCluster.name,
+                    venueColor
                 );
                 const marker = new maplibregl.Marker({
                     element,
@@ -1839,7 +1862,92 @@ export const useArtistMarkers = ({
 
                 preloadArtistMarkerImages(item.artists);
                 marker.getElement().classList.add('expanded-cluster-marker');
-                animateMarkerTo(marker, markerTarget);
+                animateMarkerTo(marker, markerTarget, () => {
+                    const actual = getMarkerCoordinates(marker);
+                    const targetPixel = map.project(markerTarget);
+                    const actualPixel = map.project(actual);
+                    const canvasRect = map.getCanvas().getBoundingClientRect();
+                    const containerRect = map.getContainer().getBoundingClientRect();
+                    const markerParentRect = marker.getElement().parentElement?.getBoundingClientRect();
+                    const markerRect = marker.getElement().getBoundingClientRect();
+                    const circleRect = marker.getElement().querySelector('[data-expanded-venue-circle="true"]')?.getBoundingClientRect();
+                    const circleCenterInCanvas = circleRect ? {
+                        x: circleRect.left + circleRect.width / 2 - canvasRect.left,
+                        y: circleRect.top + circleRect.height / 2 - canvasRect.top,
+                    } : null;
+                    const circleCenterInContainer = circleRect ? {
+                        x: circleRect.left + circleRect.width / 2 - containerRect.left,
+                        y: circleRect.top + circleRect.height / 2 - containerRect.top,
+                    } : null;
+
+                    // Settled geometry verifies marker anchor against connector target
+                    console.info('[Achizu map] expanded venue marker settled', {
+                        clusterId,
+                        venueName: item.venueCluster.name,
+                        markerTarget,
+                        actual,
+                        screenDelta: {
+                            x: actualPixel.x - targetPixel.x,
+                            y: actualPixel.y - targetPixel.y,
+                        },
+                        circleToTargetDelta: circleCenterInContainer ? {
+                            x: circleCenterInContainer.x - targetPixel.x,
+                            y: circleCenterInContainer.y - targetPixel.y,
+                        } : null,
+                        canvasCircleToTargetDelta: circleCenterInCanvas ? {
+                            x: circleCenterInCanvas.x - targetPixel.x,
+                            y: circleCenterInCanvas.y - targetPixel.y,
+                        } : null,
+                        connectorEndpoints: item.leaves.map((leaf) => {
+                            const endpoint = leaf.geometry.coordinates as [number, number];
+                            const endpointPixel = map.project(endpoint);
+
+                            return {
+                                artistId: leaf.properties.artistId,
+                                lng: endpoint[0],
+                                lat: endpoint[1],
+                                screenX: endpointPixel.x,
+                                screenY: endpointPixel.y,
+                            };
+                        }),
+                        markerRect: {
+                            left: markerRect.left,
+                            top: markerRect.top,
+                            width: markerRect.width,
+                            height: markerRect.height,
+                        },
+                        elementMetrics: {
+                            offsetWidth: marker.getElement().offsetWidth,
+                            offsetHeight: marker.getElement().offsetHeight,
+                            clientWidth: marker.getElement().clientWidth,
+                            clientHeight: marker.getElement().clientHeight,
+                        },
+                        containerRect: {
+                            left: containerRect.left,
+                            top: containerRect.top,
+                            width: containerRect.width,
+                            height: containerRect.height,
+                        },
+                        canvasRect: {
+                            left: canvasRect.left,
+                            top: canvasRect.top,
+                            width: canvasRect.width,
+                            height: canvasRect.height,
+                        },
+                        markerParentRect: markerParentRect ? {
+                            left: markerParentRect.left,
+                            top: markerParentRect.top,
+                            width: markerParentRect.width,
+                            height: markerParentRect.height,
+                        } : null,
+                        circleRect: circleRect ? {
+                            left: circleRect.left,
+                            top: circleRect.top,
+                            width: circleRect.width,
+                            height: circleRect.height,
+                        } : null,
+                    });
+                });
                 marker.getElement().addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -1920,7 +2028,7 @@ export const useArtistMarkers = ({
             markerTargets,
         });
         setHasExpandedClusters(true);
-    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, highlightedArtistIds, mapRef, openArtistPopup]);
+    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, gigProvinceColors, highlightedArtistIds, mapRef, openArtistPopup]);
 
     const bindClusterMarkerClick = useCallback((
         element: HTMLElement,
@@ -2179,12 +2287,15 @@ export const useArtistMarkers = ({
                 const sameVenue = getSameVenueGigCluster(leaves, artistsByIdRef.current);
                 const leafKey = getClusterLeafKey(leaves);
                 const clusterColor = clusterColorRecords.get(leafKey)?.color;
+                const venueColor = sameVenue?.gigs[0]
+                    ? getGigProvinceColor(sameVenue.gigs[0], gigProvinceColors)
+                    : undefined;
                 const { element, center } = createClusterMarkerElement(
                     feature,
                     leaves,
                     map,
                     clusterColorDebugEnabled,
-                    sameVenue ? { style: 'venue', venueName: sameVenue.name } : { color: clusterColor }
+                    sameVenue ? { style: 'venue', venueName: sameVenue.name, color: venueColor } : { color: clusterColor }
                 );
                 const clusterArtists = leaves
                     .map((leaf) => artistsByIdRef.current.get(leaf.properties.artistId))
@@ -2318,7 +2429,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, bindClusterMarkerClick, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, findNearestPosition, highlightedArtistIds, isClusterSourceHidden, keepCollisionClustersAtMaxZoom, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
+    }, [animateMarkerTo, artistNameDisplayMode, bindClusterMarkerClick, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, findNearestPosition, gigProvinceColors, highlightedArtistIds, isClusterSourceHidden, keepCollisionClustersAtMaxZoom, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
         // Compare only fields used by geometric clustering
