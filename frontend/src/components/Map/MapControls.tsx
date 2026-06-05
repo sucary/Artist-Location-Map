@@ -289,7 +289,7 @@ export function MapControls({
                                 aria-expanded={gigFilterOpen}
                                 aria-label={t('map.buttons.mapControls.gigFilter.open')}
                                 onClick={() => setGigFilterOpen((open) => !open)}
-                                className="flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-transparent app-dark:hover:text-primary"
+                                className="flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                                 title={t('map.buttons.mapControls.gigFilter.open')}
                             >
                                 <FilterIcon className="h-4 w-4" />

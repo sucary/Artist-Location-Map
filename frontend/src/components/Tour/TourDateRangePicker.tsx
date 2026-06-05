@@ -152,7 +152,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 aria-expanded={isOpen}
                 onPointerDown={markInternalPointerDown}
                 onClick={() => setIsOpen((open) => !open)}
-                className="grid h-9 w-32 grid-cols-[48px_16px_48px] items-center justify-center text-center text-sm font-medium text-text transition-colors hover:bg-surface-muted focus:outline-none app-dark:hover:bg-transparent app-dark:hover:text-primary"
+                className="group grid h-9 w-32 grid-cols-[48px_16px_48px] items-center justify-center text-center text-sm font-medium text-text transition-colors hover:text-primary focus:outline-none"
             >
                 {from ? (
                     <span className="tabular-nums">
@@ -165,7 +165,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 )}
                 {hasCompleteRange && (
                     <>
-                        <span className="text-text-secondary">-</span>
+                        <span className="text-text-secondary transition-colors group-hover:text-primary">-</span>
                         <span className="tabular-nums">
                             {endDisplayValue}
                         </span>

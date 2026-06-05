@@ -143,7 +143,7 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
                 aria-expanded={isOpen}
                 disabled={disabled}
                 onClick={() => setIsOpen((open) => !open)}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 hover:bg-surface-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 app-dark:hover:bg-surface-muted"
             >
                 <span className="flex min-w-0 items-center gap-2">
                     <CalendarIcon className="h-4 w-4 shrink-0 text-text-secondary" />

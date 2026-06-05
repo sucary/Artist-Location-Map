@@ -49,6 +49,34 @@ const hexToRgb = (hex: string) => [
     parseInt(hex.slice(5, 7), 16),
 ] as const;
 
+const rgbToHsl = (red: number, green: number, blue: number) => {
+    const normalizedRed = red / 255;
+    const normalizedGreen = green / 255;
+    const normalizedBlue = blue / 255;
+    const max = Math.max(normalizedRed, normalizedGreen, normalizedBlue);
+    const min = Math.min(normalizedRed, normalizedGreen, normalizedBlue);
+    const lightness = (max + min) / 2;
+    const delta = max - min;
+
+    if (delta === 0) return { hue: 0, saturation: 0, lightness: lightness * 100 };
+
+    const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+    let hue = 0;
+    if (max === normalizedRed) {
+        hue = ((normalizedGreen - normalizedBlue) / delta) % 6;
+    } else if (max === normalizedGreen) {
+        hue = (normalizedBlue - normalizedRed) / delta + 2;
+    } else {
+        hue = (normalizedRed - normalizedGreen) / delta + 4;
+    }
+
+    return {
+        hue: (hue * 60 + 360) % 360,
+        saturation: saturation * 100,
+        lightness: lightness * 100,
+    };
+};
+
 const getRelativeLuminance = (hex: string) => {
     const toLinear = (channel: number) => {
         const value = channel / 255;
@@ -62,6 +90,13 @@ const getRelativeLuminance = (hex: string) => {
 const hasReadableWhiteText = (hex: string) => (
     1.05 / (getRelativeLuminance(hex) + 0.05) >= MIN_WHITE_TEXT_CONTRAST
 );
+
+export const getDarkClusterColor = (hex: string) => {
+    const { hue, saturation, lightness } = rgbToHsl(...hexToRgb(hex));
+
+    // Dark tiles keep the same hue identity with reduced visual intensity
+    return hslToHex(hue, Math.max(16, saturation * 0.62), Math.max(30, lightness - 4));
+};
 
 const getLightnessRangeForSaturation = (saturation: number) => {
     const saturationOffset = saturation - 28;

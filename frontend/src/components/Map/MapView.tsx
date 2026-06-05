@@ -423,6 +423,7 @@ export default function MapView({
         view: tourModeActive ? 'active' : view,
         locationLanguage,
         artistNameDisplayMode,
+        tileTheme,
         clusterColorDebugEnabled: activeClusterColorDebugEnabled,
         selectedCityIdRef,
         setSelectedCityId,

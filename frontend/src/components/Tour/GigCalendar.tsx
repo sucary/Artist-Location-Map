@@ -379,7 +379,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                         <button
                             type="button"
                             onClick={handleToday}
-                            className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-muted focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-muted focus:outline-none"
                         >
                             {t('tour.calendar.today')}
                         </button>

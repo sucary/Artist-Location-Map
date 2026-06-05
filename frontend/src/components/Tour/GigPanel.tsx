@@ -495,7 +495,7 @@ export function GigPanel({
                 )}
                 <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-4 px-5 py-2">
                     <div className="grid min-h-14 w-12 shrink-0 grid-rows-[auto_auto_auto_1fr_auto] justify-items-center text-center">
-                        <span className="text-[10px] font-semibold uppercase leading-none text-primary-contrast">{dateParts.month}</span>
+                        <span className="text-[10px] font-semibold uppercase leading-none text-primary-contrast app-dark:text-primary-text-dark">{dateParts.month}</span>
                         <span className="text-[1.7rem] font-light leading-none text-text-secondary">{dateParts.day}</span>
                         <span className="text-[10px] font-medium leading-none text-text-secondary">{dateParts.weekday}</span>
                         <span aria-hidden="true" />

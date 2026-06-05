@@ -9,6 +9,7 @@ import type { Artist, LocationLanguage, LocationView } from '../../../types/arti
 import type { Gig, GigMarkerArtist } from '../../../types/gig';
 import type { ArtistNameDisplayMode } from '../../../types/profile';
 import { makeArtistPoint, getClusterZoom, isClusterFeature } from '../clusters/clusterIndex';
+import type { MapTileTheme } from '../config/mapStyles';
 import {
     createArtistDebugCenterElement,
     createArtistMarkerElement,
@@ -22,7 +23,7 @@ import {
     getClusterDebugColor,
     getClusterVisualMetrics,
 } from '../markers/clusterMarker';
-import { buildClusterPalette, getStableColorHash } from '../../../utils/generatedClusterPalette';
+import { buildClusterPalette, getDarkClusterColor, getStableColorHash } from '../../../utils/generatedClusterPalette';
 import { getGigProvinceColor, getGigProvinceColorMap } from '../../../utils/gigProvinceColors';
 import type {
     ArtistPoint,
@@ -53,6 +54,7 @@ const displayCoordinateDragHandlers = new WeakMap<maplibregl.Marker, {
     dragStart: () => void;
     dragEnd: () => Promise<void>;
 }>();
+type ClusterColorRecord = { color: string; leafIds: Set<string>; size: number };
 
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 // Use the shortest path when longitude crosses the dateline
@@ -748,6 +750,7 @@ interface UseArtistMarkersOptions {
     view: LocationView;
     locationLanguage: LocationLanguage;
     artistNameDisplayMode: ArtistNameDisplayMode;
+    tileTheme: MapTileTheme;
     clusterColorDebugEnabled: boolean;
     selectedCityIdRef: RefObject<string | null>;
     setSelectedCityId: Dispatch<SetStateAction<string | null>>;
@@ -777,6 +780,7 @@ export const useArtistMarkers = ({
     view,
     locationLanguage,
     artistNameDisplayMode,
+    tileTheme,
     clusterColorDebugEnabled,
     selectedCityIdRef,
     setSelectedCityId,
@@ -800,7 +804,7 @@ export const useArtistMarkers = ({
     const collapsingClusterHidesRef = useRef<Map<string, Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>>>(new Map());
     const visibleClustersRef = useRef<ClusterPoint[]>([]);
     const visibleClusterRadiiRef = useRef<Map<number, number>>(new Map());
-    const clusterColorRecordsRef = useRef<Map<string, { color: string; leafIds: Set<string>; size: number }>>(new Map());
+    const clusterColorRecordsRef = useRef<Map<string, ClusterColorRecord>>(new Map());
     const clusterColorSeedRef = useRef(Math.floor(Math.random() * 0xffffffff));
 
     // Current map data and popup handles
@@ -851,7 +855,7 @@ export const useArtistMarkers = ({
         leavesByClusterId: Map<number, ArtistPoint[]>
     ) => {
         const previousRecords = clusterColorRecordsRef.current;
-        const nextRecords = new Map<string, { color: string; leafIds: Set<string>; size: number }>();
+        const nextRecords = new Map<string, ClusterColorRecord>();
         const clusterEntries = visibleClusters.map((cluster) => {
             const leaves = leavesByClusterId.get(cluster.properties.cluster_id) ?? [];
             const leafKey = getClusterLeafKey(leaves);
@@ -916,8 +920,16 @@ export const useArtistMarkers = ({
             });
 
         clusterColorRecordsRef.current = nextRecords;
-        return nextRecords;
-    }, []);
+
+        // Theme rendering derives from the same base cluster identity
+        return new Map(Array.from(nextRecords.entries()).map(([leafKey, record]) => [
+            leafKey,
+            {
+                ...record,
+                color: tileTheme === 'dark' ? getDarkClusterColor(record.color) : record.color,
+            },
+        ]));
+    }, [tileTheme]);
 
     useEffect(() => {
         // Popup callbacks update independently from marker reconciliation
@@ -1344,6 +1356,14 @@ export const useArtistMarkers = ({
         setArtistPopupLifecycle(false);
     }, [mapRef, setArtistPopupLifecycle]);
 
+    const clearFocusedMarkerElements = useCallback(() => {
+        const mapContainer = mapRef.current?.getContainer();
+        if (!mapContainer) return;
+
+        // Expanded cluster markers are not tracked in markersRef
+        mapContainer.querySelectorAll('.marker-focused').forEach((element) => element.classList.remove('marker-focused'));
+    }, [mapRef]);
+
     const isClusterSourceHidden = useCallback((key: string, leafKey: string) => {
         // Cluster ids can change while leaf membership stays the same
         const matches = (state: Pick<ExpandedClusterState, 'hiddenClusterKey' | 'hiddenClusterLeafKey'>) => (
@@ -1426,7 +1446,7 @@ export const useArtistMarkers = ({
         setArtistPopupLifecycle(true);
         activePopupRef.current?.remove();
         activePopupRef.current = null;
-        markersRef.current.forEach((entry) => entry.marker.getElement().classList.remove('marker-focused'));
+        clearFocusedMarkerElements();
 
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
@@ -1503,7 +1523,7 @@ export const useArtistMarkers = ({
             entry.popup = popup;
             entry.root = root;
         }
-    }, [mapRef, promoteSelectedArtistMarker, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId]);
+    }, [clearFocusedMarkerElements, mapRef, promoteSelectedArtistMarker, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId]);
 
     const openVenueClusterPopup = useCallback((
         venueCluster: NonNullable<ReturnType<typeof getSameVenueGigCluster>>,
@@ -1516,7 +1536,7 @@ export const useArtistMarkers = ({
         setArtistPopupLifecycle(true);
         activePopupRef.current?.remove();
         activePopupRef.current = null;
-        markersRef.current.forEach((entry) => entry.marker.getElement().classList.remove('marker-focused'));
+        clearFocusedMarkerElements();
 
         const { onEditArtist, onDeleteArtist, starredGigIds, onToggleGigStar } = popupOptionsRef.current;
         const getGigMarkerArtist = (gig: Gig) => (
@@ -1578,7 +1598,7 @@ export const useArtistMarkers = ({
             }
             setArtistPopupLifecycle(false);
         });
-    }, [gigProvinceColors, mapRef, setArtistPopupLifecycle]);
+    }, [clearFocusedMarkerElements, gigProvinceColors, mapRef, setArtistPopupLifecycle]);
 
     // Open a cluster into separate artist markers
     const expandCluster = useCallback((
@@ -1916,7 +1936,7 @@ export const useArtistMarkers = ({
             markerTargets,
         });
         setHasExpandedClusters(true);
-    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, gigProvinceColors, highlightedArtistIds, mapRef, openArtistPopup]);
+    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, gigProvinceColors, highlightedArtistIds, mapRef, openArtistPopup, openVenueClusterPopup]);
 
     const bindClusterMarkerClick = useCallback((
         element: HTMLElement,
@@ -2317,7 +2337,7 @@ export const useArtistMarkers = ({
             markersRef.current.delete(key);
         });
         addPendingMergedClusters();
-    }, [animateMarkerTo, artistNameDisplayMode, bindClusterMarkerClick, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, findNearestPosition, gigProvinceColors, highlightedArtistIds, isClusterSourceHidden, keepCollisionClustersAtMaxZoom, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
+    }, [animateMarkerTo, artistNameDisplayMode, assignClusterColors, bindClusterMarkerClick, bindDisplayCoordinateEditing, clusterColorDebugEnabled, displayArtists, findNearestPosition, gigProvinceColors, highlightedArtistIds, isClusterSourceHidden, keepCollisionClustersAtMaxZoom, mapReady, mapRef, openArtistPopup, refreshArtistMarkerElement, removeMarkerEntry, syncArtistMarkerStackOrder, view]);
 
     useEffect(() => {
         // Compare only fields used by geometric clustering

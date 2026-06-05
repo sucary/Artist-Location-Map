@@ -64,6 +64,56 @@ const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${red},${green},${blue},${alpha})`;
 };
 
+const getRelativeLuminance = (hex: string) => {
+    const toLinear = (channel: number) => {
+        const value = channel / 255;
+        return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    const [red, green, blue] = hexToRgb(hex).map(toLinear);
+
+    return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+};
+
+const mixHexColor = (fromHex: string, toHex: string, ratio: number) => {
+    const from = hexToRgb(fromHex);
+    const to = hexToRgb(toHex);
+    return rgbToHex(
+        Math.round(from[0] + (to[0] - from[0]) * ratio),
+        Math.round(from[1] + (to[1] - from[1]) * ratio),
+        Math.round(from[2] + (to[2] - from[2]) * ratio)
+    );
+};
+
+const getContrastRatio = (foregroundHex: string, backgroundHex: string) => {
+    const foreground = getRelativeLuminance(foregroundHex);
+    const background = getRelativeLuminance(backgroundHex);
+    const lighter = Math.max(foreground, background);
+    const darker = Math.min(foreground, background);
+
+    return (lighter + 0.05) / (darker + 0.05);
+};
+
+const getMinDarkSurfaceContrastColor = (hex: string, backgroundHex = '#202023', minContrast = 4.65) => {
+    if (getContrastRatio(hex, backgroundHex) >= minContrast) return hex;
+
+    let low = 0;
+    let high = 1;
+    let result = hex;
+
+    for (let step = 0; step < 12; step += 1) {
+        const ratio = (low + high) / 2;
+        const mixed = mixHexColor(hex, '#ffffff', ratio);
+        if (getContrastRatio(mixed, backgroundHex) >= minContrast) {
+            result = mixed;
+            high = ratio;
+        } else {
+            low = ratio;
+        }
+    }
+
+    return result;
+};
+
 const getSoftClusterColor = (center: [number, number], countFactor: number, isDarkTheme: boolean, color?: string) => {
     const [lng, lat] = center;
     const colorKey = `${lng.toFixed(4)}:${lat.toFixed(4)}:${getStableColorHash(`${lng}:${lat}`)}`;
@@ -175,7 +225,10 @@ const createVenueClusterMarkerElement = (
     countText.textContent = String(count);
 
     label.className = 'ml-2 max-w-48 whitespace-normal text-left text-sm font-semibold leading-tight';
-    label.style.color = debugSolid ? colors.debugFill : markerColor;
+    // Dark map labels need stronger separation from base venue marker color
+    label.style.color = document.documentElement.dataset.theme === 'dark' && !debugSolid
+        ? getMinDarkSurfaceContrastColor(markerColor)
+        : debugSolid ? colors.debugFill : markerColor;
     label.style.textShadow = '0 2px 0 var(--color-surface), 2px 0 0 var(--color-surface), -2px 0 0 var(--color-surface), 0 -2px 0 var(--color-surface), 1px 1px 0 var(--color-surface), -1px 1px 0 var(--color-surface), 1px -1px 0 var(--color-surface), -1px -1px 0 var(--color-surface)';
     label.textContent = venueName;
 
