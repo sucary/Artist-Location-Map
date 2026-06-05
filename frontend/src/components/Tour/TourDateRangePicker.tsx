@@ -15,7 +15,9 @@ import {
 interface TourDateRangePickerProps {
     from: string;
     to: string;
+    visibleMonth: Date;
     onChange: (from: string, to: string) => void;
+    onVisibleMonthChange: (month: Date) => void;
     onReset: () => void;
 }
 
@@ -51,12 +53,12 @@ function getRangeFillClass(
     return '';
 }
 
-export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRangePickerProps) {
+export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibleMonthChange, onReset }: TourDateRangePickerProps) {
     const { i18n, t } = useTranslation();
     const rootRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const clickStartedInsideRef = useRef(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(parseDateValue(from) ?? new Date()));
     const [dropdownPosition, setDropdownPosition] = useState({
         top: null as number | null,
         right: 0,
@@ -70,6 +72,10 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
+            if (clickStartedInsideRef.current) {
+                clickStartedInsideRef.current = false;
+                return;
+            }
             if (rootRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
             setIsOpen(false);
         };
@@ -77,6 +83,10 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
+
+    const markInternalPointerDown = () => {
+        clickStartedInsideRef.current = true;
+    };
 
     useEffect(() => {
         if (!isOpen || !rootRef.current) return;
@@ -119,13 +129,18 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
         const dateValue = toDateValue(date);
         if (!from || to || dateValue < from) {
             onChange(dateValue, '');
+            onVisibleMonthChange(getMonthStart(date));
             return;
         }
 
         onChange(from, dateValue);
     };
 
-    const resetDates = () => {
+    const selectAllFutureDates = () => {
+        onChange(toDateValue(new Date()), '9999-12-31');
+    };
+
+    const selectAllDates = () => {
         onReset();
     };
 
@@ -136,6 +151,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
                 type="button"
                 aria-haspopup="dialog"
                 aria-expanded={isOpen}
+                onPointerDown={markInternalPointerDown}
                 onClick={() => setIsOpen((open) => !open)}
                 className="grid h-9 w-32 grid-cols-[48px_16px_48px] items-center justify-center text-center text-sm font-medium text-text transition-colors hover:bg-surface-muted focus:outline-none app-dark:hover:bg-transparent app-dark:hover:text-primary"
             >
@@ -161,6 +177,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
             {isOpen && createPortal(
                 <div
                     ref={dropdownRef}
+                    onPointerDown={markInternalPointerDown}
                     className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-5 pb-5 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)]"
                     style={{
                         top: dropdownPosition.top === null ? undefined : `${dropdownPosition.top}px`,
@@ -178,7 +195,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
                                         <button
                                             type="button"
                                             aria-label={t('tour.calendar.previousMonth')}
-                                            onClick={() => setVisibleMonth((currentMonth) => addMonths(currentMonth, -1))}
+                                            onClick={() => onVisibleMonthChange(addMonths(visibleMonth, -1))}
                                             className="absolute left-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-text transition-colors hover:bg-surface-muted"
                                         >
                                             <ChevronDownIcon className="h-4 w-4 rotate-90" />
@@ -189,7 +206,7 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
                                         <button
                                             type="button"
                                             aria-label={t('tour.calendar.nextMonth')}
-                                            onClick={() => setVisibleMonth((currentMonth) => addMonths(currentMonth, 1))}
+                                            onClick={() => onVisibleMonthChange(addMonths(visibleMonth, 1))}
                                             className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-text transition-colors hover:bg-surface-muted"
                                         >
                                             <ChevronDownIcon className="h-4 w-4 -rotate-90" />
@@ -243,14 +260,23 @@ export function TourDateRangePicker({ from, to, onChange, onReset }: TourDateRan
                         ))}
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                        <button
-                            type="button"
-                            onClick={resetDates}
-                            className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
-                        >
-                            {t('tour.actions.clearDates')}
-                        </button>
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={selectAllFutureDates}
+                                className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                            >
+                                {t('tour.actions.todayOnward', { defaultValue: 'Today onward' })}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={selectAllDates}
+                                className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                            >
+                                {t('tour.actions.allDates', { defaultValue: 'All dates' })}
+                            </button>
+                        </div>
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}

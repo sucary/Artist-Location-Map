@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { TourModeState } from '../../types/gig';
 import { TourDateRangePicker } from './TourDateRangePicker';
+import { getMonthStart, parseDateValue } from './GigDatePicker';
 
 interface TourControlsProps {
     tourMode: TourModeState;
@@ -15,6 +16,7 @@ export function TourControls({
 }: TourControlsProps) {
     const [draftFrom, setDraftFrom] = useState(tourMode.interval?.from ?? '');
     const [draftTo, setDraftTo] = useState(tourMode.interval?.to ?? '');
+    const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(parseDateValue(tourMode.interval?.from ?? '') ?? new Date()));
 
     useEffect(() => {
         setDraftFrom(tourMode.interval?.from ?? '');
@@ -33,7 +35,9 @@ export function TourControls({
             <TourDateRangePicker
                 from={draftFrom}
                 to={draftTo}
+                visibleMonth={visibleMonth}
                 onChange={handleRangeChange}
+                onVisibleMonthChange={setVisibleMonth}
                 onReset={onReset}
             />
         </div>
