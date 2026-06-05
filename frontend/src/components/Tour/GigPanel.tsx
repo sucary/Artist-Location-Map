@@ -1,19 +1,24 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { Gig } from '../../types/gig';
+import type { Gig, Tour } from '../../types/gig';
 import { CloseButton, InlineActionMenu, Input } from '../ui';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, SearchIcon, StarIcon } from '../icons/GeneralIcons';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, PlusIcon, SearchIcon, StarIcon, SwitchHorizontalIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedTimeValue, getBrowserDateLocale } from '../../utils/dateFormatting';
 
-type GigPanelSort = 'date' | 'artist' | 'location' | 'tour';
+type GigPanelSort = 'date' | 'artist' | 'location';
+type TourPanelSort = 'date' | 'artist' | 'gigs';
 type GigPanelSortDirection = 'asc' | 'desc';
 
 interface GigPanelProps {
     gigs: Gig[];
+    tours: Tour[];
+    managementGigs: Gig[];
     onClose: () => void;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
+    onDeleteTour?: (tour: Tour) => void;
+    onAddGigToTour?: (tour: Tour, artistId?: string) => void;
     onLocateGig?: (gig: Gig) => void;
     starredGigIds?: Set<string>;
     onToggleGigStar?: (gig: Gig) => void;
@@ -28,18 +33,36 @@ const getProvinceLabel = (gig: Gig) => {
 
 const getCityLabel = (gig: Gig) => gig.location.city || gig.location.displayName || getProvinceLabel(gig);
 
-export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, starredGigIds, onToggleGigStar }: GigPanelProps) {
+export function GigPanel({
+    gigs,
+    tours,
+    managementGigs,
+    onClose,
+    onEditGig,
+    onDeleteGig,
+    onDeleteTour,
+    onAddGigToTour,
+    onLocateGig,
+    starredGigIds,
+    onToggleGigStar,
+}: GigPanelProps) {
     const { i18n, t } = useTranslation();
     const [filterQuery, setFilterQuery] = useState('');
+    const [tourFilterQuery, setTourFilterQuery] = useState('');
     const [sortMode, setSortMode] = useState<GigPanelSort>('date');
+    const [tourSortMode, setTourSortMode] = useState<TourPanelSort>('date');
     const [sortDirection, setSortDirection] = useState<GigPanelSortDirection>('asc');
     const [isSortOpen, setIsSortOpen] = useState(false);
+    const [isManagingTours, setIsManagingTours] = useState(false);
+    const [expandedTourId, setExpandedTourId] = useState<string | null>(null);
     const [sortDropdownPos, setSortDropdownPos] = useState({ top: 0, left: 0, width: 0 });
     const [expandedArtistRows, setExpandedArtistRows] = useState<Set<string>>(() => new Set());
     const [artistFitCounts, setArtistFitCounts] = useState<Record<string, number>>({});
     const sortRef = useRef<HTMLDivElement>(null);
     const sortDropdownRef = useRef<HTMLDivElement>(null);
     const artistRowRefs = useRef(new Map<string, HTMLDivElement>());
+    const tourRowRefs = useRef(new Map<string, HTMLLIElement>());
+    const pendingTourScrollRef = useRef<string | null>(null);
     const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const sortListboxId = 'gig-panel-sort-options';
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
@@ -115,8 +138,6 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                 result = getArtistNames(a).localeCompare(getArtistNames(b)) || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
             } else if (sortMode === 'location') {
                 result = getCityLabel(a).localeCompare(getCityLabel(b)) || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
-            } else if (sortMode === 'tour') {
-                result = (a.tour?.name ?? '').localeCompare(b.tour?.name ?? '') || a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '');
             } else {
                 result = a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '') || getArtistNames(a).localeCompare(getArtistNames(b));
             }
@@ -126,6 +147,95 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
         });
         return sorted;
     }, [filteredGigs, sortDirection, sortMode]);
+
+    const managedTours = useMemo(() => {
+        const gigsByTour = new Map<string, Gig[]>();
+        managementGigs.forEach((gig) => {
+            if (!gig.tourId) return;
+            const tourGigs = gigsByTour.get(gig.tourId) ?? [];
+            tourGigs.push(gig);
+            gigsByTour.set(gig.tourId, tourGigs);
+        });
+
+        // Complete tour data remains independent from the active map date range
+        return tours.map((tour) => {
+            const tourGigs = (gigsByTour.get(tour.id) ?? []).sort((a, b) => (
+                a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? '')
+            ));
+            const artistCounts = new Map<string, { count: number; name: string }>();
+            tourGigs.forEach((gig) => {
+                gig.artists.forEach((artist) => {
+                    const current = artistCounts.get(artist.id);
+                    artistCounts.set(artist.id, {
+                        count: (current?.count ?? 0) + 1,
+                        name: artist.name,
+                    });
+                });
+            });
+            const mainArtist = [...artistCounts.entries()].sort((a, b) => (
+                b[1].count - a[1].count || a[1].name.localeCompare(b[1].name)
+            ))[0];
+            const fallbackArtist = tour.artists[0];
+
+            return {
+                tour,
+                gigs: tourGigs,
+                startDate: tourGigs[0]?.date,
+                mainArtistId: mainArtist?.[0] ?? fallbackArtist?.id,
+                mainArtistName: mainArtist?.[1].name ?? fallbackArtist?.name ?? '',
+            };
+        });
+    }, [managementGigs, tours]);
+
+    const filteredSortedTours = useMemo(() => {
+        const normalizedQuery = tourFilterQuery.trim().toLowerCase();
+        const filtered = normalizedQuery
+            ? managedTours.filter(({ tour }) => (
+                [tour.name, ...tour.artists.map((artist) => artist.name)]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(normalizedQuery)
+            ))
+            : managedTours;
+        const sorted = [...filtered];
+
+        sorted.sort((a, b) => {
+            let result = 0;
+
+            if (tourSortMode === 'date') {
+                // Undated tours remain after dated tours in either direction
+                if (!a.startDate && !b.startDate) return a.tour.name.localeCompare(b.tour.name);
+                if (!a.startDate) return 1;
+                if (!b.startDate) return -1;
+                result = a.startDate.localeCompare(b.startDate);
+            } else if (tourSortMode === 'artist') {
+                if (!a.mainArtistName && !b.mainArtistName) return a.tour.name.localeCompare(b.tour.name);
+                if (!a.mainArtistName) return 1;
+                if (!b.mainArtistName) return -1;
+                result = a.mainArtistName.localeCompare(b.mainArtistName);
+            } else {
+                result = a.tour.gigCount - b.tour.gigCount;
+            }
+
+            result ||= a.tour.name.localeCompare(b.tour.name);
+            return sortDirection === 'asc' ? result : -result;
+        });
+
+        return sorted;
+    }, [managedTours, sortDirection, tourFilterQuery, tourSortMode]);
+
+    useEffect(() => {
+        if (!expandedTourId || pendingTourScrollRef.current !== expandedTourId) return;
+        const animationFrame = window.requestAnimationFrame(() => {
+            pendingTourScrollRef.current = null;
+            tourRowRefs.current.get(expandedTourId)?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        });
+
+        return () => window.cancelAnimationFrame(animationFrame);
+    }, [expandedTourId, filteredSortedTours]);
 
     useEffect(() => {
         const measureArtistText = (text: string) => {
@@ -198,6 +308,94 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
 
             return nextRows;
         });
+    };
+
+    const toggleTour = (tourId: string) => {
+        setExpandedTourId((currentTourId) => {
+            if (currentTourId === tourId) return null;
+
+            // Opening a tour should reveal its header as high as the panel can scroll
+            pendingTourScrollRef.current = tourId;
+            return tourId;
+        });
+    };
+
+    const renderManagedTour = ({
+        tour,
+        gigs: managedGigs,
+        mainArtistId,
+    }: {
+        tour: Tour;
+        gigs: Gig[];
+        mainArtistId?: string;
+        mainArtistName: string;
+        startDate?: string;
+    }) => {
+        const isExpanded = expandedTourId === tour.id;
+
+        return (
+            <li
+                key={tour.id}
+                ref={(node) => {
+                    if (node) {
+                        tourRowRefs.current.set(tour.id, node);
+                    } else {
+                        tourRowRefs.current.delete(tour.id);
+                    }
+                }}
+            >
+                <div className={`group relative flex min-h-14 items-center px-4 py-2 transition-colors duration-150 ${isExpanded ? 'bg-primary text-white hover:bg-primary' : 'hover:bg-surface-secondary/30'}`}>
+                    <button
+                        type="button"
+                        aria-expanded={isExpanded}
+                        aria-label={t(isExpanded ? 'tour.management.collapseTour' : 'tour.management.expandTour', { name: tour.name })}
+                        onClick={() => toggleTour(tour.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 py-1 pr-20 text-left"
+                    >
+                        <span className={`min-w-0 truncate text-sm font-semibold ${isExpanded ? 'text-white' : 'text-text'}`}>{tour.name}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold leading-4 ${isExpanded ? 'bg-white text-primary shadow-sm' : 'bg-surface-muted text-text-secondary'}`}>
+                            {tour.gigCount}
+                        </span>
+                    </button>
+                    <ChevronDownIcon className={`pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-transform duration-150 ${isExpanded ? 'rotate-0 text-white' : '-rotate-90 text-text-secondary'}`} />
+                </div>
+                {isExpanded && (
+                    <div className="border-t border-border/60 bg-surface-secondary/20">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-2 border-b border-border/60 px-4 py-3">
+                            {onDeleteTour && (
+                                <button
+                                    type="button"
+                                    aria-label={t('tour.management.deleteTour', { name: tour.name })}
+                                    onClick={() => onDeleteTour(tour)}
+                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[#F3F4F6] px-3 text-sm font-semibold text-[rgb(220,38,38)] transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:text-white app-dark:bg-[#2C2C2E] app-dark:hover:bg-[rgb(220,38,38)] app-dark:hover:text-white"
+                                >
+                                    <TrashIcon className="h-4 w-4" />
+                                    {t('tour.management.deleteAction')}
+                                </button>
+                            )}
+                            {onAddGigToTour && (
+                                <button
+                                    type="button"
+                                    onClick={() => onAddGigToTour(tour, mainArtistId)}
+                                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[#F3F4F6] px-3 text-sm font-semibold text-text transition-colors duration-150 hover:border-primary hover:bg-primary hover:text-white app-dark:bg-[#2C2C2E] app-dark:text-text app-dark:hover:border-primary app-dark:hover:bg-primary app-dark:hover:text-white"
+                                >
+                                    <PlusIcon className="h-4 w-4" />
+                                    {t('tour.actions.addGig')}
+                                </button>
+                            )}
+                        </div>
+                        <ul className="divide-y divide-border">
+                            {managedGigs.map(renderGigRow)}
+                            {managedGigs.length === 0 && (
+                                <li className="px-5 py-4 text-center text-sm text-text-secondary">
+                                    {t('tour.management.noGigs')}
+                                </li>
+                            )}
+                        </ul>
+                    </div>
+                )}
+            </li>
+        );
     };
 
     const renderGigRow = (gig: Gig) => {
@@ -314,7 +512,24 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
             <div role="region" aria-label={t('tour.panel.title')} className="flex max-h-[calc(100vh-6rem)] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40 sm:max-h-[calc(100vh-8rem)]">
                 <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                     <h2 className="text-base font-semibold tracking-tight text-text">
-                        {t('tour.panel.title')} ({gigs.length})
+                        <button
+                            type="button"
+                            aria-pressed={isManagingTours}
+                            aria-label={isManagingTours ? t('tour.panel.title') : t('tour.management.open')}
+                            title={isManagingTours ? t('tour.panel.title') : t('tour.management.open')}
+                            onClick={() => {
+                                setIsManagingTours((current) => !current);
+                                setIsSortOpen(false);
+                            }}
+                            className="group -ml-2 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors duration-150 hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                        >
+                            <span className="whitespace-nowrap">
+                                {isManagingTours
+                                    ? `${t('tour.management.title')} (${tours.length})`
+                                    : `${t('tour.panel.title')} (${gigs.length})`}
+                            </span>
+                            <SwitchHorizontalIcon className="h-4 w-4 shrink-0 text-text-secondary transition-colors group-hover:text-text" />
+                        </button>
                     </h2>
                     <CloseButton onClick={onClose} size="md" />
                 </div>
@@ -322,29 +537,39 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                 <div className="px-4 py-3">
                     <div className="flex items-center gap-2">
                         <Input
-                            aria-label={t('tour.panel.search.ariaLabel')}
+                            aria-label={t(isManagingTours ? 'tour.management.search.ariaLabel' : 'tour.panel.search.ariaLabel')}
                             type="text"
-                            name="gig-list-search"
+                            name={isManagingTours ? 'tour-list-search' : 'gig-list-search'}
                             autoComplete="off"
                             autoCorrect="off"
                             spellCheck={false}
-                            placeholder={t('tour.panel.search.placeholder')}
-                            value={filterQuery}
-                            onChange={(event) => setFilterQuery(event.target.value)}
+                            placeholder={t(isManagingTours ? 'tour.management.search.placeholder' : 'tour.panel.search.placeholder')}
+                            value={isManagingTours ? tourFilterQuery : filterQuery}
+                            onChange={(event) => {
+                                if (isManagingTours) {
+                                    setTourFilterQuery(event.target.value);
+                                } else {
+                                    setFilterQuery(event.target.value);
+                                }
+                            }}
                             rightIcon={<SearchIcon className="w-4 h-4" />}
                             className="min-w-0 flex-1 rounded-lg"
                         />
                         <div ref={sortRef} className="relative shrink-0">
                             <button
                                 type="button"
-                                aria-label={t('tour.panel.sort.ariaLabel')}
+                                aria-label={t(isManagingTours ? 'tour.management.sort.ariaLabel' : 'tour.panel.sort.ariaLabel')}
                                 aria-haspopup="listbox"
                                 aria-expanded={isSortOpen}
                                 aria-controls={isSortOpen ? sortListboxId : undefined}
                                 onClick={() => setIsSortOpen((open) => !open)}
                                 className="flex min-w-[6.5rem] items-center justify-between gap-2 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                             >
-                                <span className="block truncate">{t(`tour.panel.sort.${sortMode}`)}</span>
+                                <span className="block truncate">
+                                    {t(isManagingTours
+                                        ? `tour.management.sort.${tourSortMode}`
+                                        : `tour.panel.sort.${sortMode}`)}
+                                </span>
                                 <ChevronDownIcon className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {isSortOpen && createPortal(
@@ -352,7 +577,7 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                                     id={sortListboxId}
                                     role="listbox"
                                     ref={sortDropdownRef}
-                                    aria-label={t('tour.panel.sort.optionsLabel')}
+                                    aria-label={t(isManagingTours ? 'tour.management.sort.optionsLabel' : 'tour.panel.sort.optionsLabel')}
                                     className="fixed z-[9999] rounded-lg border border-border-strong bg-surface shadow-lg"
                                     style={{
                                         top: `${sortDropdownPos.top}px`,
@@ -360,21 +585,32 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                                         width: `${sortDropdownPos.width}px`,
                                     }}
                                 >
-                                {(['date', 'artist', 'location', 'tour'] as const).map((option) => (
+                                {(isManagingTours
+                                    ? (['date', 'artist', 'gigs'] as const)
+                                    : (['date', 'artist', 'location'] as const)
+                                ).map((option) => (
                                     <button
                                         key={option}
                                         type="button"
                                         role="option"
-                                        aria-selected={sortMode === option}
+                                        aria-selected={isManagingTours ? tourSortMode === option : sortMode === option}
                                         onClick={() => {
-                                            setSortMode(option);
+                                            if (isManagingTours) {
+                                                setTourSortMode(option as TourPanelSort);
+                                            } else {
+                                                setSortMode(option as GigPanelSort);
+                                            }
                                             setIsSortOpen(false);
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-muted ${
-                                            sortMode === option ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
+                                            (isManagingTours ? tourSortMode === option : sortMode === option)
+                                                ? 'text-primary-contrast app-dark:text-primary font-medium'
+                                                : 'text-text'
                                         }`}
                                     >
-                                        {t(`tour.panel.sort.${option}`)}
+                                        {t(isManagingTours
+                                            ? `tour.management.sort.${option}`
+                                            : `tour.panel.sort.${option}`)}
                                     </button>
                                 ))}
                                 </div>,
@@ -398,7 +634,17 @@ export function GigPanel({ gigs, onClose, onEditGig, onDeleteGig, onLocateGig, s
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {filteredGigs.length === 0 ? (
+                    {isManagingTours ? (
+                        filteredSortedTours.length === 0 ? (
+                            <div className="px-4 py-8 text-center text-sm text-text-secondary">
+                                {tourFilterQuery ? t('tour.management.noResults') : t('tour.management.empty')}
+                            </div>
+                        ) : (
+                            <ul className="divide-y divide-border">
+                                {filteredSortedTours.map(renderManagedTour)}
+                            </ul>
+                        )
+                    ) : filteredGigs.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-text-secondary">
                             {filterQuery ? t('tour.panel.noResults') : t('tour.panel.empty')}
                         </div>

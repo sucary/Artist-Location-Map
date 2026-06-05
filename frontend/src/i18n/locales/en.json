@@ -617,10 +617,39 @@
         "location": "Location"
       }
     },
+    "management": {
+      "title": "Tours",
+      "open": "Manage tours",
+      "empty": "No tours",
+      "noResults": "No tours match the current filter",
+      "expandTour": "Expand {{name}}",
+      "collapseTour": "Collapse {{name}}",
+      "deleteTour": "Delete {{name}}",
+      "deleteAction": "Delete tour",
+      "gigCount_one": "{{count}} gig",
+      "gigCount_other": "{{count}} gigs",
+      "noGigs": "No gigs in this tour",
+      "search": {
+        "ariaLabel": "Search tours",
+        "placeholder": "Search tours"
+      },
+      "sort": {
+        "ariaLabel": "Sort tours",
+        "optionsLabel": "Tour sort options",
+        "date": "Date",
+        "artist": "Artists",
+        "gigs": "Number of gigs"
+      }
+    },
     "dialogs": {
       "deleteGig": {
         "title": "Delete gig",
         "message": "Delete {{artist}} on {{date}}? This cannot be undone."
+      },
+      "deleteTour": {
+        "title": "Delete tour",
+        "message_one": "Delete {{name}} and its {{count}} gig? This cannot be undone.",
+        "message_other": "Delete {{name}} and all {{count}} gigs? This cannot be undone."
       }
     },
     "errors": {
@@ -629,7 +658,9 @@
       "requiredTourName": "Enter a tour name",
       "loadGigs": "Failed to load gigs",
       "deleteFailedTitle": "Could not delete gig",
-      "deleteFailedMessage": "Failed to delete gig. Please try again"
+      "deleteFailedMessage": "Failed to delete gig. Please try again",
+      "deleteTourFailedTitle": "Could not delete tour",
+      "deleteTourFailedMessage": "Failed to delete the tour and its gigs. Please try again"
     },
     "calendar": {
       "title": "Gig calendar",

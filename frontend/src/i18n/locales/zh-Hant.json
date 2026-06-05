@@ -606,10 +606,39 @@
         "location": "地點"
       }
     },
+    "management": {
+      "title": "巡演",
+      "open": "管理巡演",
+      "empty": "暫無巡演",
+      "noResults": "沒有符合目前篩選的巡演",
+      "expandTour": "展開 {{name}}",
+      "collapseTour": "收起 {{name}}",
+      "deleteTour": "刪除 {{name}}",
+      "deleteAction": "刪除巡演",
+      "gigCount_one": "{{count}} 場演出",
+      "gigCount_other": "{{count}} 場演出",
+      "noGigs": "此巡演中沒有演出",
+      "search": {
+        "ariaLabel": "搜尋巡演",
+        "placeholder": "搜尋巡演"
+      },
+      "sort": {
+        "ariaLabel": "巡演排序",
+        "optionsLabel": "巡演排序選項",
+        "date": "日期",
+        "artist": "藝人",
+        "gigs": "演出場數"
+      }
+    },
     "dialogs": {
       "deleteGig": {
         "title": "刪除演出",
         "message": "刪除 {{artist}} 在 {{date}} 的演出嗎？此操作無法復原。"
+      },
+      "deleteTour": {
+        "title": "刪除巡演",
+        "message_one": "刪除 {{name}} 及其中的 {{count}} 場演出嗎？此操作無法復原。",
+        "message_other": "刪除 {{name}} 及其中的全部 {{count}} 場演出嗎？此操作無法復原。"
       }
     },
     "errors": {
@@ -618,7 +647,9 @@
       "requiredTourName": "請輸入巡演名稱",
       "loadGigs": "無法載入演出",
       "deleteFailedTitle": "無法刪除演出",
-      "deleteFailedMessage": "刪除演出失敗。請再試一次"
+      "deleteFailedMessage": "刪除演出失敗。請再試一次",
+      "deleteTourFailedTitle": "無法刪除巡演",
+      "deleteTourFailedMessage": "刪除巡演及其中的演出失敗。請再試一次"
     },
     "calendar": {
       "title": "演出日曆",

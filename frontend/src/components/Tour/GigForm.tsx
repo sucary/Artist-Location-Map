@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 interface GigFormProps {
     initialGig?: Gig | null;
     initialArtist?: Artist | null;
+    initialArtistId?: string;
+    initialTourId?: string;
     initialDate?: string;
     onSubmit: (input: GigInput, id?: string) => Promise<void> | void;
     onCancel: () => void;
@@ -51,6 +53,8 @@ function formatMissingFieldList(fields: string[], locale?: string): string {
 export function GigForm({
     initialGig,
     initialArtist,
+    initialArtistId,
+    initialTourId,
     initialDate = '',
     onSubmit,
     onCancel,
@@ -67,9 +71,12 @@ export function GigForm({
         queryKey: ['tours'],
         queryFn: getTours,
     });
-    const [artistIds, setArtistIds] = useState<string[]>(initialGig?.artistIds ?? (initialArtist ? [initialArtist.id] : []));
-    const [tourMode, setTourMode] = useState<'none' | 'existing' | 'new'>(initialGig?.tourId ? 'existing' : 'none');
-    const [tourId, setTourId] = useState(initialGig?.tourId ?? '');
+    const initialArtistSeedId = initialArtist?.id ?? initialArtistId;
+    const initialSelectedArtistIds = initialGig?.artistIds ?? (initialArtistSeedId ? [initialArtistSeedId] : []);
+    const initialSelectedTourId = initialGig?.tourId ?? initialTourId ?? '';
+    const [artistIds, setArtistIds] = useState<string[]>(initialSelectedArtistIds);
+    const [tourMode, setTourMode] = useState<'none' | 'existing' | 'new'>(initialSelectedTourId ? 'existing' : 'none');
+    const [tourId, setTourId] = useState(initialSelectedTourId);
     const [newTourName, setNewTourName] = useState('');
     const [gigName, setGigName] = useState(initialGig?.gigName ?? '');
     const [date, setDate] = useState(initialGig?.date ?? initialDate);
@@ -83,9 +90,12 @@ export function GigForm({
     const hasTours = tours.length > 0;
 
     useEffect(() => {
-        setArtistIds(initialGig?.artistIds ?? (initialArtist ? [initialArtist.id] : []));
-        setTourMode(initialGig?.tourId ? 'existing' : 'none');
-        setTourId(initialGig?.tourId ?? '');
+        const nextArtistIds = initialGig?.artistIds ?? (initialArtistSeedId ? [initialArtistSeedId] : []);
+        const nextTourId = initialGig?.tourId ?? initialTourId ?? '';
+
+        setArtistIds(nextArtistIds);
+        setTourMode(nextTourId ? 'existing' : 'none');
+        setTourId(nextTourId);
         setNewTourName('');
         setGigName(initialGig?.gigName ?? '');
         setDate(initialGig?.date ?? initialDate);
@@ -95,7 +105,7 @@ export function GigForm({
         setPlaceLocationId(initialGig?.placeLocationId ?? null);
         setRawExternalData(initialGig?.rawExternalData ?? undefined);
         setError(null);
-    }, [initialArtist?.id, initialDate, initialGig]);
+    }, [initialArtistSeedId, initialDate, initialGig, initialTourId]);
 
     useEffect(() => {
         if (!toursFetched || hasTours || tourMode === 'new') return;

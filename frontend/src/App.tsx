@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
-import { copyArtistCollectionByUsername, createGig, deleteArtist, deleteGig, getArtistsByUsername, getFeaturedArtists, getGigs, updateArtist, updateGig, updateProfile } from './services/api';
+import { copyArtistCollectionByUsername, createGig, deleteArtist, deleteGig, deleteTour, getArtistsByUsername, getFeaturedArtists, getGigs, getTours, updateArtist, updateGig, updateProfile } from './services/api';
 import MapView from './components/Map/MapView';
 import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
@@ -18,7 +18,7 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { MainSearch } from './components/MainSearch';
 import { useAuth } from './context/AuthContext';
 import type { Artist, SelectionMode } from './types/artist';
-import type { Gig, GigInput, TourModeState } from './types/gig';
+import type { Gig, GigInput, Tour, TourModeState } from './types/gig';
 import { UsernamePrompt } from './components/Auth/UsernamePrompt';
 import { ResetPasswordModal } from './components/Auth/ResetPasswordModal';
 import { ViewingUserBanner, AnonymousUserBanner, FeaturedArtistsBanner } from './components/Banner';
@@ -74,6 +74,7 @@ const getDefaultTourInterval = () => {
 type RememberedTourModeState = Pick<TourModeState, 'interval' | 'selectedDay'>;
 
 const STARRED_GIGS_STORAGE_KEY = 'achizu.starredGigs';
+const ALL_GIG_DATES = { from: '0001-01-01', to: '9999-12-31' };
 
 const readStoredStarredGigs = () => {
     if (typeof window === 'undefined') return new Set<string>();
@@ -115,6 +116,8 @@ function App() {
     const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
     const [editingGig, setEditingGig] = useState<Gig | null>(null);
     const [gigFormArtist, setGigFormArtist] = useState<Artist | null>(null);
+    const [gigFormInitialArtistId, setGigFormInitialArtistId] = useState('');
+    const [gigFormInitialTourId, setGigFormInitialTourId] = useState('');
     const [gigFormInitialDate, setGigFormInitialDate] = useState('');
     const [selectionMode, setSelectionMode] = useState<SelectionMode | null>(null);
     const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -185,13 +188,25 @@ function App() {
         }
 
         if (updates.from !== undefined) {
-            updates.from ? nextParams.set('from', updates.from) : nextParams.delete('from');
+            if (updates.from) {
+                nextParams.set('from', updates.from);
+            } else {
+                nextParams.delete('from');
+            }
         }
         if (updates.to !== undefined) {
-            updates.to ? nextParams.set('to', updates.to) : nextParams.delete('to');
+            if (updates.to) {
+                nextParams.set('to', updates.to);
+            } else {
+                nextParams.delete('to');
+            }
         }
         if (updates.day !== undefined) {
-            updates.day ? nextParams.set('day', updates.day) : nextParams.delete('day');
+            if (updates.day) {
+                nextParams.set('day', updates.day);
+            } else {
+                nextParams.delete('day');
+            }
         }
 
         setSearchParams(nextParams);
@@ -233,6 +248,16 @@ function App() {
         queryKey: ['gigs', gigQueryParams],
         queryFn: () => getGigs(gigQueryParams),
         enabled: tourMode.active,
+    });
+    const { data: tours = [] } = useQuery({
+        queryKey: ['tours'],
+        queryFn: getTours,
+        enabled: tourMode.active && showGigPanel,
+    });
+    const { data: allTourGigs = [] } = useQuery({
+        queryKey: ['gigs', ALL_GIG_DATES],
+        queryFn: () => getGigs(ALL_GIG_DATES),
+        enabled: tourMode.active && showGigPanel,
     });
     const highlightedGigCount = tourMode.selectedDay
         ? tourGigs.filter((gig) => gig.date === tourMode.selectedDay).length
@@ -370,6 +395,8 @@ function App() {
         setShowGigForm(false);
         setEditingGig(null);
         setGigFormArtist(null);
+        setGigFormInitialArtistId('');
+        setGigFormInitialTourId('');
         setGigFormInitialDate('');
         setSelectionMode(null);
         setPendingCoordinates(null);
@@ -504,6 +531,8 @@ function App() {
         setMainSearchCloseSignal((signal) => signal + 1);
         setEditingGig(null);
         setGigFormArtist(null);
+        setGigFormInitialArtistId('');
+        setGigFormInitialTourId('');
         setGigFormInitialDate(initialDate);
         setShowGigForm(true);
         updateTourParams({ active: true });
@@ -520,6 +549,29 @@ function App() {
         setShowGigCalendar(false);
         setEditingGig(null);
         setGigFormArtist(artist);
+        setGigFormInitialArtistId('');
+        setGigFormInitialTourId('');
+        setGigFormInitialDate('');
+        setShowGigForm(true);
+        updateTourParams({ active: true });
+    };
+
+    const handleAddGigToTour = (tour: Tour, artistId?: string) => {
+        if (!user) {
+            setShowAuthModal(true);
+            return;
+        }
+
+        setShowForm(false);
+        setShowArtistList(false);
+        setShowFeaturedList(false);
+        setShowGigPanel(false);
+        setShowGigCalendar(false);
+        setMainSearchCloseSignal((signal) => signal + 1);
+        setEditingGig(null);
+        setGigFormArtist(null);
+        setGigFormInitialArtistId(artistId ?? '');
+        setGigFormInitialTourId(tour.id);
         setGigFormInitialDate('');
         setShowGigForm(true);
         updateTourParams({ active: true });
@@ -538,6 +590,8 @@ function App() {
         setMainSearchCloseSignal((signal) => signal + 1);
         setEditingGig(null);
         setGigFormArtist(null);
+        setGigFormInitialArtistId('');
+        setGigFormInitialTourId('');
         setGigFormInitialDate(date);
         setShowGigForm(true);
         updateTourParams({ active: true });
@@ -549,6 +603,8 @@ function App() {
         setShowGigCalendar(false);
         setEditingGig(gig);
         setGigFormArtist(null);
+        setGigFormInitialArtistId('');
+        setGigFormInitialTourId('');
         setGigFormInitialDate('');
         setShowGigForm(true);
     };
@@ -628,6 +684,54 @@ function App() {
                 } catch (error) {
                     console.error('Failed to delete gig:', error);
                     showAppMessage(t('tour.errors.deleteFailedTitle'), t('tour.errors.deleteFailedMessage'), 'error');
+                } finally {
+                    setAppDialogLoading(false);
+                }
+            },
+        });
+    };
+
+    const handleDeleteTour = (tour: Tour) => {
+        setAppDialog({
+            title: t('tour.dialogs.deleteTour.title'),
+            message: t('tour.dialogs.deleteTour.message', {
+                count: tour.gigCount,
+                name: tour.name,
+            }),
+            variant: 'danger',
+            confirmLabel: t('common.delete'),
+            cancelLabel: t('common.cancel'),
+            onConfirm: async () => {
+                setAppDialogLoading(true);
+                try {
+                    await deleteTour(tour.id);
+                    await Promise.all([
+                        queryClient.invalidateQueries({ queryKey: ['gigs'] }),
+                        queryClient.invalidateQueries({ queryKey: ['tours'] }),
+                    ]);
+
+                    // Removed tour gigs cannot remain starred locally
+                    const deletedGigIds = new Set(
+                        allTourGigs
+                            .filter((gig) => gig.tourId === tour.id)
+                            .map((gig) => gig.id)
+                    );
+                    if (deletedGigIds.size > 0) {
+                        setStarredGigIds((currentIds) => {
+                            const nextIds = new Set([...currentIds].filter((id) => !deletedGigIds.has(id)));
+                            try {
+                                window.localStorage.setItem(STARRED_GIGS_STORAGE_KEY, JSON.stringify([...nextIds]));
+                            } catch {
+                                // Local storage failures should not block tour deletion
+                            }
+                            return nextIds;
+                        });
+                    }
+
+                    setAppDialog(null);
+                } catch (error) {
+                    console.error('Failed to delete tour:', error);
+                    showAppMessage(t('tour.errors.deleteTourFailedTitle'), t('tour.errors.deleteTourFailedMessage'), 'error');
                 } finally {
                     setAppDialogLoading(false);
                 }
@@ -936,6 +1040,8 @@ function App() {
                     <GigForm
                         initialGig={editingGig}
                         initialArtist={gigFormArtist}
+                        initialArtistId={gigFormInitialArtistId}
+                        initialTourId={gigFormInitialTourId}
                         initialDate={gigFormInitialDate}
                         onSubmit={handleGigFormSubmit}
                         onCancel={handleCloseGigForm}
@@ -948,9 +1054,13 @@ function App() {
             {showGigPanel && (
                 <GigPanel
                     gigs={tourGigs}
+                    tours={tours}
+                    managementGigs={allTourGigs}
                     onClose={handleCloseGigPanel}
                     onEditGig={handleEditGig}
                     onDeleteGig={handleDeleteGig}
+                    onDeleteTour={handleDeleteTour}
+                    onAddGigToTour={handleAddGigToTour}
                     onLocateGig={(gig) => setFocusedGigId(gig.id)}
                     starredGigIds={starredGigIds}
                     onToggleGigStar={handleToggleGigStar}

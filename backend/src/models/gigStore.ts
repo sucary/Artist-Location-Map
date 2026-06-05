@@ -1,6 +1,5 @@
 import pool from '../config/database';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
-import type { CropArea } from '../types/artist';
 import type { LocalizedChain } from '../types/city';
 import type {
     CreateTourDTO,
@@ -614,7 +613,19 @@ export const GigStore = {
     },
 
     deleteTour: async (id: string, userId: string): Promise<boolean> => {
-        const result = await pool.query('DELETE FROM artist_tours WHERE id = $1 AND user_id = $2', [id, userId]);
-        return result.rowCount !== null && result.rowCount > 0;
+        return await withTransaction(async (client) => {
+            // Lock ownership before deleting the tour and its dependent gigs
+            const tour = await client.query<{ id: string }>(`
+                SELECT id
+                FROM artist_tours
+                WHERE id = $1 AND user_id = $2
+                FOR UPDATE
+            `, [id, userId]);
+            if (!tour.rows[0]) return false;
+
+            await client.query('DELETE FROM artist_gigs WHERE tour_id = $1 AND user_id = $2', [id, userId]);
+            await client.query('DELETE FROM artist_tours WHERE id = $1 AND user_id = $2', [id, userId]);
+            return true;
+        });
     },
 };

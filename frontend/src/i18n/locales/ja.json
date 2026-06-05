@@ -617,10 +617,39 @@
         "location": "場所"
       }
     },
+    "management": {
+      "title": "ツアー",
+      "open": "ツアーを管理",
+      "empty": "ツアーはありません",
+      "noResults": "現在の絞り込みに一致するツアーはありません",
+      "expandTour": "{{name}}を展開",
+      "collapseTour": "{{name}}を閉じる",
+      "deleteTour": "{{name}}を削除",
+      "deleteAction": "ツアーを削除",
+      "gigCount_one": "公演{{count}}件",
+      "gigCount_other": "公演{{count}}件",
+      "noGigs": "このツアーに公演はありません",
+      "search": {
+        "ariaLabel": "ツアーを検索",
+        "placeholder": "ツアーを検索"
+      },
+      "sort": {
+        "ariaLabel": "ツアーを並べ替え",
+        "optionsLabel": "ツアーの並べ替えオプション",
+        "date": "日付",
+        "artist": "アーティスト",
+        "gigs": "公演数"
+      }
+    },
     "dialogs": {
       "deleteGig": {
         "title": "公演を削除",
         "message": "{{date}}の{{artist}}の公演を削除しますか？この操作は元に戻せません。"
+      },
+      "deleteTour": {
+        "title": "ツアーを削除",
+        "message_one": "{{name}}と公演{{count}}件を削除しますか？この操作は元に戻せません。",
+        "message_other": "{{name}}と公演{{count}}件をすべて削除しますか？この操作は元に戻せません。"
       }
     },
     "errors": {
@@ -629,7 +658,9 @@
       "requiredTourName": "ツアー名を入力してください",
       "loadGigs": "公演を読み込めませんでした",
       "deleteFailedTitle": "公演を削除できませんでした",
-      "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください"
+      "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください",
+      "deleteTourFailedTitle": "ツアーを削除できませんでした",
+      "deleteTourFailedMessage": "ツアーと公演の削除に失敗しました。もう一度お試しください"
     },
     "calendar": {
       "title": "公演カレンダー",

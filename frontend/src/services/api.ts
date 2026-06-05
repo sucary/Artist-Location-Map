@@ -102,6 +102,10 @@ export const createTour = async (tourData: TourInput): Promise<Tour> => {
     return response.data;
 };
 
+export const deleteTour = async (id: string): Promise<void> => {
+    await api.delete(`/gigs/tours/${id}`);
+};
+
 export const createGig = async (gigData: GigInput): Promise<Gig> => {
     const response = await api.post<Gig>('/gigs', gigData);
     return response.data;
