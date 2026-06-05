@@ -14,9 +14,32 @@ import gigRoutes from './routes/gigRoutes';
 import venueRoutes from './routes/venueRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { verifyDatabaseConnection } from './config/database';
+import { AuthCleanupService } from './services/authCleanupService';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SIGNUP_CONFIRMATION_CLEANUP_INTERVAL_MS = 60 * 1000;
+
+function startSignupConfirmationCleanup(): void {
+    const runCleanup = async () => {
+        try {
+            const result = await AuthCleanupService.cleanupExpiredSignupConfirmations();
+            if (result.deletedCount > 0) {
+                console.log(`Removed ${result.deletedCount} expired signup confirmation user(s)`);
+            }
+        } catch (error) {
+            console.error('Expired signup confirmation cleanup failed:', error);
+        }
+    };
+
+    // Keep stale unconfirmed registrations from reserving emails
+    const intervalId = setInterval(() => {
+        void runCleanup();
+    }, SIGNUP_CONFIRMATION_CLEANUP_INTERVAL_MS);
+    intervalId.unref?.();
+
+    void runCleanup();
+}
 
 // Trust only the first proxy
 app.set('trust proxy', 1);
@@ -65,4 +88,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
     await verifyDatabaseConnection();
+    startSignupConfirmationCleanup();
 });

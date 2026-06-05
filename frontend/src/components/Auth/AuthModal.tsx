@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,8 @@ interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
+
+const SIGNUP_CONFIRMATION_WINDOW_MS = 15 * 60 * 1000;
 
 function AuthErrorBox({ message }: { message: string }) {
     return (
@@ -51,6 +53,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [messageType, setMessageType] = useState<'signup' | 'reset' | null>(null);
+    const [signupConfirmationExpiresAt, setSignupConfirmationExpiresAt] = useState<number | null>(null);
     const [resendLoading, setResendLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -65,6 +68,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setError(null);
         setMessage(null);
         setMessageType(null);
+        setSignupConfirmationExpiresAt(null);
         setPasswordError(null);
         setConfirmPasswordError(null);
         setForgotPasswordEmailError(null);
@@ -76,6 +80,32 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     };
 
     const dialogRef = useDialogAccessibility(handleClose);
+
+    const expireSignupConfirmation = useCallback(() => {
+        setMessage(null);
+        setMessageType(null);
+        setSignupConfirmationExpiresAt(null);
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setIsSignUp(true);
+        setError(t('auth.errors.confirmationExpired', { defaultValue: 'Confirmation link expired. Please register again.' }));
+    }, [t]);
+
+    useEffect(() => {
+        if (!signupConfirmationExpiresAt || messageType !== 'signup') return;
+
+        const remainingMs = signupConfirmationExpiresAt - Date.now();
+        if (remainingMs <= 0) {
+            expireSignupConfirmation();
+            return;
+        }
+
+        // Match the configured signup email token lifetime.
+        const timeoutId = window.setTimeout(expireSignupConfirmation, remainingMs);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [expireSignupConfirmation, messageType, signupConfirmationExpiresAt]);
 
     if (!isOpen) return null;
 
@@ -164,6 +194,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     }
                 } else {
                     setMessageType('signup');
+                    setSignupConfirmationExpiresAt(Date.now() + SIGNUP_CONFIRMATION_WINDOW_MS);
                     setMessage(t('auth.messages.checkEmailConfirmation'));
                 }
             } else {
@@ -263,6 +294,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 });
                 if (error) throw error;
                 setMessage(t('auth.messages.checkEmailConfirmation'));
+                setSignupConfirmationExpiresAt(Date.now() + SIGNUP_CONFIRMATION_WINDOW_MS);
             }
         } catch (resendError) {
             setError(resendError instanceof Error ? resendError.message : t('auth.errors.unexpectedError'));
@@ -291,7 +323,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {message ? (
                     <div className="text-center">
                         <h2 id="auth-title" className="text-xl font-bold text-text mb-2">{t('auth.emailCheck.title')}</h2>
-                        <p id="auth-message-description" className="text-sm text-text-secondary mb-6">{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</p>
+                        <p id="auth-message-description" className="text-sm text-text-secondary mb-6">
+                            <span>{t('auth.emailCheck.message', { email: email || forgotPasswordEmail })}</span>
+                            {messageType === 'signup' && (
+                                <span className="mt-1 block text-xs">
+                                    {t('auth.emailCheck.expiresIn', { defaultValue: 'This link expires in 15 minutes.' })}
+                                </span>
+                            )}
+                        </p>
                         {error && <Alert variant="error" header={t('auth.errors.resendEmailFailed')} onClose={() => setError(null)} className="mb-4">{error}</Alert>}
                         <div className="flex gap-3">
                             <Button onClick={handleResendEmail} variant="secondary" isLoading={resendLoading} className="flex-1">{t('auth.buttons.resend')}</Button>
