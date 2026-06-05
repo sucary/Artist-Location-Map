@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
+import { getBrowserDateLocale } from '../../utils/dateFormatting';
 
 interface TourSelectOption {
     id: string;
     name: string;
+    startDate?: string | null;
+    endDate?: string | null;
 }
 
 interface TourSelectProps {
@@ -25,9 +28,12 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
     const listboxId = `${inputId}-tours`;
     const containerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { t } = useTranslation();
+    const { i18n, t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
-    const [query, setQuery] = useState('');
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
+    const tourMonthFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'short' }), [dateLocale]);
+    const tourMonthOnlyFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { month: 'short' }), [dateLocale]);
     const [dropdownPosition, setDropdownPosition] = useState({
         top: 0,
         left: 0,
@@ -38,13 +44,59 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
     const selectedTour = useMemo(() => (
         tours.find((tour) => tour.id === value)
     ), [tours, value]);
+    const selectedTourName = selectedTour?.name ?? '';
+
+    // Draft query preserves user typing while external selection changes resync
+    const [queryState, setQueryState] = useState(() => ({
+        value: selectedTourName,
+        syncedValue: value,
+        syncedName: selectedTourName,
+    }));
+    const query = queryState.syncedValue === value && queryState.syncedName === selectedTourName
+        ? queryState.value
+        : selectedTourName;
+
+    const formatTourMonth = useCallback((date?: string | null) => {
+        if (!date) return '';
+        const parsedDate = new Date(`${date}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) return '';
+
+        return tourMonthFormatter.format(parsedDate);
+    }, [tourMonthFormatter]);
+
+    const formatTourMonthOnly = useCallback((date?: string | null) => {
+        if (!date) return '';
+        const parsedDate = new Date(`${date}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) return '';
+
+        return tourMonthOnlyFormatter.format(parsedDate);
+    }, [tourMonthOnlyFormatter]);
+
+    // Tour range uses boundary gig months only
+    const formatTourDateRange = useCallback((startDate?: string | null, endDate?: string | null) => {
+        const startMonth = formatTourMonth(startDate);
+        const endMonth = formatTourMonth(endDate);
+        if (!startMonth && !endMonth) return '';
+        if (!startMonth || !endMonth || startDate?.slice(0, 7) === endDate?.slice(0, 7)) return startMonth || endMonth;
+        if (startDate?.slice(0, 4) === endDate?.slice(0, 4)) return `${startMonth} - ${formatTourMonthOnly(endDate)}`;
+
+        return `${startMonth} - ${endMonth}`;
+    }, [formatTourMonth, formatTourMonthOnly]);
+
+    const getTourOptionDate = useCallback((tour: TourSelectOption) => (
+        formatTourDateRange(tour.startDate, tour.endDate)
+    ), [formatTourDateRange]);
+
+    const getTourSearchText = useCallback((tour: TourSelectOption) => (
+        [tour.name, getTourOptionDate(tour)].filter(Boolean).join(' ')
+    ), [getTourOptionDate]);
 
     // Filter tours by the same visible value users type into the control
     const filteredTours = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
-        if (!normalizedQuery || selectedTour?.name === query) return tours;
-        return tours.filter((tour) => tour.name.toLowerCase().includes(normalizedQuery));
-    }, [query, selectedTour?.name, tours]);
+        if (!normalizedQuery || selectedTourName === query) return tours;
+        return tours.filter((tour) => getTourSearchText(tour).toLowerCase().includes(normalizedQuery));
+    }, [getTourSearchText, query, selectedTourName, tours]);
 
     useEffect(() => {
         if (!isOpen || !containerRef.current) return;
@@ -75,20 +127,24 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
             // Portaled list remains part of the active picker
             if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
             setIsOpen(false);
-            setQuery(selectedTour?.name ?? '');
+            setQueryState({
+                value: selectedTourName,
+                syncedValue: value,
+                syncedName: selectedTourName,
+            });
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [selectedTour?.name]);
-
-    useEffect(() => {
-        setQuery(selectedTour?.name ?? '');
-    }, [selectedTour?.name]);
+    }, [selectedTourName, value]);
 
     const handleSelect = (tour: TourSelectOption) => {
         onChange(tour.id);
-        setQuery(tour.name);
+        setQueryState({
+            value: tour.name,
+            syncedValue: tour.id,
+            syncedName: tour.name,
+        });
         setIsOpen(false);
     };
 
@@ -106,7 +162,11 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                 type="text"
                 value={query}
                 onChange={(event) => {
-                    setQuery(event.target.value);
+                    setQueryState({
+                        value: event.target.value,
+                        syncedValue: '',
+                        syncedName: '',
+                    });
                     onChange('');
                     setIsOpen(true);
                 }}
@@ -144,19 +204,28 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                         maxHeight: `${dropdownPosition.maxHeight}px`,
                     }}
                 >
-                    {filteredTours.map((tour) => (
-                        <button
-                            key={tour.id}
-                            type="button"
-                            role="option"
-                            aria-selected={tour.id === value}
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => handleSelect(tour)}
-                            className={`w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${tour.id === value ? 'bg-surface-muted' : ''}`}
-                        >
-                            <span className="block truncate font-medium">{tour.name}</span>
-                        </button>
-                    ))}
+                    {filteredTours.map((tour) => {
+                        const tourDate = getTourOptionDate(tour);
+
+                        return (
+                            <button
+                                key={tour.id}
+                                type="button"
+                                role="option"
+                                aria-selected={tour.id === value}
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => handleSelect(tour)}
+                                className={`flex w-full items-center gap-3 border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${tour.id === value ? 'bg-surface-muted' : ''}`}
+                            >
+                                <span className="min-w-0 flex-1 truncate font-medium">{tour.name}</span>
+                                {tourDate && (
+                                    <span className="shrink-0 text-xs font-medium text-text-secondary">
+                                        {tourDate}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
                     {filteredTours.length === 0 && (
                         <div className="px-3 py-3 text-sm text-text-secondary">
                             {emptyLabel ?? t('tour.form.noToursFound')}

@@ -33,6 +33,21 @@ const getProvinceLabel = (gig: Gig) => {
 
 const getCityLabel = (gig: Gig) => gig.location.city || gig.location.displayName || getProvinceLabel(gig);
 
+const getMostDetailedAdministrativeLabel = (gig: Gig) => (
+    gig.location.city || gig.location.province || gig.location.country || ''
+);
+
+// Expanded tour rows omit inherited tour names
+const getTourGigLocationMeta = (gig: Gig) => {
+    const gigLocation = gig.venueName || gig.placeLocation?.name || getCityLabel(gig);
+    const administrativeLocation = getMostDetailedAdministrativeLabel(gig);
+    const locationParts = [gigLocation, administrativeLocation].filter((part, index, parts) => (
+        part && parts.indexOf(part) === index
+    ));
+
+    return locationParts.join(' \u00b7 ');
+};
+
 export function GigPanel({
     gigs,
     tours,
@@ -67,6 +82,8 @@ export function GigPanel({
     const sortListboxId = 'gig-panel-sort-options';
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
+    const tourMonthFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'short' }), [dateLocale]);
+    const tourMonthOnlyFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { month: 'short' }), [dateLocale]);
 
     useEffect(() => {
         if (!isSortOpen || !sortRef.current) return;
@@ -106,6 +123,33 @@ export function GigPanel({
             day,
             weekday,
         };
+    };
+
+    const formatTourMonth = (date?: string | null) => {
+        if (!date) return '';
+        const parsedDate = new Date(`${date}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) return '';
+
+        return tourMonthFormatter.format(parsedDate);
+    };
+
+    const formatTourMonthOnly = (date?: string | null) => {
+        if (!date) return '';
+        const parsedDate = new Date(`${date}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) return '';
+
+        return tourMonthOnlyFormatter.format(parsedDate);
+    };
+
+    // Tour range uses boundary gig months only
+    const formatTourDateRange = (startDate?: string, endDate?: string) => {
+        const startMonth = formatTourMonth(startDate);
+        const endMonth = formatTourMonth(endDate);
+        if (!startMonth && !endMonth) return '';
+        if (!startMonth || !endMonth || startDate?.slice(0, 7) === endDate?.slice(0, 7)) return startMonth || endMonth;
+        if (startDate?.slice(0, 4) === endDate?.slice(0, 4)) return `${startMonth} - ${formatTourMonthOnly(endDate)}`;
+
+        return `${startMonth} - ${endMonth}`;
     };
 
     const filteredGigs = useMemo(() => {
@@ -180,7 +224,8 @@ export function GigPanel({
             return {
                 tour,
                 gigs: tourGigs,
-                startDate: tourGigs[0]?.date,
+                startDate: tourGigs[0]?.date ?? tour.startDate,
+                endDate: tourGigs[tourGigs.length - 1]?.date ?? tour.endDate,
                 mainArtistId: mainArtist?.[0] ?? fallbackArtist?.id,
                 mainArtistName: mainArtist?.[1].name ?? fallbackArtist?.name ?? '',
             };
@@ -324,14 +369,18 @@ export function GigPanel({
         tour,
         gigs: managedGigs,
         mainArtistId,
+        startDate,
+        endDate,
     }: {
         tour: Tour;
         gigs: Gig[];
         mainArtistId?: string;
         mainArtistName: string;
         startDate?: string;
+        endDate?: string;
     }) => {
         const isExpanded = expandedTourId === tour.id;
+        const tourDateRange = formatTourDateRange(startDate, endDate);
 
         return (
             <li
@@ -350,11 +399,20 @@ export function GigPanel({
                         aria-expanded={isExpanded}
                         aria-label={t(isExpanded ? 'tour.management.collapseTour' : 'tour.management.expandTour', { name: tour.name })}
                         onClick={() => toggleTour(tour.id)}
-                        className="flex min-w-0 flex-1 items-center gap-3 py-1 pr-20 text-left"
+                        className="flex min-w-0 flex-1 py-1 pr-20 text-left"
                     >
-                        <span className={`min-w-0 truncate text-sm font-semibold ${isExpanded ? 'text-white' : 'text-text'}`}>{tour.name}</span>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold leading-4 ${isExpanded ? 'bg-white text-primary shadow-sm' : 'bg-surface-muted text-text-secondary'}`}>
-                            {tour.gigCount}
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="flex min-w-0 items-center gap-2">
+                                <span className={`min-w-0 truncate text-sm font-semibold ${isExpanded ? 'text-white' : 'text-text'}`}>{tour.name}</span>
+                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold leading-4 ${isExpanded ? 'bg-white text-primary shadow-sm' : 'bg-surface-muted text-text-secondary'}`}>
+                                    {tour.gigCount}
+                                </span>
+                            </span>
+                            {tourDateRange && (
+                                <span className={`truncate text-xs font-medium ${isExpanded ? 'text-white/80' : 'text-text-secondary'}`}>
+                                    {tourDateRange}
+                                </span>
+                            )}
                         </span>
                     </button>
                     <ChevronDownIcon className={`pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-transform duration-150 ${isExpanded ? 'rotate-0 text-white' : '-rotate-90 text-text-secondary'}`} />
@@ -385,7 +443,7 @@ export function GigPanel({
                             )}
                         </div>
                         <ul className="divide-y divide-border">
-                            {managedGigs.map(renderGigRow)}
+                            {managedGigs.map((gig) => renderGigRow(gig, { useTourLocationMeta: true }))}
                             {managedGigs.length === 0 && (
                                 <li className="px-5 py-4 text-center text-sm text-text-secondary">
                                     {t('tour.management.noGigs')}
@@ -398,7 +456,7 @@ export function GigPanel({
         );
     };
 
-    const renderGigRow = (gig: Gig) => {
+    const renderGigRow = (gig: Gig, options?: { useTourLocationMeta?: boolean }) => {
         const dateParts = formatDateTile(gig.date);
         const formattedTime = formatLocalizedTimeValue(gig.time, dateFallback);
         const artistNames = gig.artists.length ? gig.artists : [gig.artist];
@@ -415,7 +473,9 @@ export function GigPanel({
         const locationParts = gig.venueName
             ? [title, gig.venueName]
             : [title, getCityLabel(gig)];
-        const locationMeta = locationParts.filter(Boolean).join(' \u00b7 ');
+        const locationMeta = options?.useTourLocationMeta
+            ? getTourGigLocationMeta(gig)
+            : locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
             <li key={gig.id} className="group relative transition-colors duration-150 hover:bg-surface-secondary/30">
@@ -650,7 +710,7 @@ export function GigPanel({
                         </div>
                     ) : (
                         <ul className="divide-y divide-border">
-                            {sortedGigs.map(renderGigRow)}
+                            {sortedGigs.map((gig) => renderGigRow(gig))}
                         </ul>
                     )}
                 </div>
