@@ -13,25 +13,26 @@ Inspired by [Anitabi](https://www.anitabi.cn/map), an interactive map website vi
 
 ## Features
 
-1. Create your own artist world map by adding artists
-    - Import artist from MusicBrainz database, within few clicks;
-    - or create your own artist.
+**1. Create your own artist world map by adding artists**
+- Import artist from MusicBrainz database, within few clicks;
+- or create your own artist.
 
-2. Interact with the map
-    - A cluster view keeping your artist layout intact at any zoom level.
-    - Click an artist marker to see the profile.
-    - Toggle map tile styles and location views.
+**2. Interact with the map**
+- A cluster view keeping your artist layout intact at any zoom level.
+- Click an artist marker to see the profile.
+- Toggle map tile styles and location views.
 
-3. Interact with others
-    - Sneak peek at other users' maps.
-    - Copy other's artist collection to your map.
-    - Featured artists: randomly selected artists across the world, from different users.
+**3. Create your tour itinerary**
+   - Track your favorite artists' live schedule.
+   - Combining gigs, map and calendar, you can easily plan a concert itinerary for your next trip!
 
-4. Accessibility: The website is screen reader friendly. Create and manage your artist location set, even if you are unable to use a map.
+**4. Interact with others**
+- Sneak peek at other users' maps.
+- Copy other's artist collection to your map.
+- Featured artists: randomly selected artists across the world, from different users.
 
-## Upcoming
-1. Localization in Chinese and Japanese.
-2. Calendar integration, where you can track artists' live schedule and view them on a map. Great for planning your next live itinerary!
+**5. Accessibility:** The website is screen reader friendly. Create and manage your artist location set, even if you are unable to use a map.
+
 
 ## Tech Stack
 
@@ -41,4 +42,4 @@ Inspired by [Anitabi](https://www.anitabi.cn/map), an interactive map website vi
 - **Maps:** MapLibre GL, Carto basemaps, MapTiler
 - **Authentication:** Supabase Auth
 - **Image Storage:** Cloudinary
-- **Geocoding:** LocationIQ (Nominatim), Overpass
+- **Geocoding:** LocationIQ (Nominatim), Overpass, Geoapify
