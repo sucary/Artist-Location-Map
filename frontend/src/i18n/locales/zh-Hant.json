@@ -530,7 +530,8 @@
       "viewEvent": "查看活動",
       "starGig": "收藏演出",
       "unstarGig": "取消收藏演出",
-      "todayOnward": "今天起",
+      "todayOnward": "即將到來",
+      "upcomingGigs": "即將到來的演出",
       "allDates": "所有日期"
     },
     "fields": {
@@ -596,8 +597,19 @@
     "banner": {
       "label": "巡演模式",
       "default": "<count>{{count}}</count> 場即將到來的演出",
+      "allDates": "已記錄 <count>{{count}}</count> 場演出",
+      "singleDate": "{{from}}（<count>{{count}}</count> 場演出）",
       "interval": "{{from}} - {{to}}（<count>{{count}}</count> 場演出）",
-      "day": "已高亮 {{day}}（<count>{{count}}</count> 場演出）"
+      "day": "已高亮 {{day}}（<count>{{count}}</count> 場演出）",
+      "countLabel_one": "場演出",
+      "countLabel_other": "場演出",
+      "countLabelUpcoming_one": "場即將到來的演出",
+      "countLabelUpcoming_other": "場即將到來的演出",
+      "scope": {
+        "all": "全部",
+        "allTime": "全部時間",
+        "upcoming": "即將到來"
+      }
     },
     "panel": {
       "title": "演出",
@@ -681,6 +693,7 @@
       "nextMonth": "下個月",
       "today": "今天",
       "dateRange": "日期範圍",
+      "singleDate": "日期：{{date}}",
       "more": "+{{count}} 更多",
       "remainingEvents": "還有 {{count}} 個活動"
     },

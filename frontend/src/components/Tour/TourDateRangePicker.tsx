@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon } from '../icons/GeneralIcons';
+import { CalendarIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { formatLocalizedDate, getBrowserDateLocale } from '../../utils/dateFormatting';
 import {
     addMonths,
@@ -30,6 +30,8 @@ function formatNumericDate(value: string, fallback?: string): string {
     if (!date) return '';
     return formatLocalizedDate(date, { month: '2-digit', day: '2-digit' }, fallback);
 }
+
+const FUTURE_GIG_DATES_END = '9999-12-31';
 
 function getRangeFillClass(
     isStart: boolean,
@@ -69,6 +71,13 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
     });
     const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
+    const closePicker = useCallback(() => {
+        if (from && !to) {
+            onChange(from, from);
+        }
+        setIsOpen(false);
+    }, [from, onChange, to]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
@@ -77,12 +86,12 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 return;
             }
             if (rootRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
-            setIsOpen(false);
+            closePicker();
         };
 
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
-    }, []);
+    }, [closePicker]);
 
     const markInternalPointerDown = () => {
         clickStartedInsideRef.current = true;
@@ -125,6 +134,22 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
     const endDisplayValue = to ? formatNumericDate(to, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';
     const hasCompleteRange = Boolean(from && to);
     const calendarId = 'tour-date-range-calendar';
+    const todayValue = toDateValue(new Date());
+    const isTodayOnward = from === todayValue && to === FUTURE_GIG_DATES_END;
+    const isAllDates = !from && !to;
+    const isSingleDay = Boolean(from && to && from === to);
+    const isPendingSingleDay = Boolean(from && !to);
+    const selectedDateLabel = from ? formatNumericDate(from, i18n.resolvedLanguage || i18n.language || undefined) : '';
+    // Partial range selection needs room for the pending end date
+    const showRangeLayout = !isTodayOnward && !isAllDates && (isPendingSingleDay || (hasCompleteRange && (isOpen || !isSingleDay)));
+
+    const togglePicker = () => {
+        if (isOpen) {
+            closePicker();
+            return;
+        }
+        setIsOpen(true);
+    };
 
     const selectDate = (date: Date) => {
         const dateValue = toDateValue(date);
@@ -138,7 +163,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
     };
 
     const selectAllFutureDates = () => {
-        onChange(toDateValue(new Date()), '9999-12-31');
+        onChange(todayValue, FUTURE_GIG_DATES_END);
     };
 
     const selectAllDates = () => {
@@ -154,24 +179,43 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 aria-haspopup="dialog"
                 aria-controls={isOpen ? calendarId : undefined}
                 onPointerDown={markInternalPointerDown}
-                onClick={() => setIsOpen((open) => !open)}
-                className="group grid h-9 w-32 grid-cols-[48px_16px_48px] items-center justify-center text-center text-sm font-medium text-text transition-colors hover:text-primary focus:outline-none"
+                onClick={togglePicker}
+                className={`group grid h-9 w-32 items-center rounded-md font-medium text-text transition-colors hover:bg-surface-muted focus:outline-none app-dark:hover:bg-transparent app-dark:hover:text-primary ${
+                    showRangeLayout ? 'grid-cols-[16px_minmax(0,1fr)_6px_minmax(0,1fr)] gap-0.5 px-1.5 text-center text-[13px]' : 'grid-cols-[18px_minmax(0,1fr)] gap-1 px-2 text-left text-sm'
+                }`}
             >
-                {from ? (
-                    <span className="tabular-nums">
-                        {startDisplayValue}
+                <CalendarIcon className="h-4 w-4 justify-self-start text-text-secondary transition-colors app-dark:group-hover:text-primary" />
+                {isTodayOnward ? (
+                    <span className="truncate text-left">
+                        {t('tour.actions.todayOnward', { defaultValue: 'Today onward' })}
+                    </span>
+                ) : isAllDates ? (
+                    <span className="truncate text-left">
+                        {t('tour.actions.allDates', { defaultValue: 'All dates' })}
+                    </span>
+                ) : !isOpen && isSingleDay ? (
+                    <span className="truncate text-left tabular-nums">
+                        {t('tour.calendar.singleDate', { date: selectedDateLabel, defaultValue: `Date: ${selectedDateLabel}` })}
                     </span>
                 ) : (
-                    <span className="col-span-3 text-text-muted">
-                        {t('tour.calendar.selectDate')}
-                    </span>
-                )}
-                {hasCompleteRange && (
                     <>
-                        <span className="text-text-secondary transition-colors group-hover:text-primary">-</span>
-                        <span className="tabular-nums">
-                            {endDisplayValue}
-                        </span>
+                        {from ? (
+                            <span className={`${showRangeLayout ? 'whitespace-nowrap' : 'min-w-0 truncate'} tabular-nums`}>
+                                {startDisplayValue}
+                            </span>
+                        ) : (
+                            <span className={showRangeLayout ? 'col-span-3 text-left text-text-muted' : 'text-left text-text-muted'}>
+                                {t('tour.calendar.selectDate')}
+                            </span>
+                        )}
+                        {(hasCompleteRange || isPendingSingleDay) && (
+                            <>
+                                <span className="text-text-secondary transition-colors app-dark:group-hover:text-primary">-</span>
+                                <span className={`${showRangeLayout ? 'whitespace-nowrap' : 'min-w-0 truncate'} tabular-nums`}>
+                                    {endDisplayValue}
+                                </span>
+                            </>
+                        )}
                     </>
                 )}
             </button>
@@ -234,7 +278,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                                         const isPendingStart = !hasCompleteRange && dateValue === from;
                                         const inRange = isBetween(dateValue, from, to);
                                         const isCurrentMonth = date.getMonth() === month.getMonth();
-                                        const rangeClass = getRangeFillClass(isStart, isEnd, inRange, dayIndex);
+                                        const rangeClass = isStart && isEnd ? '' : getRangeFillClass(isStart, isEnd, inRange, dayIndex);
                                         const isSelectedInterval = isStart || isEnd || isPendingStart || inRange;
 
                                         return (
@@ -274,7 +318,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                                 onClick={selectAllFutureDates}
                                 className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
                             >
-                                {t('tour.actions.todayOnward', { defaultValue: 'Today onward' })}
+                                {t('tour.actions.upcomingGigs', { defaultValue: 'Upcoming gigs' })}
                             </button>
                             <button
                                 type="button"
@@ -286,7 +330,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                         </div>
                         <button
                             type="button"
-                            onClick={() => setIsOpen(false)}
+                            onClick={closePicker}
                             className="rounded-lg bg-primary-contrast px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                         >
                             {t('common.apply', { defaultValue: 'Apply' })}

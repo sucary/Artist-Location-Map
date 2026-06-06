@@ -231,11 +231,11 @@ export function MapControls({
         if (!gigFilterOpen || !gigFilterButtonRef.current) return;
 
         const rect = gigFilterButtonRef.current.getBoundingClientRect();
-        const gap = 10;
+        const gap = 8;
         const availableBelow = window.innerHeight - rect.bottom - gap;
         const availableAbove = rect.top - gap;
         const opensAbove = availableBelow < 300 && availableAbove > availableBelow;
-        const maxHeight = Math.max(280, Math.min(420, opensAbove ? availableAbove : availableBelow));
+        const maxHeight = Math.max(280, opensAbove ? availableAbove : availableBelow);
         const width = Math.min(window.innerWidth - 16, 288);
         const right = Math.max(8, window.innerWidth - rect.right);
 
@@ -289,11 +289,11 @@ export function MapControls({
                                 aria-expanded={gigFilterOpen}
                                 aria-label={t('map.buttons.mapControls.gigFilter.open')}
                                 onClick={() => setGigFilterOpen((open) => !open)}
-                                className="flex h-9 w-32 items-center justify-center gap-2 rounded-md bg-surface text-sm font-medium text-text shadow-md transition-colors hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                                className="grid h-9 w-32 grid-cols-[18px_minmax(0,1fr)] items-center gap-1 rounded-md bg-surface px-2 text-sm font-medium text-text shadow-md transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-surface app-dark:hover:text-primary"
                                 title={t('map.buttons.mapControls.gigFilter.open')}
                             >
-                                <FilterIcon className="h-4 w-4" />
-                                <span className="truncate">{t('map.buttons.mapControls.gigFilter.title')}</span>
+                                <FilterIcon className="h-4 w-4 justify-self-start" />
+                                <span className="min-w-0 truncate text-left">{t('map.buttons.mapControls.gigFilter.title')}</span>
                             </button>
 
                             {gigFilterOpen && createPortal(
@@ -324,7 +324,7 @@ export function MapControls({
                                                 placeholder={t('map.buttons.mapControls.gigFilter.allArtists')}
                                                 ariaLabel={t('map.buttons.mapControls.gigFilter.artistLabel')}
                                                 emptyLabel={t('tour.form.noArtistsFound')}
-                                                dropdownMaxHeight={160}
+                                                dropdownMaxHeight={gigFilterDropdownPosition.maxHeight}
                                                 onChange={(artistId) => updateGigFilter({ artistId })}
                                             />
                                         </div>
@@ -348,7 +348,7 @@ export function MapControls({
                                                 value={gigFilter.tourId}
                                                 placeholder={t('map.buttons.mapControls.gigFilter.allTours')}
                                                 ariaLabel={t('map.buttons.mapControls.gigFilter.tourLabel')}
-                                                dropdownMaxHeight={160}
+                                                dropdownMaxHeight={gigFilterDropdownPosition.maxHeight}
                                                 onChange={(tourId) => updateGigFilter({ tourId })}
                                             />
                                         </div>
@@ -364,7 +364,7 @@ export function MapControls({
                                     <div role="group" aria-label={t('map.buttons.mapControls.gigFilter.starredLabel')} className="relative grid grid-cols-2 overflow-hidden rounded-md bg-surface">
                                         <span
                                             aria-hidden="true"
-                                            className={`absolute inset-y-0 z-0 w-1/2 rounded-md bg-primary-contrast transition-transform duration-200 ease-out ${gigFilter.starredOnly ? 'translate-x-full' : 'translate-x-0'}`}
+                                            className={`absolute inset-y-0 z-0 w-1/2 bg-primary-contrast transition-transform duration-200 ease-out ${gigFilter.starredOnly ? 'translate-x-full rounded-r-md' : 'translate-x-0 rounded-l-md'}`}
                                         />
                                         <button
                                             type="button"

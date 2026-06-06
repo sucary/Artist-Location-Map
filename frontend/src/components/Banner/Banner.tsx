@@ -8,11 +8,14 @@ interface BannerProps {
     label?: ReactNode;
     content: ReactNode;
     action: BannerAction;
+    className?: string;
+    centerContent?: boolean;
+    contentClassName?: string;
 }
 
-export function Banner({ label, content, action }: BannerProps) {
+export function Banner({ label, content, action, className = '', centerContent = false, contentClassName = 'truncate whitespace-nowrap text-sm text-text' }: BannerProps) {
     return (
-        <div className={`relative max-w-full font-sans ${label ? 'pt-[22px]' : ''}`}>
+        <div className={`relative max-w-full font-sans ${label ? 'pt-[22px]' : ''} ${className}`}>
             {label && (
                 <div className="absolute left-1/2 top-0 z-20 max-w-[70%] -translate-x-1/2">
                     <span className="block truncate rounded-t-lg border-2 border-b-0 border-primary-contrast bg-primary-contrast px-4 py-1 text-center text-sm font-medium leading-none text-white">
@@ -21,10 +24,10 @@ export function Banner({ label, content, action }: BannerProps) {
                 </div>
             )}
             <div role="status" className="relative z-10 flex min-h-10 max-w-full items-stretch overflow-hidden bg-surface border-2 border-[var(--color-primary)] rounded-lg shadow-md">
-                <div className="min-w-0 flex-1 p-2">
-                    <span className="block truncate whitespace-nowrap text-sm text-text">
+                <div className={`min-w-0 flex-1 p-2 ${centerContent ? 'text-center' : ''}`}>
+                    <div className={`block ${contentClassName}`}>
                         {content}
-                    </span>
+                    </div>
                 </div>
                 <div aria-hidden="true" className="h-6 w-px shrink-0 self-center bg-border" />
                 {action.type === 'text' ? (

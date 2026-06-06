@@ -530,7 +530,8 @@
       "viewEvent": "View event",
       "starGig": "Star gig",
       "unstarGig": "Unstar gig",
-      "todayOnward": "Today onward",
+      "todayOnward": "Upcoming",
+      "upcomingGigs": "Upcoming gigs",
       "allDates": "All dates"
     },
     "fields": {
@@ -596,8 +597,19 @@
     "banner": {
       "label": "Tour mode",
       "default": "<count>{{count}}</count> upcoming gigs",
+      "allDates": "<count>{{count}}</count> tracked gigs",
+      "singleDate": "{{from}} (<count>{{count}}</count> gigs)",
       "interval": "{{from}} - {{to}} (<count>{{count}}</count> gigs)",
-      "day": "{{day}} highlighted (<count>{{count}}</count> gigs)"
+      "day": "{{day}} highlighted (<count>{{count}}</count> gigs)",
+      "countLabel_one": "gig",
+      "countLabel_other": "gigs",
+      "countLabelUpcoming_one": "upcoming gig",
+      "countLabelUpcoming_other": "upcoming gigs",
+      "scope": {
+        "all": "All",
+        "allTime": "All time",
+        "upcoming": "Upcoming"
+      }
     },
     "panel": {
       "title": "Gigs",
@@ -681,6 +693,7 @@
       "nextMonth": "Next month",
       "today": "Today",
       "dateRange": "Date range",
+      "singleDate": "Date: {{date}}",
       "more": "+{{count}} more",
       "remainingEvents": "{{count}} more events"
     },

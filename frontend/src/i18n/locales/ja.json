@@ -530,7 +530,8 @@
       "viewEvent": "イベントを見る",
       "starGig": "お気に入りに追加",
       "unstarGig": "お気に入りから削除",
-      "todayOnward": "今日以降",
+      "todayOnward": "今後",
+      "upcomingGigs": "今後の公演",
       "allDates": "すべての日付"
     },
     "fields": {
@@ -596,8 +597,19 @@
     "banner": {
       "label": "ツアーモード",
       "default": "今後<count>{{count}}</count>件の公演",
+      "allDates": "記録中の公演 <count>{{count}}</count>件",
+      "singleDate": "{{from}}（<count>{{count}}</count>件の公演）",
       "interval": "{{from}} - {{to}}（<count>{{count}}</count>件の公演）",
-      "day": "{{day}}をハイライト（<count>{{count}}</count>件の公演）"
+      "day": "{{day}}をハイライト（<count>{{count}}</count>件の公演）",
+      "countLabel_one": "公演",
+      "countLabel_other": "公演",
+      "countLabelUpcoming_one": "今後の公演",
+      "countLabelUpcoming_other": "今後の公演",
+      "scope": {
+        "all": "すべて",
+        "allTime": "全期間",
+        "upcoming": "今後"
+      }
     },
     "panel": {
       "title": "公演",
@@ -681,6 +693,7 @@
       "nextMonth": "次の月",
       "today": "今日",
       "dateRange": "日付範囲",
+      "singleDate": "日付: {{date}}",
       "more": "+{{count}} 件",
       "remainingEvents": "他 {{count}} 件のイベント"
     },
