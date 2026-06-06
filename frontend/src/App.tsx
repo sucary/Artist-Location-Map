@@ -244,7 +244,9 @@ function App() {
 
     const gigQueryParams = tourMode.interval
         ? { from: tourMode.interval.from, to: tourMode.interval.to }
-        : undefined;
+        : tourMode.active
+            ? ALL_GIG_DATES
+            : undefined;
     const { data: tourGigs = [] } = useQuery({
         queryKey: ['gigs', gigQueryParams],
         queryFn: () => getGigs(gigQueryParams),
@@ -522,6 +524,16 @@ function App() {
         updateTourParams({ active: true, from: null, to: null, day: null });
     };
 
+    const showSavedGigDateIfHidden = (date: string) => {
+        if (!tourMode.active) return;
+        if (tourMode.selectedDay && tourMode.selectedDay === date) return;
+        if (!tourMode.selectedDay && (!tourMode.interval || (date >= tourMode.interval.from && date <= tourMode.interval.to))) return;
+
+        // Saved gigs outside the active date filter should remain visible after submit
+        setRememberedTourMode({ interval: { from: date, to: date }, selectedDay: null });
+        updateTourParams({ active: true, from: date, to: date, day: null });
+    };
+
     const handleAddGigClick = (initialDate = '') => {
         if (!user) {
             setShowAuthModal(true);
@@ -622,6 +634,7 @@ function App() {
         }
         await queryClient.invalidateQueries({ queryKey: ['gigs'] });
         await queryClient.invalidateQueries({ queryKey: ['tours'] });
+        showSavedGigDateIfHidden(input.date);
         handleCloseGigForm();
     };
 

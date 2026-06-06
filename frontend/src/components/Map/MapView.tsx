@@ -43,6 +43,8 @@ import { GigCard } from '../Tour/GigCard';
 
 // Interactive artist map shell and control wiring
 
+const ALL_GIG_DATES = { from: '0001-01-01', to: '9999-12-31' };
+
 type MarkerWithUpdate = maplibregl.Marker & {
     // Reach MapLibre's private updater to follow inertial tile movement.
     _update?: (event?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => void;
@@ -174,7 +176,9 @@ export default function MapView({
 
     const gigQueryParams = tourMode?.interval
         ? { from: tourMode.interval.from, to: tourMode.interval.to }
-        : undefined;
+        : tourModeActive
+            ? ALL_GIG_DATES
+            : undefined;
 
     const { data: gigs, isError: gigsError } = useQuery({
         queryKey: ['gigs', gigQueryParams],

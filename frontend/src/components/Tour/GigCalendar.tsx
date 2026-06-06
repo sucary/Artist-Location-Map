@@ -116,6 +116,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     const { i18n, t } = useTranslation();
     const titleButtonRef = useRef<HTMLButtonElement>(null);
     const datePickerRef = useRef<HTMLDivElement>(null);
+    const yearPickerRef = useRef<HTMLDivElement>(null);
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
     const initialMonth = parseDateValue(selectedDay) ?? parseDateValue(gigs[0]?.date) ?? new Date();
@@ -158,12 +159,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     const monthNames = useMemo(() => (
         Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(new Date(2026, index, 1)))
     ), [dateLocale]);
-    const pickerYears = useMemo(() => {
-        const baseYear = visibleMonth.getFullYear() - 4;
-
-        // Year grid centers near the currently visible calendar year
-        return Array.from({ length: 12 }, (_, index) => baseYear + index);
-    }, [visibleMonth]);
+    const pickerYears = useMemo(() => Array.from({ length: 101 }, (_, index) => visibleMonth.getFullYear() - 50 + index), [visibleMonth]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -203,6 +199,13 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
             maxHeight: Math.max(360, Math.min(560, availableBelow)),
         });
     }, [isDatePickerOpen, datePickerMode, visibleMonth]);
+
+    useEffect(() => {
+        if (!isDatePickerOpen || datePickerMode !== 'year' || !yearPickerRef.current) return;
+
+        const selectedYearButton = yearPickerRef.current.querySelector<HTMLButtonElement>('[data-selected-year="true"]');
+        selectedYearButton?.scrollIntoView({ block: 'center' });
+    }, [datePickerMode, isDatePickerOpen, pickerYears]);
 
     const moveMonth = (offset: number) => {
         setDayPopover(null);
@@ -442,11 +445,12 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
 
                                     {datePickerMode === 'year' ? (
                                         <>
-                                            <div className="mb-3 grid grid-cols-3 gap-y-2 text-center">
+                                            <div ref={yearPickerRef} className="mb-3 grid max-h-48 grid-cols-3 gap-y-2 overflow-y-auto pr-1 text-center">
                                                 {pickerYears.map((year) => (
                                                     <button
                                                         key={year}
                                                         type="button"
+                                                        data-selected-year={year === visibleMonth.getFullYear() ? 'true' : undefined}
                                                         onClick={() => handleYearSelect(year)}
                                                         className={`mx-auto grid h-10 min-w-16 place-items-center rounded-full px-3 text-base font-medium transition-colors ${
                                                             year === visibleMonth.getFullYear()
@@ -482,14 +486,14 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                                     <button
                                         type="button"
                                         onClick={() => setIsDatePickerOpen(false)}
-                                        className="rounded-md px-3 py-2 text-sm font-semibold text-primary-contrast transition-colors hover:bg-surface-muted"
+                                        className="rounded-md px-3 py-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
                                     >
                                         {t('common.cancel')}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleToday}
-                                        className="rounded-md px-3 py-2 text-sm font-semibold text-primary-contrast transition-colors hover:bg-surface-muted"
+                                        className="rounded-md px-3 py-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
                                     >
                                         {t('tour.calendar.today')}
                                     </button>

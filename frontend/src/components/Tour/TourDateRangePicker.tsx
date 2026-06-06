@@ -32,6 +32,7 @@ function formatNumericDate(value: string, fallback?: string): string {
 }
 
 const FUTURE_GIG_DATES_END = '9999-12-31';
+const ALL_GIG_DATES_START = '0001-01-01';
 
 function getRangeFillClass(
     isStart: boolean,
@@ -272,11 +273,14 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                                 <div className="grid grid-cols-7">
                                     {getCalendarDays(month).map((date, dayIndex) => {
                                         const dateValue = toDateValue(date);
-                                        const hasCompleteRange = Boolean(from && to);
-                                        const isStart = hasCompleteRange && dateValue === from;
-                                        const isEnd = hasCompleteRange && dateValue === to;
+                                        // All-time mode uses sentinel bounds for visual range coverage
+                                        const visualFrom = isAllDates ? ALL_GIG_DATES_START : from;
+                                        const visualTo = isAllDates ? FUTURE_GIG_DATES_END : to;
+                                        const hasCompleteRange = Boolean(visualFrom && visualTo);
+                                        const isStart = hasCompleteRange && dateValue === visualFrom;
+                                        const isEnd = hasCompleteRange && dateValue === visualTo;
                                         const isPendingStart = !hasCompleteRange && dateValue === from;
-                                        const inRange = isBetween(dateValue, from, to);
+                                        const inRange = isBetween(dateValue, visualFrom, visualTo);
                                         const isCurrentMonth = date.getMonth() === month.getMonth();
                                         const rangeClass = isStart && isEnd ? '' : getRangeFillClass(isStart, isEnd, inRange, dayIndex);
                                         const isSelectedInterval = isStart || isEnd || isPendingStart || inRange;
