@@ -2,14 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { CalendarIcon, ChevronDownIcon } from '../icons/GeneralIcons';
-import { formatLocalizedDate, getBrowserDateLocale } from '../../utils/dateFormatting';
+import { formatLocalizedDate, getBrowserDateLocale, getLocalizedWeekdayLabels } from '../../utils/dateFormatting';
 import {
     addMonths,
     getCalendarDays,
     getMonthStart,
     parseDateValue,
     toDateValue,
-    WEEK_START,
 } from './GigDatePicker';
 
 interface TourDateRangePickerProps {
@@ -70,7 +69,8 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
         maxHeight: 560,
         opensAbove: true,
     });
-    const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const locale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
 
     const closePicker = useCallback(() => {
         if (from && !to) {
@@ -121,14 +121,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
         });
     }, [isOpen, visibleMonth]);
 
-    const weekdays = useMemo(() => {
-        const base = new Date(2024, 0, WEEK_START);
-        return Array.from({ length: 7 }, (_, index) => {
-            const day = new Date(base);
-            day.setDate(base.getDate() + index);
-            return new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(day);
-        });
-    }, [locale]);
+    const weekdays = useMemo(() => getLocalizedWeekdayLabels(dateFallback, locale, 'narrow'), [dateFallback, locale]);
 
     const months = useMemo(() => [visibleMonth, addMonths(visibleMonth, 1)], [visibleMonth]);
     const startDisplayValue = from ? formatNumericDate(from, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';

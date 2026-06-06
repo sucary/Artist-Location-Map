@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { CalendarIcon, ChevronDownIcon } from '../icons/GeneralIcons';
-import { getBrowserDateLocale } from '../../utils/dateFormatting';
+import { getBrowserDateLocale, getLocalizedWeekdayLabels } from '../../utils/dateFormatting';
 
 // Single-date picker and shared calendar primitives
 
@@ -74,7 +74,8 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
     const [isOpen, setIsOpen] = useState(false);
     const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(selectedDate ?? today));
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 420 });
-    const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
+    const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
+    const locale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -109,14 +110,7 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
         });
     }, [disabled, isOpen, visibleMonth]);
 
-    const weekdays = useMemo(() => {
-        const base = new Date(2024, 0, WEEK_START);
-        return Array.from({ length: 7 }, (_, index) => {
-            const day = new Date(base);
-            day.setDate(base.getDate() + index);
-            return new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(day);
-        });
-    }, [locale]);
+    const weekdays = useMemo(() => getLocalizedWeekdayLabels(dateFallback, locale, 'narrow'), [dateFallback, locale]);
 
     const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
     const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(visibleMonth);

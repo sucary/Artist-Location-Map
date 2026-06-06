@@ -393,7 +393,7 @@ export function GigPanel({
                     }
                 }}
             >
-                <div className={`group relative flex min-h-14 items-center px-4 py-2 transition-colors duration-150 focus-within:bg-surface-secondary/30 ${isExpanded ? 'bg-primary text-white hover:bg-primary focus-within:bg-primary' : 'hover:bg-surface-secondary/30'}`}>
+                <div className={`group relative flex min-h-14 items-center px-4 py-2 transition-colors duration-150 focus-within:bg-surface-secondary/30 ${isExpanded ? '!bg-primary text-white hover:!bg-primary focus-within:!bg-primary' : 'hover:bg-surface-secondary/30'}`}>
                     <button
                         type="button"
                         aria-expanded={isExpanded}
@@ -419,7 +419,7 @@ export function GigPanel({
                 </div>
                 {isExpanded && (
                     <div className="border-t border-border/60 bg-surface-secondary/20">
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-2 border-b border-border/60 px-4 py-3">
+                        <div className="grid grid-cols-[minmax(8.5rem,1fr)_minmax(0,2fr)] gap-2 border-b border-border/60 px-4 py-3">
                             {onDeleteTour && (
                                 <button
                                     type="button"
@@ -428,7 +428,7 @@ export function GigPanel({
                                     className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-surface-muted px-3 text-sm font-semibold text-text transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white app-dark:bg-surface-secondary app-dark:hover:bg-[rgb(220,38,38)] app-dark:hover:!text-white"
                                 >
                                     <TrashIcon className="h-4 w-4" />
-                                    {t('tour.management.deleteAction')}
+                                    <span className="whitespace-nowrap">{t('tour.management.deleteAction')}</span>
                                 </button>
                             )}
                             {onAddGigToTour && (

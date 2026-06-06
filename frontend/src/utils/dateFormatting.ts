@@ -1,11 +1,32 @@
 // Browser-localized date and time formatting
 
+const JAPANESE_WEEKDAY_LABELS = ['\u6708', '\u706b', '\u6c34', '\u6728', '\u91d1', '\u571f', '\u65e5'];
+
 export function getBrowserDateLocale(fallback?: string): Intl.LocalesArgument {
     if (typeof navigator === 'undefined') return fallback;
 
-    // Browser preference order controls localized date shape
+    // App language takes priority so date formatting matches the UI
+    if (fallback) {
+        return [fallback, ...(navigator.languages || [navigator.language])];
+    }
+
     if (navigator.languages?.length) return [...navigator.languages];
-    return navigator.language || fallback;
+    return navigator.language;
+}
+
+export function getLocalizedWeekdayLabels(language: string | undefined, locale: Intl.LocalesArgument, width: 'narrow' | 'short' = 'short'): string[] {
+    const normalizedLanguage = language?.toLowerCase() ?? '';
+    if (normalizedLanguage.startsWith('ja')) {
+        // Japanese weekday labels follow app locale, not browser fallback order
+        return JAPANESE_WEEKDAY_LABELS;
+    }
+
+    const monday = new Date(2024, 0, 1);
+    return Array.from({ length: 7 }, (_, index) => {
+        const day = new Date(monday);
+        day.setDate(monday.getDate() + index);
+        return new Intl.DateTimeFormat(locale, { weekday: width }).format(day);
+    });
 }
 
 export function formatLocalizedDate(value: Date | string, options?: Intl.DateTimeFormatOptions, fallback?: string): string {

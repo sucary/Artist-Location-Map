@@ -17,8 +17,8 @@ export function Banner({ label, content, action, className = '', centerContent =
     return (
         <div className={`relative max-w-full font-sans ${label ? 'pt-[22px]' : ''} ${className}`}>
             {label && (
-                <div className="absolute left-1/2 top-0 z-20 max-w-[70%] -translate-x-1/2">
-                    <span className="block truncate rounded-t-lg border-2 border-b-0 border-primary-contrast bg-primary-contrast px-4 py-1 text-center text-sm font-medium leading-none text-white">
+                <div className="absolute left-1/2 top-0 z-20 max-w-[calc(100%-1rem)] -translate-x-1/2">
+                    <span className="block whitespace-nowrap rounded-t-lg border-2 border-b-0 border-primary-contrast bg-primary-contrast px-4 py-1 text-center text-sm font-medium leading-none text-white">
                         {label}
                     </span>
                 </div>

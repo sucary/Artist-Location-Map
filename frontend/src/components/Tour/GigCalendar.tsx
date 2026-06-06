@@ -4,7 +4,7 @@ import type { Gig } from '../../types/gig';
 import { CloseButton } from '../ui';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, PlusIcon, StarIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
-import { getBrowserDateLocale } from '../../utils/dateFormatting';
+import { getBrowserDateLocale, getLocalizedWeekdayLabels } from '../../utils/dateFormatting';
 import { getGigProvinceColor, getGigProvinceColorMap } from '../../utils/gigProvinceColors';
 
 // Month calendar for gig events
@@ -128,16 +128,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     const dayPopoverRef = useRef<HTMLDivElement>(null);
     const todayValue = dayKey(new Date());
     const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
-    const weekdayLabels = useMemo(() => {
-        const monday = new Date(2026, 5, 1);
-
-        // Fixed Monday anchor keeps weekday order independent of current date
-        return Array.from({ length: 7 }, (_, index) => {
-            const date = new Date(monday);
-            date.setDate(monday.getDate() + index);
-            return new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(date);
-        });
-    }, [dateLocale]);
+    const weekdayLabels = useMemo(() => getLocalizedWeekdayLabels(dateFallback, dateLocale, 'short'), [dateFallback, dateLocale]);
     const gigsByDate = useMemo(() => {
         const grouped = new Map<string, Gig[]>();
 

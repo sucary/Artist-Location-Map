@@ -232,7 +232,7 @@
       "resultsLabel": "アーティスト検索結果",
       "searchingArtists": "アーティストを検索中",
       "artists": "アーティスト",
-      "noArtistFoundTry": "アーティストが見つかりません。試す:",
+      "noArtistFoundTry": "アーティストが見つかりません。試す",
       "noArtistFound": "アーティストが見つかりません",
       "moreArtists": "さらにアーティストを表示",
       "onlineResults": "詳細検索結果",
@@ -425,13 +425,13 @@
         "zoomIn": "拡大",
         "zoomOut": "縮小",
         "gigFilter": {
-          "open": "地図の公演を絞り込み",
-          "title": "ライブフィルター",
+          "open": "絞り込み",
+          "title": "絞り込み",
           "starredLabel": "公演の表示",
-          "allGigs": "すべての公演",
+          "allGigs": "全公演",
           "starredGigs": "お気に入り",
           "tourLabel": "ツアー",
-          "all": "すべて",
+          "all": "全て",
           "allTours": "すべてのツアー",
           "artistLabel": "アーティスト",
           "allArtists": "すべてのアーティスト"
@@ -530,7 +530,7 @@
       "viewEvent": "イベントを見る",
       "starGig": "お気に入りに追加",
       "unstarGig": "お気に入りから削除",
-      "todayOnward": "今後",
+      "todayOnward": "今後の公演",
       "upcomingGigs": "今後の公演",
       "allDates": "すべての日付"
     },
@@ -597,14 +597,14 @@
     "banner": {
       "label": "ツアーモード",
       "default": "今後<count>{{count}}</count>件の公演",
-      "allDates": "記録中の公演 <count>{{count}}</count>件",
+      "allDates": "全公演 <count>{{count}}</count>件",
       "singleDate": "{{from}}（<count>{{count}}</count>件の公演）",
       "interval": "{{from}} - {{to}}（<count>{{count}}</count>件の公演）",
       "day": "{{day}}をハイライト（<count>{{count}}</count>件の公演）",
-      "countLabel_one": "公演",
-      "countLabel_other": "公演",
-      "countLabelUpcoming_one": "今後の公演",
-      "countLabelUpcoming_other": "今後の公演",
+      "countLabel_one": "件の公演",
+      "countLabel_other": "件の公演",
+      "countLabelUpcoming_one": "件の今後の公演",
+      "countLabelUpcoming_other": "件の今後の公演",
       "scope": {
         "all": "すべて",
         "allTime": "全期間",
@@ -695,7 +695,7 @@
       "dateRange": "日付範囲",
       "singleDate": "日付: {{date}}",
       "more": "+{{count}} 件",
-      "remainingEvents": "他 {{count}} 件のイベント"
+      "remainingEvents": "他 {{count}} 件の公演"
     },
     "venueSearch": {
       "coordsPlaceholder": "緯度、経度",
@@ -726,9 +726,9 @@
         "message_other": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーします",
         "skipExisting": "すでにあなたの地図にあるアーティストはスキップされます",
         "successTitle": "コレクションをコピーしました",
-        "successMessage": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
-        "successMessage_one": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
-        "successMessage_other": "{{copied}}組のアーティストをコピーしました。{{skipped}}件をスキップしました。",
+        "successMessage": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
+        "successMessage_one": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
+        "successMessage_other": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
         "errorTitle": "コレクションをコピーできませんでした",
         "errorMessage": "アーティストコレクションのコピーに失敗しました。もう一度お試しください。"
       }

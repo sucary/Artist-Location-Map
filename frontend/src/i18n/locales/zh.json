@@ -530,7 +530,7 @@
       "viewEvent": "查看活动",
       "starGig": "收藏演出",
       "unstarGig": "取消收藏演出",
-      "todayOnward": "即将到来",
+      "todayOnward": "近期演出",
       "upcomingGigs": "即将到来的演出",
       "allDates": "所有日期"
     },
@@ -607,7 +607,7 @@
       "countLabelUpcoming_other": "场即将到来的演出",
       "scope": {
         "all": "全部",
-        "allTime": "全部时间",
+        "allTime": "所有时间",
         "upcoming": "即将到来"
       }
     },
