@@ -1,7 +1,16 @@
 import { useEffect, useRef } from 'react';
 
-export function useDialogAccessibility(onClose: () => void) {
-    const dialogRef = useRef<HTMLDivElement>(null);
+const focusableSelector = [
+    'button:not(:disabled)',
+    '[href]',
+    'input:not(:disabled)',
+    'select:not(:disabled)',
+    'textarea:not(:disabled)',
+    '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+export function useDialogAccessibility<T extends HTMLElement = HTMLDivElement>(onClose: () => void) {
+    const dialogRef = useRef<T>(null);
     const onCloseRef = useRef(onClose);
     const previousFocusRef = useRef<HTMLElement | null>(
         typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -16,9 +25,10 @@ export function useDialogAccessibility(onClose: () => void) {
         const previousFocus = previousFocusRef.current;
         if (!dialog) return;
 
-        // Preserve explicit autofocus inside the modal.
         if (!dialog.contains(document.activeElement)) {
-            dialog.focus();
+            const initialFocus = dialog.querySelector<HTMLElement>('[autofocus], [data-autofocus="true"]') ?? dialog.querySelector<HTMLElement>(focusableSelector);
+            // Prefer actionable focus while keeping empty dialogs reachable
+            (initialFocus ?? dialog).focus();
         }
 
         return () => {
@@ -40,9 +50,14 @@ export function useDialogAccessibility(onClose: () => void) {
             }
 
             if (e.key === 'Tab') {
-                const focusable = dialog.querySelectorAll<HTMLElement>(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
+                const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+                    .filter((element) => element.offsetParent !== null || element === document.activeElement);
+                if (focusable.length === 0) {
+                    e.preventDefault();
+                    dialog.focus();
+                    return;
+                }
+
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
 

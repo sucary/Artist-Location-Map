@@ -56,7 +56,7 @@ export function ConfirmDialog({
     const { t } = useTranslation();
     // Passive dismissal must never confirm an action.
     const handleDismiss = onCancel ?? (() => undefined);
-    const dialogRef = useDialogAccessibility(handleDismiss);
+    const dialogRef = useDialogAccessibility<HTMLElement>(handleDismiss);
     const effectiveConfirmLabel = confirmLabel ?? t('common.ok');
     const titleId = useId();
     const contentId = useId();

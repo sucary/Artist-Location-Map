@@ -26,23 +26,23 @@ const actionIcon: Record<InlineAction['key'], ReactNode> = {
 
 const getActionClassName = (action: InlineAction) => {
     if (action.key === 'delete') {
-        return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white';
+        return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface';
     }
 
-    return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary';
+    return 'grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-surface-secondary';
 };
 
 export function InlineActionMenu({ actions, className = 'right-0 top-1/2 -translate-y-1/2', alwaysVisible = false }: InlineActionMenuProps) {
     if (actions.length === 0) return null;
 
     return (
-        <div className={`${alwaysVisible ? 'inline-flex' : 'pointer-events-none absolute inline-flex opacity-0 group-hover:pointer-events-auto group-hover:opacity-100'} items-center rounded-full bg-surface-muted p-0.5 transition-opacity ${className}`}>
+        <div className={`${alwaysVisible ? 'inline-flex' : 'pointer-events-none absolute inline-flex opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'} items-center rounded-full bg-surface-muted p-0.5 transition-opacity ${className}`}>
             {actions.map((action) => (
                 <button
                     key={action.key}
                     type="button"
                     aria-label={action.label}
-                    title={action.title}
+                    title={action.title ?? action.label}
                     onClick={action.onClick}
                     data-action={action.dataAction}
                     className={getActionClassName(action)}

@@ -54,6 +54,8 @@ const YearSelect = ({
         const match = years.find(y => y.toString().startsWith(inputValue));
         return match || null;
     }, [inputValue, years, minYear, maxYear]);
+    const activeYear = getFocusYear();
+    const activeOptionId = isOpen && activeYear ? `${listboxId}-${activeYear}` : undefined;
 
     // Update dropdown position
     useEffect(() => {
@@ -126,6 +128,13 @@ const YearSelect = ({
                     handleSelect(focusYear);
                 }
             }
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const currentYear = getFocusYear() ?? value ?? maxYear;
+            const nextYear = e.key === 'ArrowDown' ? currentYear - 1 : currentYear + 1;
+            const clampedYear = Math.min(maxYear, Math.max(minYear, nextYear));
+            setInputValue(clampedYear.toString());
+            setIsOpen(true);
         } else if (e.key === 'Escape') {
             setIsOpen(false);
         }
@@ -155,6 +164,7 @@ const YearSelect = ({
                     ref={inputRef}
                     role="combobox"
                     aria-autocomplete="list"
+                    aria-activedescendant={activeOptionId}
                     aria-controls={isOpen ? listboxId : undefined}
                     aria-expanded={isOpen}
                     aria-haspopup="listbox"
@@ -209,6 +219,7 @@ const YearSelect = ({
                         return (
                             <button
                                 key={year}
+                                id={`${listboxId}-${year}`}
                                 data-year={year}
                                 type="button"
                                 role="option"

@@ -205,19 +205,6 @@ const ArtistList = ({
         });
     };
 
-    const handleRowKeyDown = (artist: Artist, e: React.KeyboardEvent<HTMLElement>) => {
-        if (e.key !== 'Enter' && e.key !== ' ') {
-            return;
-        }
-
-        e.preventDefault();
-        positionArtistCard(e.currentTarget);
-        setSelectedArtistState({
-            artist: selectedArtist?.id === artist.id ? null : artist,
-            closeSignal: closeSelectedSignal
-        });
-    };
-
     const handleArtistCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!selectedArtist) return;
 
@@ -398,54 +385,45 @@ const ArtistList = ({
                                 const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
 
                                 return (
-                                <li key={artist.id} className="group transition-colors duration-150 hover:bg-surface-secondary/60">
-                                    <div
-                                        role="button"
+                                <li key={artist.id} className={`group flex items-center transition-colors duration-150 hover:bg-surface-secondary/60 focus-within:bg-surface-secondary/60 ${isActive ? 'bg-surface-secondary/50' : ''}`}>
+                                    <button
+                                        type="button"
                                         aria-current={isActive ? 'true' : undefined}
-                                        tabIndex={0}
+                                        aria-expanded={isActive}
                                         onClick={(e) => handleRowClick(artist, e)}
-                                        onKeyDown={(e) => handleRowKeyDown(artist, e)}
-                                        className={`w-full flex items-center gap-3 px-5 py-3 focus:outline-none cursor-pointer ${isActive ? 'bg-surface-secondary/50' : ''}`}
+                                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 px-5 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                                     >
                                         {/* Avatar */}
                                         <img
                                             src={getAvatarUrl(artist.sourceImage, artist.avatarCrop) || getPlaceholderUrl(artist.name)}
-                                            alt={artist.name}
+                                            alt=""
                                             className="w-10 h-10 rounded-full object-cover border border-border"
                                         />
                                         {/* Info */}
                                         <div className="flex-1 min-w-0 text-left overflow-hidden">
-                                            <p
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="w-fit max-w-full truncate whitespace-nowrap text-sm font-medium text-text select-text cursor-text"
-                                            >
+                                            <p className="w-fit max-w-full truncate whitespace-nowrap text-sm font-medium text-text">
                                                 {displayName.primary}
                                             </p>
                                             {displayName.secondary && (
-                                                <p
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
-                                                >
+                                                <p className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary">
                                                     {displayName.secondary}
                                                 </p>
                                             )}
-                                            <p
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary select-text cursor-text"
-                                            >
+                                            <p className="w-fit max-w-full truncate whitespace-nowrap text-xs text-text-secondary">
                                                 {formatLocationLocalized(artist.activeLocation, locationLanguage)}
                                             </p>
                                         </div>
+                                    </button>
                                         {/* Actions */}
                                         {(onNavigateToArtist || onEditArtist || onDeleteArtist) && (
-                                            <div className="inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <div className="mr-5 inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                                                 {onNavigateToArtist && (
                                                     <button
                                                         type="button"
                                                         aria-label={t('artistList.actions.goToLocation')}
                                                         onClick={(e) => { e.stopPropagation(); onNavigateToArtist(artist); }}
                                                         title={t('artistList.actions.goToLocation')}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-surface-secondary"
                                                     >
                                                         <MapPinIcon className="h-4 w-4" />
                                                     </button>
@@ -454,8 +432,9 @@ const ArtistList = ({
                                                     <button
                                                         type="button"
                                                         aria-label={t('artistList.actions.edit')}
+                                                        title={t('artistList.actions.editShort')}
                                                         onClick={(e) => { e.stopPropagation(); onEditArtist(artist); }}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text app-dark:hover:bg-surface-secondary"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-border hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface app-dark:hover:bg-surface-secondary"
                                                     >
                                                         <EditIcon className="h-4 w-4" />
                                                     </button>
@@ -466,14 +445,13 @@ const ArtistList = ({
                                                         aria-label={t('artistList.actions.delete')}
                                                         onClick={(e) => { e.stopPropagation(); onDeleteArtist(artist); }}
                                                         title={t('artistList.actions.deleteShort')}
-                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white"
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-text-secondary transition-colors duration-150 hover:bg-[rgb(220,38,38)] hover:!text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                                                     >
                                                         <TrashIcon className="h-4 w-4" />
                                                     </button>
                                                 )}
                                             </div>
                                         )}
-                                    </div>
                                 </li>
                                 );
                             })}

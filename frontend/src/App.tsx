@@ -59,15 +59,15 @@ const formatDateInputValue = (date: Date) => {
     return `${year}-${month}-${day}`;
 };
 
+const FUTURE_GIG_DATES_END = '9999-12-31';
+
 const getDefaultTourInterval = () => {
     const fromDate = new Date();
-    const toDate = new Date(fromDate);
-    toDate.setMonth(toDate.getMonth() + 12);
 
-    // Tour Mode opens on the expected upcoming-gig window
+    // Tour Mode opens on all upcoming gigs
     return {
         from: formatDateInputValue(fromDate),
-        to: formatDateInputValue(toDate),
+        to: FUTURE_GIG_DATES_END,
     };
 };
 
@@ -493,11 +493,15 @@ function App() {
         setShowGigPanel(false);
         setShowGigCalendar(false);
         setMainSearchCloseSignal((signal) => signal + 1);
+        const defaultInterval = getDefaultTourInterval();
+
+        // Fresh Tour Mode entry defaults to all future gigs
+        setRememberedTourMode({ interval: defaultInterval, selectedDay: null });
         updateTourParams({
             active: true,
-            from: rememberedTourMode.interval?.from ?? null,
-            to: rememberedTourMode.interval?.to ?? null,
-            day: rememberedTourMode.selectedDay,
+            from: defaultInterval.from,
+            to: defaultInterval.to,
+            day: null,
         });
     };
 

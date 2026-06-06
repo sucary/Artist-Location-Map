@@ -124,6 +124,7 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
     const startDisplayValue = from ? formatNumericDate(from, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';
     const endDisplayValue = to ? formatNumericDate(to, i18n.resolvedLanguage || i18n.language || undefined) : '--/--';
     const hasCompleteRange = Boolean(from && to);
+    const calendarId = 'tour-date-range-calendar';
 
     const selectDate = (date: Date) => {
         const dateValue = toDateValue(date);
@@ -150,6 +151,8 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                 id="tour-date-range"
                 type="button"
                 aria-expanded={isOpen}
+                aria-haspopup="dialog"
+                aria-controls={isOpen ? calendarId : undefined}
                 onPointerDown={markInternalPointerDown}
                 onClick={() => setIsOpen((open) => !open)}
                 className="group grid h-9 w-32 grid-cols-[48px_16px_48px] items-center justify-center text-center text-sm font-medium text-text transition-colors hover:text-primary focus:outline-none"
@@ -175,7 +178,10 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
 
             {isOpen && createPortal(
                 <div
+                    id={calendarId}
                     ref={dropdownRef}
+                    role="dialog"
+                    aria-label={t('tour.calendar.dateRange', { defaultValue: 'Date range' })}
                     onPointerDown={markInternalPointerDown}
                     className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-5 pb-5 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
@@ -238,6 +244,8 @@ export function TourDateRangePicker({ from, to, visibleMonth, onChange, onVisibl
                                                 )}
                                                 <button
                                                     type="button"
+                                                    aria-label={new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(date)}
+                                                    aria-pressed={isStart || isEnd || isPendingStart}
                                                     onClick={() => selectDate(date)}
                                                     className={`relative z-10 grid h-9 w-9 place-items-center rounded-full text-sm font-medium transition-colors ${
                                                         isStart || isEnd || isPendingStart

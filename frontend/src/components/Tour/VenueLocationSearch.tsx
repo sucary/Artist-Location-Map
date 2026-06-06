@@ -113,9 +113,12 @@ export function VenueLocationSearch({
     const { t } = useTranslation();
     const { locationLanguage } = useLocationLanguage();
     const inputId = useId();
+    const listboxId = `${inputId}-results`;
+    const searchHintId = `${inputId}-hint`;
     const [query, setQuery] = useState(venueName || (location ? formatLocationLocalized(location, locationLanguage) : ''));
     const [results, setResults] = useState<TourLocationSearchResult[]>([]);
     const [isOpen, setIsOpen] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(false);
@@ -133,6 +136,8 @@ export function VenueLocationSearch({
     const [coordInput, setCoordInput] = useState('');
     const [createdVenue, setCreatedVenue] = useState<TourLocationSearchResult | null>(null);
     const [isEditingCreatedVenue, setIsEditingCreatedVenue] = useState(false);
+    const safeActiveIndex = results.length === 0 ? 0 : Math.min(activeIndex, results.length - 1);
+    const activeOptionId = isOpen && results[safeActiveIndex] ? `${listboxId}-${safeActiveIndex}` : undefined;
 
     // Venue draft location stays local until the manual venue is created
     const [creationLocation, setCreationLocation] = useState<Location | null>(null);
@@ -308,6 +313,7 @@ export function VenueLocationSearch({
             }, controller.signal);
             setResults(response.results);
             setHasMore(response.hasMore);
+            setActiveIndex(0);
             setIsOpen(true);
         } catch {
             setError(t('tour.venueSearch.failedLocation', {
@@ -324,6 +330,7 @@ export function VenueLocationSearch({
 
     const openResults = () => {
         if (results.length > 0) {
+            setActiveIndex(0);
             setIsOpen(true);
         }
     };
@@ -494,6 +501,9 @@ export function VenueLocationSearch({
 
         return (
             <div
+                id={listboxId}
+                role="listbox"
+                aria-label={t('tour.venueSearch.resultsLabel', { defaultValue: 'Venue and location results' })}
                 className="tour-location-search-dropdown fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                 style={{
                     top: `${dropdownPosition.top}px`,
@@ -514,9 +524,13 @@ export function VenueLocationSearch({
                     return (
                         <button
                             key={key}
+                            id={`${listboxId}-${index}`}
                             type="button"
+                            role="option"
+                            aria-selected={false}
+                            onMouseEnter={() => setActiveIndex(index)}
                             onClick={() => selectResult(result)}
-                            className="w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-muted"
+                            className={`w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-muted ${index === safeActiveIndex ? 'bg-surface-muted' : ''}`}
                         >
                             <span className="flex items-center gap-2 font-medium text-text">
                                 <span>{primaryLabel}</span>
@@ -597,6 +611,33 @@ export function VenueLocationSearch({
         }
     };
 
+    const handleSearchInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Escape') {
+            setIsOpen(false);
+            return;
+        }
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (results.length === 0) return;
+            setIsOpen(true);
+            setActiveIndex((current) => {
+                const nextIndex = event.key === 'ArrowDown' ? current + 1 : current - 1;
+                return (nextIndex + results.length) % results.length;
+            });
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (isOpen && results[safeActiveIndex]) {
+                selectResult(results[safeActiveIndex]);
+                return;
+            }
+            void runSearch();
+        }
+    };
+
     const segmentClass = (active: boolean) =>
         `relative z-10 rounded-full px-3 py-2 text-center text-xs font-medium transition-colors duration-150 ${
             active ? 'text-white' : 'text-text-secondary hover:text-text'
@@ -609,13 +650,14 @@ export function VenueLocationSearch({
             </label>
 
             <div className="rounded-lg border border-border p-3">
-                <div className="relative inline-grid grid-cols-2 rounded-full transition-colors duration-150 hover:bg-surface-muted">
+                <div role="tablist" aria-label={t('tour.fields.venueLocation')} className="relative inline-grid grid-cols-2 rounded-full transition-colors duration-150 hover:bg-surface-muted">
                     <span
                         aria-hidden="true"
                         className={`absolute inset-y-0 z-0 w-1/2 rounded-full bg-primary-contrast shadow-sm transition-transform duration-200 ease-out ${venueCreationOn ? 'translate-x-full' : 'translate-x-0'}`}
                     />
                     <button
                         type="button"
+                        role="tab"
                         aria-selected={!venueCreationOn}
                         onClick={() => setVenueCreationOn(false)}
                         className={segmentClass(!venueCreationOn)}
@@ -624,6 +666,7 @@ export function VenueLocationSearch({
                     </button>
                     <button
                         type="button"
+                        role="tab"
                         aria-selected={venueCreationOn}
                         onClick={openVenueCreation}
                         className={segmentClass(venueCreationOn)}
@@ -637,6 +680,14 @@ export function VenueLocationSearch({
                         <div className="relative mt-3" ref={controlsRef}>
                             <input
                                 id={inputId}
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-activedescendant={activeOptionId}
+                                aria-busy={isLoading || isLoadingMore}
+                                aria-controls={isOpen ? listboxId : undefined}
+                                aria-describedby={searchHintId}
+                                aria-expanded={isOpen}
+                                aria-haspopup="listbox"
                                 type="text"
                                 autoComplete="off"
                                 value={query}
@@ -646,10 +697,7 @@ export function VenueLocationSearch({
                                     clearSelectedLocationForEdit(nextQuery);
                                 }}
                                 onFocus={openResults}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Escape') { setIsOpen(false); return; }
-                                    if (event.key === 'Enter') { event.preventDefault(); void runSearch(); }
-                                }}
+                                onKeyDown={handleSearchInputKeyDown}
                                 placeholder={t('tour.form.locationPlaceholder')}
                                 className={inputClass}
                             />
@@ -663,7 +711,7 @@ export function VenueLocationSearch({
                                 {isLoading ? <Spinner size="sm" /> : <SearchIcon className="h-4 w-4" />}
                             </button>
                         </div>
-                        <p className="mx-1 mt-1 text-xs text-text-secondary">
+                        <p id={searchHintId} className="mx-1 mt-1 text-xs text-text-secondary">
                             {t('tour.form.locationSearchHint')}
                         </p>
                     </>

@@ -77,10 +77,6 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
     const locale = useMemo(() => getBrowserDateLocale(i18n.resolvedLanguage || i18n.language || undefined), [i18n.language, i18n.resolvedLanguage]);
 
     useEffect(() => {
-        if (selectedDate) setVisibleMonth(getMonthStart(selectedDate));
-    }, [selectedDate]);
-
-    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             if (rootRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
@@ -111,7 +107,7 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
             width,
             maxHeight,
         });
-    }, [isOpen, visibleMonth]);
+    }, [disabled, isOpen, visibleMonth]);
 
     const weekdays = useMemo(() => {
         const base = new Date(2024, 0, WEEK_START);
@@ -126,10 +122,18 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
     const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(visibleMonth);
     const displayValue = formatDisplayDate(value, locale);
     const selectedValue = selectedDate ? toDateValue(selectedDate) : '';
+    const calendarId = `${id}-calendar`;
 
     const selectDate = (date: Date) => {
         onChange(toDateValue(date));
         setIsOpen(false);
+    };
+
+    const toggleCalendar = () => {
+        if (!isOpen) {
+            setVisibleMonth(getMonthStart(selectedDate ?? today));
+        }
+        setIsOpen((open) => !open);
     };
 
     return (
@@ -141,8 +145,10 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
                 id={id}
                 type="button"
                 aria-expanded={isOpen}
+                aria-haspopup="dialog"
+                aria-controls={isOpen ? calendarId : undefined}
                 disabled={disabled}
-                onClick={() => setIsOpen((open) => !open)}
+                onClick={toggleCalendar}
                 className="flex w-full items-center justify-between gap-3 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 hover:bg-surface-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 app-dark:hover:bg-surface-muted"
             >
                 <span className="flex min-w-0 items-center gap-2">
@@ -156,7 +162,10 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
 
             {isOpen && !disabled && createPortal(
                 <div
+                    id={calendarId}
                     ref={dropdownRef}
+                    role="dialog"
+                    aria-label={label}
                     className="fixed z-[9999] overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 pb-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
@@ -203,6 +212,8 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
                                 <div key={dateValue} className="relative grid h-10 place-items-center">
                                     <button
                                         type="button"
+                                        aria-label={new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(date)}
+                                        aria-pressed={isSelected}
                                         onClick={() => selectDate(date)}
                                         className={`relative z-10 grid h-9 w-9 place-items-center rounded-full text-sm font-medium transition-colors ${
                                             isSelected

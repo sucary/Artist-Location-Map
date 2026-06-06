@@ -370,7 +370,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <h1 id="admin-title" className="text-lg font-bold text-text">Admin Dashboard</h1>
+                    <h1 id="admin-title" className="text-lg font-bold text-text">Admin dashboard</h1>
                     <CloseButton onClick={onClose} size="md" />
                 </div>
 
@@ -541,7 +541,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         )}
                     </div>
 
-                    {/* Post Notification */}
+                    {/* Post notification */}
                     <div className="border-t border-border pt-4 mb-4">
                         <button
                             onClick={() => setPostNotificationOpen(!postNotificationOpen)}
@@ -549,7 +549,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             aria-controls={sectionIds.postNotification}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-xl font-semibold text-text">Post Notification</h2>
+                            <h2 className="text-xl font-semibold text-text">Post notification</h2>
                             <ChevronDownIcon
                                 aria-hidden="true"
                                 className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${postNotificationOpen ? 'rotate-180' : ''}`}
@@ -749,7 +749,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         )}
                     </div>
 
-                    {/* Location Translations */}
+                    {/* Location translations */}
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setTranslationsOpen(!translationsOpen)}
@@ -757,7 +757,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             aria-controls={sectionIds.translations}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-xl font-semibold text-text">Location Translations</h2>
+                            <h2 className="text-xl font-semibold text-text">Location translations</h2>
                             <ChevronDownIcon
                                 aria-hidden="true"
                                 className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${translationsOpen ? 'rotate-180' : ''}`}
@@ -771,7 +771,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         )}
                     </div>
 
-                    {/* Status Palette Template */}
+                    {/* Status palette template */}
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setStatusTemplateOpen(!statusTemplateOpen)}
@@ -779,7 +779,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             aria-controls={sectionIds.statusTemplate}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-xl font-semibold text-text">Status Palette Template</h2>
+                            <h2 className="text-xl font-semibold text-text">Status palette template</h2>
                             <ChevronDownIcon
                                 aria-hidden="true"
                                 className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${statusTemplateOpen ? 'rotate-180' : ''}`}
@@ -854,7 +854,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         )}
                     </div>
 
-                    {/* Dark Mode Interaction Template */}
+                    {/* Dark mode interaction template */}
                     <div className="border-t border-border pt-4">
                         <button
                             onClick={() => setDarkModeTemplateOpen(!darkModeTemplateOpen)}
@@ -862,7 +862,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                             aria-controls={sectionIds.darkModeTemplate}
                             className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
                         >
-                            <h2 className="text-xl font-semibold text-text">Dark Mode Interaction Template</h2>
+                            <h2 className="text-xl font-semibold text-text">Dark mode interaction template</h2>
                             <ChevronDownIcon
                                 aria-hidden="true"
                                 className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${darkModeTemplateOpen ? 'rotate-180' : ''}`}

@@ -95,8 +95,9 @@ const ArtistCard = ({
                         }}
                     >
                         {/* Edit */}
-                        <div
-                            className="artist-action-edit flex items-center justify-center cursor-pointer"
+                        <button
+                            type="button"
+                            className="artist-action-edit flex appearance-none items-center justify-center border-0 p-0 cursor-pointer"
                             style={{ width: onAddGig ? '60%' : '80%', backgroundColor: 'rgba(0, 0, 0, 0.5)', transition: 'background-color 0.15s' }}
                             data-action="edit"
                             data-artist-id={artist.id}
@@ -104,10 +105,11 @@ const ArtistCard = ({
                             title={t('artistCard.actions.edit')}
                         >
                             <EditIcon className="w-6 h-6 text-white" />
-                        </div>
+                        </button>
                         {onAddGig && (
-                            <div
-                                className="artist-action-edit flex items-center justify-center cursor-pointer"
+                            <button
+                                type="button"
+                                className="artist-action-edit flex appearance-none items-center justify-center border-0 p-0 cursor-pointer"
                                 style={{ width: '20%', backgroundColor: 'rgba(0, 0, 0, 0.55)', transition: 'background-color 0.15s' }}
                                 data-action="add-gig"
                                 data-artist-id={artist.id}
@@ -115,11 +117,12 @@ const ArtistCard = ({
                                 title={t('tour.actions.addGig')}
                             >
                                 <CalendarIcon className="w-5 h-5 text-white" />
-                            </div>
+                            </button>
                         )}
                         {/* Delete */}
-                        <div
-                            className="artist-action-delete flex items-center justify-center cursor-pointer"
+                        <button
+                            type="button"
+                            className="artist-action-delete flex appearance-none items-center justify-center border-0 p-0 cursor-pointer"
                             style={{ width: '20%', backgroundColor: 'rgba(239, 68, 68, 0.85)', transition: 'background-color 0.15s' }}
                             data-action="delete"
                             data-artist-id={artist.id}
@@ -127,7 +130,7 @@ const ArtistCard = ({
                             title={t('artistCard.actions.delete')}
                         >
                             <TrashIcon className="w-5 h-5 text-white" />
-                        </div>
+                        </button>
                     </div>
                 )}
 

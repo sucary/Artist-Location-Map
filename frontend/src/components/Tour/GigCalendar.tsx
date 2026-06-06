@@ -188,10 +188,6 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     }, []);
 
     useEffect(() => {
-        setDayPopover(null);
-    }, [visibleMonth]);
-
-    useEffect(() => {
         if (!isDatePickerOpen || !titleButtonRef.current) return;
 
         const rect = titleButtonRef.current.getBoundingClientRect();
@@ -209,6 +205,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     }, [isDatePickerOpen, datePickerMode, visibleMonth]);
 
     const moveMonth = (offset: number) => {
+        setDayPopover(null);
         setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
     };
 
@@ -216,6 +213,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
         const today = new Date();
 
         // Today also acts as a broad jump back to the current month
+        setDayPopover(null);
         setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
         onSelectDay(todayValue);
         setIsDatePickerOpen(false);
@@ -234,12 +232,14 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     };
 
     const handleYearSelect = (year: number) => {
+        setDayPopover(null);
         setVisibleMonth((currentMonth) => new Date(year, currentMonth.getMonth(), 1));
         setDatePickerMode('month');
         onSelectDay(null);
     };
 
     const handleMonthSelect = (month: number) => {
+        setDayPopover(null);
         setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), month, 1));
         onSelectDay(null);
         setIsDatePickerOpen(false);
@@ -297,9 +297,9 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     aria-label={label}
                     title={label}
                     onClick={() => onAddGig(dateValue)}
-                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-border app-dark:hover:bg-surface-muted"
+                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-border focus-visible:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary app-dark:hover:bg-surface-muted"
                 >
-                    <span className="grid h-9 w-9 place-items-center text-text-secondary opacity-0 transition-opacity group-hover/add-cell:opacity-100">
+                    <span className="grid h-9 w-9 place-items-center text-text-secondary opacity-0 transition-opacity group-hover/add-cell:opacity-100 group-focus-visible/add-cell:opacity-100">
                         <PlusIcon className="h-5 w-5" />
                     </span>
                 </button>
@@ -313,7 +313,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     aria-label={label}
                     title={label}
                     onClick={() => onAddGig(dateValue)}
-                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-border group-hover/day-row:opacity-100 app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted sm:left-2 sm:right-2"
+                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-border focus-visible:bg-border focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary group-hover/day-row:opacity-100 group-focus-within/day-row:opacity-100 app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted sm:left-2 sm:right-2"
                 >
                     <PlusIcon className="h-3.5 w-3.5" />
                 </button>
@@ -326,9 +326,9 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                 aria-label={label}
                 title={label}
                 onClick={() => onAddGig(dateValue)}
-                className="group/add-stack flex items-start justify-center rounded"
-            >
-                <span className="grid h-9 w-full place-items-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-border app-dark:bg-surface-secondary app-dark:group-hover/add-stack:bg-surface-muted">
+                    className="group/add-stack flex items-start justify-center rounded focus-visible:outline-none"
+                >
+                <span className="grid h-9 w-full place-items-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-border group-focus-visible/add-stack:opacity-100 group-focus-visible/add-stack:bg-border group-focus-visible/add-stack:ring-2 group-focus-visible/add-stack:ring-inset group-focus-visible/add-stack:ring-primary app-dark:bg-surface-secondary app-dark:group-hover/add-stack:bg-surface-muted">
                     <PlusIcon className="h-4 w-4" />
                 </span>
             </button>

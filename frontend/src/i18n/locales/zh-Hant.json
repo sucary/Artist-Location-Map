@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Achizu -音樂人地圖",
+    "appName": "Achizu",
     "search": "搜尋",
     "cancel": "取消",
     "ok": "確定",
@@ -9,13 +9,17 @@
     "close": "關閉",
     "dismiss": "關閉",
     "loading": "載入中",
-    "error": "錯誤",
-    "redirectToMap": "正在跳轉到地圖",
+    "error": "發生錯誤",
+    "redirectToMap": "正在返回地圖",
     "backToMap": "返回地圖",
     "delete": "刪除",
     "copy": "複製",
     "edit": "編輯",
-    "optional": "可選"
+    "optional": "可選",
+    "apply": "套用",
+    "city": "城市",
+    "create": "建立",
+    "expand": "展開"
   },
   "auth": {
     "fields": {
@@ -29,136 +33,138 @@
     "buttons": {
       "signIn": "登入",
       "signUp": "註冊",
-      "sendResetLink": "發送密碼重設連結",
+      "sendResetLink": "傳送重置連結",
       "backToSignIn": "返回登入",
       "showPassword": "顯示密碼",
       "hidePassword": "隱藏密碼",
       "rememberMe": "記住我",
       "done": "完成",
-      "resend": "重新發送",
-      "resetPassword": "重設密碼"
+      "resend": "重新傳送",
+      "resetPassword": "重置密碼"
     },
     "signIn": {
       "title": "登入",
       "forgotPassword": "忘記密碼？",
-      "dontHaveAccount": "沒有帳號？",
-      "rejectedAccountHint": "如果你的註冊申請已被拒絕，此帳號會無法登入。請聯系管理員或重新註冊。",
+      "dontHaveAccount": "還沒有帳號？",
+      "rejectedAccountHint": "如果你的註冊申請已被拒絕，此帳號將無法再登入。請聯絡管理員或重新註冊。",
       "or": "或"
     },
     "signUp": {
-      "title": "創建帳號",
-      "haveAccount": "已創建帳號？"
+      "title": "建立帳號",
+      "haveAccount": "已經有帳號？"
     },
     "resetPassword": {
-      "title": "重設密碼",
-      "description": "請輸入信箱，我們會發送重設密碼連結。",
-      "authSessionExpired": "目前請求已超時。請重新請求重設連結。",
-      "updating": "正在更新密碼",
-      "passwordUpdated": "密碼已更新。"
+      "title": "重置密碼",
+      "description": "輸入信箱後，我們會向你傳送密碼重置連結",
+      "authSessionExpired": "會話已過期。請重新請求重置連結。",
+      "passwordUpdated": "密碼已更新",
+      "updating": "正在更新密碼"
     },
     "emailCheck": {
-      "title": "請檢查信箱",
-      "message": "我們已向{{email}}發送了確認連結。請檢查你的收件箱並點擊連結以繼續。"
-    },
-    "messages": {
-      "checkEmailConfirmation": "請檢查信箱以確認。",
-      "resetLinkSent": "請檢查信箱以獲取密碼重設連結"
+      "title": "檢查信箱",
+      "message": "我們已向 {{email}} 傳送確認連結。請檢查收件箱並點擊連結繼續。",
+      "expiresIn": "確認連結將在 15 分鐘後過期"
     },
     "userNamePrompt": {
-      "title": "創建使用者名稱",
-      "description": "其他人可以通過使用者名稱找到你。",
-      "subdescription": "使用者名稱和可見性可以稍後在設定中修改。",
-      "usernameLabel": "使用者名稱",
-      "usernamePlaceholder": "請輸入使用者名稱",
-      "usernameAvailable": "使用者名稱可用",
-      "notApprovedNotice": "如果你的註冊申請已被拒絕，此帳號可能無法繼續使用。請聯系管理員或重新註冊。",
+      "title": "建立使用者名",
+      "description": "其他人可以透過使用者名找到你",
+      "subdescription": "使用者名和可見性之後可以在設定中修改",
+      "usernameLabel": "使用者名",
+      "usernamePlaceholder": "輸入使用者名",
+      "usernameAvailable": "使用者名可用",
+      "notApprovedNotice": "如果你的註冊申請已被拒絕，此帳號可能無法繼續使用。請聯絡管理員或重新註冊。",
       "submit": "繼續"
+    },
+    "messages": {
+      "checkEmailConfirmation": "請檢查信箱完成確認",
+      "resetLinkSent": "請檢查信箱取得密碼重置連結"
     },
     "errors": {
       "emailRequired": "請輸入信箱",
       "validEmail": "請輸入有效的信箱",
-      "emailExists": "該信箱已被註冊。",
+      "emailExists": "此信箱已註冊。請使用之前的登入方式登入。",
       "passwordRequired": "請輸入密碼",
-      "passwordMin": "密碼必須在6個字元以上",
+      "passwordMin": "密碼至少需要 6 個字元",
       "confirmPasswordRequired": "請確認密碼",
-      "passwordsMatch": "密碼不匹配，請檢查密碼是否輸入正確",
-      "incorrectCredentials": "信箱或密碼錯誤",
-      "unexpectedError": "發生意外錯誤，請再試一次",
-      "unableToSignIn": "無法使用{{provider}}登入。請嘗試其他登入方法。",
-      "userNameMin": "使用者名稱必須至少3個字元",
-      "userNameMax": "使用者名稱不能超過32個字元",
-      "userNamePattern": "使用者名稱只能包含小寫字母、數字和底線",
-      "userNameTaken": "該使用者名稱已被註冊，請輸入新的使用者名稱",
-      "unableToSaveUsername": "無法儲存使用者名稱。請再試一次。",
-      "resendEmailFailed": "無法重新發送郵件"
+      "passwordsMatch": "兩次輸入的密碼不一致",
+      "incorrectCredentials": "信箱或密碼不正確",
+      "unexpectedError": "發生意外錯誤，請重試",
+      "unableToSignIn": "無法使用 {{provider}} 登入。請嘗試其他方式或聯絡支援。",
+      "resendEmailFailed": "無法重新傳送郵件，請重試",
+      "userNameMin": "使用者名至少需要 3 個字元",
+      "userNameMax": "使用者名不能超過 32 個字元",
+      "userNamePattern": "使用者名只能包含小寫字母、數字與底線",
+      "userNameTaken": "此使用者名已被註冊，請輸入新的使用者名",
+      "unableToSaveUsername": "無法儲存使用者名。請重試。",
+      "confirmationExpired": "確認連結已過期。請重新註冊。"
     }
   },
   "approval": {
-    "title": "帳號待審核",
-    "description": "你的帳號正在等待管理員審核。",
-    "pending": "你的帳號正在審核中。",
-    "approved": "你的帳號申請已通過！現在可以登入了。",
-    "rejected": "你的帳號申請已被拒絕。"
+    "title": "帳號等待審核",
+    "description": "你的帳號正在等待管理員審核",
+    "pending": "你的帳號正在等待審核",
+    "approved": "你的帳號已透過審核！現在可以登入。",
+    "rejected": "你的帳號申請已被拒絕"
   },
   "userMenu": {
+    "accountMenu": "帳號選單",
     "settings": "設定",
     "adminDashboard": {
-      "title": "管理面板"
+      "title": "管理後台"
     },
-    "signOut": "退出登入",
-    "accountMenu": "帳號菜單"
+    "signOut": "退出登入"
   },
   "location": {
-    "searchPlaceholder": "正在搜尋地點"
+    "searchPlaceholder": "搜尋地點"
   },
   "artistForm": {
     "fields": {
-      "name": "名字",
-      "originalLocation": "出身地點",
-      "searchOriginalLocation": "搜尋出身地點",
-      "activeLocation": "活躍地點",
-      "searchActiveLocation": "搜尋活躍地點",
-      "careerYears": "生涯年份",
+      "name": "名稱",
+      "originalLocation": "出身地",
+      "searchOriginalLocation": "搜尋出身地",
+      "activeLocation": "活動地",
+      "searchActiveLocation": "搜尋活動地",
+      "careerYears": "活動年份",
       "debutYear": "出道年份",
       "debut": "出道",
-      "present": "活動中",
+      "present": "活躍中",
       "inactiveYear": "停止活動年份",
       "inactive": "停止活動"
     },
     "alts": {
-      "avatar": "頭像"
+      "avatar": "藝人頭像"
     },
     "defaults": {
       "newArtist": "新藝人"
     },
     "buttons": {
-      "editBanner": "編輯橫幅",
-      "editName": "編輯名字",
-      "uploadAvatar": "上傳頭像",
-      "save": "儲存藝人",
+      "editBanner": "編輯藝人橫幅",
+      "editName": "編輯藝人名稱",
+      "uploadAvatar": "上傳圖片",
+      "save": "儲存",
       "cancel": "取消",
-      "copyOriginalToActive": "複製起出身地點到活躍地點",
-      "setInactive": "設為停止活動",
-      "setActive": "設為活動中",
       "confirm": "確認",
-      "continue": "繼續"
+      "continue": "繼續",
+      "copyOriginalToActive": "將出身地複製到活動地",
+      "setInactive": "將藝人設為停止活動",
+      "setActive": "將藝人設為活動中"
     },
     "socialMedia": {
       "title": "社群媒體",
-      "website": "藝人網站連結",
-      "instagram": "Instagram連結",
-      "twitter": "twitter/X連結",
-      "appleMusic": "音樂軟件連結",
-      "youtube": "YouTube連結"
+      "website": "官網 URL",
+      "instagram": "Instagram URL",
+      "twitter": "Twitter/X URL",
+      "appleMusic": "音樂平台 URL",
+      "youtube": "YouTube URL"
     },
     "cropper": {
-      "title": "裁剪圖片",
+      "title": "裁切圖片",
       "avatar": "頭像",
       "banner": "橫幅",
       "reUpload": "重新上傳",
-      "reset": "重設",
-      "resetToDefault": "重設為默認",
-      "zoom": "放大/縮小"
+      "reset": "重置",
+      "resetToDefault": "重置為預設",
+      "zoom": "縮放"
     },
     "yearSelect": {
       "placeholder": "年份",
@@ -166,86 +172,86 @@
     },
     "locationSearch": {
       "placeholder": "搜尋地點",
-      "cancelSearch": "取消搜尋",
+      "cancelSearch": "取消地點搜尋",
       "searchLocation": "搜尋地點",
-      "manualSelect": "手動選擇地點",
-      "retry": "再試一次",
-      "searching": "搜尋中",
-      "searchMore": "搜尋更多地點",
-      "noResults": "沒有結果",
-      "errors": {
-        "searchTimedOut": "搜尋超時，請再試一次。",
-        "failedSearch": "搜尋地點失敗，請再試一次。",
-        "failedMore": "搜尋更多地點失敗。",
-        "noLocationsAtPoint": "該坐標未發現有效地點，請嘗試其他位置。"
-      },
+      "manualSelect": "在地圖上選擇地點",
       "failedHeader": "地點搜尋失敗",
       "locationSelected": "已選擇地點",
-      "detailedLocationRecommended": "建議選擇更詳細的地點"
-    },
-    "errors": {
-      "nameRequired": "需填入藝人名字",
-      "originalLocationRequired": "需填入起始地點",
-      "activeLocationRequired": "需填入活躍地點",
-      "invalidWebsiteUrl": "請輸入有效連結（https://...）",
-      "invalidSocialProfileUrl": "請輸入有效的{{platform}}連結",
-      "invalidSocialLinkUrl": "請輸入有效的社媒連結",
-      "failedUploadImage": "無法上傳圖片，請再試一次。",
-      "imageRequirements": "請使用不超過5 MB的JPG、PNG或WebP圖片。",
-      "failedSaveArtist": "無法儲存藝人，請再試一次。",
-      "imageUploadFailed": "圖片上傳失敗",
-      "saveArtistFailedHeader": "無法儲存藝人"
+      "detailedLocationRecommended": "建議選擇更詳細的地點",
+      "retry": "重試",
+      "searching": "正在搜尋地點",
+      "searchMore": "搜尋更多結果",
+      "noResults": "沒有找到結果",
+      "errors": {
+        "searchTimedOut": "搜尋逾時。請重試。",
+        "failedSearch": "地點搜尋失敗。請重試。",
+        "failedMore": "搜尋更多結果失敗",
+        "noLocationsAtPoint": "此位置沒有找到地點。請嘗試其他位置。"
+      }
     },
     "mediaReview": {
       "requiresReviewTitle": "圖片需要審核",
-      "replaceSharedTitle": "是否替換共享圖片？",
-      "requiresReviewDescription": "該藝人已有共享圖片。本次上傳會會經過審核，審核通過後才會對所有人可見。",
-      "replaceSharedDescription": "該藝人已有共享圖片。（管理員）繼續操作會替換所有人看到的圖片。",
+      "replaceSharedTitle": "替換共享圖片",
+      "requiresReviewDescription": "此藝人已有共享圖片。你上傳的圖片會先提交給管理員審核，通過後才會對所有人可見。",
+      "replaceSharedDescription": "此藝人已有共享圖片。作為管理員，繼續操作會替換所有人看到的圖片。",
       "currentImage": "目前圖片",
-      "currentSharedArtistAlt": "目前共享藝人圖片",
+      "currentSharedArtistAlt": "目前共享藝人",
       "artistImageExistsTitle": "藝人圖片已存在",
-      "sharedImageRecommendation": "由於網站存儲空間有限，強烈建議使用共享藝人圖片。",
-      "submitForReviewDescription": "如果你認為新圖片更能代表該藝人，可以提交審核。",
+      "sharedImageRecommendation": "由於儲存限制，我們強烈建議使用共享藝人圖片",
+      "submitForReviewDescription": "如果你認為自己的圖片更能代表該藝人，可以提交審核",
       "chooseImage": "選擇圖片",
       "sharedImage": "共享圖片",
-      "yourUpload": "你上傳的圖片",
-      "yourUploadedArtistAlt": "你上傳的藝人圖片"
+      "yourUpload": "你的上傳",
+      "yourUploadedArtistAlt": "你上傳的藝人"
     },
     "musicBrainz": {
-      "artistLabel": "藝人名稱",
+      "artistLabel": "藝人名",
       "deepSearch": "深度搜尋",
-      "searchArtist": "輸入藝人名稱後搜尋",
-      "artistSelected": "已選定認證藝人",
-      "artistNotLinked": "尚未關聯認證藝人",
-      "searchMusicBrainz": "深度搜尋",
-      "searchSavedArtists": "搜尋藝人",
+      "searchArtist": "搜尋藝人",
+      "artistSelected": "已選擇認證藝人",
+      "artistNotLinked": "藝人尚未關聯 MusicBrainz",
+      "searchMusicBrainz": "深度搜尋中",
+      "searchSavedArtists": "正在搜尋藝人",
       "processingArtist": "正在處理藝人",
       "linked": "已關聯",
       "onlineSearchFailed": "深度搜尋失敗",
-      "useExistingRecommendation": "建議優先從搜尋結果中選擇認證藝人，沒有合適結果再略過搜尋。",
+      "useExistingRecommendation": "建議優先使用搜尋結果中的認證藝人",
       "resultsLabel": "藝人搜尋結果",
       "searchingArtists": "正在搜尋藝人",
       "artists": "藝人",
-      "noArtistFoundTry": "找不到藝人。試試",
-      "noArtistFound": "找不到藝人",
+      "noArtistFoundTry": "沒有找到藝人，試試",
+      "noArtistFound": "沒有找到藝人",
       "moreArtists": "更多藝人",
       "onlineResults": "深度搜尋結果",
       "searchFailedHeader": "深度搜尋失敗"
+    },
+    "errors": {
+      "nameRequired": "藝人名稱為必填項",
+      "originalLocationRequired": "出身地為必填項",
+      "activeLocationRequired": "活動地為必填項",
+      "invalidWebsiteUrl": "請輸入有效 URL（https://...）",
+      "invalidSocialProfileUrl": "請輸入有效的 {{platform}} URL",
+      "invalidSocialLinkUrl": "社交連結 URL 無效",
+      "imageUploadFailed": "圖片上傳失敗",
+      "failedUploadImage": "圖片上傳失敗。請重試。",
+      "imageRequirements": "請使用不超過 5 MB 的 JPG、PNG 或 WebP 圖片",
+      "saveArtistFailedHeader": "無法儲存藝人",
+      "failedSaveArtist": "儲存藝人失敗。請重試。"
     }
   },
   "banner": {
-    "featuredArtists": "Achizu地圖共收集了 <count>{{count}}</count> 位藝人",
-    "featuredArtistsLabel": "全站藝人",
-    "viewingUser": "正在查看<username>{{username}}</username>的地圖",
-    "backToMyMap": "回到我的地圖",
-    "viewCommunityArtists": "查看全站藝人"
+    "featuredArtists": "Achizu 地圖已收集 <count>{{count}}</count> 位藝人",
+    "featuredArtistsLabel": "精選藝人",
+    "viewingUser": "正在查看 <username>{{username}}</username> 的地圖",
+    "backToMyMap": "返回我的地圖",
+    "viewCommunityArtists": "查看社群藝人"
   },
   "mainSearch": {
-    "placeholder": "搜尋藝人與使用者",
+    "placeholder": "搜尋藝人和使用者",
     "clearSearch": "清除搜尋",
     "search": "搜尋",
     "results": "搜尋結果",
-    "noResults": "未找到結果",
+    "noResults": "沒有找到結果",
     "artists": "藝人",
     "users": "使用者",
     "viewMap": "查看地圖"
@@ -254,24 +260,24 @@
     "title": "設定",
     "privacy": {
       "title": "隱私",
-      "description": "不要讓其他使用者看到你的帳號。",
+      "description": "向其他使用者隱藏你的帳號和地圖",
       "errorHeader": "無法更新隱私設定",
       "makePublic": "將帳號設為公開",
-      "makePrivate": "將帳號設為私人"
+      "makePrivate": "將帳號設為私密"
     },
     "adminTools": {
       "title": "管理員工具",
       "clusterDebug": "圈圈除錯",
-      "clusterDebugDescription": "在地圖上顯示圈圈除錯按鈕。",
-      "showClusterDebug": "顯示圈圈除錯按鈕",
-      "hideClusterDebug": "隱藏圈圈除錯按鈕"
+      "clusterDebugDescription": "在地圖上顯示圈圈除錯控制",
+      "showClusterDebug": "顯示圈圈除錯控制",
+      "hideClusterDebug": "隱藏圈圈除錯控制"
     },
     "language": {
       "title": "顯示",
       "locationName": "地點名稱語言",
       "locationNameLanguage": "地點名稱語言",
-      "hint": "部分地點可能因為缺少翻譯而顯示為其他語言。",
-      "native": "当地"
+      "hint": "部分地點可能因缺少翻譯而顯示為其他語言",
+      "native": "當地語言"
     },
     "artistNames": {
       "title": "藝人名稱",
@@ -284,93 +290,93 @@
       }
     },
     "username": {
-      "title": "使用者名稱",
-      "changeUsername": "更改使用者名稱",
-      "errorHeader": "無法更新使用者名稱",
-      "saveUsername": "儲存使用者名稱"
+      "title": "更改使用者名",
+      "changeUsername": "新使用者名",
+      "errorHeader": "無法更新使用者名",
+      "saveUsername": "儲存使用者名"
     },
     "password": {
       "title": "更改密碼",
       "errorHeader": "無法更新密碼",
-      "success": "密碼已成功更新。",
+      "success": "密碼已成功更新",
       "changePassword": "更改密碼"
     },
     "errors": {
-      "failedUpdateUsername": "使用者名稱更新失敗",
-      "unableUpdateUsername": "無法更新使用者名稱，請再試一次。",
-      "newPasswordMin": "新密碼必須至少包含6個字元",
+      "failedUpdateUsername": "更新使用者名失敗",
+      "unableUpdateUsername": "無法更新使用者名。請重試。",
+      "newPasswordMin": "新密碼至少需要 6 個字元",
       "currentPasswordIncorrect": "目前密碼不正確",
-      "unableUpdatePassword": "無法更新密碼，請再試一次。",
-      "failedUpdatePrivacy": "隱私設定更新失敗",
-      "unableUpdatePrivacy": "無法更新隱私設定，請再試一次。"
+      "unableUpdatePassword": "無法更新密碼。請重試。",
+      "failedUpdatePrivacy": "更新隱私設定失敗",
+      "unableUpdatePrivacy": "無法更新隱私設定。請重試。"
     },
     "uiLanguage": {
       "title": "介面語言",
-      "description": "選擇應用程式介面使用的語言。",
+      "description": "選擇應用介面使用的語言",
       "language": "主要語言"
     }
   },
   "tutorial": {
-    "progress": "第{{current}}/{{total}}步",
-    "skip": "略過教程",
+    "progress": "第 {{current}}/{{total}} 步",
+    "skip": "跳過教學",
     "next": "下一步",
     "steps": {
       "addArtist": {
-        "title": "添加你的第一個藝人",
-        "body": "點擊添加藝人按鈕。"
+        "title": "新增你的第一個藝人",
+        "body": "從點擊這個按鈕開始"
       },
       "searchArtist": {
         "title": "搜尋藝人",
         "body": {
-          "search": "輸入藝人名稱，然後按Enter或點擊搜尋按鈕。",
-          "deepSearch": "如果找不到藝人，可以嘗試<strong>深度搜尋</strong>。"
+          "search": "輸入藝人名稱，然後按 Enter 或點擊搜尋按鈕",
+          "deepSearch": "如果找不到藝人，開啟 <strong>深度搜尋</strong> 後重試"
         }
       },
       "origin": {
         "title": "設定出身地",
-        "body": "搜尋藝人的出身地。出身地通常是<strong>城市</strong>或<strong>省份</strong>。你也可以在地圖上手動選擇地點。"
+        "body": "搜尋藝人的出身地，通常是<strong>城市</strong>或<strong>省份</strong>。你也可以在地圖上手動選擇地點。"
       },
       "activeLocation": {
         "title": "設定活動地",
         "body": {
-          "search": "搜尋藝人主要活動地點。",
-          "copy": "如果與出身地相同，可以用箭頭按鈕複製。"
+          "search": "重複地點搜尋，選擇藝人現在的活動地點",
+          "copy": "如果和出身地相同，可以用箭頭按鈕複製"
         }
       },
       "careerYears": {
         "title": "設定活動年份",
-        "body": "選擇出道年份。如果藝人已停止活動，也可以添加停止活動年份。"
+        "body": "選擇出道年份。如果藝人已停止活動，也可以新增停止活動年份。"
       },
       "externalLinks": {
-        "title": "添加外部連結",
-        "body": "例如社群媒體和官方網站等（選填）。"
+        "title": "新增外部連結",
+        "body": "社群媒體和官方網站等外部連結是可選項"
       },
       "artistImage": {
         "title": "上傳藝人圖片",
-        "body": "為藝人添加圖片。該圖片會同時用於頭像和橫幅。"
+        "body": "為藝人新增圖片。該圖片會同時用於頭像和橫幅。"
       },
       "saveArtist": {
         "title": "儲存藝人",
-        "body": "所有內容設定完成後，把藝人儲存到地圖吧！"
+        "body": "全部設定完成後，將藝人儲存到地圖！"
       }
     }
   },
   "about": {
     "title": "關於",
     "project": {
-      "description": "Achizu是一個開源專案，使用者可在地圖上標記喜歡的藝人。",
+      "description": "一個用於在世界地圖上標記你喜歡的藝人的開源專案",
       "viewOnGithub": "GitHub"
     },
     "credits": {
-      "title": "API",
+      "title": "API 與函式庫",
       "openStreetMap": {
-        "description": "地圖資料與地理編碼：Nominatim和Overpass API "
+        "description": "透過 Nominatim 和 Overpass API 提供地圖資料與地理編碼服務"
       },
       "mapLibre": {
-        "description": "地圖渲染"
+        "description": "互動式向量地圖渲染"
       },
       "carto": {
-        "description": "基礎地圖樣式"
+        "description": "底圖樣式和瓦片"
       }
     }
   },
@@ -382,25 +388,26 @@
     "more": "展開",
     "pinned": "置頂",
     "clearAll": "清除所有通知",
-    "accountPendingApprovalTitle": "帳號待批準",
-    "accountPendingApprovalContent": "你的帳號正在等待管理員批準。",
-    "pendingApprovals_one": "{{count}}個帳號待批準",
-    "pendingApprovals_other": "{{count}}個帳號待批準",
-    "pendingApprovalsContent": "有使用者正在等待帳號批準。",
-    "openAdmin": "打開管理後台"
+    "accountPendingApprovalTitle": "帳號等待審核",
+    "accountPendingApprovalContent": "你的帳號正在等待管理員審核",
+    "pendingApprovals_one": "{{count}} 個待審核",
+    "pendingApprovals_other": "{{count}} 個待審核",
+    "pendingApprovals": "待審核帳號",
+    "pendingApprovalsContent": "有使用者正在等待帳號審核",
+    "openAdmin": "開啟管理後台"
   },
   "map": {
-    "achizu": "Achizu藝人地圖",
-    "manualLocationSelection": "在地圖上點擊以選擇地點",
+    "achizu": "Achizu，藝人地圖",
+    "manualLocationSelection": "點擊地圖選擇地點",
     "cancel": "取消",
     "attribution": {
-      "aboutAchizu": "關於Achizu"
+      "aboutAchizu": "關於 Achizu"
     },
     "markers": {
-      "clusterArtists": "{{count}}位藝人"
+      "clusterArtists": "{{count}} 位藝人"
     },
     "buttons": {
-      "addNewArtist": "添加新藝人",
+      "addNewArtist": "新增藝人",
       "viewArtistList": "查看藝人列表",
       "mapControls": {
         "toggleLocationView": "切換地點視圖",
@@ -410,19 +417,19 @@
         "light": "淺色",
         "dark": "深色",
         "useDarkTiles": "使用深色地圖",
-        "cannotUseDarkTiles": "此地圖不支援深色模式",
+        "cannotUseDarkTiles": "此地圖無法使用深色模式",
         "collapseAllClusters": "收起所有圈圈",
         "expandAllClusters": "展開所有圈圈",
-        "resetMapDirection": "重設地圖方向",
-        "locateMe": "顯示你的位置",
+        "resetMapDirection": "重置地圖方向",
+        "locateMe": "定位我",
         "zoomIn": "放大",
         "zoomOut": "縮小",
         "gigFilter": {
           "open": "篩選地圖上的演出",
-          "title": "地圖視圖",
+          "title": "篩選演出",
           "starredLabel": "演出顯示",
           "allGigs": "全部演出",
-          "starredGigs": "已標星",
+          "starredGigs": "已收藏演出",
           "tourLabel": "巡演",
           "all": "全部",
           "allTours": "全部巡演",
@@ -433,8 +440,8 @@
     },
     "error": {
       "renderMapError": "此瀏覽器不支援地圖渲染。請使用其他瀏覽器。",
-      "loadMapError": "地圖載入失敗。請重新整理後再試一次。",
-      "loadArtistsError": "藝術家載入失敗。請重新整理後再試一次。"
+      "loadMapError": "地圖載入失敗。請重新整理後重試。",
+      "loadArtistsError": "藝人載入失敗。請重新整理後重試。"
     }
   },
   "artistList": {
@@ -443,23 +450,23 @@
     },
     "title": {
       "default": "藝人",
-      "featured": "全站藝人"
+      "featured": "社群藝人"
     },
     "search": {
       "ariaLabel": "搜尋藝人或地點",
       "placeholder": "搜尋藝人或地點"
     },
     "sort": {
-      "label": "排序",
+      "label": "排序方式",
       "ariaLabel": "藝人排序",
       "optionsLabel": "藝人排序選項",
-      "ascending": "按遞增排序",
-      "descending": "按遞減排序",
+      "ascending": "遞增排序",
+      "descending": "遞減排序",
       "ascendingShort": "遞增",
       "descendingShort": "遞減",
       "options": {
-        "dateAdded": "添加時間",
-        "recentlyUpdated": "最近更新",
+        "dateAdded": "新增日期",
+        "recentlyUpdated": "更新日期",
         "name": "名稱",
         "activeLocation": "活動地",
         "originLocation": "出身地",
@@ -467,11 +474,11 @@
       }
     },
     "empty": {
-      "noResults": "未找到藝人",
-      "noneAdded": "尚未添加藝人"
+      "noResults": "沒有找到藝人",
+      "noneAdded": "尚未新增藝人"
     },
     "actions": {
-      "copyAll": "會所有藝人複製到我的地圖",
+      "copyAll": "將所有藝人複製到我的地圖",
       "goToLocation": "前往地點",
       "edit": "編輯藝人",
       "editShort": "編輯",
@@ -480,22 +487,22 @@
     }
   },
   "userNotFound": {
-    "title": "找不到{{username}} ;_;",
-    "reasonsIntro": "可能因為:",
+    "title": "找不到 {{username}} ;_;",
+    "reasonsIntro": "可能的原因：",
     "reasons": {
-      "doesNotExist": "該使用者不存在",
-      "private": "個人資料已設為私人",
-      "deleted": "該使用者已被刪除"
+      "doesNotExist": "使用者不存在",
+      "private": "個人資料是私密的",
+      "deleted": "帳號已被刪除"
     },
     "goBack": "返回"
   },
   "artistCard": {
     "fields": {
-      "origin": "來自",
+      "origin": "出身",
       "active": "活動"
     },
     "years": {
-      "present": "活動中"
+      "present": "活躍中"
     },
     "actions": {
       "edit": "編輯藝人",
@@ -504,25 +511,27 @@
     "social": {
       "website": "藝人網站",
       "appleMusic": "藝人音樂連結",
-      "youtube": "藝人YouTube",
-      "instagram": "藝人Instagram",
-      "twitter": "藝人X主頁"
+      "youtube": "藝人 YouTube",
+      "instagram": "藝人 Instagram",
+      "twitter": "藝人 X 主頁"
     }
   },
   "tour": {
     "actions": {
       "enterTourMode": "進入巡演模式",
-      "exitTourMode": "退出巡演模式",
+      "exitTourMode": "返回我的地圖",
       "addGig": "新增演出",
       "viewGigPanel": "查看演出",
-      "viewCalendar": "查看日曆",
+      "viewCalendar": "查看行事曆",
       "locateGig": "定位演出",
       "createTour": "建立巡演",
       "clearDates": "清除日期",
       "exit": "退出",
       "viewEvent": "查看活動",
-      "starGig": "標星演出",
-      "unstarGig": "取消標星演出"
+      "starGig": "收藏演出",
+      "unstarGig": "取消收藏演出",
+      "todayOnward": "今天起",
+      "allDates": "所有日期"
     },
     "fields": {
       "artist": "藝人",
@@ -532,14 +541,14 @@
       "date": "日期",
       "time": "時間",
       "tour": "巡演",
-      "addToTour": "加入巡演",
+      "addToTour": "新增到巡演",
       "partOfTour": "屬於巡演？",
       "createTour": "建立巡演",
       "createTourOptional": "建立巡演（可選）",
       "tourName": "巡演名稱",
       "gigs": "演出",
-      "from": "開始",
-      "to": "結束",
+      "from": "從",
+      "to": "到",
       "venue": "場館",
       "location": "地點",
       "venueLocation": "場館 / 地點"
@@ -550,12 +559,12 @@
       "selectArtist": "選擇藝人",
       "selectTour": "選擇巡演",
       "createTour": "建立巡演",
-      "addArtistToGig": "向演出新增藝人",
-      "addToExistingTour": "選擇已有巡演",
-      "createATour": "建立新巡演",
+      "addArtistToGig": "為演出新增藝人",
+      "addToExistingTour": "已有巡演",
+      "createATour": "建立巡演",
       "removeArtist": "移除 {{name}}",
-      "noArtistsFound": "找不到藝人",
-      "noToursFound": "找不到巡演",
+      "noArtistsFound": "沒有找到藝人",
+      "noToursFound": "沒有找到巡演",
       "noGigsForTour": "目前日期範圍內沒有演出",
       "sections": {
         "gig": "演出",
@@ -564,7 +573,7 @@
       "tourMode": {
         "none": "無",
         "existing": "已有",
-        "new": "新增"
+        "new": "新建"
       },
       "preselectedArtist": "已選擇 {{name}}",
       "gigNamePlaceholder": "輸入演出名稱",
@@ -572,6 +581,17 @@
       "locationPlaceholder": "搜尋場館 / 地點",
       "locationSearchHint": "如果找不到場館，請改用場館建立功能新增",
       "tourNamePlaceholder": "輸入巡演名稱"
+    },
+    "timePicker": {
+      "enterTime": "輸入時間",
+      "selectTime": "選擇時間",
+      "selectHour": "選擇小時",
+      "selectMinute": "選擇分鐘",
+      "dial": "錶盤",
+      "manual": "手動輸入",
+      "hour": "小時",
+      "minute": "分鐘",
+      "clear": "清除"
     },
     "banner": {
       "label": "巡演模式",
@@ -582,19 +602,19 @@
     "panel": {
       "title": "演出",
       "empty": "目前日期範圍內沒有演出",
-      "noResults": "沒有符合目前篩選的演出",
+      "noResults": "沒有符合目前過濾條件的演出",
       "noTour": "無巡演",
       "search": {
         "ariaLabel": "搜尋演出",
         "placeholder": "搜尋演出"
       },
       "sort": {
-        "label": "排序",
+        "label": "排序方式",
         "ariaLabel": "演出排序",
         "optionsLabel": "演出排序選項",
         "date": "日期",
-        "dateAsc": "日期升序",
-        "dateDesc": "日期降序",
+        "dateAsc": "日期遞增",
+        "dateDesc": "日期遞減",
         "artist": "藝人",
         "location": "地點",
         "tour": "巡演"
@@ -609,8 +629,8 @@
     "management": {
       "title": "巡演",
       "open": "管理巡演",
-      "empty": "暫無巡演",
-      "noResults": "沒有符合目前篩選的巡演",
+      "empty": "沒有巡演",
+      "noResults": "沒有符合目前過濾條件的巡演",
       "expandTour": "展開 {{name}}",
       "collapseTour": "收起 {{name}}",
       "deleteTour": "刪除 {{name}}",
@@ -627,49 +647,56 @@
         "optionsLabel": "巡演排序選項",
         "date": "日期",
         "artist": "藝人",
-        "gigs": "演出場數"
+        "gigs": "演出數量"
       }
     },
     "dialogs": {
       "deleteGig": {
         "title": "刪除演出",
-        "message": "刪除 {{artist}} 在 {{date}} 的演出嗎？此操作無法復原。"
+        "message": "刪除 {{artist}} 在 {{date}} 的演出？此操作無法復原。"
       },
       "deleteTour": {
         "title": "刪除巡演",
-        "message_one": "刪除 <name>{{name}}</name> 及其中的 {{count}} 場演出嗎？此操作無法復原。",
-        "message_other": "刪除 <name>{{name}}</name> 及其中的全部 {{count}} 場演出嗎？此操作無法復原。"
+        "message_one": "刪除 <name>{{name}}</name> 及其中的 {{count}} 場演出？此操作無法復原。",
+        "message_other": "刪除 <name>{{name}}</name> 及其中的全部 {{count}} 場演出？此操作無法復原。"
       }
     },
     "errors": {
       "requiredFields": "請選擇藝人、日期和地點",
       "requiredTour": "請選擇巡演",
-      "requiredTourName": "請輸入巡演名稱",
-      "loadGigs": "無法載入演出",
+      "requiredTourName": "輸入巡演名稱",
+      "missingRequiredFields": "請新增 {{fields}}",
+      "loadGigs": "載入演出失敗",
+      "saveFailed": "儲存演出失敗。請重試。",
       "deleteFailedTitle": "無法刪除演出",
-      "deleteFailedMessage": "刪除演出失敗。請再試一次",
+      "deleteFailedMessage": "刪除演出失敗。請重試",
       "deleteTourFailedTitle": "無法刪除巡演",
-      "deleteTourFailedMessage": "刪除巡演及其中的演出失敗。請再試一次"
+      "deleteTourFailedMessage": "刪除巡演及其中的演出失敗。請重試"
     },
     "calendar": {
-      "title": "演出日曆",
+      "title": "演出行事曆",
       "selectDate": "選擇日期",
       "selectMonth": "選擇月份",
       "previousMonth": "上個月",
       "nextMonth": "下個月",
       "today": "今天",
-      "more": "另有 {{count}} 項"
+      "dateRange": "日期範圍",
+      "more": "+{{count}} 更多",
+      "remainingEvents": "還有 {{count}} 個活動"
     },
-    "timePicker": {
-      "enterTime": "輸入時間",
-      "selectTime": "選擇時間",
-      "selectHour": "選擇小時",
-      "selectMinute": "選擇分鐘",
-      "dial": "錶面",
-      "manual": "手動輸入",
-      "hour": "小時",
-      "minute": "分鐘",
-      "clear": "清除"
+    "venueSearch": {
+      "coordsPlaceholder": "緯度，經度",
+      "createVenueName": "建立場館",
+      "createdByUser": "使用者建立",
+      "failedCreateVenue": "建立場館失敗。請重試。",
+      "failedLocation": "搜尋失敗。請重試。",
+      "failedReverseLocation": "無法解析這些座標的行政地點",
+      "manualLocation": "手動指定位置",
+      "resultsLabel": "場館和地點結果",
+      "searchLocation": "搜尋地點",
+      "searchLocationTab": "搜尋地點",
+      "venueCreated": "場館已建立並生效",
+      "venueNamePlaceholder": "場館名稱"
     }
   },
   "app": {
@@ -677,19 +704,20 @@
       "deleteArtist": {
         "title": "刪除藝人",
         "errorTitle": "無法刪除藝人",
-        "errorMessage": "刪除藝人失敗。請再試一次。",
-        "message": "確定要刪除<strong>{{name}}</strong>嗎？這個動作無法復原。"
+        "errorMessage": "刪除藝人失敗。請重試。",
+        "message": "從你的地圖中刪除 <strong>{{name}}</strong>？此操作無法復原。"
       },
       "copyCollection": {
-        "title": "複製藝人合集",
-        "message_one": "要把<username>{{username}}</username>地圖中的<count>{{count}}位藝人</count>複製到你的地圖嗎？",
-        "message_other": "要把<username>{{username}}</username>地圖中的<count>{{count}}位藝人</count>複製到你的地圖嗎？",
-        "skipExisting": "你已經有的藝人會略過。",
-        "successTitle": "藝人集已複製",
-        "successMessage_one": "已複製{{copied}}位藝人，略過{{skipped}}位。",
-        "successMessage_other": "已複製{{copied}}位藝人，略過{{skipped}}位。",
-        "errorTitle": "無法複製合集",
-        "errorMessage": "複製藝人合集失敗。請再試一次。"
+        "title": "複製藝人收藏",
+        "message_one": "將 <username>{{username}}</username> 地圖中的 <count>{{count}} 位藝人</count> 複製到你的地圖？",
+        "message_other": "將 <username>{{username}}</username> 地圖中的 <count>{{count}} 位藝人</count> 複製到你的地圖？",
+        "skipExisting": "已在你地圖中的藝人會被跳過",
+        "successTitle": "收藏已複製",
+        "successMessage": "已複製 {{copied}} 位藝人，跳過 {{skipped}} 位",
+        "successMessage_one": "已複製 {{copied}} 位藝人，跳過 {{skipped}} 位",
+        "successMessage_other": "已複製 {{copied}} 位藝人，跳過 {{skipped}} 位",
+        "errorTitle": "無法複製收藏",
+        "errorMessage": "複製藝人收藏失敗。請重試。"
       }
     }
   }

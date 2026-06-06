@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useId } from 'react';
 import type { ComponentType, SVGProps } from 'react';
 import type { SocialLinkKey } from '../../constants/artist';
 import { validateSocialUrl } from '../../utils/urlValidation';
@@ -25,6 +25,7 @@ const SocialLinkInput = ({ field, value, onChange, externalError }: SocialLinkIn
     const [error, setError] = useState<string | null>(null);
     const [touched, setTouched] = useState(false);
     const { t } = useTranslation();
+    const errorId = useId();
 
     const validationMessages = useMemo(() => ({
         invalidWebsite: t('artistForm.errors.invalidWebsiteUrl'),
@@ -53,6 +54,7 @@ const SocialLinkInput = ({ field, value, onChange, externalError }: SocialLinkIn
         <div className="relative">
             <input
                 aria-label={placeholder}
+                aria-describedby={displayedError ? errorId : undefined}
                 aria-invalid={Boolean(displayedError)}
                 type="text"
                 name={`social-${key}`}
@@ -67,7 +69,7 @@ const SocialLinkInput = ({ field, value, onChange, externalError }: SocialLinkIn
             />
             <Icon aria-hidden="true" className={`absolute left-3 top-2.5 w-4 h-4 transition-colors ${isValid ? 'text-primary' : 'text-text-muted'}`} />
             {displayedError && (
-                <Alert variant="error" className="mt-2">
+                <Alert id={errorId} variant="error" className="mt-2">
                     {displayedError}
                 </Alert>
             )}

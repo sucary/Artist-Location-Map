@@ -31,10 +31,12 @@ export function IconButton({
     children,
     size,
     className,
+    type,
     ...props
 }: IconButtonProps) {
     return (
         <button
+            type={type ?? 'button'}
             className={cn(iconButtonVariants({ size }), className)}
             {...props}
         >

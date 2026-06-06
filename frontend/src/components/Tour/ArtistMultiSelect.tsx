@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useId } from 'react';
+import { useEffect, useMemo, useRef, useState, useId, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Artist } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
@@ -24,6 +24,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     const [isAddingArtist, setIsAddingArtist] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
+    const [activeIndex, setActiveIndex] = useState(0);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
     const selectedArtists = useMemo(() => (
@@ -41,6 +42,8 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
             return artist.name.toLowerCase().includes(normalizedQuery) || artist.romanizedName?.toLowerCase().includes(normalizedQuery);
         });
     }, [artists, query, value]);
+    const safeActiveIndex = filteredArtists.length === 0 ? 0 : Math.min(activeIndex, filteredArtists.length - 1);
+    const activeOptionId = isOpen && filteredArtists[safeActiveIndex] ? `${listboxId}-${filteredArtists[safeActiveIndex].id}` : undefined;
 
     useEffect(() => {
         if (!isOpen || !containerRef.current) return;
@@ -76,6 +79,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
         if (value.includes(artistId)) return;
         onChange([...value, artistId]);
         setQuery('');
+        setActiveIndex(0);
         setIsOpen(false);
         setIsAddingArtist(false);
     };
@@ -87,11 +91,35 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     const openArtistField = () => {
         setIsAddingArtist(true);
         setIsOpen(true);
+        setActiveIndex(0);
     };
 
     const closeArtistField = () => {
         setIsOpen(false);
         setIsAddingArtist(false);
+    };
+
+    const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Escape') {
+            closeArtistField();
+            return;
+        }
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            setIsOpen(true);
+            setActiveIndex((current) => {
+                if (filteredArtists.length === 0) return 0;
+                const nextIndex = event.key === 'ArrowDown' ? current + 1 : current - 1;
+                return (nextIndex + filteredArtists.length) % filteredArtists.length;
+            });
+            return;
+        }
+
+        if (event.key === 'Enter' && isOpen && filteredArtists[safeActiveIndex]) {
+            event.preventDefault();
+            addArtist(filteredArtists[safeActiveIndex].id);
+        }
     };
 
     return (
@@ -114,8 +142,9 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                             <button
                                 key={artist.id}
                                 type="button"
+                                aria-label={removeLabel(artist.name)}
                                 onClick={() => removeArtist(artist.id)}
-                                className="group relative inline-flex max-w-full items-center gap-1.5 overflow-hidden rounded-full bg-surface-muted py-1 pl-3 pr-1 text-xs font-medium text-text-secondary transition-colors hover:bg-primary hover:text-white"
+                                className="group relative inline-flex max-w-full items-center gap-1.5 overflow-hidden rounded-full bg-surface-muted py-1 pl-3 pr-1 text-xs font-medium text-text-secondary transition-colors hover:bg-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                                 title={removeLabel(artist.name)}
                             >
                                 <span className="min-w-0 truncate">{artist.name}</span>
@@ -124,18 +153,18 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                                         <img
                                             src={avatarUrl}
                                             alt=""
-                                            className="h-full w-full object-cover group-hover:hidden"
+                                            className="h-full w-full object-cover group-hover:hidden group-focus-visible:hidden"
                                         />
-                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid">
+                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid group-focus-visible:grid">
                                             <CloseIcon className="h-3 w-3" />
                                         </span>
                                     </span>
                                 ) : (
-                                    <span className="relative grid h-5 w-5 shrink-0 place-items-center rounded-full bg-surface-secondary text-[10px] font-semibold text-text-secondary group-hover:bg-transparent group-hover:text-white">
-                                        <span className="group-hover:hidden">
+                                    <span className="relative grid h-5 w-5 shrink-0 place-items-center rounded-full bg-surface-secondary text-[10px] font-semibold text-text-secondary group-hover:bg-transparent group-hover:text-white group-focus-visible:bg-transparent group-focus-visible:text-white">
+                                        <span className="group-hover:hidden group-focus-visible:hidden">
                                             {Array.from(artist.name.trim())[0]?.toUpperCase()}
                                         </span>
-                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid">
+                                        <span className="absolute inset-0 hidden place-items-center rounded-full text-white group-hover:grid group-focus-visible:grid">
                                             <CloseIcon className="h-3 w-3" />
                                         </span>
                                     </span>
@@ -167,6 +196,7 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                             id={inputId}
                             role="combobox"
                             aria-autocomplete="list"
+                            aria-activedescendant={activeOptionId}
                             aria-controls={isOpen ? listboxId : undefined}
                             aria-expanded={isOpen}
                             aria-haspopup="listbox"
@@ -176,13 +206,15 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                             onChange={(event) => {
                                 setQuery(event.target.value);
                                 setIsOpen(true);
+                                setActiveIndex(0);
                             }}
                             onFocus={() => setIsOpen(true)}
+                            onKeyDown={handleInputKeyDown}
                             placeholder={placeholder}
                             className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                         />
                         <button
-                            aria-label={t('artistForm.yearSelect.label')}
+                            aria-label={placeholder}
                             aria-controls={isOpen ? listboxId : undefined}
                             aria-expanded={isOpen}
                             aria-haspopup="listbox"
@@ -212,22 +244,28 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                         width: `${dropdownPosition.width}px`,
                     }}
                 >
-                    {filteredArtists.map((artist) => (
+                    {filteredArtists.map((artist, index) => {
+                        const isActive = index === safeActiveIndex;
+
+                        return (
                         <button
                             key={artist.id}
+                            id={`${listboxId}-${artist.id}`}
                             type="button"
                             role="option"
                             aria-selected={false}
                             onMouseDown={(event) => event.preventDefault()}
+                            onMouseEnter={() => setActiveIndex(index)}
                             onClick={() => addArtist(artist.id)}
-                            className="w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted"
+                            className={`w-full border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${isActive ? 'bg-surface-muted' : ''}`}
                         >
                             <span className="block truncate font-medium">{artist.name}</span>
                             {artist.romanizedName && (
                                 <span className="block truncate text-xs text-text-secondary">{artist.romanizedName}</span>
                             )}
                         </button>
-                    ))}
+                        );
+                    })}
                     {filteredArtists.length === 0 && (
                         <div className="px-3 py-3 text-sm text-text-secondary">
                             {t('tour.form.noArtistsFound')}

@@ -15,55 +15,60 @@
     "delete": "Delete",
     "copy": "Copy",
     "edit": "Edit",
-    "optional": "Optional"
+    "optional": "Optional",
+    "apply": "Apply",
+    "city": "City",
+    "create": "Create",
+    "expand": "Expand"
   },
   "auth": {
     "fields": {
       "email": "Email",
       "password": "Password",
-      "confirmPassword": "Confirm Password",
-      "currentPassword": "Current Password",
-      "newPassword": "New Password",
-      "confirmNewPassword": "Confirm New Password"
+      "confirmPassword": "Confirm password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password"
     },
     "buttons": {
-      "signIn": "Sign In",
-      "signUp": "Sign Up",
+      "signIn": "Sign in",
+      "signUp": "Sign up",
       "sendResetLink": "Send reset link",
-      "backToSignIn": "Back to Sign In",
+      "backToSignIn": "Back to sign in",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "rememberMe": "Remember me",
       "done": "Done",
       "resend": "Resend",
-      "resetPassword": "Reset Password"
+      "resetPassword": "Reset password"
     },
     "signIn": {
-      "title": "Sign In",
-      "forgotPassword": "Forgot Password?",
+      "title": "Sign in",
+      "forgotPassword": "Forgot password?",
       "dontHaveAccount": "Don't have an account?",
       "rejectedAccountHint": "If your registration was rejected, this account can no longer sign in. Please contact an admin or register again.",
       "or": "Or"
     },
     "signUp": {
-      "title": "Create Account",
+      "title": "Create account",
       "haveAccount": "Already have an account?"
     },
     "resetPassword": {
-      "title": "Reset Password",
-      "description": "Enter your email and we'll send you a link to reset your password.",
+      "title": "Reset password",
+      "description": "Enter your email and we'll send you a link to reset your password",
       "authSessionExpired": "Session expired. Please request a new reset link.",
       "passwordUpdated": "Password updated",
       "updating": "Updating password"
     },
     "emailCheck": {
       "title": "Check your email",
-      "message": "We've sent a confirmation link to {{email}}. Please check your inbox and click the link to continue."
+      "message": "We've sent a confirmation link to {{email}}. Please check your inbox and click the link to continue.",
+      "expiresIn": "Confirmation links expire after 15 minutes"
     },
     "userNamePrompt": {
       "title": "Create your username",
-      "description": "Others can find you by your username.",
-      "subdescription": "Username and visibility can be modified in settings later.",
+      "description": "Others can find you by your username",
+      "subdescription": "Username and visibility can be modified in settings later",
       "usernameLabel": "Username",
       "usernamePlaceholder": "Enter a username",
       "usernameAvailable": "Username available",
@@ -71,7 +76,7 @@
       "submit": "Continue"
     },
     "messages": {
-      "checkEmailConfirmation": "Check your email for confirmation.",
+      "checkEmailConfirmation": "Check your email for confirmation",
       "resetLinkSent": "Check your email for the password reset link"
     },
     "errors": {
@@ -85,28 +90,29 @@
       "incorrectCredentials": "Incorrect email or password",
       "unexpectedError": "An unexpected error occurred, please try again",
       "unableToSignIn": "Unable to sign in with {{provider}}. Please try another method or contact support.",
-      "resendEmailFailed": "Could not resend email, please try again.",
+      "resendEmailFailed": "Could not resend email, please try again",
       "userNameMin": "Username must be at least 3 characters",
       "userNameMax": "Username must not exceed 32 characters",
       "userNamePattern": "Username can only contain lowercase letters, numbers, and underscores",
       "userNameTaken": "This username is already registered, please enter a new username",
-      "unableToSaveUsername": "Unable to save username. Please try again."
+      "unableToSaveUsername": "Unable to save username. Please try again.",
+      "confirmationExpired": "Confirmation link expired. Please register again."
     }
   },
   "approval": {
-    "title": "Account Pending Approval",
-    "description": "Your account is awaiting admin approval.",
-    "pending": "Your account is pending approval.",
-    "approved": "Your account has been approved! You can now sign in.",
-    "rejected": "Your account application was rejected."
+    "title": "Account pending approval",
+    "description": "Your account is awaiting admin approval",
+    "pending": "Your account is pending approval",
+    "approved": "Your account has been approved. You can now sign in.",
+    "rejected": "Your account application was rejected"
   },
   "userMenu": {
     "accountMenu": "Account menu",
     "settings": "Settings",
     "adminDashboard": {
-      "title": "Admin Dashboard"
+      "title": "Admin dashboard"
     },
-    "signOut": "Sign Out"
+    "signOut": "Sign out"
   },
   "location": {
     "searchPlaceholder": "Search locations"
@@ -114,11 +120,11 @@
   "artistForm": {
     "fields": {
       "name": "Name",
-      "originalLocation": "Original Location",
+      "originalLocation": "Original location",
       "searchOriginalLocation": "Search original location",
-      "activeLocation": "Active Location",
+      "activeLocation": "Active location",
       "searchActiveLocation": "Search active location",
-      "careerYears": "Career Years",
+      "careerYears": "Career years",
       "debutYear": "Debut year",
       "debut": "Debut",
       "present": "Present",
@@ -129,12 +135,12 @@
       "avatar": "Artist avatar"
     },
     "defaults": {
-      "newArtist": "New Artist"
+      "newArtist": "New artist"
     },
     "buttons": {
       "editBanner": "Edit artist banner",
       "editName": "Edit artist name",
-      "uploadAvatar": "Upload Image",
+      "uploadAvatar": "Upload image",
       "save": "Save",
       "cancel": "Cancel",
       "confirm": "Confirm",
@@ -144,7 +150,7 @@
       "setActive": "Set artist as active"
     },
     "socialMedia": {
-      "title": "Social Media",
+      "title": "Social media",
       "website": "Website URL",
       "instagram": "Instagram URL",
       "twitter": "Twitter/X URL",
@@ -152,7 +158,7 @@
       "youtube": "YouTube URL"
     },
     "cropper": {
-      "title": "Crop Image",
+      "title": "Crop image",
       "avatar": "Avatar",
       "banner": "Banner",
       "reUpload": "Re-upload",
@@ -179,7 +185,7 @@
       "errors": {
         "searchTimedOut": "Search timed out. Please try again.",
         "failedSearch": "Failed to search locations. Please try again.",
-        "failedMore": "Failed to search for more results.",
+        "failedMore": "Failed to search for more results",
         "noLocationsAtPoint": "No locations found at this point. Try another spot."
       }
     },
@@ -191,8 +197,8 @@
       "currentImage": "Current image",
       "currentSharedArtistAlt": "Current shared artist",
       "artistImageExistsTitle": "Artist image already exists",
-      "sharedImageRecommendation": "We highly recommend using shared artist image due to storage limits.",
-      "submitForReviewDescription": "If you think your image represents the artist better, you can submit it for review.",
+      "sharedImageRecommendation": "We highly recommend using shared artist image due to storage limits",
+      "submitForReviewDescription": "If you think your image represents the artist better, you can submit it for review",
       "chooseImage": "Choose an image",
       "sharedImage": "Shared image",
       "yourUpload": "Your upload",
@@ -228,7 +234,7 @@
       "invalidSocialLinkUrl": "Invalid social link URL",
       "imageUploadFailed": "Image upload failed",
       "failedUploadImage": "Failed to upload image. Please try again.",
-      "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB.",
+      "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB",
       "saveArtistFailedHeader": "Could not save artist",
       "failedSaveArtist": "Failed to save artist. Please try again."
     }
@@ -254,7 +260,7 @@
     "title": "Settings",
     "privacy": {
       "title": "Privacy",
-      "description": "Hide your account from other users.",
+      "description": "Hide your account and map from other users",
       "errorHeader": "Could not update privacy",
       "makePublic": "Make account public",
       "makePrivate": "Make account private"
@@ -262,7 +268,7 @@
     "adminTools": {
       "title": "Admin tools",
       "clusterDebug": "Cluster debugging",
-      "clusterDebugDescription": "Show cluster debug controls on the map.",
+      "clusterDebugDescription": "Show cluster debug controls on the map",
       "showClusterDebug": "Show cluster debug controls",
       "hideClusterDebug": "Hide cluster debug controls"
     },
@@ -270,7 +276,7 @@
       "title": "Display",
       "locationName": "Location name language",
       "locationNameLanguage": "Location name language",
-      "hint": "Some locations may display in a different language due to lack of translation.",
+      "hint": "Some locations may display in a different language due to lack of translation",
       "native": "Native"
     },
     "artistNames": {
@@ -284,15 +290,15 @@
       }
     },
     "username": {
-      "title": "Username",
-      "changeUsername": "Change username",
+      "title": "Change username",
+      "changeUsername": "New username",
       "errorHeader": "Could not update username",
       "saveUsername": "Save username"
     },
     "password": {
-      "title": "Change Password",
+      "title": "Change password",
       "errorHeader": "Could not update password",
-      "success": "Password updated successfully.",
+      "success": "Password updated successfully",
       "changePassword": "Change password"
     },
     "errors": {
@@ -306,7 +312,7 @@
     },
     "uiLanguage": {
       "title": "UI Language",
-      "description": "Choose the language used by the app interface.",
+      "description": "Choose the language used by the app interface",
       "language": "Main language"
     }
   },
@@ -317,13 +323,13 @@
     "steps": {
       "addArtist": {
         "title": "Add your first artist",
-        "body": "Start by pressing this button."
+        "body": "Start by pressing this button"
       },
       "searchArtist": {
         "title": "Search the artist",
         "body": {
-          "search": "Enter the artist name, then press Enter or the search button.",
-          "deepSearch": "If the artist is not found, switch on <strong>Deep search</strong> and retry."
+          "search": "Enter the artist name, then press Enter or the search button",
+          "deepSearch": "If the artist is not found, switch on <strong>Deep search</strong> and retry"
         }
       },
       "origin": {
@@ -333,8 +339,8 @@
       "activeLocation": {
         "title": "Set the active location",
         "body": {
-          "search": "Repeat the location search for where the artist is active now.",
-          "copy": "If it is the same as the origin, you can copy it with the arrow button."
+          "search": "Repeat the location search for where the artist is active now",
+          "copy": "If it is the same as the origin, you can copy it with the arrow button"
         }
       },
       "careerYears": {
@@ -343,7 +349,7 @@
       },
       "externalLinks": {
         "title": "Add external links",
-        "body": "External links such as social media and official pages are optional."
+        "body": "External links such as social media and official pages are optional"
       },
       "artistImage": {
         "title": "Upload an artist image",
@@ -358,19 +364,19 @@
   "about": {
     "title": "About",
     "project": {
-      "description": "An open-source project for mapping your favorite artists around the world.",
+      "description": "An open-source project for mapping your favorite artists around the world",
       "viewOnGithub": "GitHub"
     },
     "credits": {
       "title": "APIs & Libraries",
       "openStreetMap": {
-        "description": "Map data and geocoding services via Nominatim and Overpass API."
+        "description": "Map data and geocoding services via Nominatim and Overpass API"
       },
       "mapLibre": {
-        "description": "Interactive vector map rendering."
+        "description": "Interactive vector map rendering"
       },
       "carto": {
-        "description": "Base map styles and tiles."
+        "description": "Base map styles and tiles"
       }
     }
   },
@@ -383,10 +389,11 @@
     "pinned": "Pinned",
     "clearAll": "Clear all notifications",
     "accountPendingApprovalTitle": "Account pending approval",
-    "accountPendingApprovalContent": "Your account is awaiting admin approval.",
+    "accountPendingApprovalContent": "Your account is awaiting admin approval",
     "pendingApprovals_one": "{{count}} pending approval",
     "pendingApprovals_other": "{{count}} pending approvals",
-    "pendingApprovalsContent": "Users are waiting for account approval.",
+    "pendingApprovals": "Pending approvals",
+    "pendingApprovalsContent": "Users are waiting for account approval",
     "openAdmin": "Open admin"
   },
   "map": {
@@ -419,7 +426,7 @@
         "zoomOut": "Zoom out",
         "gigFilter": {
           "open": "Filter gigs on map",
-          "title": "Map view",
+          "title": "Gig filter",
           "starredLabel": "Gig visibility",
           "allGigs": "All gigs",
           "starredGigs": "Starred",
@@ -443,7 +450,7 @@
     },
     "title": {
       "default": "Artists",
-      "featured": "Artists from the Community"
+      "featured": "Artists from the community"
     },
     "search": {
       "ariaLabel": "Search artists or locations",
@@ -487,7 +494,7 @@
       "private": "The profile is private",
       "deleted": "The account has been deleted"
     },
-    "goBack": "Go Back"
+    "goBack": "Go back"
   },
   "artistCard": {
     "fields": {
@@ -511,8 +518,8 @@
   },
   "tour": {
     "actions": {
-      "enterTourMode": "Enter Tour Mode",
-      "exitTourMode": "Exit Tour Mode",
+      "enterTourMode": "Enter tour mode",
+      "exitTourMode": "Back to my map",
       "addGig": "Add gig",
       "viewGigPanel": "View gigs",
       "viewCalendar": "View calendar",
@@ -522,7 +529,9 @@
       "exit": "Exit",
       "viewEvent": "View event",
       "starGig": "Star gig",
-      "unstarGig": "Unstar gig"
+      "unstarGig": "Unstar gig",
+      "todayOnward": "Today onward",
+      "allDates": "All dates"
     },
     "fields": {
       "artist": "Artist",
@@ -585,7 +594,7 @@
       "clear": "Clear"
     },
     "banner": {
-      "label": "Tour Mode",
+      "label": "Tour mode",
       "default": "<count>{{count}}</count> upcoming gigs",
       "interval": "{{from}} - {{to}} (<count>{{count}}</count> gigs)",
       "day": "{{day}} highlighted (<count>{{count}}</count> gigs)"
@@ -656,7 +665,9 @@
       "requiredFields": "Select an artist, date, and location",
       "requiredTour": "Select a tour",
       "requiredTourName": "Enter a tour name",
+      "missingRequiredFields": "Please add {{fields}}",
       "loadGigs": "Failed to load gigs",
+      "saveFailed": "Failed to save gig. Please try again.",
       "deleteFailedTitle": "Could not delete gig",
       "deleteFailedMessage": "Failed to delete gig. Please try again",
       "deleteTourFailedTitle": "Could not delete tour",
@@ -667,11 +678,26 @@
       "selectDate": "Select date",
       "selectMonth": "Select month",
       "previousMonth": "Previous month",
-        "nextMonth": "Next month",
-        "today": "Today",
-        "more": "+{{count}} more",
-        "remainingEvents": "{{count}} more events"
-      }
+      "nextMonth": "Next month",
+      "today": "Today",
+      "dateRange": "Date range",
+      "more": "+{{count}} more",
+      "remainingEvents": "{{count}} more events"
+    },
+    "venueSearch": {
+      "coordsPlaceholder": "Latitude, longitude",
+      "createVenueName": "Create venue",
+      "createdByUser": "Created by user",
+      "failedCreateVenue": "Failed to create venue. Please try again.",
+      "failedLocation": "Failed to search. Please try again.",
+      "failedReverseLocation": "Could not resolve the administrative location for these coordinates",
+      "manualLocation": "Manual location",
+      "resultsLabel": "Venue and location results",
+      "searchLocation": "Search location",
+      "searchLocationTab": "Search location",
+      "venueCreated": "Venue created and applied",
+      "venueNamePlaceholder": "Venue name"
+    }
   },
   "app": {
     "dialogs": {
@@ -685,8 +711,9 @@
         "title": "Copy artist collection",
         "message_one": "Copy <count>{{count}} artist</count> from <username>{{username}}</username>'s map to your map?",
         "message_other": "Copy <count>{{count}} artists</count> from <username>{{username}}</username>'s map to your map?",
-        "skipExisting": "Artists already on your map will be skipped.",
+        "skipExisting": "Artists already on your map will be skipped",
         "successTitle": "Collection copied",
+        "successMessage": "Copied {{copied}} artists. Skipped {{skipped}}.",
         "successMessage_one": "Copied {{copied}} artist. Skipped {{skipped}}.",
         "successMessage_other": "Copied {{copied}} artists. Skipped {{skipped}}.",
         "errorTitle": "Could not copy collection",

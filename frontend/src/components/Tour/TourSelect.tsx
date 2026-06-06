@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,7 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { i18n, t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0);
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
     const tourMonthFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'short' }), [dateLocale]);
@@ -97,6 +98,8 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
         if (!normalizedQuery || selectedTourName === query) return tours;
         return tours.filter((tour) => getTourSearchText(tour).toLowerCase().includes(normalizedQuery));
     }, [getTourSearchText, query, selectedTourName, tours]);
+    const safeActiveIndex = filteredTours.length === 0 ? 0 : Math.min(activeIndex, filteredTours.length - 1);
+    const activeOptionId = isOpen && filteredTours[safeActiveIndex] ? `${listboxId}-${filteredTours[safeActiveIndex].id}` : undefined;
 
     useEffect(() => {
         if (!isOpen || !containerRef.current) return;
@@ -148,6 +151,35 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
         setIsOpen(false);
     };
 
+    const openWithSelectedOption = () => {
+        const selectedIndex = Math.max(0, filteredTours.findIndex((tour) => tour.id === value));
+        setActiveIndex(selectedIndex);
+        setIsOpen(true);
+    };
+
+    const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Escape') {
+            setIsOpen(false);
+            return;
+        }
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            setIsOpen(true);
+            setActiveIndex((current) => {
+                if (filteredTours.length === 0) return 0;
+                const nextIndex = event.key === 'ArrowDown' ? current + 1 : current - 1;
+                return (nextIndex + filteredTours.length) % filteredTours.length;
+            });
+            return;
+        }
+
+        if (event.key === 'Enter' && isOpen && filteredTours[safeActiveIndex]) {
+            event.preventDefault();
+            handleSelect(filteredTours[safeActiveIndex]);
+        }
+    };
+
     return (
         <div ref={containerRef} className="relative">
             <input
@@ -155,6 +187,7 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                 role="combobox"
                 aria-label={ariaLabel}
                 aria-autocomplete="list"
+                aria-activedescendant={activeOptionId}
                 aria-controls={isOpen ? listboxId : undefined}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
@@ -169,8 +202,10 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                     });
                     onChange('');
                     setIsOpen(true);
+                    setActiveIndex(0);
                 }}
-                onFocus={() => setIsOpen(true)}
+                onFocus={openWithSelectedOption}
+                onKeyDown={handleInputKeyDown}
                 placeholder={placeholder}
                 className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
             />
@@ -182,7 +217,11 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                 type="button"
                 onMouseDown={(event) => {
                     event.preventDefault();
-                    setIsOpen((open) => !open);
+                    if (isOpen) {
+                        setIsOpen(false);
+                        return;
+                    }
+                    openWithSelectedOption();
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary transition-colors hover:bg-primary hover:text-white"
             >
@@ -204,18 +243,21 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
                         maxHeight: `${dropdownPosition.maxHeight}px`,
                     }}
                 >
-                    {filteredTours.map((tour) => {
+                    {filteredTours.map((tour, index) => {
                         const tourDate = getTourOptionDate(tour);
+                        const isActive = index === activeIndex;
 
                         return (
                             <button
                                 key={tour.id}
+                                id={`${listboxId}-${tour.id}`}
                                 type="button"
                                 role="option"
                                 aria-selected={tour.id === value}
                                 onMouseDown={(event) => event.preventDefault()}
+                                onMouseEnter={() => setActiveIndex(index)}
                                 onClick={() => handleSelect(tour)}
-                                className={`flex w-full items-center gap-3 border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${tour.id === value ? 'bg-surface-muted' : ''}`}
+                                className={`flex w-full items-center gap-3 border-b border-border px-3 py-2 text-left text-sm text-text transition-colors last:border-b-0 hover:bg-surface-muted ${tour.id === value || isActive ? 'bg-surface-muted' : ''}`}
                             >
                                 <span className="min-w-0 flex-1 truncate font-medium">{tour.name}</span>
                                 {tourDate && (

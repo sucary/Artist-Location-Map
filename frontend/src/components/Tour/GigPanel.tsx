@@ -393,13 +393,13 @@ export function GigPanel({
                     }
                 }}
             >
-                <div className={`group relative flex min-h-14 items-center px-4 py-2 transition-colors duration-150 ${isExpanded ? 'bg-primary text-white hover:bg-primary' : 'hover:bg-surface-secondary/30'}`}>
+                <div className={`group relative flex min-h-14 items-center px-4 py-2 transition-colors duration-150 focus-within:bg-surface-secondary/30 ${isExpanded ? 'bg-primary text-white hover:bg-primary focus-within:bg-primary' : 'hover:bg-surface-secondary/30'}`}>
                     <button
                         type="button"
                         aria-expanded={isExpanded}
                         aria-label={t(isExpanded ? 'tour.management.collapseTour' : 'tour.management.expandTour', { name: tour.name })}
                         onClick={() => toggleTour(tour.id)}
-                        className="flex min-w-0 flex-1 py-1 pr-20 text-left"
+                        className="flex min-w-0 flex-1 py-1 pr-20 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                     >
                         <span className="flex min-w-0 flex-col gap-0.5">
                             <span className="flex min-w-0 items-center gap-2">
@@ -478,7 +478,7 @@ export function GigPanel({
             : locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
-            <li key={gig.id} className="group relative transition-colors duration-150 hover:bg-surface-secondary/30">
+            <li key={gig.id} className="group relative transition-colors duration-150 hover:bg-surface-secondary/30 focus-within:bg-surface-secondary/30">
                 {onToggleGigStar && (
                     <button
                         type="button"
@@ -538,7 +538,7 @@ export function GigPanel({
                             </button>
                         )}
                         <div className="relative flex min-h-8 min-w-0 items-center">
-                            <p className="min-w-0 truncate text-xs text-text-secondary group-hover:pr-28">{locationMeta}</p>
+                            <p className="min-w-0 truncate text-xs text-text-secondary group-hover:pr-28 group-focus-within:pr-28">{locationMeta}</p>
                             <InlineActionMenu
                                 actions={[
                                     ...(onLocateGig ? [{

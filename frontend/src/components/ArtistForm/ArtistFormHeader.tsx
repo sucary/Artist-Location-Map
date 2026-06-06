@@ -75,33 +75,30 @@ const ArtistFormHeader = ({
     return (
         <div
             data-tutorial-target="artist-image"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onProfileClick();
-                }
-            }}
-            aria-label={t('artistForm.buttons.editBanner')}
-            className={`relative z-[80] w-full h-32 shrink-0 bg-surface-muted bg-cover bg-center group/profile cursor-pointer ${profileUrl ? '' : 'artist-banner-placeholder'}`}
+            className={`group/profile relative z-[80] w-full h-32 shrink-0 bg-surface-muted bg-cover bg-center ${profileUrl ? '' : 'artist-banner-placeholder'}`}
             style={profileUrl ? { backgroundImage: `url(${profileUrl})` } : undefined}
-            onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
-            onClick={handleProfileClick}
         >
+            <button
+                type="button"
+                aria-label={t('artistForm.buttons.editBanner')}
+                className="absolute inset-0 cursor-pointer appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
+                onClick={handleProfileClick}
+            />
+
             {/* Bottom gradient for name readability */}
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 via-black/20 to-transparent pointer-events-none" />
 
             {/* Hover overlay */}
-            <div className="absolute inset-0 flex items-center justify-center transition-colors group-hover/profile:bg-black/30">
-                <EditIcon aria-hidden="true" className="w-6 h-6 text-white opacity-0 transition-opacity group-hover/profile:opacity-100" />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-colors group-hover/profile:bg-black/30 group-focus-within/profile:bg-black/30">
+                <EditIcon aria-hidden="true" className="w-6 h-6 text-white opacity-0 transition-opacity group-hover/profile:opacity-100 group-focus-within/profile:opacity-100" />
             </div>
 
             {/* Avatar */}
             <button
                 type="button"
                 aria-label={t('artistForm.buttons.uploadAvatar')}
-                className="absolute -bottom-8 left-4 w-20 h-20 rounded-full border-4 border-surface bg-border overflow-hidden z-10 shadow-md group/avatar cursor-pointer"
+                className="absolute -bottom-8 left-4 w-20 h-20 rounded-full border-4 border-surface bg-border overflow-hidden z-10 shadow-md group/avatar cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
                 onClick={handleAvatarClick}
             >
@@ -130,7 +127,7 @@ const ArtistFormHeader = ({
                         ) : (
                             <div className="w-full h-full bg-surface-muted" />
                         )}
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity group-hover/avatar:opacity-100 group-hover/profile:opacity-100">
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity group-hover/avatar:opacity-100 group-focus-visible/avatar:opacity-100 group-hover/profile:opacity-100">
                             <EditIcon aria-hidden="true" className="w-6 h-6 text-white" />
                         </div>
                     </>
@@ -160,8 +157,9 @@ const ArtistFormHeader = ({
                     />
                 ) : (
                     <button
+                        type="button"
                         onClick={() => setIsEditingName(true)}
-                        className="text-lg font-bold text-white text-shadow-overlay hover:text-white/90 whitespace-nowrap overflow-hidden p-0 m-0 leading-tight border-b-2 border-transparent cursor-pointer min-h-[1.75rem]"
+                        className="text-lg font-bold text-white text-shadow-overlay hover:text-white/90 whitespace-nowrap overflow-hidden p-0 m-0 leading-tight border-b-2 border-transparent cursor-pointer min-h-[1.75rem] focus:outline-none focus-visible:border-white"
                         title={name}
                         aria-label={t('artistForm.buttons.editName')}
                     >

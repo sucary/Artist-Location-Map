@@ -11,11 +11,14 @@ interface TourBannerProps {
     onExit: () => void;
 }
 
+const FUTURE_GIG_DATES_END = '9999-12-31';
+
 export function TourBanner({ tourMode, gigCount, highlightedCount, onExit }: TourBannerProps) {
     const { i18n, t } = useTranslation();
+    const showsAllFutureGigs = tourMode.interval?.to === FUTURE_GIG_DATES_END && !tourMode.selectedDay;
     const i18nKey = tourMode.selectedDay
         ? 'tour.banner.day'
-        : tourMode.interval
+        : tourMode.interval && !showsAllFutureGigs
             ? 'tour.banner.interval'
             : 'tour.banner.default';
     const count = tourMode.selectedDay ? highlightedCount : gigCount;
