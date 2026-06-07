@@ -426,7 +426,7 @@
         "zoomOut": "縮小",
         "gigFilter": {
           "open": "篩選地圖上的演出",
-          "title": "篩選演出",
+          "title": "演出篩選",
           "starredLabel": "演出顯示",
           "allGigs": "全部演出",
           "starredGigs": "已收藏演出",

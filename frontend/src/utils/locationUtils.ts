@@ -167,9 +167,9 @@ export const formatLocationLocalized = (
     if (!chain) return formatLocation(location);
 
     const parts = [
-        getLocalizedName(chain.city, preference) || (preference === 'native' ? location.city : ''),
-        getLocalizedName(chain.province, preference) || (preference === 'native' ? location.province : ''),
-        getLocalizedName(chain.country, preference) || (preference === 'native' ? location.country : ''),
+        getLocalizedName(chain.city, preference) || location.city,
+        getLocalizedName(chain.province, preference) || location.province,
+        getLocalizedName(chain.country, preference) || location.country,
     ].filter(Boolean);
 
     // Dedupe adjacent identical parts (e.g. city-state where province == country)

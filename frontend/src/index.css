@@ -107,7 +107,7 @@ html[data-theme="dark"] .artist-banner-placeholder {
 .custom-artist-marker.marker-focused,
 .custom-artist-marker:has(+ .maplibregl-popup),
 .custom-venue-cluster-marker.marker-focused {
-  z-index: 1000 !important;
+  z-index: 800 !important;
 }
 .custom-artist-marker.marker-focused > div,
 .custom-artist-marker:has(+ .maplibregl-popup) > div {

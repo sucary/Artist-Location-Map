@@ -272,14 +272,16 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
                         </svg>
                         <span className="flex min-w-0 flex-col">
                             <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                                {gig.venueName && (
-                                    <span className="min-w-0 break-words font-semibold leading-5 text-text">{gig.venueName}</span>
-                                )}
+                                <span className={`min-w-0 break-words leading-5 ${gig.venueName ? 'font-semibold text-text' : ''}`}>
+                                    {gig.venueName || locationLabel}
+                                </span>
                                 <span className={`flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
                                     {renderInfoBadge(formattedDate)}
                                 </span>
                             </span>
-                            <span className="min-w-0 break-words leading-5">{locationLabel}</span>
+                            {gig.venueName && (
+                                <span className="min-w-0 break-words leading-5">{locationLabel}</span>
+                            )}
                         </span>
                     </div>
                 </div>

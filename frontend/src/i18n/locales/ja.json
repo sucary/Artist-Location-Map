@@ -428,7 +428,7 @@
         "zoomOut": "縮小",
         "gigFilter": {
           "open": "絞り込み",
-          "title": "絞り込み",
+          "title": "公演フィルター",
           "starredLabel": "公演の表示",
           "allGigs": "全公演",
           "starredGigs": "お気に入り",

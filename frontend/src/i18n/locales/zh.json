@@ -428,7 +428,7 @@
         "zoomOut": "缩小",
         "gigFilter": {
           "open": "筛选地图上的演出",
-          "title": "筛选演出",
+          "title": "演出筛选",
           "starredLabel": "演出显示",
           "allGigs": "全部演出",
           "starredGigs": "已收藏演出",
