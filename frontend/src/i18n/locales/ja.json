@@ -66,7 +66,7 @@
       "expiresIn": "確認リンクは15分後に期限切れになります"
     },
     "messages": {
-      "checkEmailConfirmation": "確認メールをご確認ください",
+      "checkEmailConfirmation": "確認メールをご覧ください",
       "resetLinkSent": "パスワード再設定用のリンクを送信しました"
     },
     "userNamePrompt": {
@@ -93,7 +93,7 @@
       "userNameMin": "ユーザー名は3文字以上にしてください",
       "userNameMax": "ユーザー名は32文字以内にしてください",
       "userNamePattern": "ユーザー名には小文字の英字、数字、アンダースコアのみ使用できます",
-      "userNameTaken": "そのユーザー名は既に登録されています。新しいユーザー名を入力してください。",
+      "userNameTaken": "そのユーザー名はすでに登録されています。新しいユーザー名を入力してください。",
       "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。",
       "resendEmailFailed": "メールを再送信できませんでした。もう一度お試しください。",
       "confirmationExpired": "確認リンクの有効期限が切れました。もう一度登録してください。"
@@ -368,7 +368,7 @@
       "viewOnGithub": "GitHub"
     },
     "credits": {
-      "title": "API とライブラリ",
+      "title": "APIとライブラリ",
       "openStreetMap": {
         "description": "Nominatim と Overpass API による地図データとジオコーディングサービス"
       },
@@ -416,7 +416,7 @@
         "toggleMapTheme": "地図テーマを切り替え",
         "light": "ライト",
         "dark": "ダーク",
-        "useDarkTiles": "ダーク地図を使用",
+        "useDarkTiles": "ダークモードを使用",
         "cannotUseDarkTiles": "この地図ではダーク表示を使用できません",
         "collapseAllClusters": "すべてのクラスターを閉じる",
         "expandAllClusters": "すべてのクラスターを開く",
@@ -487,7 +487,7 @@
     }
   },
   "userNotFound": {
-    "title": "{{username}} が見つかりません ;_;",
+    "title": "{{username}}が見つかりません ;_;",
     "reasonsIntro": "次の理由が考えられます:",
     "reasons": {
       "doesNotExist": "ユーザーが存在しない",
@@ -543,7 +543,7 @@
       "time": "時刻",
       "tour": "ツアー",
       "addToTour": "ツアーに追加",
-      "partOfTour": "ツアーの一部？",
+      "partOfTour": "ツアーに含めますか？",
       "createTour": "ツアーを作成",
       "createTourOptional": "ツアーを作成（任意）",
       "tourName": "ツアー名",
