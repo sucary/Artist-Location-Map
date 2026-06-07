@@ -17,6 +17,7 @@ import {
     CLUSTER_DEBUG_CONTROLS_STORAGE_EVENT,
     defaultCenter,
     defaultZoom,
+    localCjkIdeographFontFamily,
     scrollWheelZoomRate,
     trackpadZoomRate,
 } from './config/mapConstants';
@@ -490,6 +491,7 @@ export default function MapView({
             center: defaultCenter,
             zoom: defaultZoom,
             attributionControl: false,
+            localIdeographFontFamily: localCjkIdeographFontFamily,
         });
 
         // MapLibre owns the canvas lifecycle after this point.
