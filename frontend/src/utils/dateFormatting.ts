@@ -2,16 +2,41 @@
 
 const JAPANESE_WEEKDAY_LABELS = ['\u6708', '\u706b', '\u6c34', '\u6728', '\u91d1', '\u571f', '\u65e5'];
 
+function getLanguageScript(locale: string): string | null {
+    try {
+        const maximizedLocale = new Intl.Locale(locale).maximize();
+        return `${maximizedLocale.language.toLowerCase()}-${maximizedLocale.script?.toLowerCase() ?? ''}`;
+    } catch {
+        return null;
+    }
+}
+
+function dedupeLocales(locales: string[]): string[] {
+    const seen = new Set<string>();
+    return locales.filter((locale) => {
+        const key = locale.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 export function getBrowserDateLocale(fallback?: string): Intl.LocalesArgument {
     if (typeof navigator === 'undefined') return fallback;
 
-    // App language takes priority so date formatting matches the UI
-    if (fallback) {
-        return [fallback, ...(navigator.languages || [navigator.language])];
-    }
+    const browserLocales = navigator.languages?.length
+        ? [...navigator.languages]
+        : [navigator.language];
+    if (!fallback) return browserLocales;
 
-    if (navigator.languages?.length) return [...navigator.languages];
-    return navigator.language;
+    const appLanguageScript = getLanguageScript(fallback);
+    // Matching browser locales preserve regional conventions without changing UI language
+    const matchingBrowserLocales = appLanguageScript
+        ? browserLocales.filter((locale) => getLanguageScript(locale) === appLanguageScript)
+        : [];
+    const remainingBrowserLocales = browserLocales.filter((locale) => !matchingBrowserLocales.includes(locale));
+
+    return dedupeLocales([...matchingBrowserLocales, fallback, ...remainingBrowserLocales]);
 }
 
 export function getLocalizedWeekdayLabels(language: string | undefined, locale: Intl.LocalesArgument, width: 'narrow' | 'short' = 'short'): string[] {
