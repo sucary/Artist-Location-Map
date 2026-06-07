@@ -89,6 +89,8 @@
       "passwordsMatch": "パスワードが一致しません",
       "incorrectCredentials": "メールアドレスまたはパスワードが間違っています",
       "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
+      "authEmailLimitReached": "パスワードリセットメールの1日の送信上限に達しました。しばらくしてからもう一度お試しください。",
+      "registrationEmailLimitReached": "登録確認メールの1日の送信上限に達しました。しばらくしてからもう一度お試しください。",
       "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか、サポートにお問い合わせください。",
       "userNameMin": "ユーザー名は3文字以上にしてください",
       "userNameMax": "ユーザー名は32文字以内にしてください",

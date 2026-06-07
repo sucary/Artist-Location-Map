@@ -8,6 +8,22 @@ import { isValidUsername, normalizeUsername, usernameValidationMessage } from '.
 
 // Authentication profile and password reset handlers
 
+const AUTH_EMAIL_LIMIT_ERROR_PATTERNS = [
+    'rate limit',
+    'rate-limit',
+    'too many',
+    'quota',
+    'daily limit',
+    'email rate',
+    'limit exceeded',
+    'exceeded'
+];
+
+function isAuthEmailLimitError(message: string): boolean {
+    const normalizedMessage = message.toLowerCase();
+    return AUTH_EMAIL_LIMIT_ERROR_PATTERNS.some((pattern) => normalizedMessage.includes(pattern));
+}
+
 function getAllowedRedirectOrigins(): Set<string> {
     const configuredOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
     return new Set(
@@ -78,6 +94,10 @@ export const requestPasswordReset = asyncHandler(async (req: Request, res: Respo
 
         if (error) {
             console.error('Password reset request failed:', error.message);
+            if (isAuthEmailLimitError(error.message)) {
+                res.status(429).json({ error: 'The daily password reset email limit has been reached. Please try again later.' });
+                return;
+            }
         }
     }
 

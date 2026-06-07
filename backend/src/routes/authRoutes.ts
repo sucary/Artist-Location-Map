@@ -34,8 +34,8 @@ const emailAvailabilityLimiter = rateLimit({
 });
 
 const passwordResetLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 5,
+    windowMs: 24 * 60 * 60 * 1000,
+    max: 2,
     message: 'Too many password reset requests, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,

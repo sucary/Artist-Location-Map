@@ -89,6 +89,8 @@
       "passwordsMatch": "两次输入的密码不一致",
       "incorrectCredentials": "邮箱或密码不正确",
       "unexpectedError": "发生意外错误，请重试",
+      "authEmailLimitReached": "每日密码重置邮件发送次数已达上限，请稍后再试。",
+      "registrationEmailLimitReached": "每日注册邮件发送次数已达上限，请稍后再试。",
       "unableToSignIn": "无法使用 {{provider}} 登录。请尝试其他方式或联系支持。",
       "resendEmailFailed": "无法重新发送邮件，请重试",
       "userNameMin": "用户名至少需要 3 个字符",

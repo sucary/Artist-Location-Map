@@ -9,12 +9,49 @@ import { API_URL } from '../../services/api';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import { useTranslation } from 'react-i18next';
 
+// Auth dialog state and email delivery handling
+
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
 const SIGNUP_CONFIRMATION_WINDOW_MS = 15 * 60 * 1000;
+const EMAIL_DELIVERY_LIMIT_PATTERNS = [
+    'rate limit',
+    'rate-limit',
+    'too many',
+    'quota',
+    'daily limit',
+    'email rate',
+    'limit exceeded',
+    'exceeded'
+];
+
+function isEmailDeliveryLimitError(error: unknown): boolean {
+    if (!(error instanceof Error)) return false;
+
+    // Provider and Supabase quota errors are not normalized
+    const message = error.message.toLowerCase();
+    return EMAIL_DELIVERY_LIMIT_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
+function resolveAuthEmailError(error: unknown, limitMessage: string, fallbackMessage: string): string {
+    if (isEmailDeliveryLimitError(error)) return limitMessage;
+    if (error instanceof Error) return error.message;
+    return fallbackMessage;
+}
+
+async function resolvePasswordResetResponseError(response: Response, limitMessage: string, fallbackMessage: string): Promise<string> {
+    if (response.status === 429) return limitMessage;
+
+    try {
+        const data = await response.json();
+        return data.error || fallbackMessage;
+    } catch {
+        return fallbackMessage;
+    }
+}
 
 function AuthErrorBox({ message }: { message: string }) {
     return (
@@ -185,6 +222,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 const { error } = await signUp(email, password);
                 if (error) {
+                    const emailLimitMessage = t('auth.errors.registrationEmailLimitReached');
+                    if (isEmailDeliveryLimitError(error)) {
+                        setEmailError(emailLimitMessage);
+                        return;
+                    }
+
                     if (error.message.toLowerCase().includes('email')) {
                         setEmailError(error.message);
                     } else if (error.message.toLowerCase().includes('password')) {
@@ -248,8 +291,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                setForgotPasswordEmailError(data.error || t('auth.errors.unexpectedError'));
+                setForgotPasswordEmailError(await resolvePasswordResetResponseError(
+                    response,
+                    t('auth.errors.authEmailLimitReached'),
+                    t('auth.errors.unexpectedError')
+                ));
                 return;
             }
 
@@ -282,7 +328,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         redirectTo: `${window.location.origin}/`,
                     }),
                 });
-                if (!response.ok) throw new Error(t('auth.errors.unexpectedError'));
+                if (!response.ok) {
+                    throw new Error(await resolvePasswordResetResponseError(
+                        response,
+                        t('auth.errors.authEmailLimitReached'),
+                        t('auth.errors.unexpectedError')
+                    ));
+                }
                 setMessage(t('auth.messages.resetLinkSent'));
             } else {
                 const { error } = await supabase.auth.resend({
@@ -297,7 +349,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 setSignupConfirmationExpiresAt(Date.now() + SIGNUP_CONFIRMATION_WINDOW_MS);
             }
         } catch (resendError) {
-            setError(resendError instanceof Error ? resendError.message : t('auth.errors.unexpectedError'));
+            const limitMessage = messageType === 'signup'
+                ? t('auth.errors.registrationEmailLimitReached')
+                : t('auth.errors.authEmailLimitReached');
+
+            setError(resolveAuthEmailError(
+                resendError,
+                limitMessage,
+                t('auth.errors.unexpectedError')
+            ));
         } finally {
             setResendLoading(false);
         }

@@ -89,6 +89,8 @@
       "passwordsMatch": "Passwords do not match",
       "incorrectCredentials": "Incorrect email or password",
       "unexpectedError": "An unexpected error occurred, please try again",
+      "authEmailLimitReached": "The daily password reset email limit has been reached. Please try again later.",
+      "registrationEmailLimitReached": "The daily registration email limit has been reached. Please try again later.",
       "unableToSignIn": "Unable to sign in with {{provider}}. Please try another method or contact support.",
       "resendEmailFailed": "Could not resend email, please try again",
       "userNameMin": "Username must be at least 3 characters",
