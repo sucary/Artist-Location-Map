@@ -253,6 +253,13 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
     }, [isOpen, onOpenChange]);
 
     useEffect(() => {
+        // Clear the shared open flag before the button disappears with its last item
+        if (notifications.length === 0 && isOpen) {
+            setIsOpen(false);
+        }
+    }, [isOpen, notifications.length]);
+
+    useEffect(() => {
         if (!isOpen) return;
 
         if (usesHoverMenu) return;
