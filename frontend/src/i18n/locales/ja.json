@@ -366,19 +366,25 @@
   "about": {
     "title": "Achizuについて",
     "project": {
-      "description": "世界中のお気に入りのアーティストを地図に記録するためのオープンソースプロジェクトです",
+      "description": "お気に入りのアーティストを地図で見つけるオープンソースプロジェクトです",
       "viewOnGithub": "GitHub"
     },
     "credits": {
       "title": "APIとライブラリ",
       "openStreetMap": {
-        "description": "Nominatim と Overpass API による地図データとジオコーディングサービス"
-      },
-      "mapLibre": {
-        "description": "インタラクティブなベクター地図の描画"
+        "description": "Overpass API による逆ジオコーディング"
       },
       "carto": {
-        "description": "ベース地図のスタイルとタイル"
+        "description": "ベースマップのスタイルとタイル"
+      },
+      "geoapify": {
+        "description": "ジオコーディングと逆ジオコーディング"
+      },
+      "locationIq": {
+        "description": "ジオコーディングと逆ジオコーディング"
+      },
+      "musicBrainz": {
+        "description": "アーティストのメタデータと検索"
       }
     }
   },

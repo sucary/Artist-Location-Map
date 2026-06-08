@@ -366,19 +366,25 @@
   "about": {
     "title": "About",
     "project": {
-      "description": "An open-source project for mapping your favorite artists around the world",
+      "description": "An open-source project for mapping your favorite artists and their gigs around the world",
       "viewOnGithub": "GitHub"
     },
     "credits": {
       "title": "APIs & Libraries",
       "openStreetMap": {
-        "description": "Map data and geocoding services via Nominatim and Overpass API"
-      },
-      "mapLibre": {
-        "description": "Interactive vector map rendering"
+        "description": "Reverse geocoding via Overpass API"
       },
       "carto": {
         "description": "Base map styles and tiles"
+      },
+      "geoapify": {
+        "description": "Geocoding and reverse geocoding"
+      },
+      "locationIq": {
+        "description": "Geocoding and reverse geocoding"
+      },
+      "musicBrainz": {
+        "description": "Artist metadata and search"
       }
     }
   },

@@ -11,15 +11,27 @@ export function AboutPage() {
             license: 'ODbL',
         },
         {
-            name: 'MapLibre GL JS',
-            description: t('about.credits.mapLibre.description'),
-            url: 'https://maplibre.org/',
-            license: 'BSD-3-Clause',
-        },
-        {
             name: 'CARTO',
             description: t('about.credits.carto.description'),
             url: 'https://carto.com/',
+            license: null,
+        },
+        {
+            name: 'Geoapify',
+            description: t('about.credits.geoapify.description'),
+            url: 'https://www.geoapify.com/',
+            license: null,
+        },
+        {
+            name: 'LocationIQ',
+            description: t('about.credits.locationIq.description'),
+            url: 'https://locationiq.com/',
+            license: null,
+        },
+        {
+            name: 'MusicBrainz',
+            description: t('about.credits.musicBrainz.description'),
+            url: 'https://musicbrainz.org/',
             license: null,
         },
     ];

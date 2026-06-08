@@ -364,19 +364,25 @@
   "about": {
     "title": "關於",
     "project": {
-      "description": "一個用於在世界地圖上標記你喜歡的藝人的開源專案",
+      "description": "在地圖上發現和標記你喜愛的藝人",
       "viewOnGithub": "GitHub"
     },
     "credits": {
-      "title": "API 與函式庫",
+      "title": "API 和函式庫",
       "openStreetMap": {
-        "description": "透過 Nominatim 和 Overpass API 提供地圖資料與地理編碼服務"
-      },
-      "mapLibre": {
-        "description": "互動式向量地圖渲染"
+        "description": "基於 Overpass API 的反向地理編碼"
       },
       "carto": {
-        "description": "底圖樣式和瓦片"
+        "description": "地圖主題樣式"
+      },
+      "geoapify": {
+        "description": "地理編碼和反向地理編碼"
+      },
+      "locationIq": {
+        "description": "地理編碼和反向地理編碼"
+      },
+      "musicBrainz": {
+        "description": "藝人元資料和搜尋"
       }
     }
   },
