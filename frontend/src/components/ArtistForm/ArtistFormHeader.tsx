@@ -1,18 +1,26 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { EditIcon } from '../icons/GeneralIcons';
 import { MAX_NAME_LENGTH } from '../../constants/artist';
 import { useTranslation } from 'react-i18next';
 
 // Artist form visual header
 
+type ImageSource = 'file' | 'url';
+
 interface ArtistFormHeaderProps {
     name: string;
     avatarUrl?: string;
     profileUrl?: string;
     isUploading: boolean;
-    onAvatarClick: () => void;
-    onProfileClick: () => void;
+    onSelectImageSource: (mode: 'avatar' | 'profile', source: ImageSource) => void;
     onNameChange: (name: string) => void;
+}
+
+interface PickerMenuState {
+    mode: 'avatar' | 'profile';
+    top: number;
+    left: number;
 }
 
 const ArtistFormHeader = ({
@@ -20,13 +28,43 @@ const ArtistFormHeader = ({
     avatarUrl,
     profileUrl,
     isUploading,
-    onAvatarClick,
-    onProfileClick,
+    onSelectImageSource,
     onNameChange,
 }: ArtistFormHeaderProps) => {
     const [isEditingName, setIsEditingName] = useState(false);
+    const [pickerMenu, setPickerMenu] = useState<PickerMenuState | null>(null);
     const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+    const pickerMenuRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (!pickerMenu) return;
+
+        const closePickerMenu = (event: MouseEvent) => {
+            if (pickerMenuRef.current?.contains(event.target as Node)) return;
+            setPickerMenu(null);
+        };
+
+        const closeOnResize = () => setPickerMenu(null);
+        document.addEventListener('mousedown', closePickerMenu);
+        window.addEventListener('resize', closeOnResize);
+
+        return () => {
+            document.removeEventListener('mousedown', closePickerMenu);
+            window.removeEventListener('resize', closeOnResize);
+        };
+    }, [pickerMenu]);
+
+    const openPickerMenu = (mode: 'avatar' | 'profile', event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+
+        const menuWidth = 208;
+        const menuHeight = 96;
+        const left = Math.min(window.innerWidth - menuWidth - 12, Math.max(12, event.clientX - menuWidth / 2));
+        const top = Math.min(window.innerHeight - menuHeight - 12, Math.max(12, event.clientY + 12));
+
+        setPickerMenu({ mode, top, left });
+    };
 
     const displayName = name.length > MAX_NAME_LENGTH
         ? `${name.substring(0, MAX_NAME_LENGTH)}...`
@@ -47,12 +85,12 @@ const ArtistFormHeader = ({
 
             // If mouse moved more than 5 pixels, it's a drag, not a click
             // Prevents accidental clicks when trying to drag the name
-            if (distance > 5) {
+        if (distance > 5) {
                 mouseDownPos.current = null;
                 return;
             }
         }
-        onProfileClick();
+        openPickerMenu('profile', e as React.MouseEvent<HTMLButtonElement>);
         mouseDownPos.current = null;
     };
 
@@ -68,7 +106,7 @@ const ArtistFormHeader = ({
                 return;
             }
         }
-        onAvatarClick();
+        openPickerMenu('avatar', e as React.MouseEvent<HTMLButtonElement>);
         mouseDownPos.current = null;
     };
 
@@ -81,6 +119,8 @@ const ArtistFormHeader = ({
             <button
                 type="button"
                 aria-label={t('artistForm.buttons.editBanner')}
+                aria-haspopup="menu"
+                aria-expanded={pickerMenu?.mode === 'profile'}
                 className="absolute inset-0 cursor-pointer appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                 onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
                 onClick={handleProfileClick}
@@ -97,7 +137,9 @@ const ArtistFormHeader = ({
             {/* Avatar */}
             <button
                 type="button"
-                aria-label={t('artistForm.buttons.uploadAvatar')}
+                aria-label={t('artistForm.buttons.editAvatar')}
+                aria-haspopup="menu"
+                aria-expanded={pickerMenu?.mode === 'avatar'}
                 className="absolute -bottom-8 left-4 w-20 h-20 rounded-full border-4 border-surface bg-border overflow-hidden z-10 shadow-md group/avatar cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 onMouseDown={(e) => mouseDownPos.current = { x: e.clientX, y: e.clientY }}
                 onClick={handleAvatarClick}
@@ -167,6 +209,40 @@ const ArtistFormHeader = ({
                     </button>
                 )}
             </div>
+
+            {pickerMenu && createPortal(
+                <div
+                    ref={pickerMenuRef}
+                    role="menu"
+                    aria-label={t('artistForm.buttons.imageSourceMenu')}
+                    className="fixed z-[1200] w-52 rounded-lg border border-border bg-surface p-1 shadow-xl"
+                    style={{ top: `${pickerMenu.top}px`, left: `${pickerMenu.left}px` }}
+                >
+                    <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium text-text hover:bg-surface-muted focus:outline-none focus-visible:bg-surface-muted"
+                        onClick={() => {
+                            onSelectImageSource(pickerMenu.mode, 'file');
+                            setPickerMenu(null);
+                        }}
+                    >
+                        {t('artistForm.buttons.uploadFromDevice')}
+                    </button>
+                    <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium text-text hover:bg-surface-muted focus:outline-none focus-visible:bg-surface-muted"
+                        onClick={() => {
+                            onSelectImageSource(pickerMenu.mode, 'url');
+                            setPickerMenu(null);
+                        }}
+                    >
+                        {t('artistForm.buttons.uploadFromUrl')}
+                    </button>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

@@ -5,7 +5,7 @@ import type { MusicBrainzCatalogArtist, SearchResult } from '../services/api';
 import type { Artist, CropArea } from '../types/artist';
 import type { SocialLinkKey } from '../constants/artist';
 import { extractLocationData, createEmptyLocation, hasValidCoordinates } from '../utils/locationUtils';
-import { getArtistMediaAssetStatus, uploadImageToCloudinary } from '../utils/cloudinary';
+import { getArtistMediaAssetStatus, uploadImageFromWebUrlToCloudinary, uploadImageToCloudinary } from '../utils/cloudinary';
 import { validateAllSocialLinks } from '../utils/urlValidation';
 import { useTranslation } from 'react-i18next';
 
@@ -55,6 +55,7 @@ export interface UseArtistFormReturn {
     uploadError: string | null;
     clearUploadError: () => void;
     handleImageUpload: (file: File) => Promise<string | null>;
+    handleImageUploadFromWebUrl: (imageUrl: string) => Promise<string | null>;
     clearImage: () => void;
     updateCrops: (avatarCrop: CropArea, profileCrop: CropArea) => void;
 
@@ -359,6 +360,16 @@ export const useArtistForm = ({
         setFormData(prev => ({ ...prev, inactiveYear: year }));
     }, []);
 
+    const extractUploadError = useCallback((err: unknown): string => {
+        const axiosError = err as {
+            response?: { data?: { error?: string; message?: string } };
+            message?: string;
+        };
+        return axiosError.response?.data?.error
+            || axiosError.response?.data?.message
+            || (err instanceof Error ? err.message : t('artistForm.errors.failedUploadImage'));
+    }, [t]);
+
     // Upload image to Cloudinary and return the URL
     const handleImageUpload = useCallback(async (file: File): Promise<string | null> => {
         setIsUploadingImage(true);
@@ -372,14 +383,33 @@ export const useArtistForm = ({
             }));
             return imageUrl;
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : t('artistForm.errors.failedUploadImage');
-            setUploadError(errorMessage);
+            setUploadError(extractUploadError(err));
             console.error('Image upload error:', err);
             return null;
         } finally {
             setIsUploadingImage(false);
         }
-    }, [t]);
+    }, [t, extractUploadError]);
+
+    const handleImageUploadFromWebUrl = useCallback(async (imageUrl: string): Promise<string | null> => {
+        setIsUploadingImage(true);
+        setUploadError(null);
+
+        try {
+            const uploadedUrl = await uploadImageFromWebUrlToCloudinary(imageUrl);
+            setFormData(prev => ({
+                ...prev,
+                sourceImage: uploadedUrl
+            }));
+            return uploadedUrl;
+        } catch (err) {
+            setUploadError(extractUploadError(err));
+            console.error('Image upload error:', err);
+            return null;
+        } finally {
+            setIsUploadingImage(false);
+        }
+    }, [t, extractUploadError]);
 
     const clearImage = useCallback(() => {
         setFormData(prev => ({
@@ -520,6 +550,7 @@ export const useArtistForm = ({
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,
+        handleImageUploadFromWebUrl,
         clearImage,
         clearUploadError,
         updateCrops,

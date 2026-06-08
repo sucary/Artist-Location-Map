@@ -141,6 +141,10 @@
     },
     "buttons": {
       "editBanner": "アーティストのバナーを編集",
+      "editAvatar": "アーティストのアバターを編集",
+      "imageSourceMenu": "画像ソースの選択",
+      "uploadFromDevice": "端末からアップロード",
+      "uploadFromUrl": "Web URLを使用",
       "editName": "アーティスト名を編集",
       "uploadAvatar": "画像をアップロード",
       "save": "保存",
@@ -150,6 +154,14 @@
       "setActive": "活動中にする",
       "confirm": "確認",
       "continue": "続行"
+    },
+    "imageSource": {
+      "avatarTitle": "Web URLから画像を追加",
+      "bannerTitle": "Web URLから画像を追加",
+      "description": "• 対応形式: JPG、JPEG、PNG、WebP\n• ファイルサイズ ≤ 5 MB\n• 解像度 ≤ 1920×1080（1080p）",
+      "inputLabel": "画像URL",
+      "placeholder": "https://example.com/image.jpg",
+      "useUrl": "アップロード"
     },
     "socialMedia": {
       "title": "ソーシャルメディア",
@@ -198,6 +210,7 @@
       "invalidWebsiteUrl": "有効なURLを入力してください（https://...）",
       "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してください",
       "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効です",
+      "invalidImageUrl": "有効な画像URLを入力してください",
       "failedUploadImage": "画像をアップロードできませんでした。もう一度お試しください。",
       "imageRequirements": "JPG、PNG、WebP形式で、5 MB以下の画像を使用してください",
       "failedSaveArtist": "アーティストを保存できませんでした。もう一度お試しください。",

@@ -1,5 +1,7 @@
 import { Router, Response } from 'express';
 import { randomUUID } from 'crypto';
+import { lookup } from 'dns/promises';
+import { isIP } from 'net';
 import { requireAuth, requireApproval, requireAdmin, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { asyncHandler } from '../middleware/errorHandler';
 import cloudinary from '../config/cloudinary';
@@ -12,12 +14,134 @@ import { NotificationService } from '../services/notificationService';
 const router = Router();
 const NORMAL_USER_DAILY_UPLOAD_LIMIT = 25;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const LANDSCAPE_MAX_WIDTH = 1280;
-const LANDSCAPE_MAX_HEIGHT = 720;
-const PORTRAIT_MAX_WIDTH = 720;
-const PORTRAIT_MAX_HEIGHT = 1280;
-const SQUARE_MAX_DIMENSION = 720;
+const LANDSCAPE_MAX_WIDTH = 1920;
+const LANDSCAPE_MAX_HEIGHT = 1080;
+const PORTRAIT_MAX_WIDTH = 1080;
+const PORTRAIT_MAX_HEIGHT = 1920;
+const SQUARE_MAX_DIMENSION = 1080;
 const ALLOWED_IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'webp']);
+
+function isPrivateIpv4(address: string): boolean {
+    const parts = address.split('.').map((part) => Number(part));
+    if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+        return true;
+    }
+
+    const [first, second] = parts;
+    return first === 10 ||
+        first === 127 ||
+        (first === 192 && second === 168) ||
+        (first === 172 && second >= 16 && second <= 31) ||
+        (first === 169 && second === 254);
+}
+
+function isPrivateIpv6(address: string): boolean {
+    const normalized = address.toLowerCase();
+    return normalized === '::1' ||
+        normalized.startsWith('fe80:') ||
+        normalized.startsWith('fc') ||
+        normalized.startsWith('fd');
+}
+
+function isSafeHostname(hostname: string): boolean {
+    const lower = hostname.toLowerCase();
+    return lower !== 'localhost' && !lower.endsWith('.localhost') && !lower.endsWith('.local');
+}
+
+async function assertSafeRemoteImageUrl(value: string): Promise<URL> {
+    let parsed: URL;
+    try {
+        parsed = new URL(value);
+    } catch {
+        throw new Error('Invalid image URL');
+    }
+
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('Image URL must use http or https');
+    }
+
+    if (parsed.username || parsed.password) {
+        throw new Error('Image URL must not include credentials');
+    }
+
+    if (!isSafeHostname(parsed.hostname)) {
+        throw new Error('Image URL must point to a public host');
+    }
+
+    if (isIP(parsed.hostname) === 4 && isPrivateIpv4(parsed.hostname)) {
+        throw new Error('Image URL must point to a public host');
+    }
+
+    if (isIP(parsed.hostname) === 6 && isPrivateIpv6(parsed.hostname)) {
+        throw new Error('Image URL must point to a public host');
+    }
+
+    // User-provided image URLs must not target private infrastructure
+    const resolvedAddresses = await lookup(parsed.hostname, { all: true }).catch(() => []);
+    if (resolvedAddresses.length === 0) {
+        throw new Error('Image URL must point to a public host');
+    }
+
+    if (resolvedAddresses.some((record) => {
+        if (record.family === 4) return isPrivateIpv4(record.address);
+        if (record.family === 6) return isPrivateIpv6(record.address);
+        return true;
+    })) {
+        throw new Error('Image URL must point to a public host');
+    }
+
+    return parsed;
+}
+
+async function reserveUploadEvent(userId: string, publicId: string) {
+    await pool.query(`
+        INSERT INTO media_upload_events (user_id, public_id, status)
+        VALUES ($1, $2, 'signed')
+    `, [userId, publicId]);
+}
+
+async function finalizeUploadEvent(
+    userId: string,
+    publicId: string,
+    data: {
+        secureUrl: string;
+        bytes?: number;
+        width?: number;
+        height?: number;
+        format?: string;
+    }
+) {
+    await pool.query(`
+        UPDATE media_upload_events
+        SET
+            secure_url = $1,
+            bytes = $2,
+            width = $3,
+            height = $4,
+            format = $5,
+            status = 'uploaded',
+            completed_at = NOW()
+        WHERE public_id = $6
+          AND user_id = $7
+    `, [
+        data.secureUrl,
+        Number.isFinite(data.bytes) ? data.bytes : null,
+        Number.isFinite(data.width) ? data.width : null,
+        Number.isFinite(data.height) ? data.height : null,
+        data.format || null,
+        publicId,
+        userId
+    ]);
+}
+
+async function markUploadFailed(userId: string, publicId: string) {
+    await pool.query(`
+        UPDATE media_upload_events
+        SET status = 'failed'
+        WHERE public_id = $1
+          AND user_id = $2
+    `, [publicId, userId]);
+}
 
 function isExpectedCloudinaryUrl(secureUrl: string, publicId: string): boolean {
     try {
@@ -150,21 +274,14 @@ router.post(
 
         const timestamp = Math.round(Date.now() / 1000);
         const publicId = `artist_uploads/${userId}/${randomUUID()}`;
-
-        const paramsToSign = {
-            timestamp,
-            public_id: publicId,
-        };
+        const paramsToSign = { timestamp, public_id: publicId };
 
         const signature = cloudinary.utils.api_sign_request(
             paramsToSign,
             process.env.CLOUDINARY_API_SECRET!
         );
 
-        await pool.query(`
-            INSERT INTO media_upload_events (user_id, public_id, status)
-            VALUES ($1, $2, 'signed')
-        `, [userId, publicId]);
+        await reserveUploadEvent(userId, publicId);
 
         res.json({
             signature,
@@ -173,6 +290,95 @@ router.post(
             apiKey: process.env.CLOUDINARY_API_KEY,
             cloudName: process.env.CLOUDINARY_CLOUD_NAME,
         });
+    })
+);
+
+router.post(
+    '/from-url',
+    requireAuth,
+    requireApproval,
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const userId = req.user!.id;
+        const isAdmin = req.profile?.isAdmin ?? false;
+        const { imageUrl } = req.body as { imageUrl?: string };
+
+        if (!imageUrl) {
+            res.status(400).json({ error: 'imageUrl is required' });
+            return;
+        }
+
+        let parsedUrl: URL;
+        try {
+            parsedUrl = await assertSafeRemoteImageUrl(imageUrl);
+        } catch (error) {
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid image URL' });
+            return;
+        }
+
+        if (!isAdmin) {
+            const quotaResult = await pool.query<{ count: string }>(`
+                SELECT COUNT(*)::text as count
+                FROM media_upload_events
+                WHERE user_id = $1
+                  AND created_at > NOW() - INTERVAL '24 hours'
+                  AND status IN ('signed', 'uploaded')
+            `, [userId]);
+
+            const uploadCount = Number(quotaResult.rows[0]?.count || 0);
+            if (uploadCount >= NORMAL_USER_DAILY_UPLOAD_LIMIT) {
+                res.status(429).json({
+                    error: 'Daily upload limit reached',
+                    message: `You can request up to ${NORMAL_USER_DAILY_UPLOAD_LIMIT} image uploads per 24 hours.`
+                });
+                return;
+            }
+        }
+
+        const publicId = `artist_uploads/${userId}/${randomUUID()}`;
+        // URL uploads consume the same daily quota reservation as local files
+        await reserveUploadEvent(userId, publicId);
+
+        try {
+            const uploadResult = await cloudinary.uploader.upload(parsedUrl.toString(), {
+                public_id: publicId,
+                resource_type: 'image'
+            });
+
+            if (Number.isFinite(uploadResult.bytes) && uploadResult.bytes > MAX_IMAGE_BYTES) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => undefined);
+                await markUploadFailed(userId, publicId);
+                res.status(400).json({ error: 'Image size must be smaller than 5 MB' });
+                return;
+            }
+
+            if (!isAllowedImageResolution(uploadResult.width, uploadResult.height)) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => undefined);
+                await markUploadFailed(userId, publicId);
+                res.status(400).json({ error: 'Image resolution must fit within 1920×1080 (landscape), 1080×1920 (portrait), or 1080×1080 (square)' });
+                return;
+            }
+
+            if (uploadResult.format && !ALLOWED_IMAGE_FORMATS.has(uploadResult.format.toLowerCase())) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => undefined);
+                await markUploadFailed(userId, publicId);
+                res.status(400).json({ error: 'Only JPG, PNG, and WebP images are allowed' });
+                return;
+            }
+
+            await finalizeUploadEvent(userId, publicId, {
+                secureUrl: uploadResult.secure_url,
+                bytes: uploadResult.bytes,
+                width: uploadResult.width,
+                height: uploadResult.height,
+                format: uploadResult.format,
+            });
+
+            res.json({ secureUrl: uploadResult.secure_url });
+        } catch (error) {
+            await markUploadFailed(userId, publicId);
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => undefined);
+            throw error;
+        }
     })
 );
 
@@ -238,7 +444,7 @@ router.post(
         }
 
         if (!isAllowedImageResolution(width, height)) {
-            await rejectAndDeleteUpload(publicId, 'Image resolution must fit within 1920x1080 or 1080x1920', res);
+            await rejectAndDeleteUpload(publicId, 'Image resolution must fit within 1920×1080 (landscape), 1080×1920 (portrait), or 1080×1080 (square)', res);
             return;
         }
 

@@ -141,6 +141,10 @@
     },
     "buttons": {
       "editBanner": "Edit artist banner",
+      "editAvatar": "Edit artist avatar",
+      "imageSourceMenu": "Image source options",
+      "uploadFromDevice": "Upload from device",
+      "uploadFromUrl": "Use web URL",
       "editName": "Edit artist name",
       "uploadAvatar": "Upload image",
       "save": "Save",
@@ -150,6 +154,14 @@
       "copyOriginalToActive": "Copy original location to active location",
       "setInactive": "Set artist as inactive",
       "setActive": "Set artist as active"
+    },
+    "imageSource": {
+      "avatarTitle": "Add image from web URL",
+      "bannerTitle": "Add image from web URL",
+      "description": "• Supported formats: JPG, JPEG, PNG, WebP\n• File size ≤ 5 MB\n• Resolution ≤ 1920×1080 (1080p)",
+      "inputLabel": "Image URL",
+      "placeholder": "https://example.com/image.jpg",
+      "useUrl": "Upload"
     },
     "socialMedia": {
       "title": "Social media",
@@ -234,6 +246,7 @@
       "invalidWebsiteUrl": "Enter a valid URL (https://...)",
       "invalidSocialProfileUrl": "Enter a valid {{platform}} URL",
       "invalidSocialLinkUrl": "Invalid social link URL",
+      "invalidImageUrl": "Enter a valid image URL",
       "imageUploadFailed": "Image upload failed",
       "failedUploadImage": "Failed to upload image. Please try again.",
       "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB",

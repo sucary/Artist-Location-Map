@@ -30,11 +30,11 @@ interface SignatureResponse {
 
 const MAX_INPUT_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_NORMALIZED_IMAGE_SIZE = MAX_INPUT_IMAGE_SIZE;
-const BASE_LANDSCAPE_MAX_WIDTH = 1280;
-const BASE_LANDSCAPE_MAX_HEIGHT = 720;
-const BASE_PORTRAIT_MAX_WIDTH = 720;
-const BASE_PORTRAIT_MAX_HEIGHT = 1280;
-const BASE_SQUARE_MAX_SIZE = 720;
+const BASE_LANDSCAPE_MAX_WIDTH = 1920;
+const BASE_LANDSCAPE_MAX_HEIGHT = 1080;
+const BASE_PORTRAIT_MAX_WIDTH = 1080;
+const BASE_PORTRAIT_MAX_HEIGHT = 1920;
+const BASE_SQUARE_MAX_SIZE = 1080;
 const QUALITY_TIER_SMALL_FILE = 2 * 1024 * 1024;
 const QUALITY_TIER_MEDIUM_FILE = 3.5 * 1024 * 1024;
 
@@ -79,7 +79,6 @@ function getDimensionTrimRatio(fileSize: number): number {
 function getDimensionCaps(fileSize: number) {
   const ratio = getDimensionTrimRatio(fileSize);
 
-  // File-size tier controls the normalized resolution ceiling
   return {
     landscapeMaxWidth: Math.round(BASE_LANDSCAPE_MAX_WIDTH * ratio),
     landscapeMaxHeight: Math.round(BASE_LANDSCAPE_MAX_HEIGHT * ratio),
@@ -254,6 +253,22 @@ export async function deleteUploadedImage(secureUrl: string): Promise<void> {
       },
     }
   );
+}
+
+export async function uploadImageFromWebUrlToCloudinary(imageUrl: string): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const response = await axios.post<{ secureUrl: string }>(
+    `${API_URL}/upload/from-url`,
+    { imageUrl },
+    {
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+    }
+  );
+
+  return response.data.secureUrl;
 }
 
 async function recordUploadComplete(data: CloudinaryUploadResponse): Promise<void> {

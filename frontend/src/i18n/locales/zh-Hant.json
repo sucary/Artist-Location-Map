@@ -139,6 +139,10 @@
     },
     "buttons": {
       "editBanner": "編輯藝人橫幅",
+      "editAvatar": "編輯藝人頭像",
+      "imageSourceMenu": "圖片來源選項",
+      "uploadFromDevice": "從裝置上傳",
+      "uploadFromUrl": "使用網頁 URL",
       "editName": "編輯藝人名稱",
       "uploadAvatar": "上傳圖片",
       "save": "儲存",
@@ -148,6 +152,14 @@
       "copyOriginalToActive": "將出身地複製到活動地",
       "setInactive": "將藝人設為停止活動",
       "setActive": "將藝人設為活動中"
+    },
+    "imageSource": {
+      "avatarTitle": "透過網頁 URL 新增圖片",
+      "bannerTitle": "透過網頁 URL 新增圖片",
+      "description": "• 支援格式：JPG、JPEG、PNG、WebP\n• 檔案大小 ≤ 5 MB\n• 解析度 ≤ 1920×1080（1080p）",
+      "inputLabel": "圖片 URL",
+      "placeholder": "https://example.com/image.jpg",
+      "useUrl": "上傳"
     },
     "socialMedia": {
       "title": "社群媒體",
@@ -232,6 +244,7 @@
       "invalidWebsiteUrl": "請輸入有效 URL（https://...）",
       "invalidSocialProfileUrl": "請輸入有效的 {{platform}} URL",
       "invalidSocialLinkUrl": "社交連結 URL 無效",
+      "invalidImageUrl": "請輸入有效的圖片 URL",
       "imageUploadFailed": "圖片上傳失敗",
       "failedUploadImage": "圖片上傳失敗。請重試。",
       "imageRequirements": "請使用不超過 5 MB 的 JPG、PNG 或 WebP 圖片",

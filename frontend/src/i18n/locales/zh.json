@@ -141,6 +141,10 @@
     },
     "buttons": {
       "editBanner": "编辑艺人横幅",
+      "editAvatar": "编辑艺人头像",
+      "imageSourceMenu": "图片来源选项",
+      "uploadFromDevice": "从设备上传",
+      "uploadFromUrl": "使用网页 URL",
       "editName": "编辑艺人名称",
       "uploadAvatar": "上传图片",
       "save": "保存",
@@ -150,6 +154,14 @@
       "copyOriginalToActive": "将出身地复制到活动地",
       "setInactive": "将艺人设为停止活动",
       "setActive": "将艺人设为活动中"
+    },
+    "imageSource": {
+      "avatarTitle": "通过网页 URL 添加图片",
+      "bannerTitle": "通过网页 URL 添加图片",
+      "description": "• 支持格式：JPG、JPEG、PNG、WebP\n• 文件大小 ≤ 5 MB\n• 分辨率 ≤ 1920×1080（1080p）",
+      "inputLabel": "图片 URL",
+      "placeholder": "https://example.com/image.jpg",
+      "useUrl": "上传"
     },
     "socialMedia": {
       "title": "社交媒体",
@@ -234,6 +246,7 @@
       "invalidWebsiteUrl": "请输入有效 URL（https://...）",
       "invalidSocialProfileUrl": "请输入有效的 {{platform}} URL",
       "invalidSocialLinkUrl": "社交链接 URL 无效",
+      "invalidImageUrl": "请输入有效的图片 URL",
       "imageUploadFailed": "图片上传失败",
       "failedUploadImage": "图片上传失败。请重试。",
       "imageRequirements": "请使用不超过 5 MB 的 JPG、PNG 或 WebP 图片",

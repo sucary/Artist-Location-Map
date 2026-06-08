@@ -12,7 +12,7 @@ import { useArtistForm } from '../../hooks/useArtistForm';
 import { getAvatarUrl, getProfileUrl } from '../../utils/cloudinaryUrl';
 import { deleteUploadedImage, getArtistMediaAssetStatus, type ArtistMediaAssetStatus } from '../../utils/cloudinary';
 import { hasValidCoordinates } from '../../utils/locationUtils';
-import { Alert, IconButton, Button } from '../ui';
+import { Alert, IconButton, Button, Input, Spinner } from '../ui';
 import type { Artist } from '../../types/artist';
 import type { MusicBrainzCatalogArtist } from '../../services/api';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +48,8 @@ const dialogConfirmButtonClass = `${dialogActionButtonClass} text-primary-contra
 interface MediaWarningDialogProps {
     warning: {
         mode: 'avatar' | 'profile';
+        source: 'file' | 'url';
+        imageUrl?: string;
         status: ArtistMediaAssetStatus;
     };
     onCancel: () => void;
@@ -104,6 +106,92 @@ function MediaWarningDialog({ warning, onCancel, onContinue }: MediaWarningDialo
                         onClick={onContinue}
                     >
                         {t('artistForm.buttons.continue')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+interface ImageUrlDialogProps {
+    mode: 'avatar' | 'profile';
+    value: string;
+    error: string | null;
+    uploadError: string | null;
+    isUploading: boolean;
+    onValueChange: (value: string) => void;
+    onCancel: () => void;
+    onSubmit: () => void;
+}
+
+function ImageUrlDialog({ mode, value, error, uploadError, isUploading, onValueChange, onCancel, onSubmit }: ImageUrlDialogProps) {
+    const { t } = useTranslation();
+    const dialogRef = useDialogAccessibility(onCancel);
+    const titleId = useId();
+    const descriptionId = useId();
+    const inputId = useId();
+    const isBanner = mode === 'profile';
+
+    return (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center px-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-black/30" onClick={onCancel} />
+            <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={descriptionId}
+                tabIndex={-1}
+                className="relative w-full max-w-md rounded-xl border border-border bg-surface p-4 shadow-xl focus:outline-none"
+            >
+                <h2 id={titleId} className="text-base font-semibold text-text">
+                    {isBanner ? t('artistForm.imageSource.bannerTitle') : t('artistForm.imageSource.avatarTitle')}
+                </h2>
+                <p id={descriptionId} className="mt-2 text-sm text-text-secondary whitespace-pre-line">
+                    {t('artistForm.imageSource.description')}
+                </p>
+                <label htmlFor={inputId} className="mt-4 block text-sm font-medium text-text">
+                    {t('artistForm.imageSource.inputLabel')}
+                </label>
+                <Input
+                    id={inputId}
+                    value={value}
+                    onChange={(e) => onValueChange(e.target.value)}
+                    placeholder={t('artistForm.imageSource.placeholder')}
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    onKeyDown={(event) => {
+                        if (event.key !== 'Enter') return;
+                        event.preventDefault();
+                        onSubmit();
+                    }}
+                    className="mt-2"
+                />
+                {(error || uploadError) && (
+                    <Alert variant="error" header={t('artistForm.errors.imageUploadFailed')} className="mt-3">
+                        <span className="block">{error || uploadError}</span>
+                    </Alert>
+                )}
+                <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" className={dialogCancelButtonClass} onClick={onCancel}>
+                        {t('artistForm.buttons.cancel')}
+                    </button>
+                    <button
+                        type="button"
+                        className={`${dialogConfirmButtonClass} ${isUploading ? 'opacity-60 pointer-events-none' : ''}`}
+                        onClick={onSubmit}
+                        disabled={isUploading}
+                    >
+                        {isUploading ? (
+                            <span className="flex items-center gap-2">
+                                <Spinner size="sm" />
+                                {t('artistForm.imageSource.useUrl')}
+                            </span>
+                        ) : (
+                            t('artistForm.imageSource.useUrl')
+                        )}
                     </button>
                 </div>
             </div>
@@ -237,12 +325,17 @@ const ArtistForm = ({
     const formScrollRef = useRef<HTMLDivElement>(null);
     const sessionUploadedUrlsRef = useRef<Set<string>>(new Set());
     const [cropperInitialMode, setCropperInitialMode] = useState<'avatar' | 'profile'>('avatar');
+    const [imageUrlMode, setImageUrlMode] = useState<'avatar' | 'profile' | null>(null);
+    const [imageUrlValue, setImageUrlValue] = useState('');
+    const [imageUrlError, setImageUrlError] = useState<string | null>(null);
 
     // Cropper state - simplified: just need to know if it's open and have the image
     const [isCropperOpen, setIsCropperOpen] = useState(false);
     const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
     const [mediaWarning, setMediaWarning] = useState<{
         mode: 'avatar' | 'profile';
+        source: 'file' | 'url';
+        imageUrl?: string;
         status: ArtistMediaAssetStatus;
     } | null>(null);
     const [preUploadSelectionWarning, setPreUploadSelectionWarning] = useState<{
@@ -268,6 +361,7 @@ const ArtistForm = ({
         pendingField,
         isUploadingImage,
         uploadError,
+        clearUploadError,
         handleLocationSelect,
         handleSave,
         copyOriginalToActive,
@@ -279,6 +373,7 @@ const ArtistForm = ({
         updateDebutYear,
         updateInactiveYear,
         handleImageUpload,
+        handleImageUploadFromWebUrl,
         clearImage,
         updateCrops,
     } = useArtistForm({
@@ -364,40 +459,135 @@ const ArtistForm = ({
         return isCountryLevelLocation(location) ? 'warning' : 'success';
     };
 
-    const openImageEntry = (mode: 'avatar' | 'profile') => {
-        setCropperInitialMode(mode);
-        if (formData.sourceImage) {
-            setCropperImageSrc(formData.sourceImage);
-            setIsCropperOpen(true);
-        } else {
-            fileInputRef.current?.click();
+    const validateImageUrlInput = (value: string): string | null => {
+        try {
+            const url = new URL(value);
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                return t('artistForm.errors.invalidImageUrl');
+            }
+            return null;
+        } catch {
+            return t('artistForm.errors.invalidImageUrl');
         }
     };
 
-    const requestImageEntry = async (mode: 'avatar' | 'profile') => {
+    const openFileImageEntry = () => {
+        fileInputRef.current?.click();
+    };
+
+    const openImageUrlDialog = (mode: 'avatar' | 'profile') => {
+        setCropperInitialMode(mode);
+        setImageUrlMode(mode);
+        setImageUrlValue('');
+        setImageUrlError(null);
+        clearUploadError();
+    };
+
+    const closeImageUrlDialog = () => {
+        setImageUrlMode(null);
+        setImageUrlValue('');
+        setImageUrlError(null);
+        clearUploadError();
+    };
+
+    const uploadImageUrlAndCrop = async (imageUrl: string) => {
+        const uploadedUrl = await handleImageUploadFromWebUrl(imageUrl);
+        if (!uploadedUrl) return false;
+
+        sessionUploadedUrlsRef.current.add(uploadedUrl);
+        setCropperImageSrc(uploadedUrl);
+        setIsCropperOpen(true);
+        setImageUrlMode(null);
+        setImageUrlValue('');
+        return true;
+    };
+
+    const requestLocalImageUpload = async (mode: 'avatar' | 'profile') => {
         setCropperInitialMode(mode);
 
         if (!formData.musicbrainzMbid) {
-            openImageEntry(mode);
+            openFileImageEntry();
             return;
         }
 
         try {
             const status = await getArtistMediaAssetStatus(formData.musicbrainzMbid);
             if (!status.hasAsset) {
-                openImageEntry(mode);
+                openFileImageEntry();
                 return;
             }
 
             if (profile?.isAdmin || status.requiresReview) {
-                setMediaWarning({ mode, status });
+                setMediaWarning({ mode, source: 'file', status });
                 return;
             }
 
-            openImageEntry(mode);
+            openFileImageEntry();
         } catch {
-            openImageEntry(mode);
+            openFileImageEntry();
         }
+    };
+
+    const requestWebUrlImageUpload = async (mode: 'avatar' | 'profile', imageUrl: string) => {
+        setCropperInitialMode(mode);
+
+        if (!formData.musicbrainzMbid) {
+            await uploadImageUrlAndCrop(imageUrl);
+            return;
+        }
+
+        try {
+            const status = await getArtistMediaAssetStatus(formData.musicbrainzMbid);
+            if (!status.hasAsset) {
+                await uploadImageUrlAndCrop(imageUrl);
+                return;
+            }
+
+            if (profile?.isAdmin || status.requiresReview) {
+                closeImageUrlDialog();
+                setMediaWarning({ mode, source: 'url', imageUrl, status });
+                return;
+            }
+
+            await uploadImageUrlAndCrop(imageUrl);
+        } catch {
+            await uploadImageUrlAndCrop(imageUrl);
+        }
+    };
+
+    const handleImageSourceSelect = (mode: 'avatar' | 'profile', source: 'file' | 'url') => {
+        clearUploadError();
+        if (source === 'file') {
+            void requestLocalImageUpload(mode);
+            return;
+        }
+
+        openImageUrlDialog(mode);
+    };
+
+    const handleImageUrlChange = (value: string) => {
+        setImageUrlValue(value);
+        if (imageUrlError) {
+            setImageUrlError(null);
+        }
+        if (uploadError) {
+            clearUploadError();
+        }
+    };
+
+    const handleImageUrlSubmit = () => {
+        const mode = imageUrlMode;
+        const normalizedUrl = imageUrlValue.trim();
+        if (isUploadingImage) return;
+        if (!mode) return;
+
+        const validationError = validateImageUrlInput(normalizedUrl);
+        if (validationError) {
+            setImageUrlError(validationError);
+            return;
+        }
+
+        void requestWebUrlImageUpload(mode, normalizedUrl);
     };
 
     const continueAfterMediaWarning = () => {
@@ -405,12 +595,12 @@ const ArtistForm = ({
         setMediaWarning(null);
         if (!warning) return;
 
-        if (warning.status.requiresReview) {
-            fileInputRef.current?.click();
+        if (warning.source === 'url' && warning.imageUrl) {
+            void uploadImageUrlAndCrop(warning.imageUrl);
             return;
         }
 
-        openImageEntry(warning.mode);
+        openFileImageEntry();
     };
 
     const cleanupSessionUpload = async (imageUrl?: string | null) => {
@@ -560,7 +750,7 @@ const ArtistForm = ({
         <>
         {/* Hidden file input */}
         <input
-            aria-label={t('artistForm.buttons.uploadAvatar')}
+            aria-label={t('artistForm.buttons.uploadFromDevice')}
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -588,6 +778,19 @@ const ArtistForm = ({
             />
         )}
 
+        {imageUrlMode && (
+            <ImageUrlDialog
+                mode={imageUrlMode}
+                value={imageUrlValue}
+                error={imageUrlError}
+                uploadError={uploadError}
+                isUploading={isUploadingImage}
+                onValueChange={handleImageUrlChange}
+                onCancel={closeImageUrlDialog}
+                onSubmit={handleImageUrlSubmit}
+            />
+        )}
+
         {preUploadSelectionWarning && (
             <PreUploadSelectionDialog
                 warning={preUploadSelectionWarning}
@@ -609,15 +812,14 @@ const ArtistForm = ({
                         avatarUrl={avatarUrl}
                         profileUrl={profileUrl}
                         isUploading={isUploadingImage}
-                        onAvatarClick={() => void requestImageEntry('avatar')}
-                        onProfileClick={() => void requestImageEntry('profile')}
+                        onSelectImageSource={handleImageSourceSelect}
                         onNameChange={updateName}
                     />
 
                     {/* Form content */}
                     <div className="mt-10 px-4 pb-4 flex flex-col gap-4">
                     {/* Upload error */}
-                    {uploadError && (
+                    {uploadError && !imageUrlMode && (
                         <Alert variant="error" header={t('artistForm.errors.imageUploadFailed')}>
                             <span className="block">{uploadError}</span>
                             <span className="mt-1 block text-xs">{t('artistForm.errors.imageRequirements')}</span>
