@@ -66,18 +66,40 @@ export type ArtistPoint = GeoJSON.Feature<GeoJSON.Point, ArtistPointProperties>;
 export type ClusterPoint = GeoJSON.Feature<GeoJSON.Point, ClusterProperties>;
 export type ClusterFeature = ArtistPoint | ClusterPoint;
 
+export type VenueClusterPopupData = {
+    key: string;
+    name: string;
+    gigs: Gig[];
+};
+
 export type MarkerEntry = {
     marker: maplibregl.Marker;
     kind: 'artist' | 'cluster';
     // Visible marker content identity
     markerRenderKey?: string;
     leafKey?: string;
+    clusterFeature?: ClusterPoint;
+    artistIds?: string[];
+    venueCluster?: VenueClusterPopupData;
     popup?: maplibregl.Popup;
     root?: Root;
 };
 
+export type ExpandedClusterMarkerEntry = {
+    marker: maplibregl.Marker;
+    kind: 'artist';
+    artistId: string;
+    gigId?: string;
+} | {
+    marker: maplibregl.Marker;
+    kind: 'venue';
+    venueCluster: VenueClusterPopupData;
+    gigIds: string[];
+};
+
 export type ExpandedClusterState = {
     markers: maplibregl.Marker[];
+    markerEntries: ExpandedClusterMarkerEntry[];
     debugRingMarkers: maplibregl.Marker[];
     artistClusterColors: Map<string, string>;
     markerTargets: [number, number][];

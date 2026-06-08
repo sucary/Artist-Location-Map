@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import type { Gig } from '../../types/gig';
 import type { LocationLanguage } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
@@ -47,6 +47,8 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
     const { i18n, t } = useTranslation();
     const [artistsExpanded, setArtistsExpanded] = useState(false);
     const [optimisticStarred, setOptimisticStarred] = useState(isStarred);
+    const actionAreaRef = useRef<HTMLDivElement>(null);
+    const suppressRevealClickRef = useRef(false);
     const artists = gig.artists.length ? gig.artists : [gig.artist];
     const topSectionBackgroundUrl = getAvatarUrl(artists[0]?.sourceImage, artists[0]?.avatarCrop) || artists[0]?.sourceImage;
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
@@ -167,9 +169,40 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
         onToggleStar?.(gig);
     };
 
+    const clearActionAreaFocus = () => {
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement && actionAreaRef.current?.contains(activeElement)) {
+            activeElement.blur();
+        }
+    };
+
+    const handleActionAreaPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+        if (!showActions) return;
+        if (event.target instanceof Element && event.target.closest('button')) return;
+        if (event.currentTarget.contains(document.activeElement)) return;
+
+        // First tap only reveals hidden card actions
+        suppressRevealClickRef.current = true;
+        window.setTimeout(() => {
+            suppressRevealClickRef.current = false;
+        }, 500);
+        event.currentTarget.focus({ preventScroll: true });
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    const handleActionAreaClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+        if (!suppressRevealClickRef.current) return;
+
+        // Prevent reveal taps from also firing newly visible actions
+        suppressRevealClickRef.current = false;
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
     return (
         <div className="flex w-80 flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
-            <div className="relative overflow-hidden bg-surface">
+            <div className="relative overflow-hidden bg-surface" onPointerDown={clearActionAreaFocus}>
                 {onToggleStar && (
                     <button
                         type="button"
@@ -263,7 +296,13 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
                 </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-b-lg">
+            <div
+                ref={actionAreaRef}
+                tabIndex={showActions ? 0 : undefined}
+                onPointerDown={handleActionAreaPointerDown}
+                onClickCapture={handleActionAreaClickCapture}
+                className="group relative overflow-hidden rounded-b-lg focus:outline-none"
+            >
                 <div className="flex flex-col gap-3 border-t border-border/40 px-5 pb-4 pt-3">
                     <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-start gap-2 text-sm text-text-secondary">
                         <svg aria-hidden="true" focusable="false" className="mt-0.5 h-4 w-4 text-text-muted" viewBox="0 0 24 24" fill="none">
@@ -275,7 +314,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
                                 <span className={`min-w-0 break-words leading-5 ${gig.venueName ? 'font-semibold text-text' : ''}`}>
                                     {gig.venueName || locationLabel}
                                 </span>
-                                <span className={`flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0' : ''}`}>
+                                <span className={`flex shrink-0 items-start justify-end transition-opacity ${showActions ? 'group-hover:opacity-0 group-focus-within:opacity-0' : ''}`}>
                                     {renderInfoBadge(formattedDate)}
                                 </span>
                             </span>

@@ -604,6 +604,7 @@ function App() {
         setShowArtistList(false);
         setShowFeaturedList(false);
         setShowGigPanel(false);
+        setShowGigCalendar(false);
         setMainSearchCloseSignal((signal) => signal + 1);
         setEditingGig(null);
         setGigFormArtist(null);
@@ -782,6 +783,12 @@ function App() {
         setFocusedArtist(artist);
     };
 
+    const handleNavigateToGig = (gig: Gig) => {
+        setShowGigPanel(false);
+        setShowGigCalendar(false);
+        setFocusedGigId(gig.id);
+    };
+
     const handleCloseArtistList = useCallback(() => {
         setArtistListCardOpen(false);
         setShowArtistList(false);
@@ -838,12 +845,15 @@ function App() {
     // User-only menu locks must not survive into anonymous map browsing
     const mapInteractionsDisabled = (isMobileLayout && showArtistList)
         || (isMobileLayout && showFeaturedList)
-        || (isMobileLayout && showGigForm)
+        // Manual gig location selection temporarily returns pointer control to the map
+        || (isMobileLayout && showGigForm && !selectionMode?.active)
         || (isMobileLayout && showGigPanel)
         || (isMobileLayout && showGigCalendar)
         || (!!user && mainSearchResultsOpen)
         || (!!user && notificationMenuOpen)
         || (!!user && accountMenuOpen);
+    // Mobile header menus own the space used by top status banners
+    const mobileHeaderMenuOpen = isMobileLayout && (notificationMenuOpen || accountMenuOpen);
 
     const handleCopyArtistCollection = async (artistCount: number) => {
         if (!username || !user || !profile?.isApproved || isCopyingCollection) {
@@ -977,34 +987,36 @@ function App() {
             </div>
 
             {/* Bottom center: Viewing banner, Featured banner, or Anonymous banner */}
-            {selectionMode?.active ? (
-                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
-                    <SelectionPrompt onCancel={handleLocationPick} />
-                </div>
-            ) : isViewingOther && username ? (
-                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
-                    <ViewingUserBanner username={username} />
-                </div>
-            ) : tourMode.active && canManageOwnMap ? (
-                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
-                    <TourBanner
-                        tourMode={tourMode}
-                        gigCount={tourGigs.length}
-                        highlightedCount={highlightedGigCount}
-                        onExit={handleExitTourMode}
-                    />
-                </div>
-            ) : viewingFeatured && user ? (
-                <div className="absolute top-16 inset-x-2 z-[1100] flex justify-center sm:inset-x-auto sm:top-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2">
-                    <FeaturedArtistsBanner
-                        artistCount={featuredArtists?.length || 0}
-                        onHomeClick={() => setViewingFeatured(false)}
-                    />
-                </div>
-            ) : !user && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1100]">
-                    <AnonymousUserBanner onSignInClick={() => setShowAuthModal(true)} />
-                </div>
+            {!mobileHeaderMenuOpen && (
+                selectionMode?.active ? (
+                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                        <SelectionPrompt onCancel={handleLocationPick} />
+                    </div>
+                ) : isViewingOther && username ? (
+                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                        <ViewingUserBanner username={username} />
+                    </div>
+                ) : tourMode.active && canManageOwnMap ? (
+                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                        <TourBanner
+                            tourMode={tourMode}
+                            gigCount={tourGigs.length}
+                            highlightedCount={highlightedGigCount}
+                            onExit={handleExitTourMode}
+                        />
+                    </div>
+                ) : viewingFeatured && user ? (
+                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                        <FeaturedArtistsBanner
+                            artistCount={featuredArtists?.length || 0}
+                            onHomeClick={() => setViewingFeatured(false)}
+                        />
+                    </div>
+                ) : !user && (
+                    <div className="absolute bottom-6 left-1/2 z-[1100] -translate-x-1/2">
+                        <AnonymousUserBanner onSignInClick={() => setShowAuthModal(true)} />
+                    </div>
+                )
             )}
 
             {/* Show username prompt for OAuth users without username */}
@@ -1083,7 +1095,7 @@ function App() {
                     onDeleteGig={handleDeleteGig}
                     onDeleteTour={handleDeleteTour}
                     onAddGigToTour={handleAddGigToTour}
-                    onLocateGig={(gig) => setFocusedGigId(gig.id)}
+                    onLocateGig={handleNavigateToGig}
                     starredGigIds={starredGigIds}
                     onToggleGigStar={handleToggleGigStar}
                 />

@@ -45,6 +45,7 @@ import { GigCard } from '../Tour/GigCard';
 // Interactive artist map shell and control wiring
 
 const ALL_GIG_DATES = { from: '0001-01-01', to: '9999-12-31' };
+const focusedMapZoom = 11;
 
 type MarkerWithUpdate = maplibregl.Marker & {
     // Reach MapLibre's private updater to follow inertial tile movement.
@@ -420,6 +421,8 @@ export default function MapView({
         hasExpandedClusters,
         markersRef,
         openArtistPopup,
+        openGigInVisibleCluster,
+        openVenueClusterPopup,
         renderVisibleMarkers,
     } = useArtistMarkers({
         mapRef,
@@ -789,7 +792,7 @@ export default function MapView({
         onFocusedLocationHandled?.();
     }, [focusedLocation, mapReady, onFocusedLocationHandled]);
 
-    // Fly to a focused artist marker and reopen its popup after the animation.
+    // Jump to a focused artist marker and reopen its popup.
     useEffect(() => {
         const map = mapRef.current;
         if (!map || !mapReady || !focusedArtist) return;
@@ -797,24 +800,24 @@ export default function MapView({
         const markerCoordinates = view === 'active'
             ? focusedArtist.activeLocationDisplayCoordinates
             : focusedArtist.originalLocationDisplayCoordinates;
-        map.flyTo({
+        map.jumpTo({
             center: [markerCoordinates.lng, markerCoordinates.lat],
-            zoom: 11,
-            duration: 2000,
+            zoom: focusedMapZoom,
         });
 
-        // Wait for the fly animation before reopening the artist popup.
-        window.setTimeout(() => {
+        const animationFrame = window.requestAnimationFrame(() => {
             renderVisibleMarkers();
             const marker = markersRef.current.get(`artist-${focusedArtist.id}`)?.marker;
             if (marker) {
                 openArtistPopup(focusedArtist, marker);
             }
             onFocusedArtistHandled?.();
-        }, 1700);
+        });
+
+        return () => window.cancelAnimationFrame(animationFrame);
     }, [focusedArtist, mapReady, markersRef, onFocusedArtistHandled, openArtistPopup, renderVisibleMarkers, view]);
 
-    // Fly to a focused gig marker and reopen its popup after the animation.
+    // Jump to a focused gig marker and reopen its popup.
     useEffect(() => {
         const map = mapRef.current;
         if (!map || !mapReady || !focusedGigId || !tourModeActive) return;
@@ -823,22 +826,33 @@ export default function MapView({
         if (!gigArtist) return;
 
         const markerCoordinates = gigArtist.activeLocationDisplayCoordinates;
-        map.flyTo({
+        map.jumpTo({
             center: [markerCoordinates.lng, markerCoordinates.lat],
-            zoom: 11,
-            duration: 2000,
+            zoom: focusedMapZoom,
         });
 
-        // Wait for the fly animation before reopening the gig popup.
-        window.setTimeout(() => {
+        const animationFrame = window.requestAnimationFrame(() => {
             renderVisibleMarkers();
             const marker = markersRef.current.get(`artist-${focusedGigId}`)?.marker;
             if (marker) {
                 openArtistPopup(gigArtist, marker);
+            } else {
+                // Same-venue gig groups render as cluster markers instead of artist markers
+                const venueEntry = Array.from(markersRef.current.values()).find((entry) => (
+                    entry.kind === 'cluster' && entry.venueCluster?.gigs.some((gig) => gig.id === focusedGigId)
+                ));
+                if (venueEntry?.venueCluster) {
+                    const lngLat = venueEntry.marker.getLngLat();
+                    openVenueClusterPopup(venueEntry.venueCluster, [lngLat.lng, lngLat.lat], venueEntry.marker.getElement());
+                } else {
+                    openGigInVisibleCluster(focusedGigId);
+                }
             }
             onFocusedGigHandled?.();
-        }, 1700);
-    }, [focusedGigId, gigMarkerArtists, mapReady, markersRef, onFocusedGigHandled, openArtistPopup, renderVisibleMarkers, tourModeActive]);
+        });
+
+        return () => window.cancelAnimationFrame(animationFrame);
+    }, [focusedGigId, gigMarkerArtists, mapReady, markersRef, onFocusedGigHandled, openArtistPopup, openGigInVisibleCluster, openVenueClusterPopup, renderVisibleMarkers, tourModeActive]);
 
     // Sync selected-city GeoJSON overlays into MapLibre layers.
     useEffect(() => {

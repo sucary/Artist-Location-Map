@@ -80,6 +80,10 @@ export const getProvinceColorKey = (gig: Gig) => {
     return normalizeProvinceColorKey(provinceKey || fallbackKey);
 };
 
+const getIsMobileCalendarLayout = () => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches
+);
+
 const getCalendarDays = (monthDate: Date): CalendarDay[] => {
     const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
     const startDate = new Date(firstDay);
@@ -125,6 +129,8 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     const [datePickerMode, setDatePickerMode] = useState<'month' | 'year'>('year');
     const [datePickerPosition, setDatePickerPosition] = useState({ top: 0, left: 0, width: 300, maxHeight: 520 });
     const [dayPopover, setDayPopover] = useState<DayPopoverState | null>(null);
+    const [activeDayValue, setActiveDayValue] = useState<string | null>(null);
+    const [isMobileCalendarLayout, setIsMobileCalendarLayout] = useState(getIsMobileCalendarLayout);
     const dayPopoverRef = useRef<HTMLDivElement>(null);
     const todayValue = dayKey(new Date());
     const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
@@ -151,6 +157,16 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
         Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat(dateLocale, { month: 'short' }).format(new Date(2026, index, 1)))
     ), [dateLocale]);
     const pickerYears = useMemo(() => Array.from({ length: 101 }, (_, index) => visibleMonth.getFullYear() - 50 + index), [visibleMonth]);
+
+    useEffect(() => {
+        const media = window.matchMedia('(max-width: 639px)');
+        const handleChange = () => setIsMobileCalendarLayout(media.matches);
+
+        // Mobile interaction state follows the same breakpoint as Tailwind sm
+        handleChange();
+        media.addEventListener('change', handleChange);
+        return () => media.removeEventListener('change', handleChange);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -200,6 +216,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
 
     const moveMonth = (offset: number) => {
         setDayPopover(null);
+        setActiveDayValue(null);
         setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
     };
 
@@ -208,6 +225,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
 
         // Today also acts as a broad jump back to the current month
         setDayPopover(null);
+        setActiveDayValue(todayValue);
         setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
         onSelectDay(todayValue);
         setIsDatePickerOpen(false);
@@ -239,23 +257,33 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
         setIsDatePickerOpen(false);
     };
 
-    const openDayPopover = (event: React.MouseEvent<HTMLButtonElement>, dateValue: string) => {
+    const openDayPopover = (event: React.MouseEvent<HTMLElement>, dateValue: string) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const width = Math.min(300, window.innerWidth - 16);
-        const left = Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
         const maxHeight = Math.min(520, window.innerHeight - 16);
+        const left = isMobileCalendarLayout
+            ? (window.innerWidth - width) / 2
+            : Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+        const top = isMobileCalendarLayout
+            ? Math.max(8, window.innerHeight - maxHeight - 16)
+            : Math.min(Math.max(8, rect.top - 110), window.innerHeight - maxHeight - 8);
 
-        // Full-day popover anchors near the collapsed count row
+        // Mobile popovers stay bottom-centered while desktop popovers remain anchored
         setDayPopover({
             dateValue,
-            top: Math.min(Math.max(8, rect.top - 110), window.innerHeight - maxHeight - 8),
+            top,
             left,
             width,
             maxHeight,
         });
     };
 
-    const renderGigEvent = (gig: Gig) => {
+    const handleAddGigFromPopover = (dateValue: string) => {
+        setDayPopover(null);
+        onAddGig?.(dateValue);
+    };
+
+    const renderGigEvent = (gig: Gig, dateValue?: string) => {
         const eventLabel = getArtistNames(gig);
         const eventMeta = getGigMeta(gig);
         const isStarred = starredGigIds?.has(gig.id) ?? false;
@@ -265,7 +293,15 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                 key={gig.id}
                 type="button"
                 aria-label={isStarred ? t('tour.actions.unstarGig') : t('tour.actions.starGig')}
-                onClick={() => onToggleGigStar?.(gig)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    if (dateValue && isMobileCalendarLayout) {
+                        openDayPopover(event, dateValue);
+                        return;
+                    }
+
+                    onToggleGigStar?.(gig);
+                }}
                 className="relative min-w-0 rounded px-2 py-1 text-left text-xs font-semibold leading-4 text-white shadow-sm transition duration-150 hover:brightness-90 hover:shadow-md"
                 style={{ backgroundColor: getGigProvinceColor(gig, provinceEventColors) }}
                 title={eventMeta ? `${eventLabel} - ${eventMeta}` : eventLabel}
@@ -283,6 +319,16 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
         if (!onAddGig) return null;
 
         const label = t('tour.actions.addGig');
+        const isActive = activeDayValue === dateValue;
+        const handleAddGig = (event: React.MouseEvent<HTMLButtonElement>) => {
+            event.stopPropagation();
+            if (isMobileCalendarLayout && !isActive) {
+                setActiveDayValue(dateValue);
+                return;
+            }
+
+            onAddGig(dateValue);
+        };
 
         if (placement === 'center') {
             return (
@@ -290,10 +336,14 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     type="button"
                     aria-label={label}
                     title={label}
-                    onClick={() => onAddGig(dateValue)}
-                    className="group/add-cell flex h-full w-full items-center justify-center rounded transition-colors hover:bg-border focus-visible:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary app-dark:hover:bg-surface-muted"
+                    onClick={handleAddGig}
+                    className={`group/add-cell flex h-full w-full touch-manipulation items-center justify-center rounded transition-colors hover:bg-border focus-visible:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary app-dark:hover:bg-surface-muted ${
+                        isActive ? 'pointer-events-auto' : 'pointer-events-none'
+                    } sm:pointer-events-auto`}
                 >
-                    <span className="grid h-9 w-9 place-items-center text-text-secondary opacity-0 transition-opacity group-hover/add-cell:opacity-100 group-focus-visible/add-cell:opacity-100">
+                    <span className={`grid h-9 w-9 place-items-center text-text-secondary transition-opacity ${
+                        isActive ? 'opacity-100' : 'opacity-0'
+                    } sm:opacity-0 sm:group-hover/add-cell:opacity-100 sm:group-focus-visible/add-cell:opacity-100`}>
                         <PlusIcon className="h-5 w-5" />
                     </span>
                 </button>
@@ -306,8 +356,10 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     type="button"
                     aria-label={label}
                     title={label}
-                    onClick={() => onAddGig(dateValue)}
-                    className="group/add-row absolute inset-y-0 left-1 right-1 flex items-center justify-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity hover:bg-border focus-visible:bg-border focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary group-hover/day-row:opacity-100 group-focus-within/day-row:opacity-100 app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted sm:left-2 sm:right-2"
+                    onClick={handleAddGig}
+                    className={`group/add-row absolute inset-y-0 right-1 z-20 flex w-6 touch-manipulation items-center justify-center rounded bg-surface-muted text-text-secondary transition-colors transition-opacity hover:bg-border focus-visible:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted ${
+                        isActive ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+                    } sm:left-2 sm:right-2 sm:z-auto sm:w-auto sm:pointer-events-auto sm:opacity-0 sm:group-hover/day-row:opacity-100 sm:group-focus-within/day-row:opacity-100`}
                 >
                     <PlusIcon className="h-3.5 w-3.5" />
                 </button>
@@ -319,10 +371,14 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                 type="button"
                 aria-label={label}
                 title={label}
-                onClick={() => onAddGig(dateValue)}
-                    className="group/add-stack flex items-start justify-center rounded focus-visible:outline-none"
+                onClick={handleAddGig}
+                className={`group/add-stack flex touch-manipulation items-start justify-center rounded focus-visible:outline-none ${
+                    isActive ? 'pointer-events-auto' : 'pointer-events-none'
+                } sm:pointer-events-auto`}
                 >
-                <span className="grid h-9 w-full place-items-center rounded bg-surface-muted text-text-secondary opacity-0 transition-colors transition-opacity group-hover/add-stack:opacity-100 group-hover/add-stack:bg-border group-focus-visible/add-stack:opacity-100 group-focus-visible/add-stack:bg-border group-focus-visible/add-stack:ring-2 group-focus-visible/add-stack:ring-inset group-focus-visible/add-stack:ring-primary app-dark:bg-surface-secondary app-dark:group-hover/add-stack:bg-surface-muted">
+                <span className={`grid h-7 w-full place-items-center rounded bg-surface-muted text-text-secondary transition-colors transition-opacity group-hover/add-stack:bg-border group-focus-visible/add-stack:bg-border group-focus-visible/add-stack:ring-2 group-focus-visible/add-stack:ring-inset group-focus-visible/add-stack:ring-primary app-dark:bg-surface-secondary app-dark:group-hover/add-stack:bg-surface-muted ${
+                    isActive ? 'opacity-100' : 'opacity-0'
+                } sm:h-9 sm:opacity-0 sm:group-hover/add-stack:opacity-100 sm:group-focus-visible/add-stack:opacity-100`}>
                     <PlusIcon className="h-4 w-4" />
                 </span>
             </button>
@@ -358,7 +414,21 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                     <CloseButton onClick={() => setDayPopover(null)} size="md" className="absolute right-3 top-3" />
                 </div>
                 <div className="flex max-h-[420px] min-w-0 flex-col gap-0.5 overflow-y-auto px-3 pb-4">
-                    {dayGigs.map(renderGigEvent)}
+                    {dayGigs.map((gig) => renderGigEvent(gig))}
+                    {onAddGig && (
+                        <button
+                            type="button"
+                            aria-label={t('tour.actions.addGig')}
+                            title={t('tour.actions.addGig')}
+                            onClick={() => handleAddGigFromPopover(dayPopover.dateValue)}
+                            className="relative min-w-0 touch-manipulation rounded bg-surface-muted px-2 py-1 text-left text-xs font-semibold leading-4 text-text-secondary shadow-sm transition duration-150 hover:bg-border hover:text-text hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted"
+                        >
+                            <span className="flex min-w-0 items-center gap-1.5">
+                                <PlusIcon className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{t('tour.actions.addGig')}</span>
+                            </span>
+                        </button>
+                    )}
                 </div>
             </div>,
             document.body
@@ -366,9 +436,9 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     };
 
     return (
-        <div className="absolute inset-x-2 top-20 z-[1050] mx-auto flex w-[min(1280px,calc(100vw-1rem),calc((100vh-8rem)*1.6))] justify-center font-sans sm:top-24">
-            <div role="region" aria-label={t('tour.calendar.title')} className="flex aspect-[16/10] w-full flex-col overflow-hidden rounded-xl bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
+        <div className="fixed inset-0 z-[1300] flex h-[100dvh] w-screen font-sans sm:absolute sm:inset-x-2 sm:inset-y-auto sm:top-24 sm:z-[1050] sm:mx-auto sm:h-auto sm:w-[min(1280px,calc(100vw-1rem),calc((100vh-8rem)*1.6))] sm:justify-center">
+            <div role="region" aria-label={t('tour.calendar.title')} className="flex h-full w-full flex-col overflow-hidden bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40 sm:aspect-[16/10] sm:h-auto sm:rounded-xl">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-5 sm:pt-3">
                     <div className="flex min-w-0 items-center gap-2">
                         <button
                             type="button"
@@ -513,19 +583,32 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                         const visibleGigs = dayGigs.length >= 3 ? dayGigs.slice(0, 2) : dayGigs;
                         const hiddenGigCount = dayGigs.length - visibleGigs.length;
                         const showCenteredAdd = dayGigs.length === 0;
-                        const showStackAdd = dayGigs.length > 0 && dayGigs.length <= 2;
-                        const showRowAdd = dayGigs.length >= 3;
+                        const showStackAdd = !isMobileCalendarLayout && dayGigs.length > 0 && dayGigs.length <= 2;
+                        const showRowAdd = !isMobileCalendarLayout && dayGigs.length >= 3;
 
                         return (
                             <div
                                 key={day.value}
-                                className={`flex min-h-0 flex-col overflow-hidden border-b border-r border-border/60 bg-surface pb-1 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:pb-2 ${
+                                tabIndex={0}
+                                onClick={(event) => {
+                                    setActiveDayValue(day.value);
+                                    event.currentTarget.focus({ preventScroll: true });
+                                }}
+                                onFocus={() => setActiveDayValue(day.value)}
+                                onBlur={(event) => {
+                                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                                        setActiveDayValue((current) => current === day.value ? null : current);
+                                    }
+                                }}
+                                className={`flex min-h-0 flex-col overflow-hidden border-b border-r border-border/60 bg-surface pb-1 text-left transition-colors focus:bg-surface-secondary/30 focus:outline-none sm:pb-2 ${
                                     day.inMonth ? 'text-text' : 'text-text-muted bg-surface-secondary/25'
                                 } hover:bg-surface-secondary/50`}
                             >
-                                <div className={`relative mb-0.5 flex min-h-5 items-start gap-1 ${showRowAdd ? 'group/day-row' : ''}`}>
+                                <div className={`relative mb-0.5 flex min-h-5 items-start gap-1 ${
+                                    showRowAdd ? `group/day-row ${activeDayValue === day.value ? 'pr-7' : ''} sm:pr-0` : ''
+                                }`}>
                                     <span
-                                        className={`relative z-10 inline-flex h-5 min-w-5 self-start items-center justify-center rounded-full px-1 text-xs font-semibold leading-none transition-colors group-hover/day-row:opacity-0 focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 ${
+                                        className={`relative z-10 inline-flex h-5 min-w-5 max-w-full self-start items-center justify-center whitespace-nowrap rounded-full px-1 text-[11px] font-semibold leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-primary sm:mx-1 sm:text-xs sm:group-hover/day-row:opacity-0 ${
                                             isToday ? 'bg-surface-muted text-text' : day.inMonth ? 'text-text-secondary' : 'text-text-muted'
                                         }`}
                                     >
@@ -540,15 +623,19 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                                         </span>
                                     ) : (
                                         <>
-                                            {visibleGigs.map(renderGigEvent)}
+                                            {visibleGigs.map((gig) => renderGigEvent(gig, day.value))}
                                             {showStackAdd && renderAddGigButton(day.value, 'stack')}
                                             {hiddenGigCount > 0 && (
                                                 <button
                                                     type="button"
                                                     onClick={(event) => openDayPopover(event, day.value)}
+                                                    aria-label={t('tour.calendar.remainingEvents', { count: hiddenGigCount, defaultValue: '{{count}} more events' })}
                                                     className="truncate rounded bg-surface-muted px-1 py-1 text-left text-xs font-semibold text-text-secondary transition-colors hover:bg-border hover:text-text app-dark:bg-surface-secondary app-dark:hover:bg-surface-muted"
                                                 >
-                                                    {t('tour.calendar.remainingEvents', { count: hiddenGigCount, defaultValue: '{{count}} more events' })}
+                                                    <span className="sm:hidden">+{hiddenGigCount}</span>
+                                                    <span className="hidden sm:inline">
+                                                        {t('tour.calendar.remainingEvents', { count: hiddenGigCount, defaultValue: '{{count}} more events' })}
+                                                    </span>
                                                 </button>
                                             )}
                                         </>

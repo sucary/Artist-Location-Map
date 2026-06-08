@@ -478,7 +478,12 @@ export function GigPanel({
             : locationParts.filter(Boolean).join(' \u00b7 ');
 
         return (
-            <li key={gig.id} className="group relative transition-colors duration-150 hover:bg-surface-secondary/30 focus-within:bg-surface-secondary/30">
+            <li
+                key={gig.id}
+                tabIndex={0}
+                onClick={(event) => event.currentTarget.focus({ preventScroll: true })}
+                className="group relative transition-colors duration-150 hover:bg-surface-secondary/30 focus:bg-surface-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary focus-within:bg-surface-secondary/30"
+            >
                 {onToggleGigStar && (
                     <button
                         type="button"

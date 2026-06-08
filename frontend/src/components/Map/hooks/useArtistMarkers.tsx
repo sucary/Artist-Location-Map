@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type RefObject, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject, type SetStateAction } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 import maplibregl from 'maplibre-gl';
@@ -30,9 +30,11 @@ import type {
     ArtistPointProperties,
     ClusterFeature,
     ClusterPoint,
+    ExpandedClusterMarkerEntry,
     ExpandedClusterState,
     MarkerEntry,
     ArtistPopupLifecycleState,
+    VenueClusterPopupData,
 } from '../types';
 import { getCityById } from '../../../services/api';
 import { formatGigDateTimeValue } from '../../../utils/dateFormatting';
@@ -145,7 +147,7 @@ const getGigVenueClusterKey = (artist: Artist) => {
 const getSameVenueGigCluster = (
     leaves: GeoJSON.Feature<GeoJSON.Point, ArtistPointProperties>[],
     artistsById: Map<string, Artist>
-) => {
+): VenueClusterPopupData | null => {
     if (leaves.length < 2) return null;
 
     // Venue clusters require all leaves to be gigs at the exact same venue point
@@ -190,6 +192,7 @@ const VenueClusterGigRow = ({
     const [optimisticStarred, setOptimisticStarred] = useState(isStarred);
     const artistRowRef = useRef<HTMLDivElement | null>(null);
     const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const suppressRevealClickRef = useRef(false);
     const artistNames = useMemo(() => gig.artists.length ? gig.artists : [gig.artist], [gig.artist, gig.artists]);
     const formattedDate = formatGigDateTimeValue(gig.date, gig.time, dateFallback);
     const title = gig.gigName || gig.tour?.name || '';
@@ -255,9 +258,39 @@ const VenueClusterGigRow = ({
     const hiddenArtistCount = artistNames.length - visibleArtists.length;
     const canToggleArtistRow = hiddenArtistCount > 0 || (isArtistRowExpanded && collapsedArtistCount < artistNames.length);
     const visibleArtistLabel = visibleArtists.map((artist) => artist.name).join(', ');
+    const hasActions = Boolean(onToggleGigStar || onEditGig || onDeleteGig);
+
+    const handleRowPointerDownCapture = (event: ReactPointerEvent<HTMLLIElement>) => {
+        if (!hasActions) return;
+        if (event.target instanceof Element && event.target.closest('button')) return;
+        if (event.currentTarget.contains(document.activeElement)) return;
+
+        // First tap only reveals hidden row actions
+        suppressRevealClickRef.current = true;
+        window.setTimeout(() => {
+            suppressRevealClickRef.current = false;
+        }, 500);
+        event.currentTarget.focus({ preventScroll: true });
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    const handleRowClickCapture = (event: ReactMouseEvent<HTMLLIElement>) => {
+        if (!suppressRevealClickRef.current) return;
+
+        // Prevent reveal taps from also firing newly visible actions
+        suppressRevealClickRef.current = false;
+        event.preventDefault();
+        event.stopPropagation();
+    };
 
     return (
-        <li className="group transition-colors duration-150 hover:bg-surface-secondary/30">
+        <li
+            tabIndex={hasActions ? 0 : undefined}
+            onPointerDownCapture={handleRowPointerDownCapture}
+            onClickCapture={handleRowClickCapture}
+            className="group transition-colors duration-150 hover:bg-surface-secondary/30 focus:bg-surface-secondary/30 focus:outline-none"
+        >
             <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-5 ${isArtistRowExpanded ? 'items-start py-3' : 'items-center py-2.5'}`}>
                 <div className={`flex min-w-0 flex-col justify-center ${isArtistRowExpanded ? 'gap-1.5' : 'gap-0.5'}`}>
                     {isArtistRowExpanded ? (
@@ -295,7 +328,7 @@ const VenueClusterGigRow = ({
                     )}
                     <p className="min-w-0 truncate text-xs leading-4 text-text-secondary">{title}</p>
                 </div>
-                <span className={`inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary transition-opacity ${isArtistRowExpanded ? 'mt-0.5' : ''} ${(onToggleGigStar || onEditGig || onDeleteGig) ? 'group-hover:opacity-0' : ''}`}>
+                <span className={`inline-flex max-w-full items-center rounded-lg bg-surface-muted px-3 py-0.5 text-sm font-medium leading-5 text-text-secondary transition-opacity ${isArtistRowExpanded ? 'mt-0.5' : ''} ${hasActions ? 'group-hover:opacity-0 group-focus-within:opacity-0' : ''}`}>
                     <span className="min-w-0 truncate">{formattedDate}</span>
                 </span>
                 <InlineActionMenu
@@ -357,10 +390,16 @@ const VenueClusterGigList = ({
     const headerLightColor = `color-mix(in srgb, ${headerPrimaryColor} 42%, white)`;
     const headerMidColor = `color-mix(in srgb, ${headerPrimaryColor} 62%, white)`;
     const headerColorField = `linear-gradient(115deg, ${headerLightColor} 0%, ${headerMidColor} 42%, ${headerPrimaryColor} 100%)`;
+    const clearFocusedVenueRow = () => {
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement) {
+            activeElement.blur();
+        }
+    };
 
     return (
         <div className="flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg bg-surface font-sans shadow-lg ring-1 ring-border/40">
-            <div className="relative flex items-center justify-between gap-3 overflow-hidden border-b border-border/60 bg-surface px-5 py-3.5">
+            <div className="relative flex items-center justify-between gap-3 overflow-hidden border-b border-border/60 bg-surface px-5 py-3.5" onPointerDown={clearFocusedVenueRow}>
                 {headerBackgroundUrl && (
                     <>
                         <img
@@ -1122,7 +1161,7 @@ export const useArtistMarkers = ({
         marker.on('dragstart', dragStart);
         marker.on('dragend', dragEnd);
         displayCoordinateDragHandlers.set(marker, { dragStart, dragEnd });
-    }, [isInsideBoundary]);
+    }, [isInsideBoundary, mapRef]);
 
     const syncArtistMarkerStackOrder = useCallback((artistId: string, element: HTMLElement, clusterDisabled: boolean) => {
         if (!clusterDisabled) {
@@ -1439,7 +1478,11 @@ export const useArtistMarkers = ({
     }, [removeExpandedClusterArtifacts]);
 
     // Show ArtistCard in a MapLibre popup
-    const openArtistPopup = useCallback((artist: Artist, marker: maplibregl.Marker) => {
+    const openArtistPopup = useCallback((
+        artist: Artist,
+        marker: maplibregl.Marker,
+        options?: { focusMarker?: boolean; removeMarkerOnClose?: boolean }
+    ) => {
         const map = mapRef.current;
         if (!map) return;
 
@@ -1472,8 +1515,11 @@ export const useArtistMarkers = ({
             .addTo(map);
         activePopupRef.current = popup;
 
-        marker.getElement().classList.add('marker-focused');
-        if (map.getZoom() >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5) {
+        const focusMarker = options?.focusMarker ?? true;
+        if (focusMarker) {
+            marker.getElement().classList.add('marker-focused');
+        }
+        if (focusMarker && map.getZoom() >= CLUSTER_CONFIG.disableClusteringAtZoomLevel + 0.5) {
             promoteSelectedArtistMarker(artist.id, marker.getElement());
         }
         setSelectedCityId(view === 'active' ? artist.activeCityId : artist.originalCityId);
@@ -1499,7 +1545,12 @@ export const useArtistMarkers = ({
         popup.on('close', () => {
             // Remove listeners and React state owned by this popup
             popupContainer.removeEventListener('click', handleClick);
-            marker.getElement().classList.remove('marker-focused');
+            if (focusMarker) {
+                marker.getElement().classList.remove('marker-focused');
+            }
+            if (options?.removeMarkerOnClose) {
+                marker.remove();
+            }
             root.unmount();
             markersRef.current.forEach((entry) => {
                 if (entry.popup === popup) {
@@ -1526,7 +1577,7 @@ export const useArtistMarkers = ({
     }, [clearFocusedMarkerElements, mapRef, promoteSelectedArtistMarker, selectedCityIdRef, setArtistPopupLifecycle, setSelectedCityId]);
 
     const openVenueClusterPopup = useCallback((
-        venueCluster: NonNullable<ReturnType<typeof getSameVenueGigCluster>>,
+        venueCluster: VenueClusterPopupData,
         center: [number, number],
         sourceElement: HTMLElement
     ) => {
@@ -1600,34 +1651,61 @@ export const useArtistMarkers = ({
         });
     }, [clearFocusedMarkerElements, gigProvinceColors, mapRef, setArtistPopupLifecycle]);
 
+    const openExpandedClusterGig = useCallback((gigId: string) => {
+        for (const state of expandedRef.current.values()) {
+            const entry = state.markerEntries.find((markerEntry) => (
+                markerEntry.kind === 'artist'
+                    ? markerEntry.gigId === gigId
+                    : markerEntry.gigIds.includes(gigId)
+            ));
+            if (!entry) continue;
+
+            if (entry.kind === 'venue') {
+                openVenueClusterPopup(entry.venueCluster, getMarkerCoordinates(entry.marker), entry.marker.getElement());
+                return true;
+            }
+
+            const artist = artistsByIdRef.current.get(entry.artistId);
+            if (!artist) return false;
+
+            openArtistPopup(artist, entry.marker);
+            return true;
+        }
+
+        return false;
+    }, [openArtistPopup, openVenueClusterPopup]);
+
     // Open a cluster into separate artist markers
     const expandCluster = useCallback((
         feature: ClusterPoint,
         sourceElement?: HTMLElement,
         preserveArtistLocations = false,
-        showDebugRings = false
+        showDebugRings = false,
+        focusedGigId?: string,
+        force = false
     ) => {
         const map = mapRef.current;
-        if (!map) return;
+        if (!map) return false;
 
         const clusterId = feature.properties.cluster_id;
         const clusterKey = `expanded-${clusterId}`;
 
         if (expandedRef.current.has(clusterKey)) {
+            if (focusedGigId) return openExpandedClusterGig(focusedGigId);
             collapseExpandedClusters();
-            return;
+            return false;
         }
 
         const leaves = clusterLeavesRef.current.get(clusterId) ?? [];
-        if (leaves.length === 0) return;
+        if (leaves.length === 0) return false;
         const clusterDebugColor = getClusterDebugColor(feature, leaves, map);
         const artistClusterColors = new Map(leaves.map((leaf) => [leaf.properties.artistId, clusterDebugColor]));
         artistClusterColors.forEach((color, artistId) => clusterDebugColorsRef.current.set(artistId, color));
         const expandedLeafKey = getClusterLeafKey(leaves);
         const clusterMarkerKey = `cluster-${clusterId}`;
         // Ignore clicks while zoom or merge work is still changing markers
-        if (map.isZooming() || clusterTransitionUntilRef.current > performance.now()) {
-            return;
+        if (!force && (map.isZooming() || clusterTransitionUntilRef.current > performance.now())) {
+            return false;
         }
 
         // Manual expansion cancels delayed merge work
@@ -1718,7 +1796,7 @@ export const useArtistMarkers = ({
             kind: 'venue';
             leaves: ArtistPoint[];
             artists: Artist[];
-            venueCluster: NonNullable<ReturnType<typeof getSameVenueGigCluster>>;
+            venueCluster: VenueClusterPopupData;
         };
 
         const venueGroups = new Map<string, {
@@ -1799,6 +1877,7 @@ export const useArtistMarkers = ({
         const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
         const collapsedLines: GeoJSON.Feature<GeoJSON.LineString>[] = [];
         const expandedMarkers: maplibregl.Marker[] = [];
+        const expandedMarkerEntries: ExpandedClusterMarkerEntry[] = [];
         const markerTargets: [number, number][] = [];
         const renderExpandedArtistMarkers = !showDebugRings;
 
@@ -1835,6 +1914,13 @@ export const useArtistMarkers = ({
                     event.stopPropagation();
                     openArtistPopup(artist, marker);
                 });
+                const markerEntry: ExpandedClusterMarkerEntry = {
+                    marker,
+                    kind: 'artist',
+                    artistId: artist.id,
+                    gigId: (artist as Partial<GigMarkerArtist>).gig?.id,
+                };
+                expandedMarkerEntries.push(markerEntry);
                 expandedMarkers.push(marker);
             } else if (renderExpandedArtistMarkers && item.kind === 'venue') {
                 const venueColor = item.venueCluster.gigs[0]
@@ -1861,6 +1947,13 @@ export const useArtistMarkers = ({
                     event.stopPropagation();
                     openVenueClusterPopup(item.venueCluster, getMarkerCoordinates(marker), marker.getElement());
                 });
+                const markerEntry: ExpandedClusterMarkerEntry = {
+                    marker,
+                    kind: 'venue',
+                    venueCluster: item.venueCluster,
+                    gigIds: item.venueCluster.gigs.map((gig) => gig.id),
+                };
+                expandedMarkerEntries.push(markerEntry);
                 expandedMarkers.push(marker);
             }
 
@@ -1890,6 +1983,13 @@ export const useArtistMarkers = ({
             });
             markerTargets.push(markerTarget);
         });
+        const focusedExpandedMarkerEntry = focusedGigId
+            ? expandedMarkerEntries.find((entry) => (
+                entry.kind === 'artist'
+                    ? entry.gigId === focusedGigId
+                    : entry.gigIds.includes(focusedGigId)
+            ))
+            : undefined;
 
         const sourceId = `expanded-cluster-lines-${clusterId}`;
         const layerId = `expanded-cluster-lines-${clusterId}`;
@@ -1926,6 +2026,7 @@ export const useArtistMarkers = ({
 
         expandedRef.current.set(clusterKey, {
             markers: expandedMarkers,
+            markerEntries: expandedMarkerEntries,
             sourceId,
             layerId,
             hiddenClusterKey: clusterMarkerKey,
@@ -1936,7 +2037,36 @@ export const useArtistMarkers = ({
             markerTargets,
         });
         setHasExpandedClusters(true);
-    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, gigProvinceColors, highlightedArtistIds, mapRef, openArtistPopup, openVenueClusterPopup]);
+        if (focusedExpandedMarkerEntry) {
+            const entry = focusedExpandedMarkerEntry;
+            window.setTimeout(() => {
+                if (entry.kind === 'venue') {
+                    openVenueClusterPopup(entry.venueCluster, getMarkerCoordinates(entry.marker), entry.marker.getElement());
+                    return;
+                }
+
+                const artist = artistsByIdRef.current.get(entry.artistId);
+                if (artist) {
+                    openArtistPopup(artist, entry.marker);
+                }
+            }, markerMoveDuration);
+        }
+
+        return true;
+    }, [animateLineSource, animateMarkerTo, artistNameDisplayMode, clearPendingMergeTimers, clusterColorDebugEnabled, collapseExpandedClusters, gigProvinceColors, highlightedArtistIds, mapRef, openArtistPopup, openExpandedClusterGig, openVenueClusterPopup]);
+
+    const openGigInVisibleCluster = useCallback((gigId: string) => {
+        if (openExpandedClusterGig(gigId)) return true;
+
+        const clusterEntry = Array.from(markersRef.current.values()).find((entry) => (
+            entry.kind === 'cluster' && entry.clusterFeature && entry.artistIds?.includes(gigId)
+        ));
+        const clusterFeature = clusterEntry?.clusterFeature;
+        if (!clusterFeature) return false;
+
+        // Focused navigation expands only the final visible cluster after jumpTo
+        return expandCluster(clusterFeature, clusterEntry.marker.getElement(), false, false, gigId, true);
+    }, [expandCluster, openExpandedClusterGig]);
 
     const bindClusterMarkerClick = useCallback((
         element: HTMLElement,
@@ -2055,6 +2185,7 @@ export const useArtistMarkers = ({
             center: [number, number];
             feature: ClusterPoint;
             leafKey: string;
+            venueCluster: VenueClusterPopupData | null;
             leaves: ArtistPoint[];
             token: number;
         }> = [];
@@ -2081,14 +2212,21 @@ export const useArtistMarkers = ({
 
             // Ignore inserts from older merge cycles
             pendingMergeFinalized = true;
-            pendingMergeAdds.forEach(({ key, element, center, feature, leafKey, leaves, token }) => {
+            pendingMergeAdds.forEach(({ key, element, center, feature, leafKey, venueCluster, leaves, token }) => {
                 if (mergeHoldTokenRef.current !== token || markersRef.current.has(key)) {
                     return;
                 }
                 bindClusterMarkerClick(element, feature, leaves, center);
                 const marker = new maplibregl.Marker({ element, anchor: 'center' }).setLngLat(center).addTo(map);
                 setClusterElementExpandedHidden(element, isClusterSourceHidden(key, leafKey));
-                markersRef.current.set(key, { marker, kind: 'cluster', leafKey });
+                markersRef.current.set(key, {
+                    marker,
+                    kind: 'cluster',
+                    leafKey,
+                    clusterFeature: feature,
+                    artistIds: leaves.map((leaf) => leaf.properties.artistId),
+                    venueCluster: venueCluster ?? undefined,
+                });
                 mergeHoldTargetKeysRef.current.delete(key);
             });
         };
@@ -2192,6 +2330,7 @@ export const useArtistMarkers = ({
             if (isClusterFeature(feature)) {
                 // Load images for artists inside this cluster
                 const leaves = leavesByClusterId.get(feature.properties.cluster_id) ?? [];
+                const clusterArtistIds = leaves.map((leaf) => leaf.properties.artistId);
                 const sameVenue = getSameVenueGigCluster(leaves, artistsByIdRef.current);
                 const leafKey = getClusterLeafKey(leaves);
                 const clusterColor = clusterColorRecords.get(leafKey)?.color;
@@ -2226,6 +2365,7 @@ export const useArtistMarkers = ({
                         center,
                         feature,
                         leafKey,
+                        venueCluster: sameVenue,
                         leaves,
                         token: mergeHoldTokenRef.current,
                     });
@@ -2239,6 +2379,9 @@ export const useArtistMarkers = ({
                     replaceMarkerElementContents(existingElement, element);
                     setClusterElementExpandedHidden(existingElement, isExpandedSourceCluster);
                     bindClusterMarkerClick(existingElement, feature, leaves, center);
+                    existingEntry.clusterFeature = feature;
+                    existingEntry.artistIds = clusterArtistIds;
+                    existingEntry.venueCluster = sameVenue ?? undefined;
                     animateMarkerTo(existingEntry.marker, center);
                     nextMarkerKeys.add(key);
                     return;
@@ -2259,7 +2402,14 @@ export const useArtistMarkers = ({
                     animateMarkerTo(marker, center);
                 }
 
-                markersRef.current.set(key, { marker, kind: 'cluster', leafKey });
+                markersRef.current.set(key, {
+                    marker,
+                    kind: 'cluster',
+                    leafKey,
+                    clusterFeature: feature,
+                    artistIds: clusterArtistIds,
+                    venueCluster: sameVenue ?? undefined,
+                });
                 nextMarkerKeys.add(key);
                 return;
             }
@@ -2408,6 +2558,8 @@ export const useArtistMarkers = ({
         hasExpandedClusters,
         markersRef,
         openArtistPopup,
+        openGigInVisibleCluster,
+        openVenueClusterPopup,
         renderVisibleMarkers,
     };
 };
