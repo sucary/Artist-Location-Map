@@ -54,6 +54,9 @@ const GIG_VENUE_NAME_HINTS = [
     'venue',
 ];
 
+const VENUE_ADMIN_TYPES = new Set(['city', 'town', 'village', 'municipality', 'county', 'district', 'state', 'province', 'region']);
+const UNKNOWN_PROVINCE_PATTERN = /^unknown(?:\s+\[[^\]]+\])?$/i;
+
 export class VenueSearchError extends Error {
     statusCode: number;
 
@@ -233,6 +236,23 @@ function getFallbackProvince(result: GeoapifyResult): string {
     return result.state || result.state_district || result.county || result.city || '';
 }
 
+function inferJapaneseAdminFromFormatted(formatted?: string): Pick<CreateManualVenueInput, 'city' | 'province' | 'country'> {
+    const parts = formatted?.split(',').map((part) => part.trim()).filter(Boolean) ?? [];
+    if (parts.length === 0) return {};
+
+    const provinceIndex = parts.findIndex((part) => /[都道府県]$/.test(part));
+    const city = provinceIndex > 0
+        ? [...parts.slice(0, provinceIndex)].reverse().find((part) => /市$/.test(part))
+        : undefined;
+
+    // Japanese formatted addresses end with the country after optional postal code
+    return {
+        city,
+        province: provinceIndex >= 0 ? parts[provinceIndex] : undefined,
+        country: parts[parts.length - 1],
+    };
+}
+
 function getResultName(result: GeoapifyResult, language?: NameLanguage): string {
     if (language) {
         const localizedName = getLocalizedName(result, language);
@@ -303,11 +323,19 @@ function getManualVenueCreatorId(place: PlaceLocation): string | undefined {
     return typeof rawProviderData.createdByUserId === 'string' ? rawProviderData.createdByUserId : undefined;
 }
 
+function isUsableVenueAdminLocation(city: City): boolean {
+    if (!VENUE_ADMIN_TYPES.has((city.type || '').toLowerCase())) return false;
+    if (city.country && city.name === city.country) return false;
+    if (!city.province || UNKNOWN_PROVINCE_PATTERN.test(city.province)) return false;
+    return true;
+}
+
 async function buildManualVenuePlaceInput(input: CreateManualVenueInput): Promise<ManualVenuePlaceInput> {
     const localCity = input.cityId ? await CityService.getById(input.cityId) : await resolveLocalCity(input.center);
-    const city = input.city || localCity?.name || input.name;
-    const province = input.province || localCity?.province || city;
-    const country = input.country || localCity?.country || undefined;
+    const formattedAdmin = inferJapaneseAdminFromFormatted(input.displayName);
+    const city = formattedAdmin.city || input.city || localCity?.name || input.name;
+    const province = formattedAdmin.province || input.province || localCity?.province || city;
+    const country = formattedAdmin.country || input.country || localCity?.country || undefined;
     const addressLabel = input.displayName || [city, province, country].filter(Boolean).join(', ');
     const formatted = [input.name, addressLabel].filter(Boolean).join(', ');
     const searchAliases = await generateVenueSearchAliases([input.name, formatted], { country });
@@ -430,8 +458,10 @@ async function persistGeoapifyPlaces(
 }
 
 async function resolveLocalCity(center: Coordinates): Promise<City | null> {
-    const results = await CityService.reverseGeocodeAll(center.lat, center.lng, 1);
-    return results[0] ?? null;
+    const results = await CityService.reverseGeocodeAll(center.lat, center.lng, 10);
+
+    // Venue addresses need city-level context, not broad country boundaries
+    return results.find(isUsableVenueAdminLocation) ?? null;
 }
 
 export function normalizeGeoapifyResult(
@@ -634,15 +664,16 @@ export const VenueSearchService = {
         if (!localCity) {
             const result = await fetchGeoapifyReverse(center);
             if (!result) return null;
+            const formattedAdmin = inferJapaneseAdminFromFormatted(result.formatted);
 
             return {
                 source: 'geoapify',
                 providerId: getProviderId(result),
-                name: getFallbackCity(result) || getResultName(result),
+                name: formattedAdmin.city || getFallbackCity(result) || getResultName(result),
                 displayName: result.formatted,
-                city: getFallbackCity(result) || getResultName(result),
-                province: getFallbackProvince(result) || getFallbackCity(result) || getResultName(result),
-                country: result.country,
+                city: formattedAdmin.city || getFallbackCity(result) || getResultName(result),
+                province: formattedAdmin.province || getFallbackProvince(result) || getFallbackCity(result) || getResultName(result),
+                country: formattedAdmin.country || result.country,
                 countryCode: result.country_code,
                 center,
                 type: result.result_type,

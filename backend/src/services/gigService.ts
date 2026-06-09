@@ -21,6 +21,8 @@ import type {
 
 const COORD_TOLERANCE = 0.01;
 const MIN_PLACEMENT_BOUNDARY_AREA_M2 = 1000000;
+const GIG_ADMIN_TYPES = new Set(['city', 'town', 'village', 'municipality', 'county', 'district', 'state', 'province', 'region']);
+const UNKNOWN_PROVINCE_PATTERN = /^unknown(?:\s+\[[^\]]+\])?$/i;
 
 function coordsMatch(a: Coordinates, b: Coordinates): boolean {
     return Math.abs(a.lat - b.lat) < COORD_TOLERANCE &&
@@ -88,8 +90,15 @@ async function cityContainsCoordinates(cityId: string, coords: Coordinates): Pro
 }
 
 async function resolveContainingLocalCity(coords: Coordinates): Promise<City | null> {
-    const results = await CityService.reverseGeocodeAll(coords.lat, coords.lng, 1);
-    return results[0] ?? null;
+    const results = await CityService.reverseGeocodeAll(coords.lat, coords.lng, 10);
+
+    // Venue/gig points need city-level context, not broad country boundaries
+    return results.find((city) => {
+        if (!GIG_ADMIN_TYPES.has((city.type || '').toLowerCase())) return false;
+        if (city.country && city.name === city.country) return false;
+        if (!city.province || UNKNOWN_PROVINCE_PATTERN.test(city.province)) return false;
+        return true;
+    }) ?? null;
 }
 
 async function resolveCity(osmId: number, osmType: string): Promise<City> {

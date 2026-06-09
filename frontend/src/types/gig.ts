@@ -45,6 +45,9 @@ export interface GigPlaceLocationSummary {
     providerPlaceId: string;
     name: string;
     formatted?: string | null;
+    city?: string | null;
+    province?: string | null;
+    country?: string | null;
     categories: string[];
     isVenue: boolean;
 }

@@ -4,6 +4,7 @@ import {
     LocalizedLocation,
     LocalizedNames,
 } from '../types/city';
+import { applyChinaRegionCountryPolicy } from './chinaRegionCountryPolicy';
 import { CityService } from './cityService';
 import { nominatimLimiter } from './nominatimRateLimiter';
 
@@ -84,6 +85,7 @@ interface LocationIQAddress {
     state?: string;
     province?: string;
     country?: string;
+    country_code?: string;
 }
 interface LocationIQNamedetails {
     [key: string]: string | undefined;
@@ -112,7 +114,7 @@ export const LocationLocalizationService = {
     ensureLocalized: async (locationId: string): Promise<LocalizedLocation | null> => {
         try {
             const existing = await pool.query(
-                `SELECT localized_at, localized_manual, localized_names, osm_id, osm_type, name, province, country
+                `SELECT localized_at, localized_manual, localized_names, osm_id, osm_type, name, province, country, address_components
                  FROM locations WHERE id = $1`,
                 [locationId]
             );
@@ -152,6 +154,15 @@ export const LocationLocalizationService = {
                     console.warn(`[localize] ${locationId} Wikidata returned nothing for ${wikidataId}, falling back to LocationIQ-only`);
                 }
                 chain = await fetchChainFromLocationIQ(osmId, osmType, initial, nativeName);
+            } else if (shouldReplaceCountryFromFallback(chain, row.country ?? initial.address?.country)) {
+                console.warn(`[localize] ${locationId} Wikidata country mismatched base country, replacing country from LocationIQ`);
+                const fallbackChain = await fetchChainFromLocationIQ(osmId, osmType, initial, nativeName);
+                if (fallbackChain?.country) {
+                    chain.country = fallbackChain.country;
+                }
+                if (!chain.province && fallbackChain?.province) {
+                    chain.province = fallbackChain.province;
+                }
             }
 
             if (!chain) {
@@ -162,6 +173,10 @@ export const LocationLocalizationService = {
             // Override province/country with manual translations from
             // sibling locations (same province/country name) if available.
             await applyManualOverrides(chain, row.province, row.country);
+            chain = applyChinaRegionCountryPolicy(chain, {
+                country: row.country ?? initial.address?.country,
+                countryCode: initial.address?.country_code ?? row.address_components?.country_code,
+            });
 
             await persistChain(locationId, chain);
             return { id: locationId, chain };
@@ -365,18 +380,19 @@ function extractLabels(entity: WikidataEntity | undefined, native?: string | nul
 }
 
 function firstActiveP131(entity: WikidataEntity): string | null {
-    const claims = entity.claims?.P131 ?? [];
-    for (const claim of claims) {
-        if (claim.rank === 'deprecated') continue;
-        const id = claim.mainsnak?.datavalue?.value?.id;
-        if (id) return id;
-    }
-    return null;
+    return firstActiveClaimId(entity.claims?.P131 ?? []);
 }
 
 function firstActiveP17(entity: WikidataEntity): string | null {
-    const claims = entity.claims?.P17 ?? [];
-    for (const claim of claims) {
+    return firstActiveClaimId(entity.claims?.P17 ?? []);
+}
+
+function firstActiveClaimId(claims: WikidataClaim[]): string | null {
+    const activeClaims = claims.filter((claim) => claim.rank !== 'deprecated');
+    const preferredClaim = activeClaims.find((claim) => claim.rank === 'preferred');
+
+    for (const claim of [preferredClaim, ...activeClaims]) {
+        if (!claim) continue;
         if (claim.rank === 'deprecated') continue;
         const id = claim.mainsnak?.datavalue?.value?.id;
         if (id) return id;
@@ -436,6 +452,24 @@ async function fetchChainFromWikidata(rootQid: string, nativeName: string | null
     }
 
     return chain;
+}
+
+function normalizeComparableName(value?: string | null): string {
+    return (value || '').trim().toLocaleLowerCase();
+}
+
+function hasMatchingLocalizedName(names: LocalizedNames | undefined, expected?: string | null): boolean {
+    const normalizedExpected = normalizeComparableName(expected);
+    if (!names || !normalizedExpected) return true;
+
+    return Object.values(names).some((value) => (
+        normalizeComparableName(value) === normalizedExpected
+    ));
+}
+
+function shouldReplaceCountryFromFallback(chain: LocalizedChain, expectedCountry?: string | null): boolean {
+    // Historical Wikidata P17 claims can outrank the current country
+    return !hasMatchingLocalizedName(chain.country, expectedCountry);
 }
 
 // ─── Manual overrides ──────────────────────────────────────────────────

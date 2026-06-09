@@ -1,5 +1,6 @@
 import pool from '../config/database';
 import { City, LocalizedChain, LocalizedLocation, NominatimResponse, NominatimSearchResult } from '../types/city';
+import { normalizeChinaRegionCountry } from './chinaRegionCountryPolicy';
 import { applyLocationDisplayOverride, getLocationDisplayOverride } from './locationDisplayOverrides';
 import { nominatimLimiter } from './nominatimRateLimiter';
 
@@ -76,6 +77,21 @@ function getDisplayType(type: string, addresstype?: string, address?: Record<str
     }
 
     return type;
+}
+
+function normalizeAdministrativeProvince(
+    province: string | undefined,
+    city: string,
+    country: string,
+    locationType: string
+): string {
+    const trimmedProvince = province?.trim();
+    if (trimmedProvince) return trimmedProvince;
+
+    // City-state and country-level rows should not persist placeholder provinces
+    if (locationType === 'country' || city === country) return city || country;
+
+    return city || country || 'Unknown';
 }
 
 /**
@@ -468,6 +484,8 @@ export const CityService = {
                   || data.address?.village
                   || 'Unknown';
 
+        const locationType = getDisplayType(data.type, data.addresstype, data.address as Record<string, string>, city);
+
         // Extract province - try address fields first, then parse from displayName
         let province = data.address?.state || data.address?.province || data.address?.region;
         if (!province && data.display_name) {
@@ -486,12 +504,13 @@ export const CityService = {
                 }
             }
         }
-        province = province || 'Unknown';
-        const country = data.address?.country || 'Unknown';
+        const country = normalizeChinaRegionCountry(data.address?.country || 'Unknown', {
+            countryCode: data.address?.country_code,
+        });
+        province = normalizeAdministrativeProvince(province, city, country, locationType);
         const displayOverride = getLocationDisplayOverride(data.osm_id, data.osm_type);
 
         // Disambiguate name+province when a different osm entity already
-        const locationType = getDisplayType(data.type, data.addresstype, data.address as Record<string, string>, city);
         const nameCollision = await pool.query(
             `SELECT osm_id FROM locations WHERE name = $1 AND province = $2 LIMIT 1`,
             [city, province]

@@ -48,6 +48,9 @@ const GIG_SELECT_COLUMNS = `
         'providerPlaceId', pl.provider_place_id,
         'name', pl.name,
         'formatted', pl.formatted,
+        'city', pl.city,
+        'province', pl.province,
+        'country', pl.country,
         'categories', pl.categories,
         'isVenue', pl.is_venue
     ) END AS place_location,

@@ -31,6 +31,21 @@ const stripVenuePrefix = (label: string, venueName?: string | null) => {
     return label.replace(new RegExp(`^${escapedVenue}\\s*,\\s*`, 'i'), '');
 };
 
+const getGigLocationLabel = (gig: Gig, locationLanguage: LocationLanguage) => {
+    const placeLocation = gig.placeLocation;
+
+    // Venue admin fields repair broad gig snapshots without showing full street rows
+    if (placeLocation?.city || placeLocation?.province || placeLocation?.country) {
+        return formatLocationLocalized({
+            city: placeLocation.city || undefined,
+            province: placeLocation.province || undefined,
+            country: placeLocation.country || undefined,
+        }, locationLanguage);
+    }
+
+    return stripVenuePrefix(formatLocationLocalized(gig.location, locationLanguage), gig.venueName);
+};
+
 // Artist overflow toggle size invariant
 const artistToggleButtonClass = 'inline-flex h-7 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold leading-none text-text transition-colors hover:bg-surface-secondary';
 const COLLAPSED_CHIP_LIMIT = 2;
@@ -59,7 +74,7 @@ export const GigCard = ({ gig, locationLanguage = 'en', showActions = true, isSt
     const visibleArtists = artistsExpanded ? artists : artists.slice(0, collapsedVisibleCount);
     const hiddenArtistCount = artists.length - visibleArtists.length;
     const formattedDate = formatGigDateTimeValue(gig.date, gig.time, dateFallback);
-    const locationLabel = stripVenuePrefix(formatLocationLocalized(gig.location, locationLanguage), gig.venueName);
+    const locationLabel = getGigLocationLabel(gig, locationLanguage);
     const hasTitleSection = Boolean(gig.gigName || gig.tour);
     const topSectionGapClass = 'gap-3';
 

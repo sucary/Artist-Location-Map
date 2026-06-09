@@ -9,6 +9,19 @@ type LocationLike = {
     localizedChain?: LocalizedChain;
 };
 
+const UNKNOWN_PROVINCE_PATTERN = /^unknown(?:\s+\[[^\]]+\])?$/i;
+
+const stripProvinceDisambiguator = (value: string): string => (
+    value.replace(/\s+\[[^\]]+\]$/, '')
+);
+
+const isDisplayableProvince = (province: string | undefined, city?: string, country?: string): province is string => {
+    if (!province || UNKNOWN_PROVINCE_PATTERN.test(province)) return false;
+
+    const normalizedProvince = stripProvinceDisambiguator(province);
+    return normalizedProvince !== city && normalizedProvince !== country;
+};
+
 /**
  * Formats location for display. Parses displayName to show key parts only.
  */
@@ -54,7 +67,7 @@ export const formatLocation = (location: LocationLike): string => {
     // Fallback for administrative locations
     const parts: string[] = [];
     if (location.city) parts.push(location.city);
-    if (location.province && location.province !== location.city) parts.push(location.province);
+    if (isDisplayableProvince(location.province, location.city, location.country)) parts.push(stripProvinceDisambiguator(location.province));
     if (location.country && location.country !== location.province) parts.push(location.country);
     return parts.join(', ');
 };
@@ -166,10 +179,16 @@ export const formatLocationLocalized = (
     const chain = location.localizedChain;
     if (!chain) return formatLocation(location);
 
+    const city = getLocalizedName(chain.city, preference) || location.city;
+
+    // Missing localized province is omitted to avoid mixed-language address chains
+    const province = getLocalizedName(chain.province, preference) || (chain.province ? location.province : '');
+    const country = getLocalizedName(chain.country, preference) || location.country;
+
     const parts = [
-        getLocalizedName(chain.city, preference) || location.city,
-        getLocalizedName(chain.province, preference) || location.province,
-        getLocalizedName(chain.country, preference) || location.country,
+        city,
+        isDisplayableProvince(province, city, country) ? stripProvinceDisambiguator(province) : '',
+        country,
     ].filter(Boolean);
 
     // Dedupe adjacent identical parts (e.g. city-state where province == country)
