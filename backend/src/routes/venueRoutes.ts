@@ -5,6 +5,7 @@ import { requireApproval, requireAuth } from '../middleware/authMiddleware';
 import type { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CoordinatesSchema } from '../schemas/artistValidation';
+import { VenueSearchQuerySchema } from '../schemas/venueValidation';
 import { VenueSearchError, VenueSearchService } from '../services/venueSearchService';
 
 // Authenticated tour venue and location search routes
@@ -19,16 +20,7 @@ const venueSearchLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-const SearchQuerySchema = z.object({
-    q: z.string().trim().min(2, 'Query must be at least 2 characters'),
-    limit: z.coerce.number().int().min(1).max(20).optional(),
-    lat: z.coerce.number().min(-90).max(90).optional(),
-    lng: z.coerce.number().min(-180).max(180).optional(),
-    countryCode: z.string().trim().length(2).optional(),
-    lang: z.string().trim().regex(/^[a-z]{2}$/i).transform((value) => value.toLowerCase()).optional(),
-    nativeName: z.coerce.boolean().optional(),
-    source: z.enum(['auto', 'geoapify']).optional(),
-});
+const SearchQuerySchema = VenueSearchQuerySchema;
 
 const ManualVenueSchema = z.object({
     name: z.string().trim().min(1, 'Venue name is required').max(255),
