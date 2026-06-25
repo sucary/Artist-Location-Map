@@ -13,7 +13,6 @@ import {
     type NotificationRecipient
 } from '../../services/api';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
-import type { PendingUser } from '../../types/profile';
 import { LocalizationEditor } from './LocalizationEditor';
 import { DarkModeInteractionTemplate } from './DarkModeInteractionTemplate';
 import { formatLocalizedDate, formatLocalizedTime } from '../../utils/dateFormatting';
@@ -55,12 +54,10 @@ const destructiveActionButtonClass = 'bg-surface-muted text-text hover:bg-[rgb(2
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { user, profile } = useAuth();
-    const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
     const [pendingMediaReviews, setPendingMediaReviews] = useState<PendingMediaReview[]>([]);
     const [pinnedNotifications, setPinnedNotifications] = useState<AdminPinnedNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [approvalsOpen, setApprovalsOpen] = useState(true);
     const [mediaReviewsOpen, setMediaReviewsOpen] = useState(true);
     const [postNotificationOpen, setPostNotificationOpen] = useState(false);
     const [pinnedNotificationsOpen, setPinnedNotificationsOpen] = useState(false);
@@ -84,7 +81,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
     const dialogRef = useDialogAccessibility(onClose);
     const sectionIds = {
-        approvals: 'admin-pending-approvals',
         mediaReviews: 'admin-media-reviews',
         postNotification: 'admin-post-notification',
         pinnedNotifications: 'admin-pinned-notifications',
@@ -147,20 +143,15 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         setError(null);
         try {
             const headers = await getAuthHeaders();
-            const [usersResponse, mediaResponse, pinned] = await Promise.all([
-                fetch(`${API_URL}/auth/admin/pending-users`, { headers }),
+            const [mediaResponse, pinned] = await Promise.all([
                 fetch(`${API_URL}/upload/admin/media-reviews`, { headers }),
                 getAdminPinnedNotifications(),
             ]);
 
-            if (!usersResponse.ok) {
-                throw new Error('Failed to fetch pending users');
-            }
             if (!mediaResponse.ok) {
                 throw new Error('Failed to fetch media reviews');
             }
 
-            setPendingUsers(await usersResponse.json());
             setPendingMediaReviews(await mediaResponse.json());
             setPinnedNotifications(pinned);
         } catch (err) {
@@ -203,57 +194,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             confirmLabel: 'Looks good',
             cancelLabel: 'Close',
             onConfirm: () => setAdminDialog(null),
-        });
-    };
-
-    const handleApprove = async (userId: string) => {
-        try {
-            const headers = await getAuthHeaders();
-
-            const response = await fetch(`${API_URL}/auth/admin/approve/${userId}`, {
-                method: 'POST',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to approve user');
-            }
-
-            setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        } catch (err) {
-            showAdminMessage('Could not approve user', err instanceof Error ? err.message : 'Failed to approve user', 'error');
-        }
-    };
-
-    const handleReject = async (userId: string) => {
-        setAdminDialog({
-            title: 'Reject user?',
-            message: 'Rejecting this user will remove the account request.',
-            variant: 'danger',
-            confirmLabel: 'Reject',
-            cancelLabel: 'Cancel',
-            onConfirm: async () => {
-                setAdminDialogLoading(true);
-                try {
-                    const headers = await getAuthHeaders();
-
-                    const response = await fetch(`${API_URL}/auth/admin/reject/${userId}`, {
-                        method: 'POST',
-                        headers,
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to reject user');
-                    }
-
-                    setPendingUsers(prev => prev.filter(u => u.id !== userId));
-                    setAdminDialog(null);
-                } catch (err) {
-                    showAdminMessage('Could not reject user', err instanceof Error ? err.message : 'Failed to reject user', 'error');
-                } finally {
-                    setAdminDialogLoading(false);
-                }
-            },
         });
     };
 
@@ -379,72 +319,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     {error && (
                         <Alert variant="error" header="Could not load admin data" className="mb-4">{error}</Alert>
                     )}
-
-                    {/* Pending User Approvals */}
-                    <div className="mb-4">
-                        <button
-                            onClick={() => setApprovalsOpen(!approvalsOpen)}
-                            aria-expanded={approvalsOpen}
-                            aria-controls={sectionIds.approvals}
-                            className="w-full flex items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-surface-muted transition-colors"
-                        >
-                            <h2 className="text-xl font-semibold text-text">
-                                Pending User Approvals ({pendingUsers.length})
-                            </h2>
-                            <ChevronDownIcon
-                                aria-hidden="true"
-                                className={`h-6 w-6 flex-shrink-0 text-text-muted transition-transform duration-200 ${approvalsOpen ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-
-                        {approvalsOpen && (
-                            <div id={sectionIds.approvals} className="mt-2">
-                                {loading && (
-                                    <div className="text-center py-8">
-                                        <Spinner size="lg" className="mx-auto text-primary" />
-                                        <p className="text-text-secondary mt-2">Loading...</p>
-                                    </div>
-                                )}
-
-                                {!loading && pendingUsers.length === 0 && (
-                                    <div className="text-center py-8 text-text-secondary">
-                                        <CheckCircleIcon className="w-12 h-12 mx-auto mb-2 text-text-muted" />
-                                        <p>No pending approvals</p>
-                                    </div>
-                                )}
-
-                                {!loading && pendingUsers.length > 0 && (
-                                    <div className="space-y-3">
-                                        {pendingUsers.map(user => (
-                                            <div key={user.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-medium text-text">{user.username || 'No username'}</p>
-                                                    <p className="text-sm text-text-secondary">{user.email}</p>
-                                                    <p className="text-xs text-text-muted mt-1">
-                                                        Registered: {formatAdminDateTime(user.createdAt)}
-                                                    </p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        onClick={() => handleApprove(user.id)}
-                                                        className="bg-success hover:bg-success/90"
-                                                    >
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => handleReject(user.id)}
-                                                        className={destructiveActionButtonClass}
-                                                    >
-                                                        Reject
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
 
                     {/* Pending Artist Image Reviews */}
                     <div className="border-t border-border pt-4 mb-4">

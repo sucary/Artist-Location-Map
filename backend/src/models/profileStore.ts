@@ -83,6 +83,9 @@ export const ProfileStore = {
         const profile = result.rows[0];
         if (!profile) return null;
 
+        // Registration no longer requires approval; report everyone as approved.
+        profile.isApproved = true;
+
         // Avoid querying rejected_registrations before migration 012 exists.
         const rejectedTableResult = await pool.query<{ exists: boolean }>(
             `SELECT to_regclass('public.rejected_registrations') IS NOT NULL as "exists"`

@@ -6,12 +6,10 @@ import {
     clearNotifications,
     deleteNotification,
     getNotifications,
-    default as api,
     type Notification
 } from '../../services/api';
 import { CloseButton } from '../ui';
 import { NotificationContent } from './NotificationContent';
-import type { PendingUser } from '../../types/profile';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedDate } from '../../utils/dateFormatting';
 
@@ -156,16 +154,6 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
         refetchInterval: 30000,
     });
 
-    const { data: pendingUsers = [] } = useQuery({
-        queryKey: ['pendingUsers'],
-        queryFn: async () => {
-            const response = await api.get<PendingUser[]>('/auth/admin/pending-users');
-            return response.data;
-        },
-        enabled: !!profile?.isAdmin,
-        refetchInterval: 30000,
-    });
-
     const deleteMutation = useMutation({
         mutationFn: deleteNotification,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
@@ -176,61 +164,17 @@ export function NotificationButton({ onOpenChange }: NotificationButtonProps) {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
     });
 
-    const syntheticNotifications = useMemo<MenuNotification[]>(() => {
-        const now = new Date().toISOString();
-        const notifications: MenuNotification[] = [];
-
-        if (profile && !profile.isApproved) {
-            notifications.push({
-                id: 'account-pending-approval',
-                userId: profile.id,
-                type: 'account_pending_approval',
-                title: t('notifications.accountPendingApprovalTitle'),
-                content: t('notifications.accountPendingApprovalContent'),
-                isRead: false,
-                isHard: true,
-                linkLabel: null,
-                linkUrl: null,
-                metadata: {},
-                aggregationKey: 'account_pending_approval',
-                createdAt: now,
-                readAt: null,
-                source: 'synthetic'
-            });
-        }
-
-        if (profile?.isAdmin && pendingUsers.length > 0) {
-            notifications.push({
-                id: 'admin-pending-users',
-                userId: profile.id,
-                type: 'registration_pending',
-                title: t('notifications.pendingApprovals', { count: pendingUsers.length }),
-                content: t('notifications.pendingApprovalsContent'),
-                isRead: false,
-                isHard: true,
-                linkLabel: t('notifications.openAdmin'),
-                linkUrl: 'admin:dashboard',
-                metadata: { count: pendingUsers.length },
-                aggregationKey: 'admin_pending_users',
-                createdAt: pendingUsers[0]?.createdAt ?? now,
-                readAt: null,
-                source: 'synthetic'
-            });
-        }
-
-        return notifications;
-    }, [pendingUsers, profile, t]);
-
     const notifications: MenuNotification[] = useMemo(() => {
-        const persisted = persistedNotifications.map((notification) => ({
-            ...notification,
-            source: 'persisted' as const
-        }));
-        return [...syntheticNotifications, ...persisted].sort((a, b) => {
-            if (a.isHard !== b.isHard) return a.isHard ? -1 : 1;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-    }, [persistedNotifications, syntheticNotifications]);
+        return persistedNotifications
+            .map((notification) => ({
+                ...notification,
+                source: 'persisted' as const
+            }))
+            .sort((a, b) => {
+                if (a.isHard !== b.isHard) return a.isHard ? -1 : 1;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+    }, [persistedNotifications]);
 
     const hardNotifications = notifications.filter((notification) => notification.isHard);
     const normalNotifications = notifications.filter((notification) => !notification.isHard);

@@ -19,13 +19,14 @@ export interface AuthenticatedRequest extends Request {
 
 async function fetchProfile(userId: string): Promise<AuthProfile> {
     const result = await pool.query(
-        `SELECT is_admin, is_approved FROM profiles WHERE id = $1`,
+        `SELECT is_admin FROM profiles WHERE id = $1`,
         [userId]
     );
     const row = result.rows[0];
     return {
         isAdmin: row?.is_admin ?? false,
-        isApproved: row?.is_approved ?? false
+        // Registration no longer requires approval; everyone is approved.
+        isApproved: true
     };
 }
 
