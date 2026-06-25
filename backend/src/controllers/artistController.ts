@@ -15,6 +15,10 @@ interface FeaturedArtistsCache {
 let featuredArtistsCache: FeaturedArtistsCache | null = null;
 const FEATURED_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 
+function invalidateFeaturedArtistsCache() {
+    featuredArtistsCache = null;
+}
+
 async function getFeaturedArtists(): Promise<Artist[]> {
     const now = Date.now();
     if (featuredArtistsCache && (now - featuredArtistsCache.timestamp) < FEATURED_CACHE_TTL_MS) {
@@ -245,6 +249,7 @@ export const createArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
 
     try {
         const newArtist = await ArtistService.create(data, userId, isAdmin);
+        invalidateFeaturedArtistsCache();
         res.status(201).json(newArtist);
     } catch (error) {
         if (error instanceof Error && error.message.includes('City not found')) {
@@ -270,6 +275,7 @@ export const updateArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
 
     try {
         const updatedArtist = await ArtistService.update(req.params.id, data, userId, isAdmin);
+        invalidateFeaturedArtistsCache();
         res.json(updatedArtist);
     } catch (error) {
         if (error instanceof Error && error.message.includes('City not found')) {
@@ -293,6 +299,7 @@ export const deleteArtist = asyncHandler(async (req: AuthenticatedRequest, res: 
     }
 
     await ArtistService.delete(req.params.id, artist.userId || userId);
+    invalidateFeaturedArtistsCache();
     res.status(204).send();
 });
 
