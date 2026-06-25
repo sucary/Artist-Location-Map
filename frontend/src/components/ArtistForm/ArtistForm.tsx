@@ -323,6 +323,7 @@ const ArtistForm = ({
     const [showInactive, setShowInactive] = useState(() => !!initialData?.inactiveYear);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formScrollRef = useRef<HTMLDivElement>(null);
+    const socialSectionRef = useRef<HTMLDivElement>(null);
     const sessionUploadedUrlsRef = useRef<Set<string>>(new Set());
     const [cropperInitialMode, setCropperInitialMode] = useState<'avatar' | 'profile'>('avatar');
     const [imageUrlMode, setImageUrlMode] = useState<'avatar' | 'profile' | null>(null);
@@ -400,6 +401,18 @@ const ArtistForm = ({
         // Save-time URL errors reveal the social section
         setIsSocialExpanded(true);
     }, [socialLinkErrors]);
+
+    useEffect(() => {
+        if (!isSocialExpanded) return;
+
+        const scroller = formScrollRef.current;
+        const section = socialSectionRef.current;
+        if (!scroller || !section) return;
+
+        // Bring the expanded social section to the top of the form's scroll area.
+        const delta = section.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: 'smooth' });
+    }, [isSocialExpanded]);
 
     useEffect(() => {
         const scrollElement = formScrollRef.current;
@@ -912,7 +925,7 @@ const ArtistForm = ({
                     </div>
 
                     {/* Social Media section */}
-                    <div data-tutorial-target="social-links">
+                    <div ref={socialSectionRef} data-tutorial-target="social-links">
                         <button
                             aria-expanded={isSocialExpanded}  
                             onClick={toggleSocialExpanded}
