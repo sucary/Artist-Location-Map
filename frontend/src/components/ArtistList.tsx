@@ -443,7 +443,7 @@ const ArtistList = ({
                                     </button>
                                         {/* Actions */}
                                         {(onNavigateToArtist || onEditArtist || onDeleteArtist) && (
-                                            <div className="mr-5 inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                                            <div className="mr-5 inline-flex shrink-0 items-center rounded-full bg-surface-muted p-0.5 opacity-0 transition-opacity pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
                                                 {onNavigateToArtist && (
                                                     <button
                                                         type="button"
