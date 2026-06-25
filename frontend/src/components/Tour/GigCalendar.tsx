@@ -452,7 +452,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             aria-label={t('tour.calendar.previousMonth')}
                             title={t('tour.calendar.previousMonth')}
                             onClick={() => moveMonth(-1)}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text sm:h-9 sm:w-9"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                         >
                             <ArrowUpIcon className="h-5 w-5 -rotate-90" />
                         </button>
@@ -461,7 +461,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             aria-label={t('tour.calendar.nextMonth')}
                             title={t('tour.calendar.nextMonth')}
                             onClick={() => moveMonth(1)}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text sm:h-9 sm:w-9"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                         >
                             <ArrowDownIcon className="h-5 w-5 -rotate-90" />
                         </button>
