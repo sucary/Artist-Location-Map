@@ -438,12 +438,12 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
     return (
         <div className="fixed inset-0 z-[1300] flex h-[100dvh] w-screen font-sans sm:absolute sm:inset-x-2 sm:inset-y-auto sm:top-24 sm:z-[1050] sm:mx-auto sm:h-auto sm:w-[min(1280px,calc(100vw-1rem),calc((100vh-8rem)*1.6))] sm:justify-center">
             <div role="region" aria-label={t('tour.calendar.title')} className="flex h-full w-full flex-col overflow-hidden bg-surface shadow-xl shadow-black/5 ring-1 ring-border/40 sm:aspect-[16/10] sm:h-auto sm:rounded-xl">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-5 sm:pt-3">
-                    <div className="flex min-w-0 items-center gap-2">
+                <div className="flex flex-nowrap items-center justify-between gap-1 border-b border-border/60 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:gap-2 sm:px-5 sm:pt-3">
+                    <div className="flex min-w-0 items-center gap-1 sm:gap-2">
                         <button
                             type="button"
                             onClick={handleToday}
-                            className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-muted focus:outline-none"
+                            className="shrink-0 whitespace-nowrap rounded-lg border border-border-strong bg-surface px-2 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted focus:outline-none sm:px-3 sm:py-2 sm:text-sm"
                         >
                             {t('tour.calendar.today')}
                         </button>
@@ -452,7 +452,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             aria-label={t('tour.calendar.previousMonth')}
                             title={t('tour.calendar.previousMonth')}
                             onClick={() => moveMonth(-1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text sm:h-9 sm:w-9"
                         >
                             <ArrowUpIcon className="h-5 w-5 -rotate-90" />
                         </button>
@@ -461,7 +461,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             aria-label={t('tour.calendar.nextMonth')}
                             title={t('tour.calendar.nextMonth')}
                             onClick={() => moveMonth(1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text sm:h-9 sm:w-9"
                         >
                             <ArrowDownIcon className="h-5 w-5 -rotate-90" />
                         </button>
@@ -470,7 +470,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             type="button"
                             aria-expanded={isDatePickerOpen}
                             onClick={handleTitleClick}
-                            className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-left text-lg font-semibold tracking-tight text-text transition-colors hover:bg-surface-muted focus:bg-primary focus:text-white focus:outline-none sm:text-xl"
+                            className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-left text-base font-semibold tracking-tight text-text transition-colors hover:bg-surface-muted focus:bg-primary focus:text-white focus:outline-none sm:text-lg"
                         >
                             <span className="min-w-0 truncate">
                                 {monthLabel}
@@ -563,7 +563,7 @@ export function GigCalendar({ gigs, selectedDay, onSelectDay, onClose, onAddGig,
                             document.body
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                         <CloseButton onClick={onClose} size="md" />
                     </div>
                 </div>
