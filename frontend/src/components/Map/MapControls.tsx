@@ -258,10 +258,9 @@ export function MapControls({
     return (
         <>
             {mobileSwipeZoneVisible && (
-                // Narrow swipe edge keeps nearby markers tappable.
                 <div
                     aria-hidden="true"
-                    className="absolute bottom-0 right-0 z-[999] h-64 w-8 bg-transparent sm:hidden"
+                    className="absolute bottom-0 right-0 z-[999] h-64 w-24 bg-transparent sm:hidden"
                     style={{ touchAction: 'pan-y' }}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
