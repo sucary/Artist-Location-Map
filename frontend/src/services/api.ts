@@ -276,6 +276,10 @@ export const updateProfile = async (updates: Partial<Pick<Profile, 'username' | 
     return response.data;
 };
 
+export const submitFeedback = async (message: string): Promise<void> => {
+    await api.post('/feedback', { message });
+};
+
 export interface MusicBrainzCatalogArtist {
     mbid: string;
     name: string;

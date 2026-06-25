@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { UserIcon } from '../icons/GeneralIcons';
+import { FeedbackModal } from './FeedbackModal';
 
 interface UserMenuProps {
     onOpenAdminDashboard?: () => void;
@@ -15,6 +16,7 @@ export function UserMenu({ onOpenAdminDashboard, onOpenChange }: UserMenuProps) 
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     useEffect(() => {
         onOpenChange?.(isOpen);
@@ -75,6 +77,16 @@ export function UserMenu({ onOpenAdminDashboard, onOpenChange }: UserMenuProps) 
                     >
                         {t('userMenu.settings')}
                     </button>
+                    <button
+                        role="menuitem"
+                        onClick={() => {
+                            setIsFeedbackOpen(true);
+                            setIsOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-text hover:bg-surface-muted transition-colors"
+                    >
+                        {t('userMenu.feedback')}
+                    </button>
                     {profile.isAdmin && onOpenAdminDashboard && (
                         <button
                             role="menuitem"
@@ -96,6 +108,7 @@ export function UserMenu({ onOpenAdminDashboard, onOpenChange }: UserMenuProps) 
                     </button>
                 </div>
             )}
+            {isFeedbackOpen && <FeedbackModal onClose={() => setIsFeedbackOpen(false)} />}
         </div>
     );
 }

@@ -111,10 +111,19 @@
   "userMenu": {
     "accountMenu": "账号菜单",
     "settings": "设置",
+    "feedback": "发送反馈",
     "adminDashboard": {
       "title": "管理后台"
     },
     "signOut": "退出登录"
+  },
+  "feedback": {
+    "title": "发送反馈",
+    "description": "发现问题或有建议？告诉我们。",
+    "placeholder": "您的反馈...",
+    "submit": "发送",
+    "success": "感谢您的反馈！",
+    "error": "无法发送反馈，请重试。"
   },
   "location": {
     "searchPlaceholder": "搜索地点"

@@ -12,6 +12,7 @@ import musicbrainzCatalogRoutes from './routes/musicbrainzCatalogRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import gigRoutes from './routes/gigRoutes';
 import venueRoutes from './routes/venueRoutes';
+import feedbackRoutes from './routes/feedbackRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { verifyDatabaseConnection } from './config/database';
 import { AuthCleanupService } from './services/authCleanupService';
@@ -73,6 +74,7 @@ app.use('/api/musicbrainz-catalog', musicbrainzCatalogRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/gigs', gigRoutes);
 app.use('/api/venues', venueRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({

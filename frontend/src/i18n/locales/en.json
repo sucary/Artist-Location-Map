@@ -111,10 +111,19 @@
   "userMenu": {
     "accountMenu": "Account menu",
     "settings": "Settings",
+    "feedback": "Send feedback",
     "adminDashboard": {
       "title": "Admin dashboard"
     },
     "signOut": "Sign out"
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "description": "Found a bug or have a suggestion? Let us know.",
+    "placeholder": "Your feedback...",
+    "submit": "Send",
+    "success": "Thanks for your feedback!",
+    "error": "Couldn't send feedback. Please try again."
   },
   "location": {
     "searchPlaceholder": "Search locations"

@@ -110,11 +110,20 @@
   },
   "userMenu": {
     "settings": "設定",
+    "feedback": "フィードバックを送る",
     "adminDashboard": {
       "title": "管理ダッシュボード"
     },
     "signOut": "ログアウト",
     "accountMenu": "アカウントメニュー"
+  },
+  "feedback": {
+    "title": "フィードバックを送る",
+    "description": "バグの報告やご提案がありましたらお知らせください。",
+    "placeholder": "ご意見をご記入ください...",
+    "submit": "送信",
+    "success": "フィードバックありがとうございます！",
+    "error": "フィードバックを送信できませんでした。もう一度お試しください。"
   },
   "location": {
     "searchPlaceholder": "場所を検索"

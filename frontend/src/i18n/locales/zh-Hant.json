@@ -109,10 +109,19 @@
   "userMenu": {
     "accountMenu": "帳號選單",
     "settings": "設定",
+    "feedback": "傳送意見回饋",
     "adminDashboard": {
       "title": "管理後台"
     },
     "signOut": "退出登入"
+  },
+  "feedback": {
+    "title": "傳送意見回饋",
+    "description": "發現問題或有建議嗎？告訴我們。",
+    "placeholder": "您的意見回饋...",
+    "submit": "傳送",
+    "success": "感謝您的意見回饋！",
+    "error": "無法傳送意見回饋，請重試。"
   },
   "location": {
     "searchPlaceholder": "搜尋地點"
