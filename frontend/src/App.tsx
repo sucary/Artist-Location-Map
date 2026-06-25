@@ -299,6 +299,7 @@ function App() {
             user
             && profile?.isApproved
             && profile.tutorialCompleted === false
+            && profile?.username
             && !isTutorialDismissed
             && tutorialStepIndex === null
             && !isViewingOther
