@@ -97,6 +97,19 @@ export function GigPanel({
     }, [isSortOpen]);
 
     useEffect(() => {
+        // Scrolling the panel behind the open sort menu dismisses it.
+        if (!isSortOpen) return;
+
+        const handleScroll = (event: Event) => {
+            const target = event.target as Node | null;
+            if (target && sortDropdownRef.current?.contains(target)) return;
+            setIsSortOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isSortOpen]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             if (sortRef.current?.contains(target) || sortDropdownRef.current?.contains(target)) return;

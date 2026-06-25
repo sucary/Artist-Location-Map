@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { getBrowserDateLocale } from '../../utils/dateFormatting';
+import { useAnchoredPopup } from '../../hooks/useAnchoredPopup';
 
 interface TourSelectOption {
     id: string;
@@ -22,7 +23,7 @@ interface TourSelectProps {
     onChange: (tourId: string) => void;
 }
 
-export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabel, dropdownMaxHeight = 192, onChange }: TourSelectProps) {
+export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabel, dropdownMaxHeight, onChange }: TourSelectProps) {
     const generatedInputId = useId();
     const inputId = id ?? generatedInputId;
     const listboxId = `${inputId}-tours`;
@@ -35,12 +36,6 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
     const dateLocale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
     const tourMonthFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { year: 'numeric', month: 'short' }), [dateLocale]);
     const tourMonthOnlyFormatter = useMemo(() => new Intl.DateTimeFormat(dateLocale, { month: 'short' }), [dateLocale]);
-    const [dropdownPosition, setDropdownPosition] = useState({
-        top: 0,
-        left: 0,
-        width: 0,
-        maxHeight: dropdownMaxHeight,
-    });
 
     const selectedTour = useMemo(() => (
         tours.find((tour) => tour.id === value)
@@ -101,28 +96,24 @@ export function TourSelect({ id, tours, value, placeholder, ariaLabel, emptyLabe
     const safeActiveIndex = filteredTours.length === 0 ? 0 : Math.min(activeIndex, filteredTours.length - 1);
     const activeOptionId = isOpen && filteredTours[safeActiveIndex] ? `${listboxId}-${filteredTours[safeActiveIndex].id}` : undefined;
 
-    useEffect(() => {
-        if (!isOpen || !containerRef.current) return;
-
-        // Portal menu follows the input inside map overlays
-        const rect = containerRef.current.getBoundingClientRect();
-        const gap = 4;
-        const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gap - 8);
-        const maxHeight = Math.min(dropdownMaxHeight, availableBelow);
-        const dropdownWidth = Math.min(rect.width, window.innerWidth - 16);
-        const dropdownLeft = Math.min(
-            Math.max(8, rect.left),
-            window.innerWidth - dropdownWidth - 8
-        );
-
-        // Portal dropdown stays within the viewport when used inside map overlays
-        setDropdownPosition({
-            top: rect.bottom + gap,
-            left: dropdownLeft,
-            width: dropdownWidth,
-            maxHeight,
-        });
-    }, [dropdownMaxHeight, isOpen, query]);
+    const dropdownPosition = useAnchoredPopup({
+        isOpen,
+        anchorRef: containerRef,
+        popupRef: dropdownRef,
+        width: 'anchor',
+        align: 'left',
+        gap: 4,
+        maxHeightCap: dropdownMaxHeight,
+        recomputeKey: filteredTours.length,
+        onScrollAway: () => {
+            setIsOpen(false);
+            setQueryState({
+                value: selectedTourName,
+                syncedValue: value,
+                syncedName: selectedTourName,
+            });
+        },
+    });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

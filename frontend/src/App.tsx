@@ -855,6 +855,12 @@ function App() {
     // Mobile header menus own the space used by top status banners
     const mobileHeaderMenuOpen = isMobileLayout && (notificationMenuOpen || accountMenuOpen);
 
+    // The top status banner is anchored to the top on mobile and bottom-center on
+    // sm+. In both layouts it overlaps an opened list/form/panel (top on mobile,
+    // bottom-right panels on desktop). Hide it whenever such a surface is open.
+    const topBannerHidden = showArtistList || showFeaturedList || showGigForm
+        || showGigPanel || showGigCalendar || showForm;
+
     const handleCopyArtistCollection = async (artistCount: number) => {
         if (!username || !user || !profile?.isApproved || isCopyingCollection) {
             return;
@@ -993,25 +999,25 @@ function App() {
                         <SelectionPrompt onCancel={handleLocationPick} />
                     </div>
                 ) : isViewingOther && username ? (
-                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                    !topBannerHidden && (<div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
                         <ViewingUserBanner username={username} />
-                    </div>
+                    </div>)
                 ) : tourMode.active && canManageOwnMap ? (
-                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                    !topBannerHidden && (<div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
                         <TourBanner
                             tourMode={tourMode}
                             gigCount={tourGigs.length}
                             highlightedCount={highlightedGigCount}
                             onExit={handleExitTourMode}
                         />
-                    </div>
+                    </div>)
                 ) : viewingFeatured && user ? (
-                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
+                    !topBannerHidden && (<div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
                         <FeaturedArtistsBanner
                             artistCount={featuredArtists?.length || 0}
                             onHomeClick={() => setViewingFeatured(false)}
                         />
-                    </div>
+                    </div>)
                 ) : !user && (
                     <div className="absolute bottom-6 left-1/2 z-[1100] -translate-x-1/2">
                         <AnonymousUserBanner onSignInClick={() => setShowAuthModal(true)} />

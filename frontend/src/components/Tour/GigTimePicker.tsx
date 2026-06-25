@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDownIcon, ClockIcon, KeyboardIcon } from '../icons/GeneralIcons';
 import { formatLocalizedTimeValue } from '../../utils/dateFormatting';
 import { Button } from '../ui';
+import { useAnchoredPopup } from '../../hooks/useAnchoredPopup';
 
 // Optional gig time selector
 
@@ -56,9 +57,20 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
     const [dialPhase, setDialPhase] = useState<DialPhase>('hour');
     const [draftTime, setDraftTime] = useState(() => parseTimeValue(value));
     const [draftCleared, setDraftCleared] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 420 });
     const localeFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const displayValue = formatLocalizedTimeValue(value, localeFallback);
+
+    const dropdownPosition = useAnchoredPopup({
+        isOpen: isOpen && !disabled,
+        anchorRef: rootRef,
+        popupRef: dropdownRef,
+        width: 'anchor',
+        minWidth: 320,
+        align: 'right',
+        gap: 10,
+        recomputeKey: mode,
+        onScrollAway: () => setIsOpen(false),
+    });
 
     useEffect(() => {
         setDraftTime(parseTimeValue(value));
@@ -75,26 +87,6 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    useEffect(() => {
-        if (!isOpen || !rootRef.current || disabled) return;
-
-        const rect = rootRef.current.getBoundingClientRect();
-        const gap = 10;
-        const availableBelow = window.innerHeight - rect.bottom - gap;
-        const availableAbove = rect.top - gap;
-        const opensAbove = availableBelow < 430 && availableAbove > availableBelow;
-        const maxHeight = Math.max(330, Math.min(500, opensAbove ? availableAbove : availableBelow));
-        const width = Math.min(window.innerWidth - 16, Math.max(rect.width, 320));
-
-        // Material-style dialog can be wider than the trigger
-        setDropdownPosition({
-            top: opensAbove ? rect.top - maxHeight - gap : rect.bottom + gap,
-            left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
-            width,
-            maxHeight,
-        });
-    }, [disabled, isOpen, mode]);
 
     const setDraft = (nextTime: TimeParts) => {
         setDraftTime(nextTime);
@@ -350,7 +342,7 @@ export function GigTimePicker({ id, label, value, onChange, disabled = false }: 
                     ref={dropdownRef}
                     role="region"
                     aria-label={label}
-                    className="fixed z-[9999] overflow-hidden rounded-xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
+                    className="fixed z-[9999] overflow-y-auto rounded-xl border border-border-strong bg-surface shadow-[0_-8px_24px_rgba(15,23,42,0.12),0_0_12px_rgba(15,23,42,0.08)] app-dark:shadow-[0_-10px_28px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,

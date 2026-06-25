@@ -112,6 +112,19 @@ const ArtistList = ({
     }, [isSortOpen]);
 
     useEffect(() => {
+        // Scrolling the list behind the open sort menu dismisses it.
+        if (!isSortOpen) return;
+
+        const handleScroll = (event: Event) => {
+            const target = event.target as Node | null;
+            if (target && sortDropdownRef.current?.contains(target)) return;
+            setIsSortOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isSortOpen]);
+
+    useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (sortRef.current?.contains(e.target as Node) || sortDropdownRef.current?.contains(e.target as Node)) return;
             setIsSortOpen(false);

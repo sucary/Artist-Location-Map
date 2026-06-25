@@ -184,7 +184,7 @@ export function GigForm({
     return (
         <form
             onSubmit={(event) => { void handleSubmit(event); }}
-            className="absolute top-20 left-1/2 z-[1050] flex max-h-[calc(100vh-6rem)] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-xl shadow-black/5 ring-1 ring-border/40 sm:top-28 sm:right-2 sm:left-auto sm:translate-x-0"
+            className="absolute top-20 left-1/2 z-[1050] flex max-h-[calc(100vh-6rem)] w-[calc(100vw-1rem)] max-w-sm -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-surface font-sans shadow-xl shadow-black/5 ring-1 ring-border/40 sm:top-28 sm:right-2 sm:left-auto sm:max-h-[calc(100vh-8rem)] sm:translate-x-0"
         >
             <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                 <h2 className="text-base font-semibold tracking-tight text-text">

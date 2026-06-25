@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { CalendarIcon, ChevronDownIcon } from '../icons/GeneralIcons';
 import { getBrowserDateLocale, getLocalizedWeekdayLabels } from '../../utils/dateFormatting';
+import { useAnchoredPopup } from '../../hooks/useAnchoredPopup';
 
 // Single-date picker and shared calendar primitives
 
@@ -73,9 +74,18 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
     const today = useMemo(() => new Date(), []);
     const [isOpen, setIsOpen] = useState(false);
     const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(selectedDate ?? today));
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 420 });
     const dateFallback = i18n.resolvedLanguage || i18n.language || undefined;
     const locale = useMemo(() => getBrowserDateLocale(dateFallback), [dateFallback]);
+
+    const dropdownPosition = useAnchoredPopup({
+        isOpen: isOpen && !disabled,
+        anchorRef: rootRef,
+        popupRef: dropdownRef,
+        width: 340,
+        align: 'left',
+        gap: 10,
+        onScrollAway: () => setIsOpen(false),
+    });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -87,28 +97,6 @@ export function GigDatePicker({ id, label, value, onChange, disabled = false }: 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    useEffect(() => {
-        if (!isOpen || !rootRef.current) return;
-        if (disabled) return;
-
-        const rect = rootRef.current.getBoundingClientRect();
-        const gap = 10;
-        const availableBelow = window.innerHeight - rect.bottom - gap;
-        const availableAbove = rect.top - gap;
-        const opensAbove = availableBelow < 380 && availableAbove > availableBelow;
-        const maxHeight = Math.max(320, Math.min(500, opensAbove ? availableAbove : availableBelow));
-        const width = Math.min(window.innerWidth - 16, 340);
-        const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
-
-        // Fixed portal avoids clipping inside the gig form scroller
-        setDropdownPosition({
-            top: opensAbove ? rect.top - maxHeight - gap : rect.bottom + gap,
-            left,
-            width,
-            maxHeight,
-        });
-    }, [disabled, isOpen, visibleMonth]);
 
     const weekdays = useMemo(() => getLocalizedWeekdayLabels(dateFallback, locale, 'narrow'), [dateFallback, locale]);
 

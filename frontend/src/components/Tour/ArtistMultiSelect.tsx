@@ -4,6 +4,7 @@ import type { Artist } from '../../types/artist';
 import { getAvatarUrl } from '../../utils/cloudinaryUrl';
 import { ChevronDownIcon, CloseIcon, PlusIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
+import { useAnchoredPopup } from '../../hooks/useAnchoredPopup';
 
 interface ArtistMultiSelectProps {
     artists: Artist[];
@@ -25,7 +26,6 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(0);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
     const selectedArtists = useMemo(() => (
         value
@@ -45,17 +45,19 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
     const safeActiveIndex = filteredArtists.length === 0 ? 0 : Math.min(activeIndex, filteredArtists.length - 1);
     const activeOptionId = isOpen && filteredArtists[safeActiveIndex] ? `${listboxId}-${filteredArtists[safeActiveIndex].id}` : undefined;
 
-    useEffect(() => {
-        if (!isOpen || !containerRef.current) return;
-
-        // Portal menu follows the input inside map overlays
-        const rect = containerRef.current.getBoundingClientRect();
-        setDropdownPosition({
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.left + window.scrollX,
-            width: rect.width,
-        });
-    }, [isOpen, query, selectedArtists.length]);
+    const dropdownPosition = useAnchoredPopup({
+        isOpen: isAddingArtist && isOpen,
+        anchorRef: containerRef,
+        popupRef: dropdownRef,
+        width: 'anchor',
+        align: 'left',
+        gap: 4,
+        recomputeKey: filteredArtists.length,
+        onScrollAway: () => {
+            setIsOpen(false);
+            setIsAddingArtist(false);
+        },
+    });
 
     useEffect(() => {
         if (!isAddingArtist) return;
@@ -237,11 +239,12 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                     role="listbox"
                     aria-label={label}
                     ref={dropdownRef}
-                    className="fixed z-9999 max-h-48 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
+                    className="fixed z-9999 overflow-y-auto rounded-lg border border-border-strong bg-surface shadow-lg app-dark:shadow-[0_16px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)]"
                     style={{
                         top: `${dropdownPosition.top}px`,
                         left: `${dropdownPosition.left}px`,
                         width: `${dropdownPosition.width}px`,
+                        maxHeight: `${dropdownPosition.maxHeight}px`,
                     }}
                 >
                     {filteredArtists.map((artist, index) => {
