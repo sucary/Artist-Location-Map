@@ -8,7 +8,7 @@ export interface Profile {
     isApproved: boolean;
     isPrivate: boolean;
     locationLanguage: string;
-    uiLanguage: string;
+    uiLanguage: string | null;
     artistNameDisplayMode: ArtistNameDisplayMode;
     tutorialCompleted: boolean;
     isRejected: boolean;

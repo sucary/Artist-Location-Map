@@ -8,7 +8,7 @@ export interface Profile {
   isApproved: boolean;
   isPrivate: boolean;
   locationLanguage: string;
-  uiLanguage: string;
+  uiLanguage: string | null;
   artistNameDisplayMode: string;
   tutorialCompleted: boolean;
   isRejected: boolean;
@@ -54,7 +54,7 @@ async function ensureArtistNameDisplayModeColumn(): Promise<void> {
 async function ensureUiLanguageColumn(): Promise<void> {
     await pool.query(`
         ALTER TABLE profiles
-        ADD COLUMN IF NOT EXISTS ui_language TEXT NOT NULL DEFAULT 'en'
+        ADD COLUMN IF NOT EXISTS ui_language TEXT DEFAULT NULL
     `);
 }
 
@@ -73,7 +73,7 @@ export const ProfileStore = {
                 p.is_approved as "isApproved",
                 p.is_private as "isPrivate",
                 p.location_language as "locationLanguage",
-                COALESCE(p.ui_language, 'en') as "uiLanguage",
+                p.ui_language as "uiLanguage",
                 COALESCE(p.artist_name_display_mode, 'both') as "artistNameDisplayMode",
                 COALESCE(p.tutorial_completed, false) as "tutorialCompleted"
               FROM profiles p
