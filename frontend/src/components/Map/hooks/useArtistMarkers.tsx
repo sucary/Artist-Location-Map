@@ -851,6 +851,7 @@ export const useArtistMarkers = ({
     const clusterDebugColorsRef = useRef<Map<string, string>>(new Map());
     const artistsByIdRef = useRef<Map<string, Artist>>(new Map());
     const activePopupRef = useRef<maplibregl.Popup | null>(null);
+    const activePopupArtistIdRef = useRef<string | null>(null);
     const artistMarkerZIndexRef = useRef<Map<string, string>>(new Map());
     const lastSelectedArtistIdRef = useRef<string | null>(null);
     const popupOptionsRef = useRef({
@@ -1514,6 +1515,7 @@ export const useArtistMarkers = ({
             .setLngLat(marker.getLngLat())
             .addTo(map);
         activePopupRef.current = popup;
+        activePopupArtistIdRef.current = artist.id;
 
         const focusMarker = options?.focusMarker ?? true;
         if (focusMarker) {
@@ -1560,6 +1562,9 @@ export const useArtistMarkers = ({
             });
             if (activePopupRef.current === popup) {
                 activePopupRef.current = null;
+            }
+            if (activePopupArtistIdRef.current === artist.id) {
+                activePopupArtistIdRef.current = null;
             }
             setArtistPopupLifecycle(false);
             setSelectedCityId((current) => current === selectedCityIdRef.current ? null : current);
@@ -1638,6 +1643,7 @@ export const useArtistMarkers = ({
             .addTo(map);
 
         activePopupRef.current = popup;
+        activePopupArtistIdRef.current = null;
         sourceElement.classList.add('marker-focused');
 
         popup.on('close', () => {
@@ -2547,6 +2553,28 @@ export const useArtistMarkers = ({
     const expandAllVisibleClustersAtLocations = useCallback(() => {
         visibleClustersRef.current.forEach((cluster) => expandCluster(cluster, undefined, true, true));
     }, [expandCluster]);
+
+    // When the open/expanded artist disappears (e.g. deleted from its card),
+    // close its popup and collapse any expanded cluster still showing it.
+    useEffect(() => {
+        const artistIds = new Set(displayArtists.map((artist) => artist.id));
+
+        if (activePopupArtistIdRef.current && !artistIds.has(activePopupArtistIdRef.current)) {
+            closeActiveArtistPopup();
+        }
+
+        let expandedShowsRemovedArtist = false;
+        expandedRef.current.forEach((state) => {
+            state.markerEntries.forEach((entry) => {
+                if (entry.kind === 'artist' && !artistIds.has(entry.artistId)) {
+                    expandedShowsRemovedArtist = true;
+                }
+            });
+        });
+        if (expandedShowsRemovedArtist) {
+            collapseExpandedClusters();
+        }
+    }, [closeActiveArtistPopup, collapseExpandedClusters, displayArtists]);
 
     return {
         clearMarkers,
