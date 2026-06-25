@@ -7,7 +7,7 @@ const PLATFORM_PATTERNS: Record<SocialLinkKey, RegExp> = {
     instagram: /^https?:\/\/(www\.)?instagram\.com\/.+/i,
     twitter: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/.+/i,
     appleMusic: /^https?:\/\/(music\.apple\.com|itunes\.apple\.com)\/.+/i,
-    youtube: /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/.+/i,
+    youtube: /^https?:\/\/((www|music)\.)?(youtube\.com|youtu\.be)\/.+/i,
 };
 
 const PLATFORM_NAMES: Record<SocialLinkKey, string> = {

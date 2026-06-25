@@ -16,6 +16,7 @@ interface ArtistCardProps {
     onAddGig?: (artist: Artist) => void;
     locationLanguage?: LocationLanguage;
     artistNameDisplayMode?: ArtistNameDisplayMode;
+    hideWebsite?: boolean;
 }
 
 // URL sanitizer
@@ -36,7 +37,8 @@ const ArtistCard = ({
     showActions = true,
     onAddGig,
     locationLanguage = 'en',
-    artistNameDisplayMode = DEFAULT_ARTIST_NAME_DISPLAY_MODE
+    artistNameDisplayMode = DEFAULT_ARTIST_NAME_DISPLAY_MODE,
+    hideWebsite = false
 }: ArtistCardProps) => {
     const { t } = useTranslation();
     const [actionsVisible, setActionsVisible] = useState(false);
@@ -197,7 +199,7 @@ const ArtistCard = ({
                     )}
                     {/* Social icons */}
                     <div className="flex gap-3">
-                        {artist.socialLinks?.website && (
+                        {!hideWebsite && artist.socialLinks?.website && (
                             <a href={safeUrl(artist.socialLinks.website)} target="_blank" rel="noopener noreferrer" aria-label={t('artistCard.social.website')} className="!text-text-muted hover:!text-primary visited:!text-text-muted transition-colors">
                                 <HomeIcon className="w-5 h-5" />
                             </a>

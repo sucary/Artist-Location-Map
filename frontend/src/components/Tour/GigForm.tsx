@@ -4,7 +4,7 @@ import axios from 'axios';
 import { getArtists, getTours } from '../../services/api';
 import type { Artist, Coordinates, Location, SelectionMode } from '../../types/artist';
 import type { Gig, GigInput } from '../../types/gig';
-import { Button, CloseButton } from '../ui';
+import { Alert, Button, CloseButton } from '../ui';
 import { VenueLocationSearch } from './VenueLocationSearch';
 import { ArtistMultiSelect } from './ArtistMultiSelect';
 import { TourSelect } from './TourSelect';
@@ -361,11 +361,9 @@ export function GigForm({
                 </div>
 
                 {error && (
-                    <div role="alert" className="mx-4 mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2">
-                        <p className="whitespace-pre-line text-sm font-medium text-error">
-                            {error}
-                        </p>
-                    </div>
+                    <Alert variant="error" className="mx-4 mb-3">
+                        <span className="whitespace-pre-line">{error}</span>
+                    </Alert>
                 )}
             </div>
 

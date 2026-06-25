@@ -265,6 +265,7 @@ const ArtistList = ({
                         onAddGig={onAddGig}
                         locationLanguage={locationLanguage}
                         artistNameDisplayMode={artistNameDisplayMode}
+                        hideWebsite={viewingFeatured}
                     />
                 </div>
             )}

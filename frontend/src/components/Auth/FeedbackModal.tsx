@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
-import { Button, CloseButton } from '../ui';
+import { Button, CloseButton, Alert } from '../ui';
 import { submitFeedback } from '../../services/api';
 
 interface FeedbackModalProps {
@@ -77,7 +77,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
                             className="w-full resize-y rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
                         />
                         {error && (
-                            <p role="alert" className="mt-2 text-sm font-medium text-error">{error}</p>
+                            <Alert variant="error" className="mt-2">{error}</Alert>
                         )}
                         <div className="mt-3 flex justify-end gap-2">
                             <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>

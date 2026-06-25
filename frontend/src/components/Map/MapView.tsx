@@ -41,6 +41,7 @@ import type { GigMarkerArtist } from '../../types/gig';
 import type { ArtistPopupLifecycleState, MapViewProps } from './types';
 import { useTranslation } from 'react-i18next';
 import { GigCard } from '../Tour/GigCard';
+import ArtistCard from '../ArtistCard';
 
 // Interactive artist map shell and control wiring
 
@@ -280,18 +281,31 @@ export default function MapView({
     }, [onDeleteArtist, onDeleteGig, tourModeActive]);
 
     const renderPopupContent = useCallback((artist: Artist, showActions: boolean) => {
-        if (!tourModeActive) return undefined;
-        const gig = (artist as GigMarkerArtist).gig;
-        return (
-            <GigCard
-                gig={gig}
-                showActions={showActions}
-                locationLanguage={locationLanguage}
-                isStarred={starredGigIds?.has(gig.id) ?? false}
-                onToggleStar={onToggleGigStar}
-            />
-        );
-    }, [locationLanguage, onToggleGigStar, starredGigIds, tourModeActive]);
+        if (tourModeActive) {
+            const gig = (artist as GigMarkerArtist).gig;
+            return (
+                <GigCard
+                    gig={gig}
+                    showActions={showActions}
+                    locationLanguage={locationLanguage}
+                    isStarred={starredGigIds?.has(gig.id) ?? false}
+                    onToggleStar={onToggleGigStar}
+                />
+            );
+        }
+        if (viewingFeatured) {
+            // Featured artists hide the personal home/website link.
+            return (
+                <ArtistCard
+                    artist={artist}
+                    showActions={showActions}
+                    locationLanguage={locationLanguage}
+                    hideWebsite
+                />
+            );
+        }
+        return undefined;
+    }, [locationLanguage, onToggleGigStar, starredGigIds, tourModeActive, viewingFeatured]);
 
     const { data: selectedCity } = useQuery({
         queryKey: ['city', selectedCityId],
@@ -444,7 +458,7 @@ export default function MapView({
         onDisplayCoordinateEditEnd: () => setActiveAdjustmentCityId(null),
         onDisplayCoordinateChange,
         highlightedArtistIds: highlightedGigIds,
-        renderPopupContent: tourModeActive ? renderPopupContent : undefined,
+        renderPopupContent: tourModeActive || viewingFeatured ? renderPopupContent : undefined,
         starredGigIds,
         onToggleGigStar,
         keepCollisionClustersAtMaxZoom: tourModeActive,

@@ -958,9 +958,9 @@ const ArtistForm = ({
             {/* Footer with error and buttons */}
             <div className="border-t border-border/60 px-4 py-3.5 bg-surface">
                 {error && (
-                    <div role="alert" className="mb-3 rounded-lg border-l-2 border-error bg-error/5 px-3 py-2.5">
-                        <p className="text-sm font-medium text-error">{error}</p>
-                    </div>
+                    <Alert variant="error" className="mb-3">
+                        {error}
+                    </Alert>
                 )}
                 <div className="flex gap-2.5">
                     <Button
