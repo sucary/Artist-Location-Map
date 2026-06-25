@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getArtists, getArtistsByUsername, getFeaturedArtists } from '../services/api';
-import { SearchIcon, EditIcon, TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from './icons/GeneralIcons';
+import { SearchIcon, EditIcon, TrashIcon, CopyIcon, ShareIcon, ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from './icons/GeneralIcons';
 import { MapPinIcon } from './icons/MapIcons';
 import { getAvatarUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized, getSearchableLocationText } from '../utils/locationUtils';
@@ -26,6 +26,7 @@ interface ArtistListProps {
     onAddGig?: (artist: Artist) => void;
     onCopyCollection?: (artistCount: number) => void;
     isCopyingCollection?: boolean;
+    onShare?: () => void;
 }
 
 const getPlaceholderUrl = (name: string) =>
@@ -66,7 +67,8 @@ const ArtistList = ({
     onDeleteArtist,
     onAddGig,
     onCopyCollection,
-    isCopyingCollection = false
+    isCopyingCollection = false,
+    onShare
 }: ArtistListProps) => {
     const { t } = useTranslation();
     const { locationLanguage } = useLocationLanguage();
@@ -278,6 +280,17 @@ const ArtistList = ({
                     {viewingFeatured ? t('artistList.title.featured') : t('artistList.title.default')} ({artists.length})
                 </h2>
                 <div className="flex items-center gap-2">
+                    {onShare && (
+                        <button
+                            type="button"
+                            aria-label={t('artistList.actions.share')}
+                            title={t('artistList.actions.share')}
+                            onClick={onShare}
+                            className="rounded-lg text-text-muted hover:text-text-secondary hover:bg-surface-muted transition-colors duration-150 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-text-muted disabled:hover:bg-transparent"
+                        >
+                            <ShareIcon className="w-5 h-5" />
+                        </button>
+                    )}
                     {onCopyCollection && (
                         <button
                             type="button"

@@ -28,3 +28,6 @@ export type { ConfirmDialogVariant } from './ConfirmDialog';
 export { PageLayout, PageSection } from './PageLayout';
 
 export { InlineActionMenu } from './InlineActionMenu';
+
+export { Toast } from './Toast';
+export type { ToastProps } from './Toast';

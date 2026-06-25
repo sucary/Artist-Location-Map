@@ -498,6 +498,8 @@
     },
     "actions": {
       "copyAll": "將所有藝人複製到我的地圖",
+      "share": "分享我的地圖",
+      "linkCopied": "連結已複製",
       "goToLocation": "前往地點",
       "edit": "編輯藝人",
       "editShort": "編輯",

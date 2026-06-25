@@ -26,7 +26,7 @@ import { UserNotFound } from './components/UserNotFound';
 import { supabase } from './lib/supabase';
 import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 import { useTutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
-import { ConfirmDialog, type ConfirmDialogVariant } from './components/ui';
+import { ConfirmDialog, Toast, type ConfirmDialogVariant } from './components/ui';
 import { Trans, useTranslation } from 'react-i18next';
 import { TransStrong } from './components/i18n/TransComponents';
 import { GigForm } from './components/Tour/GigForm';
@@ -137,6 +137,7 @@ function App() {
     const [tutorialArtistHasImage, setTutorialArtistHasImage] = useState(false);
     const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
     const [appDialogLoading, setAppDialogLoading] = useState(false);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [rememberedTourMode, setRememberedTourMode] = useState<RememberedTourModeState>(() => ({
         interval: getDefaultTourInterval(),
         selectedDay: null,
@@ -799,6 +800,15 @@ function App() {
         setShowFeaturedList(false);
     }, []);
 
+    const handleShareMyMap = useCallback(() => {
+        if (!profile?.username) return;
+        // Public maps are reachable at /u/:username; copy that link to share.
+        void navigator.clipboard?.writeText(`${window.location.origin}/u/${profile.username}`);
+        setToastMessage(t('artistList.actions.linkCopied'));
+    }, [profile?.username, t]);
+
+    const dismissToast = useCallback(() => setToastMessage(null), []);
+
     const handleArtistListEmptyMapClick = useCallback(() => {
         if (artistListCardOpen) {
             setArtistListCloseCardSignal((signal) => signal + 1);
@@ -1130,6 +1140,7 @@ function App() {
                     onAddGig={tourMode.active && !isViewingOther && !viewingFeatured ? handleAddGigForArtist : undefined}
                     onCopyCollection={isViewingOther && !viewingFeatured && user && profile?.isApproved ? handleCopyArtistCollection : undefined}
                     isCopyingCollection={isCopyingCollection}
+                    onShare={!isViewingOther && !viewingFeatured && !!user && !!profile?.username && !profile.isPrivate ? handleShareMyMap : undefined}
                 />
             )}
             {showAdminDashboard && (
@@ -1160,6 +1171,9 @@ function App() {
                 >
                     {appDialog.message}
                 </ConfirmDialog>
+            )}
+            {toastMessage && (
+                <Toast message={toastMessage} onDismiss={dismissToast} />
             )}
             <MapView
                 username={username}

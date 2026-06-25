@@ -94,6 +94,15 @@ export const CopyIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props 
     </svg>
 );
 
+export const ShareIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
+        <path d="M8.59 10.51l6.83-3.52M8.59 13.49l6.83 3.52" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 export const ArrowUpIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <path d="M12 19V5M5 12L12 5L19 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

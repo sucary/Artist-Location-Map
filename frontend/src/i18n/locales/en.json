@@ -500,6 +500,8 @@
     },
     "actions": {
       "copyAll": "Copy all artists to my map",
+      "share": "Share my map",
+      "linkCopied": "Link copied",
       "goToLocation": "Go to location",
       "edit": "Edit artist",
       "editShort": "Edit",

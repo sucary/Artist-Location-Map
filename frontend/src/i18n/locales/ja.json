@@ -500,6 +500,8 @@
     },
     "actions": {
       "copyAll": "すべてのアーティストを自分の地図にコピー",
+      "share": "自分の地図を共有",
+      "linkCopied": "リンクをコピーしました",
       "goToLocation": "場所へ移動",
       "edit": "アーティストを編集",
       "editShort": "編集",

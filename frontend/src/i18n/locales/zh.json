@@ -500,6 +500,8 @@
     },
     "actions": {
       "copyAll": "将所有艺人复制到我的地图",
+      "share": "分享我的地图",
+      "linkCopied": "链接已复制",
       "goToLocation": "前往地点",
       "edit": "编辑艺人",
       "editShort": "编辑",
