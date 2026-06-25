@@ -109,8 +109,8 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const profile = await ProfileStore.getByUserId(userId);
 
     if (!profile) {
-        res.status(404).json({ error: 'Profile not found' });
-        return;
+        // Profile row may have been deleted — recreate it from the auth user
+        profile = await ProfileStore.createProfile(userId, req.user!.email);
     }
 
     res.json(profile);

@@ -264,14 +264,14 @@
     }
   },
   "banner": {
-    "featuredArtists": "Achizu 地图已收集 <count>{{count}}</count> 位艺人",
-    "featuredArtistsLabel": "精选艺人",
+    "featuredArtists": "Achizu 音乐人地图已收集 <count>{{count}}</count> 位音乐人",
+    "featuredArtistsLabel": "Achizu音乐人",
     "viewingUser": "正在查看 <username>{{username}}</username> 的地图",
     "backToMyMap": "返回我的地图",
-    "viewCommunityArtists": "查看社区艺人"
+    "viewCommunityArtists": "查看Achizu 地图"
   },
   "mainSearch": {
-    "placeholder": "搜索艺人和用户",
+    "placeholder": "搜索音乐人和用户",
     "clearSearch": "清除搜索",
     "search": "搜索",
     "results": "搜索结果",
@@ -388,7 +388,7 @@
   "about": {
     "title": "关于",
     "project": {
-      "description": "在地图上标记你喜爱的艺人和演出",
+      "description": "在地图上标记你喜爱的音乐人和演出",
       "viewOnGithub": "GitHub"
     },
     "credits": {
@@ -427,7 +427,7 @@
     "openAdmin": "打开管理后台"
   },
   "map": {
-    "achizu": "Achizu，艺人地图",
+    "achizu": "Achizu，音乐人地图",
     "manualLocationSelection": "点击地图选择地点",
     "cancel": "取消",
     "attribution": {
@@ -480,7 +480,7 @@
     },
     "title": {
       "default": "艺人",
-      "featured": "社区艺人"
+      "featured": "Achizu 地图"
     },
     "search": {
       "ariaLabel": "搜索艺人或地点",
