@@ -106,7 +106,7 @@ export const requestPasswordReset = asyncHandler(async (req: Request, res: Respo
 
 export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user!.id;
-    const profile = await ProfileStore.getByUserId(userId);
+    let profile = await ProfileStore.getByUserId(userId);
 
     if (!profile) {
         // Profile row may have been deleted — recreate it from the auth user
