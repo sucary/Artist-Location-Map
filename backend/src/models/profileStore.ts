@@ -110,6 +110,21 @@ export const ProfileStore = {
         };
     },
 
+    createProfile: async (userId: string, email: string): Promise<Profile> => {
+        await pool.query(
+            `INSERT INTO profiles (id, email)
+             VALUES ($1, $2)
+             ON CONFLICT (id) DO NOTHING`,
+            [userId, email]
+        );
+        // Fetch to get defaults and apply isApproved/nameDisplayMode overrides
+        const profile = await ProfileStore.getByUserId(userId);
+        if (!profile) {
+            throw new Error('Failed to create profile');
+        }
+        return profile;
+    },
+
     getPendingUsers: async (): Promise<PendingUser[]> => {
         const result = await pool.query(
             `SELECT id, email, username, created_at as "createdAt"
