@@ -310,6 +310,14 @@ function App() {
         }
     }, [isTutorialDismissed, isViewingOther, profile, showForm, tutorialStepIndex, user, viewingFeatured]);
 
+    useEffect(() => {
+        if (!user) {
+            setTutorialStepIndex(null);
+            setIsTutorialDismissed(false);
+            setTutorialArtistHasImage(false);
+        }
+    }, [user]);
+
     const completeTutorial = useCallback(async () => {
         setTutorialStepIndex(null);
         setIsTutorialDismissed(true);
