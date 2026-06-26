@@ -256,7 +256,7 @@
       "resultsLabel": "アーティスト検索結果",
       "searchingArtists": "アーティストを検索中",
       "artists": "アーティスト",
-      "noArtistFoundTry": "アーティストが見つかりません。試す",
+      "noArtistFoundTry": "アーティストが見つかりません。次をお試しください：",
       "noArtistFound": "アーティストが見つかりません",
       "moreArtists": "さらにアーティストを表示",
       "onlineResults": "詳細検索結果",
@@ -298,11 +298,11 @@
       "hideClusterDebug": "クラスターデバッグ操作を非表示"
     },
     "language": {
-      "title": "表示",
+      "title": "地名表示",
       "locationName": "地名の言語",
       "locationNameLanguage": "地名の表示言語",
       "hint": "翻訳がない場所は別の言語で表示される場合があります",
-      "native": "現地語"
+      "native": "現地表記"
     },
     "artistNames": {
       "title": "アーティスト名",
@@ -338,7 +338,7 @@
     "uiLanguage": {
       "title": "表示言語",
       "description": "アプリ画面で使う言語を選択します",
-      "language": "メイン言語"
+      "language": "言語"
     }
   },
   "tutorial": {
@@ -463,9 +463,9 @@
           "starredGigs": "お気に入り",
           "tourLabel": "ツアー",
           "all": "全て",
-          "allTours": "すべてのツアー",
+          "allTours": "全ツアー",
           "artistLabel": "アーティスト",
-          "allArtists": "すべてのアーティスト"
+          "allArtists": "全アーティスト"
         }
       }
     },

@@ -262,11 +262,11 @@
     }
   },
   "banner": {
-    "featuredArtists": "Achizu 地圖已收集 <count>{{count}}</count> 位藝人",
-    "featuredArtistsLabel": "精選藝人",
+    "featuredArtists": "Achizu地圖已收集 <count>{{count}}</count> 位藝人",
+    "featuredArtistsLabel": "Achizu地图",
     "viewingUser": "正在查看 <username>{{username}}</username> 的地圖",
     "backToMyMap": "返回我的地圖",
-    "viewCommunityArtists": "查看Achizu 地圖",
+    "viewCommunityArtists": "查看Achizu地圖",
     "loginCta": "登入并建立你的音樂人地圖"
   },
   "mainSearch": {
@@ -426,11 +426,11 @@
     "openAdmin": "開啟管理後台"
   },
   "map": {
-    "achizu": "Achizu，藝人地圖",
+    "achizu": "Achizu音乐人地圖",
     "manualLocationSelection": "點擊地圖選擇地點",
     "cancel": "取消",
     "attribution": {
-      "aboutAchizu": "關於 Achizu"
+      "aboutAchizu": "關於Achizu"
     },
     "markers": {
       "clusterArtists": "{{count}} 位藝人"
