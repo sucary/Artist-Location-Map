@@ -21,6 +21,7 @@ void i18n
             ja: { translation: ja },
         },
         supportedLngs: ['en', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK', 'zh-MO', 'ja'],
+        nonExplicitSupportedLngs: true,
         fallbackLng: 'en',
         interpolation: {
             escapeValue: false,
@@ -28,7 +29,7 @@ void i18n
         detection: {
             order: ['localStorage', 'navigator', 'htmlTag'],
             caches: ['localStorage'],
-            lookupLocalStorage: 'appLanguage',
+            lookupLocalStorage: 'appLanguage_v2',
         },
     });
 
