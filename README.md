@@ -1,6 +1,13 @@
 # Achizu
 
-<img width="2560" height="650" alt="image" src="https://github.com/user-attachments/assets/d38b665b-406c-4f1d-98c0-ebccaf944127" />
+<img width="959" height="419" alt="image" src="https://github.com/user-attachments/assets/7c882ff0-e96b-493f-9072-307a27216d92" />
+
+
+
+
+
+
+
 
 
 
@@ -8,6 +15,7 @@
 Achizu is a website where you can
 - manage your artist (musician) collection;
 - visualizes the geographic distribution of your artists on a map: where they're from and where they're currently based.
+- Manage and visualize your favorite gigs
 
 Inspired by [Anitabi](https://www.anitabi.cn/map), an interactive map website visualizing real-world locations of anime scenes.
 
