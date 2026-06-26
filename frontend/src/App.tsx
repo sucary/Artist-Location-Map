@@ -227,6 +227,14 @@ function App() {
     // Viewing another user's map
     const isViewingOther = !!username;
 
+    const tutorialSuppressed = isViewingOther
+        || viewingFeatured
+        || tourMode.active
+        || showAdminDashboard
+        || showGigForm
+        || showGigPanel
+        || showGigCalendar;
+
     useEffect(() => {
         const mediaQuery = window.matchMedia('(max-width: 640px)');
         const syncMobileLayout = () => setIsMobileLayout(mediaQuery.matches);
@@ -302,13 +310,21 @@ function App() {
             && profile?.username
             && !isTutorialDismissed
             && tutorialStepIndex === null
-            && !isViewingOther
-            && !viewingFeatured
+            && !tutorialSuppressed
             && !showForm
         ) {
             setTutorialStepIndex(0);
         }
-    }, [isTutorialDismissed, isViewingOther, profile, showForm, tutorialStepIndex, user, viewingFeatured]);
+    }, [isTutorialDismissed, profile, showForm, tutorialStepIndex, tutorialSuppressed, user]);
+
+    useEffect(() => {
+        // Don't remember tutorial progress when the user leaves the add-artist flow.
+        // The add-artist form is cleared on close, so there's nothing to resume into;
+        // reset to the start and let the effect above re-open it at step 0 on return.
+        if (tutorialSuppressed && tutorialStepIndex !== null) {
+            setTutorialStepIndex(null);
+        }
+    }, [tutorialSuppressed, tutorialStepIndex]);
 
     useEffect(() => {
         if (!user) {
@@ -948,7 +964,7 @@ function App() {
     return (
         <main className="h-screen w-screen flex flex-col bg-background text-text">
             {/* Top controls */}
-            <div className="absolute top-2 inset-x-2 z-[1100] flex items-start gap-2 pointer-events-none">
+            <div className={`absolute top-2 inset-x-2 ${notificationMenuOpen || accountMenuOpen ? 'z-[1450]' : 'z-[1100]'} flex items-start gap-2 pointer-events-none`}>
                 <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-auto">
                     {user && (
                         <>
@@ -1158,7 +1174,7 @@ function App() {
             {showResetPassword && (
                 <ResetPasswordModal onClose={() => setShowResetPassword(false)} />
             )}
-            {tutorialStepIndex !== null && (
+            {tutorialStepIndex !== null && !tutorialSuppressed && (
                 <TutorialOverlay
                     steps={tutorialSteps}
                     stepIndex={tutorialStepIndex}
