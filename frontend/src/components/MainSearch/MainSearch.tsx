@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useMemo, useRef, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useMainSearch } from './useMainSearch';
 import { SearchResultRow } from './SearchResultRow';
 import { SearchIcon, CloseIcon } from '../icons/GeneralIcons';
@@ -20,7 +20,29 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [activeIndex, setActiveIndex] = useState(-1);
+    // Below `sm` (mobile) the search is a single button that expands into a
+    // full-row field on tap; the desktop field is unchanged.
+    const [compact, setCompact] = useState(() => (
+        typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches
+    ));
+    const [expanded, setExpanded] = useState(false);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 639px)');
+        const syncCompact = () => {
+            const isCompact = mediaQuery.matches;
+            setCompact(isCompact);
+            // Leaving compact renders the field inline, so drop the expanded flag.
+            if (!isCompact) setExpanded(false);
+        };
+        syncCompact();
+        mediaQuery.addEventListener('change', syncCompact);
+        return () => mediaQuery.removeEventListener('change', syncCompact);
+    }, []);
+
+    // Always show the full field on wider screens; on compact only once expanded.
+    const showField = !compact || expanded;
 
     const {
         query,
@@ -37,11 +59,28 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
         onSelectArtist,
     });
 
+    const openSearch = useCallback(() => {
+        setExpanded(true);
+    }, []);
+
+    const collapseSearch = useCallback(() => {
+        setExpanded(false);
+        setIsOpen(false);
+    }, [setIsOpen]);
+
+    // Focus the field as soon as it expands.
+    useEffect(() => {
+        if (showField && expanded) {
+            inputRef.current?.focus();
+        }
+    }, [expanded, showField]);
+
     // Close on outside click
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setExpanded(false);
             }
         };
 
@@ -54,10 +93,12 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
         const handleKeyDown = (e: globalThis.KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
+                setExpanded(true);
                 inputRef.current?.focus();
             }
             if (e.key === 'Escape' && isOpen) {
                 setIsOpen(false);
+                setExpanded(false);
                 inputRef.current?.blur();
             }
         };
@@ -76,6 +117,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
     const hasActiveResult = activeIndex >= 0 && activeIndex < flatResults.length;
 
     const selectResult = (result: SearchResult) => {
+        setExpanded(false);
         if (result.type === 'artist') {
             handleSelectArtist(result);
             return;
@@ -88,6 +130,7 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
         if (event.key === 'Escape' && showDropdown) {
             event.preventDefault();
             setIsOpen(false);
+            setExpanded(false);
             return;
         }
 
@@ -119,64 +162,95 @@ export function MainSearch({ mapUsername, onSelectArtist, closeSignal = 0, onRes
         // Keep mobile surfaces mutually exclusive from the parent signal
         if (closeSignal > 0) {
             setIsOpen(false);
+            // Sync on an external close signal so the expanded field can't linger.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setExpanded(false);
         }
     }, [closeSignal, setIsOpen]);
 
     return (
-        <div ref={containerRef} className="relative w-full font-sans sm:w-80">
-            {/* Search Input */}
-            <div
-                className="relative"
-                onPointerDown={(event) => {
-                    // Expand the focus target without stealing clear/search button clicks
-                    if ((event.target as HTMLElement).closest('button')) return;
-                    inputRef.current?.focus();
-                }}
-            >
-                <input
-                    ref={inputRef}
-                    role="combobox"
-                    aria-label={t('mainSearch.placeholder')}
-                    aria-expanded={showDropdown}
-                    aria-controls="search-results"
-                    aria-autocomplete="list"
-                    aria-haspopup="listbox"
-                    aria-busy={isLoading}
-                    aria-activedescendant={hasActiveResult ? `main-search-option-${activeIndex}` : undefined}
-                    type="text"
-                    name="main-search"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    placeholder={t('mainSearch.placeholder')}
-                    value={query}
-                    onChange={(e) => {
-                        setQuery(e.target.value);
-                        setActiveIndex(-1);
-                    }}
-                    onFocus={() => query.length >= 2 && setIsOpen(true)}
-                    onKeyDown={handleInputKeyDown}
-                    className="h-12 w-full min-w-0 pl-3.5 pr-13 text-base bg-surface border border-border rounded-lg shadow-md focus:outline-none focus:border-primary focus:ring-[1.5px] focus:ring-inset focus:ring-primary sm:pl-5"
-                />
-                {query && (
-                    <IconButton
-                        aria-label={t('mainSearch.clearSearch')}
-                        onClick={handleClear}
-                        size="sm"
-                        className="absolute right-8 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
-                    >
-                        <CloseIcon className="w-4 h-4" />
-                    </IconButton>
-                )}
+        <div ref={containerRef} className={compact ? 'font-sans' : 'relative w-full font-sans'}>
+            {!showField ? (
+                /* Compact: collapsed search trigger */
                 <button
-                    aria-label={t('mainSearch.search')}
                     type="button"
-                    onClick={() => inputRef.current?.focus()}
-                    className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-lg text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                    aria-label={t('mainSearch.search')}
+                    aria-expanded={false}
+                    onClick={openSearch}
+                    className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-surface text-text shadow-md transition-colors hover:bg-primary hover:text-white hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                    <SearchIcon className="w-5 h-5" />
+                    <SearchIcon className="h-5 w-5" />
                 </button>
-            </div>
+            ) : (
+                /* Expanded field — covers the whole top row on compact. */
+                <div className={compact ? 'fixed top-2 inset-x-2 z-[1300]' : 'relative'}>
+                    <div
+                        className="relative"
+                        onPointerDown={(event) => {
+                            // Expand the focus target without stealing clear/search button clicks
+                            if ((event.target as HTMLElement).closest('button')) return;
+                            inputRef.current?.focus();
+                        }}
+                    >
+                        {compact && (
+                            <button
+                                type="button"
+                                aria-label={t('common.cancel')}
+                                onClick={collapseSearch}
+                                className="absolute left-0 top-0 z-10 flex h-12 w-10 items-center justify-center rounded-l-lg text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                            >
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M19 12H5" />
+                                    <path d="M12 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        )}
+                        <input
+                            ref={inputRef}
+                            role="combobox"
+                            aria-label={t('mainSearch.placeholder')}
+                            aria-expanded={showDropdown}
+                            aria-controls="search-results"
+                            aria-autocomplete="list"
+                            aria-haspopup="listbox"
+                            aria-busy={isLoading}
+                            aria-activedescendant={hasActiveResult ? `main-search-option-${activeIndex}` : undefined}
+                            type="text"
+                            name="main-search"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            placeholder={t('mainSearch.placeholder')}
+                            value={query}
+                            onChange={(e) => {
+                                setQuery(e.target.value);
+                                setActiveIndex(-1);
+                            }}
+                            onFocus={() => query.length >= 2 && setIsOpen(true)}
+                            onKeyDown={handleInputKeyDown}
+                            className={`h-12 w-full min-w-0 pr-13 text-base bg-surface border border-border rounded-lg shadow-md focus:outline-none focus:border-primary focus:ring-[1.5px] focus:ring-inset focus:ring-primary ${compact ? 'pl-11' : 'pl-3.5 sm:pl-5'}`}
+                        />
+                        {query && (
+                            <IconButton
+                                aria-label={t('mainSearch.clearSearch')}
+                                onClick={handleClear}
+                                size="sm"
+                                className="absolute right-8 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
+                            >
+                                <CloseIcon className="w-4 h-4" />
+                            </IconButton>
+                        )}
+                        <button
+                            aria-label={t('mainSearch.search')}
+                            type="button"
+                            onClick={() => inputRef.current?.focus()}
+                            className="absolute right-0 top-0 flex h-12 w-9 items-center justify-center rounded-r-lg text-text-secondary hover:bg-primary hover:text-white transition-colors"
+                        >
+                            <SearchIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Dropdown Results */}
             {showDropdown && (

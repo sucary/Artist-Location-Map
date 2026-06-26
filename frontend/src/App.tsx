@@ -968,7 +968,7 @@ function App() {
                 <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-auto">
                     {user && (
                         <>
-                            <div className="min-w-0 flex-1 sm:flex-none">
+                            <div className="shrink-0 sm:min-w-0 sm:flex-1 sm:max-w-[20rem]">
                                 <MainSearch
                                     mapUsername={username}
                                     onSelectArtist={handleNavigateToArtist}
