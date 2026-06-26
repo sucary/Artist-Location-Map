@@ -7,7 +7,7 @@ type BannerAction =
 interface BannerProps {
     label?: ReactNode;
     content: ReactNode;
-    action: BannerAction;
+    action?: BannerAction;
     className?: string;
     centerContent?: boolean;
     contentClassName?: string;
@@ -29,23 +29,27 @@ export function Banner({ label, content, action, className = '', centerContent =
                         {content}
                     </div>
                 </div>
-                <div aria-hidden="true" className="h-6 w-px shrink-0 self-center bg-border" />
-                {action.type === 'text' ? (
-                    <button
-                        onClick={action.onClick}
-                        className="flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted"
-                    >
-                        {action.label}
-                    </button>
-                ) : (
-                    <button
-                        aria-label={action.title}
-                        onClick={action.onClick}
-                        className="flex w-10 shrink-0 items-center justify-center py-2 text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
-                        title={action.title}
-                    >
-                        {action.icon}
-                    </button>
+                {action && (
+                    <>
+                        <div aria-hidden="true" className="h-6 w-px shrink-0 self-center bg-border" />
+                        {action.type === 'text' ? (
+                            <button
+                                onClick={action.onClick}
+                                className="flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted"
+                            >
+                                {action.label}
+                            </button>
+                        ) : (
+                            <button
+                                aria-label={action.title}
+                                onClick={action.onClick}
+                                className="flex w-10 shrink-0 items-center justify-center py-2 text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
+                                title={action.title}
+                            >
+                                {action.icon}
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
         </div>

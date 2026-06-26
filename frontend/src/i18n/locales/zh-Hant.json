@@ -266,7 +266,8 @@
     "featuredArtistsLabel": "精選藝人",
     "viewingUser": "正在查看 <username>{{username}}</username> 的地圖",
     "backToMyMap": "返回我的地圖",
-    "viewCommunityArtists": "查看社群藝人"
+    "viewCommunityArtists": "查看Achizu 地圖",
+    "loginCta": "登入并建立你的音樂人地圖"
   },
   "mainSearch": {
     "placeholder": "搜尋藝人和使用者",

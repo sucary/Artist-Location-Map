@@ -268,7 +268,8 @@
     "featuredArtistsLabel": "注目のアーティスト",
     "viewingUser": "<username>{{username}}</username> の地図を表示中",
     "backToMyMap": "自分の地図に戻る",
-    "viewCommunityArtists": "コミュニティのアーティストを表示"
+    "viewCommunityArtists": "コミュニティのアーティストを表示",
+    "loginCta": "ログインして自分のアーティストマップを作成"
   },
   "mainSearch": {
     "placeholder": "アーティストとユーザーを検索",

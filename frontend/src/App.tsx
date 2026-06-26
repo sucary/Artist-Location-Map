@@ -999,7 +999,7 @@ function App() {
                     <div className="z-[1250]">
                         {user && <NotificationButton onOpenChange={setNotificationMenuOpen} />}
                     </div>
-                    <div className="z-[1100]">
+                    <div className={`z-[1100] ${!user ? 'hidden sm:block' : ''}`}>
                         <AccountButton
                             showAuthModal={showAuthModal}
                             onOpenAuthModal={() => setShowAuthModal(true)}
@@ -1038,7 +1038,7 @@ function App() {
                         />
                     </div>)
                 ) : !user && (
-                    <div className="absolute bottom-6 left-1/2 z-[1100] -translate-x-1/2">
+                    <div className="absolute inset-x-2 top-16 z-[850] flex justify-center sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:top-auto sm:z-[1100] sm:-translate-x-1/2">
                         <AnonymousUserBanner onSignInClick={() => setShowAuthModal(true)} />
                     </div>
                 )

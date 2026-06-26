@@ -21,14 +21,22 @@ export function AnonymousUserBanner({ onSignInClick }: AnonymousUserBannerProps)
         <Banner
             label={t('banner.featuredArtistsLabel')}
             content={
-                <Trans
-                    i18nKey="banner.featuredArtists"
-                    values={{ count: artistCount }}
-                    components={{
-                        count: <TransSpan className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
-                    }}
-                />
+                <div className="min-w-0 flex flex-col">
+                    <span className="truncate">
+                        <Trans
+                            i18nKey="banner.featuredArtists"
+                            values={{ count: artistCount }}
+                            components={{
+                                count: <TransSpan className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
+                            }}
+                        />
+                    </span>
+                    <span className="truncate text-xs text-text-muted">
+                        {t('banner.loginCta')}
+                    </span>
+                </div>
             }
+            contentClassName="text-sm text-text"
             action={{ type: 'text', label: t('auth.buttons.signIn'), onClick: onSignInClick }}
         />
     );

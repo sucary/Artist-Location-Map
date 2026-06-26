@@ -268,7 +268,8 @@
     "featuredArtistsLabel": "Achizu音乐人",
     "viewingUser": "正在查看 <username>{{username}}</username> 的地图",
     "backToMyMap": "返回我的地图",
-    "viewCommunityArtists": "查看Achizu 地图"
+    "viewCommunityArtists": "查看Achizu 地图",
+    "loginCta": "登录并创建你的音乐人地图"
   },
   "mainSearch": {
     "placeholder": "搜索音乐人和用户",

@@ -264,11 +264,12 @@
     }
   },
   "banner": {
-    "featuredArtists": "The Achizu map has collected <count>{{count}}</count> artists",
+    "featuredArtists": "Achizu map has collected <count>{{count}}</count> artists",
     "featuredArtistsLabel": "Featured artists",
     "viewingUser": "Viewing <username>{{username}}</username>'s map",
     "backToMyMap": "Back to my map",
-    "viewCommunityArtists": "View artists from the community"
+    "viewCommunityArtists": "View artists from the community",
+    "loginCta": "Sign in to create your artist map"
   },
   "mainSearch": {
     "placeholder": "Search artists & users",
