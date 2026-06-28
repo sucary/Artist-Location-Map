@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "Achizu",
     "search": "Search",
@@ -19,7 +19,8 @@
     "apply": "Apply",
     "city": "City",
     "create": "Create",
-    "expand": "Expand"
+    "expand": "Expand",
+    "selectLanguage": "Select language"
   },
   "auth": {
     "fields": {
@@ -167,7 +168,7 @@
     "imageSource": {
       "avatarTitle": "Add image from web URL",
       "bannerTitle": "Add image from web URL",
-      "description": "• Supported formats: JPG, JPEG, PNG, WebP\n• File size ≤ 5 MB\n• Resolution ≤ 1920×1080 (1080p)",
+      "description": "鈥?Supported formats: JPG, JPEG, PNG, WebP\n鈥?File size 鈮?5 MB\n鈥?Resolution 鈮?1920脳1080 (1080p)",
       "inputLabel": "Image URL",
       "placeholder": "https://example.com/image.jpg",
       "useUrl": "Upload"
@@ -258,7 +259,7 @@
       "invalidImageUrl": "Enter a valid image URL",
       "imageUploadFailed": "Image upload failed",
       "failedUploadImage": "Failed to upload image. Please try again.",
-      "imageRequirements": "Use a JPG, PNG, or WebP image up to 5 MB",
+      "imageRequirements": "Use a JPG, PNG, WebP, HEIC, or HEIF image up to 5 MB",
       "saveArtistFailedHeader": "Could not save artist",
       "failedSaveArtist": "Failed to save artist. Please try again."
     }
@@ -539,7 +540,8 @@
     },
     "actions": {
       "edit": "Edit artist",
-      "delete": "Delete artist"
+      "delete": "Delete artist",
+      "copy": "Copy to my map"
     },
     "social": {
       "website": "Artist website",
@@ -764,6 +766,17 @@
         "successMessage_other": "Copied {{copied}} artists. Skipped {{skipped}}.",
         "errorTitle": "Could not copy collection",
         "errorMessage": "Failed to copy artist collection. Please try again."
+      },
+      "copyArtist": {
+        "title": "Copy artist",
+        "message": "Copy <name>{{name}}</name> to your map?",
+        "successTitle": "Artist copied",
+        "successMessage": "<name>{{name}}</name> was added to your map.",
+        "successToast": "{{name}} added to your map",
+        "alreadyExistsTitle": "Couldn't copy artist",
+        "alreadyExistsMessage": "<name>{{name}}</name> is already in your map.",
+        "errorTitle": "Could not copy artist",
+        "errorMessage": "Failed to copy this artist. Please try again."
       }
     }
   }

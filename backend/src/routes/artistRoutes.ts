@@ -3,6 +3,7 @@ import {
     getAllArtists,
     getArtistsByUsername,
     copyArtistsByUsername,
+    copyArtistById,
     getArtistById,
     createArtist,
     updateArtist,
@@ -30,6 +31,7 @@ router.get('/:id', requireAuth, getArtistById);
 
 // Protected routes - require approval for mutations
 router.post('/', requireAuth, requireApproval, createArtist);
+router.post('/:id/copy', requireAuth, requireApproval, copyArtistById);
 router.put('/:id', requireAuth, requireApproval, updateArtist);
 router.delete('/:id', requireAuth, requireApproval, deleteArtist);
 

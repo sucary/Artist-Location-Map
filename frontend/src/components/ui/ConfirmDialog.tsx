@@ -34,7 +34,7 @@ const confirmButtonClasses: Record<ConfirmDialogVariant, string> = {
     default: 'text-primary-contrast hover:bg-primary-contrast/10',
     danger: 'text-[#DC2626] hover:bg-[#DC2626]/10',
     warning: 'text-warning hover:bg-warning/10',
-    success: 'text-success hover:bg-success/10',
+    success: 'text-text-secondary hover:bg-surface-muted hover:text-text',
     error: 'text-[#DC2626] hover:bg-[#DC2626]/10',
 };
 
@@ -78,7 +78,7 @@ export function ConfirmDialog({
                 aria-labelledby={titleId}
                 aria-describedby={contentId}
                 tabIndex={-1}
-                className="relative w-[calc(100vw-1rem)] max-w-80 rounded-xl border border-border bg-surface p-4 shadow-xl focus:outline-none sm:w-80"
+                className="relative w-[calc(100vw-1rem)] max-w-80 rounded-xl border border-border bg-surface p-4 pb-2 shadow-xl focus:outline-none sm:w-80"
             >
                 <h2 id={titleId} className={cn('text-base font-semibold', variantLabelClasses[variant])}>
                     {title}
@@ -90,7 +90,12 @@ export function ConfirmDialog({
                     {cancelLabel && onCancel && (
                         <button
                             type="button"
-                            className={cn(actionButtonClass, 'text-text-secondary hover:bg-surface-muted hover:text-text')}
+                            className={cn(
+                                actionButtonClass,
+                                confirmButtonVariant === 'secondary'
+                                    ? 'text-text-muted hover:bg-surface-muted hover:text-text'
+                                    : 'text-text-secondary hover:bg-surface-muted hover:text-text'
+                            )}
                             onClick={onCancel}
                             disabled={isLoading}
                         >

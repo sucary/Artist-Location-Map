@@ -26,6 +26,8 @@ interface ArtistListProps {
     onAddGig?: (artist: Artist) => void;
     onCopyCollection?: (artistCount: number) => void;
     isCopyingCollection?: boolean;
+    onCopyArtist?: (artist: Artist) => void;
+    copyingArtistId?: string | null;
     onShare?: () => void;
 }
 
@@ -68,6 +70,8 @@ const ArtistList = ({
     onAddGig,
     onCopyCollection,
     isCopyingCollection = false,
+    onCopyArtist,
+    copyingArtistId = null,
     onShare
 }: ArtistListProps) => {
     const { t } = useTranslation();
@@ -228,6 +232,14 @@ const ArtistList = ({
         const addGigButton = target.closest('[data-action="add-gig"]');
         const editButton = target.closest('[data-action="edit"]');
         const deleteButton = target.closest('[data-action="delete"]');
+        const copyButton = target.closest('[data-action="copy"]');
+
+        if (copyButton && onCopyArtist) {
+            e.preventDefault();
+            e.stopPropagation();
+            onCopyArtist(selectedArtist);
+            return;
+        }
 
         if (addGigButton && onAddGig) {
             e.preventDefault();
@@ -263,6 +275,8 @@ const ArtistList = ({
                         artist={selectedArtist}
                         showActions={!!(onEditArtist || onDeleteArtist)}
                         onAddGig={onAddGig}
+                        onCopyArtist={onCopyArtist}
+                        isCopyingArtist={copyingArtistId === selectedArtist.id}
                         locationLanguage={locationLanguage}
                         artistNameDisplayMode={artistNameDisplayMode}
                         hideWebsite={viewingFeatured}

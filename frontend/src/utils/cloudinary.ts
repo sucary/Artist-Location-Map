@@ -37,6 +37,28 @@ const BASE_PORTRAIT_MAX_HEIGHT = 1920;
 const BASE_SQUARE_MAX_SIZE = 1080;
 const QUALITY_TIER_SMALL_FILE = 2 * 1024 * 1024;
 const QUALITY_TIER_MEDIUM_FILE = 3.5 * 1024 * 1024;
+type ImageInputKind = 'jpeg' | 'png' | 'webp' | 'heic';
+
+const INPUT_IMAGE_TYPES: Record<string, ImageInputKind> = {
+  'image/jpeg': 'jpeg',
+  'image/jpg': 'jpeg',
+  'image/pjpeg': 'jpeg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heic',
+  'image/heic-sequence': 'heic',
+  'image/heif-sequence': 'heic',
+};
+
+const INPUT_IMAGE_EXTENSIONS: Record<string, ImageInputKind> = {
+  jpg: 'jpeg',
+  jpeg: 'jpeg',
+  png: 'png',
+  webp: 'webp',
+  heic: 'heic',
+  heif: 'heic',
+};
 
 export interface ArtistMediaAssetStatus {
   hasAsset: boolean;
@@ -51,10 +73,21 @@ export interface ArtistMediaAssetStatus {
 /**
  * Validates image file before upload
  */
+function getFileExtension(fileName: string): string {
+  return fileName.split('.').pop()?.toLowerCase() || '';
+}
+
+function getImageInputKind(file: File): ImageInputKind | null {
+  const mimeKind = INPUT_IMAGE_TYPES[file.type.toLowerCase()];
+  if (mimeKind) return mimeKind;
+
+  // iOS Safari can provide Photos library files with an empty or generic MIME type.
+  return INPUT_IMAGE_EXTENSIONS[getFileExtension(file.name)] ?? null;
+}
+
 export const validateImageFile = (file: File): string | null => {
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
-    return 'Only JPG, PNG, and WebP images are allowed';
+  if (!getImageInputKind(file)) {
+    return 'Only JPG, PNG, WebP, HEIC, and HEIF images are allowed';
   }
 
   if (file.size > MAX_INPUT_IMAGE_SIZE) {
@@ -131,7 +164,8 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number):
 }
 
 function replaceExtension(fileName: string, extension: string): string {
-  return fileName.replace(/\.[^.]+$/, '') + `.${extension}`;
+  const baseName = fileName.replace(/\.[^.]+$/, '') || 'artist-image';
+  return `${baseName}.${extension}`;
 }
 
 // Original size picks conservative normalized encoding targets
@@ -147,8 +181,8 @@ function getQualityCandidates(fileSize: number): number[] {
   return [0.94, 0.92, 0.9];
 }
 
-function getNormalizedImageOutputs(file: File): Array<{ type: string; extension: string; qualities: number[] }> {
-  if (file.type === 'image/png') {
+function getNormalizedImageOutputs(file: File, inputKind: ImageInputKind): Array<{ type: string; extension: string; qualities: number[] }> {
+  if (inputKind === 'png') {
     // WebP fallback preserves transparency when resized PNG remains too large
     return [
       { type: 'image/png', extension: 'png', qualities: [1] },
@@ -156,54 +190,109 @@ function getNormalizedImageOutputs(file: File): Array<{ type: string; extension:
     ];
   }
 
-  if (file.type === 'image/webp') {
+  if (inputKind === 'webp') {
     return [{ type: 'image/webp', extension: 'webp', qualities: getQualityCandidates(file.size) }];
   }
 
   return [{ type: 'image/jpeg', extension: 'jpg', qualities: getQualityCandidates(file.size) }];
 }
 
-async function normalizeImageFile(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
+type LoadedCanvasImage = {
+  source: ImageBitmap | HTMLImageElement;
+  width: number;
+  height: number;
+  close: () => void;
+};
 
-  if (
-    file.size <= MAX_NORMALIZED_IMAGE_SIZE &&
-    isWithinOutputResolution(bitmap.width, bitmap.height, file.size)
-  ) {
-    bitmap.close?.();
-    return file;
-  }
+function loadHtmlImage(file: File): Promise<LoadedCanvasImage> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
 
-  const dimensions = getTargetDimensions(bitmap.width, bitmap.height, file.size);
-  const canvas = document.createElement('canvas');
-  canvas.width = dimensions.width;
-  canvas.height = dimensions.height;
+    image.onload = () => {
+      resolve({
+        source: image,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        close: () => {
+          image.removeAttribute('src');
+          URL.revokeObjectURL(objectUrl);
+        },
+      });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Could not read this image file'));
+    };
+    image.src = objectUrl;
+  });
+}
 
-  const context = canvas.getContext('2d', { alpha: file.type === 'image/png' || file.type === 'image/webp' });
-  if (!context) {
-    bitmap.close?.();
-    throw new Error('Image normalization is not supported in this browser');
-  }
-
-  // Browser high-quality resampling for dimension-only normalization
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-  context.drawImage(bitmap, 0, 0, dimensions.width, dimensions.height);
-
-  for (const output of getNormalizedImageOutputs(file)) {
-    for (const quality of output.qualities) {
-      const blob = await canvasToBlob(canvas, output.type, quality);
-      if (blob.size <= MAX_NORMALIZED_IMAGE_SIZE) {
-        bitmap.close?.();
-        return new File([blob], replaceExtension(file.name, output.extension), {
-          type: output.type,
-          lastModified: Date.now(),
-        });
-      }
+async function loadCanvasImage(file: File, inputKind: ImageInputKind): Promise<LoadedCanvasImage> {
+  if (inputKind !== 'heic' && 'createImageBitmap' in window) {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return {
+        source: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+        close: () => bitmap.close?.(),
+      };
+    } catch {
+      // Safari can fail createImageBitmap for File/Blob inputs that <img> can decode.
     }
   }
 
-  bitmap.close?.();
+  return loadHtmlImage(file);
+}
+
+async function normalizeImageFile(file: File): Promise<File> {
+  const inputKind = getImageInputKind(file);
+  if (!inputKind) {
+    throw new Error('Only JPG, PNG, WebP, HEIC, and HEIF images are allowed');
+  }
+
+  const image = await loadCanvasImage(file, inputKind);
+
+  try {
+    if (
+      inputKind !== 'heic' &&
+      file.size <= MAX_NORMALIZED_IMAGE_SIZE &&
+      isWithinOutputResolution(image.width, image.height, file.size)
+    ) {
+      return file;
+    }
+
+    const dimensions = getTargetDimensions(image.width, image.height, file.size);
+    const canvas = document.createElement('canvas');
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+
+    const context = canvas.getContext('2d', { alpha: inputKind === 'png' || inputKind === 'webp' });
+    if (!context) {
+      throw new Error('Image normalization is not supported in this browser');
+    }
+
+    // Browser high-quality resampling for dimension-only normalization
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image.source, 0, 0, dimensions.width, dimensions.height);
+
+    for (const output of getNormalizedImageOutputs(file, inputKind)) {
+      for (const quality of output.qualities) {
+        const blob = await canvasToBlob(canvas, output.type, quality);
+        if (blob.size <= MAX_NORMALIZED_IMAGE_SIZE) {
+          return new File([blob], replaceExtension(file.name, output.extension), {
+            type: output.type,
+            lastModified: Date.now(),
+          });
+        }
+      }
+    }
+  } finally {
+    image.close();
+  }
+
   throw new Error('Image could not be resized under 5 MB without reducing quality too much');
 }
 

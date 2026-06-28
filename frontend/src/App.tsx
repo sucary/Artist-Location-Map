@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import axios from 'axios';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './App.css';
-import { copyArtistCollectionByUsername, createGig, deleteArtist, deleteGig, deleteTour, getArtistsByUsername, getFeaturedArtists, getGigs, getTours, updateArtist, updateGig, updateProfile } from './services/api';
+import { copyArtistCollectionByUsername, copyArtistById, createGig, deleteArtist, deleteGig, deleteTour, getArtistsByUsername, getFeaturedArtists, getGigs, getTours, updateArtist, updateGig, updateProfile } from './services/api';
 import MapView from './components/Map/MapView';
 import ArtistForm from './components/ArtistForm/ArtistForm';
 import ArtistList from './components/ArtistList';
@@ -13,6 +14,7 @@ import ViewGigCalendarButton from './components/Map/buttons/ViewGigCalendarButto
 import ViewArtistListButton from './components/Map/buttons/ViewArtistListButton';
 import TourModeButton from './components/Map/buttons/TourModeButton';
 import { AccountButton } from './components/Auth/AccountButton';
+import { LanguageDropdown } from './components/Auth/LanguageDropdown';
 import { NotificationButton } from './components/Notifications/NotificationButton';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { MainSearch } from './components/MainSearch';
@@ -26,7 +28,7 @@ import { UserNotFound } from './components/UserNotFound';
 import { supabase } from './lib/supabase';
 import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 import { useTutorialText, type TutorialAction } from './components/Tutorial/TutorialText';
-import { ConfirmDialog, Toast, type ConfirmDialogVariant } from './components/ui';
+import { ConfirmDialog, Toast, type ConfirmDialogVariant, type ButtonProps } from './components/ui';
 import { Trans, useTranslation } from 'react-i18next';
 import { TransStrong } from './components/i18n/TransComponents';
 import { GigForm } from './components/Tour/GigForm';
@@ -43,6 +45,7 @@ interface AppDialogState {
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: ConfirmDialogVariant;
+    confirmButtonVariant?: ButtonProps['variant'];
     dimBackdrop?: boolean;
     onConfirm: () => void | Promise<void>;
 }
@@ -124,6 +127,7 @@ function App() {
     const [focusedArtist, setFocusedArtist] = useState<Artist | null>(null);
     const [focusedGigId, setFocusedGigId] = useState<string | null>(null);
     const [isCopyingCollection, setIsCopyingCollection] = useState(false);
+    const [copyingArtistId, setCopyingArtistId] = useState<string | null>(null);
     const [isMobileLayout, setIsMobileLayout] = useState(getIsMobileLayout);
     const [artistPopupOpen, setArtistPopupOpen] = useState(false);
     const [artistListCardOpen, setArtistListCardOpen] = useState(false);
@@ -442,12 +446,14 @@ function App() {
     const showAppMessage = useCallback((
         title: string,
         message: ReactNode,
-        variant: ConfirmDialogVariant = 'default'
+        variant: ConfirmDialogVariant = 'default',
+        confirmButtonVariant?: ButtonProps['variant']
     ) => {
         setAppDialog({
             title,
             message,
             variant,
+            confirmButtonVariant,
             confirmLabel: t('common.ok'),
             onConfirm: () => setAppDialog(null),
         });
@@ -919,6 +925,7 @@ function App() {
                 </>
             ),
             variant: 'default',
+            confirmButtonVariant: 'secondary',
             confirmLabel: t('common.copy'),
             cancelLabel: t('common.cancel'),
             onConfirm: async () => {
@@ -941,6 +948,88 @@ function App() {
                     );
                 } finally {
                     setIsCopyingCollection(false);
+                    setAppDialogLoading(false);
+                }
+            },
+        });
+    };
+
+    const handleCopyArtist = (artist: Artist) => {
+        if (!user || !profile?.isApproved || copyingArtistId) {
+            return;
+        }
+
+        const artistName = artist.name;
+
+        setAppDialog({
+            title: t('app.dialogs.copyArtist.title'),
+            message: (
+                <p>
+                    <Trans
+                        i18nKey="app.dialogs.copyArtist.message"
+                        values={{ name: artistName }}
+                        components={{
+                            name: <TransStrong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" />,
+                        }}
+                    />
+                </p>
+            ),
+            variant: 'default',
+            confirmButtonVariant: 'secondary',
+            confirmLabel: t('common.copy'),
+            cancelLabel: t('common.cancel'),
+            onConfirm: async () => {
+                setAppDialogLoading(true);
+                setCopyingArtistId(artist.id);
+                try {
+                    const result = await copyArtistById(artist.id);
+                    if (result.copied > 0) {
+                        await queryClient.invalidateQueries({ queryKey: ['artists'] });
+                        setAppDialog(null);
+                        setToastMessage(t('app.dialogs.copyArtist.successToast', { name: artistName }));
+                    } else {
+                        // Already in the user's map (deduped server-side).
+                        showAppMessage(
+                            t('app.dialogs.copyArtist.alreadyExistsTitle'),
+                            <p>
+                                <Trans
+                                    i18nKey="app.dialogs.copyArtist.alreadyExistsMessage"
+                                    values={{ name: artistName }}
+                                    components={{ name: <TransStrong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" /> }}
+                                />
+                            </p>,
+                            'default',
+                            'secondary'
+                        );
+                    }
+                } catch (error) {
+                    // Copying an artist already in the map can surface either as a
+                    // deduped no-op (handled above) or, when it's the viewer's own
+                    // artist, as a 400 from the API. Both mean "already in your map".
+                    const alreadyInMap = axios.isAxiosError(error) && error.response?.status === 400;
+                    if (alreadyInMap) {
+                        showAppMessage(
+                            t('app.dialogs.copyArtist.alreadyExistsTitle'),
+                            <p>
+                                <Trans
+                                    i18nKey="app.dialogs.copyArtist.alreadyExistsMessage"
+                                    values={{ name: artistName }}
+                                    components={{ name: <TransStrong className="font-semibold text-primary-contrast app-dark:text-primary-text-dark" /> }}
+                                />
+                            </p>,
+                            'default',
+                            'secondary'
+                        );
+                    } else {
+                        console.error('Failed to copy artist:', error);
+                        showAppMessage(
+                            t('app.dialogs.copyArtist.errorTitle'),
+                            t('app.dialogs.copyArtist.errorMessage'),
+                            'error'
+                        );
+                    }
+                } finally {
+                    setCopyingArtistId(null);
                     setAppDialogLoading(false);
                 }
             },
@@ -1015,6 +1104,11 @@ function App() {
                     <div className="z-[1250]">
                         {user && <NotificationButton onOpenChange={setNotificationMenuOpen} />}
                     </div>
+                    {!user && (
+                        <div className="z-[1100] hidden sm:block">
+                            <LanguageDropdown />
+                        </div>
+                    )}
                     <div className={`z-[1100] ${!user ? 'hidden sm:block' : ''}`}>
                         <AccountButton
                             showAuthModal={showAuthModal}
@@ -1165,6 +1259,8 @@ function App() {
                     onAddGig={tourMode.active && !isViewingOther && !viewingFeatured ? handleAddGigForArtist : undefined}
                     onCopyCollection={isViewingOther && !viewingFeatured && user && profile?.isApproved ? handleCopyArtistCollection : undefined}
                     isCopyingCollection={isCopyingCollection}
+                    onCopyArtist={(isViewingOther || viewingFeatured) && user && profile?.isApproved ? handleCopyArtist : undefined}
+                    copyingArtistId={copyingArtistId}
                     onShare={!isViewingOther && !viewingFeatured && !!user && !!profile?.username && !profile.isPrivate ? handleShareMyMap : undefined}
                 />
             )}
@@ -1187,6 +1283,7 @@ function App() {
                     open
                     title={appDialog.title}
                     variant={appDialog.variant}
+                    confirmButtonVariant={appDialog.confirmButtonVariant}
                     confirmLabel={appDialog.confirmLabel}
                     cancelLabel={appDialog.cancelLabel}
                     isLoading={appDialogLoading}
@@ -1208,6 +1305,8 @@ function App() {
                 onLocationPick={handleLocationPick}
                 onEditArtist={isViewingOther || viewingFeatured || !user ? undefined : handleEditArtist}
                 onDeleteArtist={isViewingOther || viewingFeatured || !user ? undefined : handleDeleteArtist}
+                onCopyArtist={(isViewingOther || viewingFeatured) && user && profile?.isApproved ? handleCopyArtist : undefined}
+                copyingArtistId={copyingArtistId}
                 onEditGig={tourMode.active ? handleEditGig : undefined}
                 onDeleteGig={tourMode.active ? handleDeleteGig : undefined}
                 starredGigIds={starredGigIds}

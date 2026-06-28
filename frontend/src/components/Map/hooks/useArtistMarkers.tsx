@@ -795,6 +795,7 @@ interface UseArtistMarkersOptions {
     setSelectedCityId: Dispatch<SetStateAction<string | null>>;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
+    onCopyArtist?: (artist: Artist) => void;
     onArtistPopupOpenChange?: (open: boolean) => void;
     artistPopupLifecycleRef?: RefObject<ArtistPopupLifecycleState>;
     canAdjustDisplayCoordinates?: boolean;
@@ -825,6 +826,7 @@ export const useArtistMarkers = ({
     setSelectedCityId,
     onEditArtist,
     onDeleteArtist,
+    onCopyArtist,
     onArtistPopupOpenChange,
     artistPopupLifecycleRef,
     canAdjustDisplayCoordinates = false,
@@ -858,6 +860,7 @@ export const useArtistMarkers = ({
         locationLanguage,
         onEditArtist,
         onDeleteArtist,
+        onCopyArtist,
         view,
         renderPopupContent,
         starredGigIds,
@@ -977,12 +980,13 @@ export const useArtistMarkers = ({
             locationLanguage,
             onEditArtist,
             onDeleteArtist,
+            onCopyArtist,
             view,
             renderPopupContent,
             starredGigIds,
             onToggleGigStar,
         };
-    }, [locationLanguage, onDeleteArtist, onEditArtist, onToggleGigStar, renderPopupContent, starredGigIds, view]);
+    }, [locationLanguage, onCopyArtist, onDeleteArtist, onEditArtist, onToggleGigStar, renderPopupContent, starredGigIds, view]);
 
     useEffect(() => {
         displayCoordinateEditOptionsRef.current = {
@@ -1487,20 +1491,24 @@ export const useArtistMarkers = ({
         const map = mapRef.current;
         if (!map) return;
 
-        setArtistPopupLifecycle(true);
+        // Remove any existing popup first so its close handler (which marks the
+        // popup lifecycle closed) runs before we mark this new popup open.
+        // Otherwise, switching markers directly leaves the lifecycle flagged
+        // closed while the new popup is open.
         activePopupRef.current?.remove();
         activePopupRef.current = null;
+        setArtistPopupLifecycle(true);
         clearFocusedMarkerElements();
 
         const popupContainer = document.createElement('div');
         const root = createRoot(popupContainer);
-        const { locationLanguage, onEditArtist, onDeleteArtist, view, renderPopupContent } = popupOptionsRef.current;
+        const { locationLanguage, onEditArtist, onDeleteArtist, onCopyArtist, view, renderPopupContent } = popupOptionsRef.current;
         const showActions = !!(onEditArtist || onDeleteArtist);
         // React renders the content, MapLibre places the popup
         root.render(
             renderPopupContent
                 ? renderPopupContent(artist, showActions)
-                : <ArtistCard artist={artist} showActions={showActions} locationLanguage={locationLanguage} />
+                : <ArtistCard artist={artist} showActions={showActions} onCopyArtist={onCopyArtist} locationLanguage={locationLanguage} />
         );
 
         const popup = new maplibregl.Popup({
@@ -1526,12 +1534,21 @@ export const useArtistMarkers = ({
         }
         setSelectedCityId(view === 'active' ? artist.activeCityId : artist.originalCityId);
 
-        const handleClick = (event: MouseEvent) => {
+        const handleClick = (event: Event) => {
             const target = event.target as HTMLElement;
             const editButton = target.closest('[data-action="edit"]');
             const deleteButton = target.closest('[data-action="delete"]');
+            const copyButton = target.closest('[data-action="copy"]');
+            const { onCopyArtist: onCopyArtistLatest } = popupOptionsRef.current;
 
-            if (editButton && onEditArtist) {
+            if (copyButton && onCopyArtistLatest) {
+                // Keep the popup open; the success toast confirms the copy.
+                // preventDefault on touchend suppresses the synthesized click so
+                // the copy is not triggered twice on touch devices.
+                event.preventDefault();
+                event.stopPropagation();
+                onCopyArtistLatest(artist);
+            } else if (editButton && onEditArtist) {
                 event.preventDefault();
                 event.stopPropagation();
                 popup.remove();
@@ -1543,10 +1560,14 @@ export const useArtistMarkers = ({
             }
         };
 
+        // Bind both click and touchend: on touch devices the popup content does
+        // not reliably synthesize a click, so touchend is what actually fires.
         popupContainer.addEventListener('click', handleClick);
+        popupContainer.addEventListener('touchend', handleClick);
         popup.on('close', () => {
             // Remove listeners and React state owned by this popup
             popupContainer.removeEventListener('click', handleClick);
+            popupContainer.removeEventListener('touchend', handleClick);
             if (focusMarker) {
                 marker.getElement().classList.remove('marker-focused');
             }
@@ -1589,9 +1610,13 @@ export const useArtistMarkers = ({
         const map = mapRef.current;
         if (!map) return;
 
-        setArtistPopupLifecycle(true);
+        // Remove any existing popup first so its close handler (which marks the
+        // popup lifecycle closed) runs before we mark this new popup open.
+        // Otherwise, switching markers directly leaves the lifecycle flagged
+        // closed while the new popup is open.
         activePopupRef.current?.remove();
         activePopupRef.current = null;
+        setArtistPopupLifecycle(true);
         clearFocusedMarkerElements();
 
         const { onEditArtist, onDeleteArtist, starredGigIds, onToggleGigStar } = popupOptionsRef.current;

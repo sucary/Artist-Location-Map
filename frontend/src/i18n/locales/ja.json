@@ -2,67 +2,68 @@
   "common": {
     "appName": "Achizu",
     "search": "検索",
-    "cancel": "キャンセル",
+    "cancel": "キャンセ�?,
     "ok": "OK",
     "save": "保存",
-    "saving": "保存中",
-    "close": "閉じる",
-    "dismiss": "閉じる",
-    "loading": "読み込み中",
-    "error": "エラー",
+    "saving": "保存�?,
+    "close": "閉じ�?,
+    "dismiss": "閉じ�?,
+    "loading": "読み込み�?,
+    "error": "エラ�?,
     "redirectToMap": "地図へ移動しています",
-    "backToMap": "地図に戻る",
+    "backToMap": "地図に戻�?,
     "delete": "削除",
-    "copy": "コピー",
+    "copy": "コピ�?,
     "edit": "編集",
     "optional": "任意",
     "apply": "適用",
     "city": "市区町村",
     "create": "作成",
-    "expand": "展開"
+    "expand": "展開",
+    "selectLanguage": "訢�語を選択"
   },
   "auth": {
     "fields": {
-      "email": "メールアドレス",
-      "password": "パスワード",
-      "confirmPassword": "パスワード確認",
+      "email": "メールアドレ�?,
+      "password": "パスワー�?,
+      "confirmPassword": "パスワード確�?,
       "currentPassword": "現在のパスワード",
       "newPassword": "新しいパスワード",
       "confirmNewPassword": "新しいパスワード確認"
     },
     "buttons": {
       "signIn": "ログイン",
-      "signUp": "アカウントを作成",
+      "signUp": "ゃ6�9��ウントを作成",
       "sendResetLink": "リセットリンクを送信",
-      "backToSignIn": "ログインに戻る",
+      "backToSignIn": "ログインに戻�?,
       "showPassword": "パスワードを表示",
-      "hidePassword": "パスワードを非表示",
-      "rememberMe": "ログイン状態を保存",
+      "hidePassword": "パスワードを非表�?,
+      "rememberMe": "ログイン状態を保�?,
       "done": "完了",
-      "resend": "再送信",
+      "resend": "再��信",
       "resetPassword": "パスワードをリセット"
     },
     "signIn": {
       "title": "ログイン",
-      "forgotPassword": "パスワードをお忘れですか？",
-      "dontHaveAccount": "アカウントをお持ちではありませんか？",
-      "rejectedAccountHint": "登録が拒否された場合、このアカウントではログインできません。管理者に連絡するか、再登録してください。",
-      "or": "または"
+      "forgotPassword": "パスワードをお忘れですか�?,
+      "dontHaveAccount": "ゃ6�9��ウントをお持ちではありませんか？",
+      "rejectedAccountHint": "登録が拒否された場合、このアカウントではログインできません��管理��に連絡するか��再登録してください�?,
+      "or": "また�?
     },
     "signUp": {
-      "title": "アカウントを作成",
+      "title": "ゃ6�9��ウントを作成",
       "haveAccount": "すでにアカウントをお持ちですか？"
     },
     "resetPassword": {
       "title": "パスワードをリセット",
-      "description": "メールアドレスを入力してください。パスワードリセットリンクをお送りします。",
-      "authSessionExpired": "セッションの有効期限が切れました。新しいリセットリンクをリクエストしてください。",
-      "updating": "パスワードを更新しています",
+      "description": "メールアドレスを入力してください。パスワードリセットリンクをお��りします��?,
+      "authSessionExpired": "セッションの有効期限が切れました。新しいリセットリンクをリクエストしてください��?,
+      "updating": "パスワードを更新していま�?,
       "passwordUpdated": "パスワードを更新しました"
     },
     "emailCheck": {
       "title": "メールを確認してください",
-      "message": "{{email}} に確認リンクを送信しました。メールをご確認のうえ、リンクをクリックして続行してください。",
+      "message": "{{email}} に確認リンクを��信しました。メールをご確認のうえ��リンクをクリックして続行してください��?,
       "expiresIn": "確認リンクは15分後に期限切れになります"
     },
     "messages": {
@@ -71,109 +72,109 @@
     },
     "userNamePrompt": {
       "title": "ユーザー名を作成",
-      "description": "他のユーザーは、ユーザー名であなたを見つけられます",
-      "subdescription": "ユーザー名と公開設定は、あとから設定で変更できます",
-      "usernameLabel": "ユーザー名",
+      "description": "他のユーザーは��ユーザー名であなたを見つけられます",
+      "subdescription": "ユーザー名と公開設定は��あとから設定で変更できます",
+      "usernameLabel": "ユーザー�?,
       "usernamePlaceholder": "ユーザー名を入力してください",
       "usernameAvailable": "このユーザー名は使用できます",
-      "notApprovedNotice": "登録が拒否された場合、このアカウントは使用できない可能性があります。管理者に連絡するか、再登録してください。",
+      "notApprovedNotice": "登録が拒否された場合、このアカウントは使用できない可能��があります。管理��に連絡するか��再登録してください�?,
       "submit": "続行"
     },
     "errors": {
       "emailRequired": "メールアドレスを入力してください",
-      "validEmail": "正しいメールアドレスを入力してください",
-      "emailExists": "このメールアドレスはすでに登録されています。以前使用した方法でログインしてください。",
+      "validEmail": "正しいメールゃ6�9��レスを入力してくださ�?,
+      "emailExists": "このメールアドレスはすでに登録されています��以前使用した方法でログインしてください�?,
       "passwordRequired": "パスワードを入力してください",
-      "passwordMin": "パスワードは6文字以上にしてください",
+      "passwordMin": "パスワードは6文字以上にしてくださ�?,
       "confirmPasswordRequired": "パスワードを確認してください",
-      "passwordsMatch": "パスワードが一致しません",
-      "incorrectCredentials": "メールアドレスまたはパスワードが間違っています",
-      "unexpectedError": "予期しないエラーが発生しました。もう一度お試しください。",
-      "authEmailLimitReached": "パスワードリセットメールの1日の送信上限に達しました。しばらくしてからもう一度お試しください。",
-      "registrationEmailLimitReached": "登録確認メールの1日の送信上限に達しました。しばらくしてからもう一度お試しください。",
-      "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか、サポートにお問い合わせください。",
-      "userNameMin": "ユーザー名は3文字以上にしてください",
-      "userNameMax": "ユーザー名は32文字以内にしてください",
-      "userNamePattern": "ユーザー名には小文字の英字、数字、アンダースコアのみ使用できます",
-      "userNameTaken": "そのユーザー名はすでに登録されています。新しいユーザー名を入力してください。",
-      "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください。",
-      "resendEmailFailed": "メールを再送信できませんでした。もう一度お試しください。",
-      "confirmationExpired": "確認リンクの有効期限が切れました。もう一度登録してください。"
+      "passwordsMatch": "パスワードが丢�致しませ�?,
+      "incorrectCredentials": "メールアドレスまたはパスワードが間違っていま�?,
+      "unexpectedError": "予期しないエラーが発生しました��もう一度お試しください�?,
+      "authEmailLimitReached": "パスワードリセットメール�?日の送信上限に達しました。しばらくしてからもう一度お試しください�?,
+      "registrationEmailLimitReached": "登録確認メールの1日の送信上限に達しました。しばらくしてからもう一度お試しください�?,
+      "unableToSignIn": "{{provider}}でログインできません。別の方法を試すか��サポートにお問い合わせください�?,
+      "userNameMin": "ユーザー名は3文字以上にしてくださ�?,
+      "userNameMax": "ユーザー名は32文字以内にしてくださ�?,
+      "userNamePattern": "ユーザー名には小文字の英字��数字��アンダースコアのみ使用できます",
+      "userNameTaken": "そのユーザー名はすでに登録されています��新しいユーザー名を入力してください�?,
+      "unableToSaveUsername": "ユーザー名を保存できませんでした。もう一度お試しください�?,
+      "resendEmailFailed": "メールを再��信できませんでした。もう一度お試しください�?,
+      "confirmationExpired": "確認リンクの有効期限が切れました。もう一度登録してください��?
     }
   },
   "approval": {
-    "title": "アカウント承認待ち",
-    "description": "アカウントは管理者の承認待ちです",
-    "pending": "アカウントは承認待ちです",
-    "approved": "アカウントが承認されました。ログインできます。",
-    "rejected": "アカウント申請は承認されませんでした"
+    "title": "ゃ6�9��ウント承認待�?,
+    "description": "ゃ6�9��ウントは管理者の承認待ちです",
+    "pending": "ゃ6�9��ウントは承認待ちです",
+    "approved": "ゃ6�9��ウントが承認されました��ログインできます��?,
+    "rejected": "ゃ6�9��ウント申請は承認されませんでした"
   },
   "userMenu": {
     "settings": "設定",
     "feedback": "フィードバックを送る",
     "adminDashboard": {
-      "title": "管理ダッシュボード"
+      "title": "管理モ�ッシュボード"
     },
-    "signOut": "ログアウト",
-    "accountMenu": "アカウントメニュー"
+    "signOut": "ログゃ6�9���?,
+    "accountMenu": "ゃ6�9��ウントメニュ�?
   },
   "feedback": {
     "title": "フィードバックを送る",
-    "description": "バグの報告やご提案がありましたらお知らせください。",
-    "placeholder": "ご意見をご記入ください...",
+    "description": "バグの報告やご提案がありましたらお知らせください�?,
+    "placeholder": "ご意見をご記入くださ�?..",
     "submit": "送信",
     "success": "フィードバックありがとうございます！",
-    "error": "フィードバックを送信できませんでした。もう一度お試しください。"
+    "error": "フィードバックを送信できませんでした。もう一度お試しください�?
   },
   "location": {
-    "searchPlaceholder": "場所を検索"
+    "searchPlaceholder": "場所を検�?
   },
   "artistForm": {
     "fields": {
-      "name": "アーティスト名",
-      "originalLocation": "出身地",
+      "name": "ゃ6�9��ティスト�?,
+      "originalLocation": "出身�?,
       "searchOriginalLocation": "出身地を検索",
-      "activeLocation": "活動地",
+      "activeLocation": "活動�?,
       "searchActiveLocation": "活動地を検索",
       "careerYears": "活動期間",
-      "debutYear": "デビュー年",
+      "debutYear": "デビュー�?,
       "debut": "デビュー",
       "present": "現在",
-      "inactiveYear": "活動終了年",
+      "inactiveYear": "活動終了�?,
       "inactive": "活動終了"
     },
     "alts": {
-      "avatar": "アーティスト画像"
+      "avatar": "ゃ6�9��ティスト画像"
     },
     "defaults": {
-      "newArtist": "新しいアーティスト"
+      "newArtist": "新しいアーティス�?
     },
     "buttons": {
-      "editBanner": "アーティストのバナーを編集",
-      "editAvatar": "アーティストのアバターを編集",
+      "editBanner": "ゃ6�9��ティストのバナーを編�?,
+      "editAvatar": "ゃ6�9��ティストのアバターを編集",
       "imageSourceMenu": "画像ソースの選択",
-      "uploadFromDevice": "端末からアップロード",
-      "uploadFromUrl": "Web URLを使用",
-      "editName": "アーティスト名を編集",
-      "uploadAvatar": "画像をアップロード",
+      "uploadFromDevice": "端末からゃ6�9��プロード",
+      "uploadFromUrl": "Web URLを使�?,
+      "editName": "ゃ6�9��ティスト名を編集",
+      "uploadAvatar": "画像をアップロー�?,
       "save": "保存",
-      "cancel": "キャンセル",
-      "copyOriginalToActive": "出身地を活動地にコピー",
-      "setInactive": "活動終了にする",
+      "cancel": "キャンセ�?,
+      "copyOriginalToActive": "出身地を活動地にコピ�?,
+      "setInactive": "活動終了にす�?,
       "setActive": "活動中にする",
       "confirm": "確認",
       "continue": "続行"
     },
     "imageSource": {
-      "avatarTitle": "Web URLから画像を追加",
-      "bannerTitle": "Web URLから画像を追加",
-      "description": "• 対応形式: JPG、JPEG、PNG、WebP\n• ファイルサイズ ≤ 5 MB\n• 解像度 ≤ 1920×1080（1080p）",
+      "avatarTitle": "Web URLから画像を追�?,
+      "bannerTitle": "Web URLから画像を追�?,
+      "description": "�?対応形式: JPG、JPEG、PNG、WebP\n�?ファイルサイ�?�?5 MB\n�?解像�?�?1920×1080�?080p�?,
       "inputLabel": "画像URL",
       "placeholder": "https://example.com/image.jpg",
-      "useUrl": "アップロード"
+      "useUrl": "ゃ6�9��プロード"
     },
     "socialMedia": {
-      "title": "ソーシャルメディア",
+      "title": "ソーシャルメディ�?,
       "website": "公式サイトURL",
       "instagram": "Instagram URL",
       "twitter": "Twitter/X URL",
@@ -182,136 +183,136 @@
     },
     "cropper": {
       "title": "画像をトリミング",
-      "avatar": "アバター",
-      "banner": "バナー",
-      "reUpload": "再アップロード",
+      "avatar": "ゃ6�9��ター",
+      "banner": "バナ�?,
+      "reUpload": "再アップロー�?,
       "reset": "リセット",
       "resetToDefault": "デフォルトに戻す",
-      "zoom": "ズーム"
+      "zoom": "ズー�?
     },
     "locationSearch": {
-      "placeholder": "場所を検索",
-      "cancelSearch": "場所の検索をキャンセル",
-      "searchLocation": "場所を検索",
-      "manualSelect": "地図上で場所を選択",
-      "retry": "再試行",
-      "searching": "場所を検索しています",
+      "placeholder": "場所を検�?,
+      "cancelSearch": "場所の検紃6�9��キャンセ�?,
+      "searchLocation": "場所を検�?,
+      "manualSelect": "地図上で場所を選�?,
+      "retry": "再試�?,
+      "searching": "場所を検紃6�9��ています",
       "searchMore": "さらに結果を検索",
       "noResults": "結果が見つかりません",
       "errors": {
-        "searchTimedOut": "検索がタイムアウトしました。もう一度お試しください。",
-        "failedSearch": "場所を検索できませんでした。もう一度お試しください。",
+        "searchTimedOut": "検索がタイムゃ6�9��トしました��もう一度お試しください�?,
+        "failedSearch": "場所を検紃6�9��きませんでした��もう一度お試しください�?,
         "failedMore": "追加の検索結果を取得できませんでした",
-        "noLocationsAtPoint": "この地点では場所が見つかりませんでした。別の地点を試してください。"
+        "noLocationsAtPoint": "この地点では場所が見つかりませんでした��別の地点を試してください��?
       },
-      "failedHeader": "場所の検索に失敗しました",
-      "locationSelected": "場所を選択しました",
-      "detailedLocationRecommended": "より詳しい場所の選択をおすすめします"
+      "failedHeader": "場所の検紃6�9��失敗しました",
+      "locationSelected": "場所を選択しまし�?,
+      "detailedLocationRecommended": "より詳しい場扢�の選択をおすすめしま�?
     },
     "yearSelect": {
-      "placeholder": "年",
+      "placeholder": "�?,
       "label": "年を選択"
     },
     "errors": {
-      "nameRequired": "アーティスト名を入力してください",
+      "nameRequired": "ゃ6�9��ティスト名を入力してください",
       "originalLocationRequired": "出身地を入力してください",
       "activeLocationRequired": "活動地を入力してください",
-      "invalidWebsiteUrl": "有効なURLを入力してください（https://...）",
-      "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してください",
-      "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効です",
-      "invalidImageUrl": "有効な画像URLを入力してください",
-      "failedUploadImage": "画像をアップロードできませんでした。もう一度お試しください。",
-      "imageRequirements": "JPG、PNG、WebP形式で、5 MB以下の画像を使用してください",
-      "failedSaveArtist": "アーティストを保存できませんでした。もう一度お試しください。",
+      "invalidWebsiteUrl": "有効なURLを入力してください（https://...�?,
+      "invalidSocialProfileUrl": "有効な{{platform}}プロフィールURLを入力してくださ�?,
+      "invalidSocialLinkUrl": "ソーシャルリンクのURLが無効で�?,
+      "invalidImageUrl": "有効な画像URLを入力してくださ�?,
+      "failedUploadImage": "画像をアップロードできませんでした��もう一度お試しください�?,
+      "imageRequirements": "JPG、PNG、WebP形式で��? MB以下の画像を使用してください",
+      "failedSaveArtist": "ゃ6�9��ティストを保存できませんでした��もう一度お試しください�?,
       "imageUploadFailed": "画像のアップロードに失敗しました",
-      "saveArtistFailedHeader": "アーティストを保存できませんでした"
+      "saveArtistFailedHeader": "ゃ6�9��ティストを保存できませんでし�?
     },
     "mediaReview": {
       "requiresReviewTitle": "画像の確認が必要です",
-      "replaceSharedTitle": "共有画像を置き換えますか？",
-      "requiresReviewDescription": "このアーティストにはすでに共有画像があります。アップロードした画像は、全員に表示される前に管理者レビューへ送信されます。",
-      "replaceSharedDescription": "このアーティストにはすでに共有画像があります。管理者として続行すると、全員に表示される画像を置き換えます。",
-      "currentImage": "現在の画像",
-      "currentSharedArtistAlt": "現在の共有アーティスト画像",
-      "artistImageExistsTitle": "アーティスト画像はすでに存在します",
-      "sharedImageRecommendation": "ストレージ容量に限りがあるため、共有アーティスト画像の使用をおすすめします",
-      "submitForReviewDescription": "アップロードした画像のほうがアーティストをよく表している場合は、レビューに送信できます",
-      "chooseImage": "画像を選択",
+      "replaceSharedTitle": "共有画像を置き換えますか�?,
+      "requiresReviewDescription": "このゃ6�9��ティストにはすでに共有画像があります。アップロードした画像は、全員に表示される前に管理��レビューへ送信されます�?,
+      "replaceSharedDescription": "このゃ6�9��ティストにはすでに共有画像があります。管理��として続行すると��全員に表示される画像を置き換えます�?,
+      "currentImage": "現在の画�?,
+      "currentSharedArtistAlt": "現在の共有アーティスト画�?,
+      "artistImageExistsTitle": "ゃ6�9��ティスト画像はすでに存在しま�?,
+      "sharedImageRecommendation": "ストレージ容量に限りがあるため��共有アーティスト画像の使用をおすすめします",
+      "submitForReviewDescription": "ゃ6�9��プロードした画像のほうがゃ6�9��ティストをよく表している場合は��レビューに送信できます",
+      "chooseImage": "画像を選�?,
       "sharedImage": "共有画像",
-      "yourUpload": "アップロード画像",
-      "yourUploadedArtistAlt": "アップロードしたアーティスト画像"
+      "yourUpload": "ゃ6�9��プロード画像",
+      "yourUploadedArtistAlt": "ゃ6�9��プロードしたゃ6�9��ティスト画像"
     },
     "musicBrainz": {
-      "artistLabel": "アーティスト名",
+      "artistLabel": "ゃ6�9��ティスト�?,
       "deepSearch": "詳細検索",
-      "searchArtist": "アーティストを検索",
-      "artistSelected": "確認済みアーティストを選択しました",
-      "artistNotLinked": "アーティストはMusicBrainzにリンクされていません",
-      "searchMusicBrainz": "詳細検索中",
-      "searchSavedArtists": "保存済みアーティストを検索",
-      "processingArtist": "アーティストを処理中",
-      "linked": "リンク済み",
-      "onlineSearchFailed": "詳細検索に失敗しました",
+      "searchArtist": "ゃ6�9��ティストを検�?,
+      "artistSelected": "確認済みゃ6�9��ティストを選択しまし�?,
+      "artistNotLinked": "ゃ6�9��ティストはMusicBrainzにリンクされていませ�?,
+      "searchMusicBrainz": "詳細検索�?,
+      "searchSavedArtists": "保存済みゃ6�9��ティストを検�?,
+      "processingArtist": "ゃ6�9��ティストを処理中",
+      "linked": "リンク済�?,
+      "onlineSearchFailed": "詳細検索に失敗しまし�?,
       "useExistingRecommendation": "検索結果から確認済みのアーティストを選択することをおすすめします",
-      "resultsLabel": "アーティスト検索結果",
-      "searchingArtists": "アーティストを検索中",
-      "artists": "アーティスト",
-      "noArtistFoundTry": "アーティストが見つかりません。次をお試しください：",
-      "noArtistFound": "アーティストが見つかりません",
+      "resultsLabel": "ゃ6�9��ティスト検索結果",
+      "searchingArtists": "ゃ6�9��ティストを検索中",
+      "artists": "ゃ6�9��ティスト",
+      "noArtistFoundTry": "ゃ6�9��ティストが見つかりません。次をお試しください�?,
+      "noArtistFound": "ゃ6�9��ティストが見つかりません",
       "moreArtists": "さらにアーティストを表示",
       "onlineResults": "詳細検索結果",
-      "searchFailedHeader": "詳細検索に失敗しました"
+      "searchFailedHeader": "詳細検索に失敗しまし�?
     }
   },
   "banner": {
-    "featuredArtists": "Achizuの地図には<count>{{count}}</count>組のアーティストが集まっています",
-    "featuredArtistsLabel": "注目のアーティスト",
-    "viewingUser": "<username>{{username}}</username> の地図を表示中",
+    "featuredArtists": "Achizuの地図に�?count>{{count}}</count>組のゃ6�9��ティストが集まっています",
+    "featuredArtistsLabel": "注目のアーティス�?,
+    "viewingUser": "<username>{{username}}</username> の地図を表示�?,
     "backToMyMap": "自分の地図に戻る",
     "viewCommunityArtists": "コミュニティのアーティストを表示",
-    "loginCta": "ログインして自分のアーティストマップを作成"
+    "loginCta": "ログインして自分のアーティストマップを作�?
   },
   "mainSearch": {
-    "placeholder": "アーティストとユーザーを検索",
+    "placeholder": "ゃ6�9��ティストとユーザーを検索",
     "clearSearch": "検索をクリア",
     "search": "検索",
     "results": "検索結果",
     "noResults": "結果が見つかりません",
-    "artists": "アーティスト",
+    "artists": "ゃ6�9��ティスト",
     "users": "ユーザー",
-    "viewMap": "地図を表示"
+    "viewMap": "地図を表�?
   },
   "settings": {
     "title": "設定",
     "privacy": {
       "title": "プライバシー",
-      "description": "他のユーザーからアカウントと地図を非表示にします",
-      "errorHeader": "プライバシー設定を更新できませんでした",
-      "makePublic": "アカウントを公開する",
-      "makePrivate": "アカウントを非公開にする"
+      "description": "他のユーザーからゃ6�9��ウントと地図を非表示にします",
+      "errorHeader": "プライバシー設定を更新できませんでし�?,
+      "makePublic": "ゃ6�9��ウントを公開する",
+      "makePrivate": "ゃ6�9��ウントを非公開にする"
     },
     "adminTools": {
       "title": "管理者ツール",
-      "clusterDebug": "クラスターデバッグ",
+      "clusterDebug": "クラスターデバッ�?,
       "clusterDebugDescription": "地図にクラスターデバッグ操作を表示します",
       "showClusterDebug": "クラスターデバッグ操作を表示",
-      "hideClusterDebug": "クラスターデバッグ操作を非表示"
+      "hideClusterDebug": "クラスターデバッグ操作を非表�?
     },
     "language": {
       "title": "地名表示",
-      "locationName": "地名の言語",
-      "locationNameLanguage": "地名の表示言語",
-      "hint": "翻訳がない場所は別の言語で表示される場合があります",
+      "locationName": "地名の言�?,
+      "locationNameLanguage": "地名の表示言�?,
+      "hint": "翻訳がない場扢�は別の言語で表示される場合があります",
       "native": "現地表記"
     },
     "artistNames": {
-      "title": "アーティスト名",
-      "previewFooter": "表示設定のプレビュー例",
+      "title": "ゃ6�9��ティスト�?,
+      "previewFooter": "表示設定のプレビュー�?,
       "options": {
         "main": "メイン名のみ",
-        "sub": "サブ名のみ",
-        "both": "メイン名 + サブ名",
-        "subFirst": "サブ名 + メイン名"
+        "sub": "サブ名の�?,
+        "both": "メイン名 + サブ�?,
+        "subFirst": "サブ�?+ メイン名"
       }
     },
     "username": {
@@ -327,18 +328,18 @@
       "changePassword": "パスワードを変更"
     },
     "errors": {
-      "failedUpdateUsername": "ユーザー名の更新に失敗しました",
-      "unableUpdateUsername": "ユーザー名を更新できませんでした。もう一度お試しください。",
-      "newPasswordMin": "新しいパスワードは6文字以上にしてください",
-      "currentPasswordIncorrect": "現在のパスワードが正しくありません",
-      "unableUpdatePassword": "パスワードを更新できませんでした。もう一度お試しください。",
+      "failedUpdateUsername": "ユーザー名の更新に失敗しまし�?,
+      "unableUpdateUsername": "ユーザー名を更新できませんでした。もう一度お試しください�?,
+      "newPasswordMin": "新しいパスワード�?文字以上にしてくださ�?,
+      "currentPasswordIncorrect": "現在のパスワードが正しくありませ�?,
+      "unableUpdatePassword": "パスワードを更新できませんでした。もう一度お試しください�?,
       "failedUpdatePrivacy": "プライバシー設定の更新に失敗しました",
-      "unableUpdatePrivacy": "プライバシー設定を更新できませんでした。もう一度お試しください。"
+      "unableUpdatePrivacy": "プライバシー設定を更新できませんでした��もう一度お試しください�?
     },
     "uiLanguage": {
-      "title": "表示言語",
-      "description": "アプリ画面で使う言語を選択します",
-      "language": "言語"
+      "title": "表示訢��?,
+      "description": "ゃ6�9��リ画靃6�9��使う訢�語を選択しま�?,
+      "language": "訢��?
     }
   },
   "tutorial": {
@@ -347,67 +348,67 @@
     "next": "次へ",
     "steps": {
       "addArtist": {
-        "title": "最初のアーティストを追加",
+        "title": "朢�初のゃ6�9��ティストを追�?,
         "body": "まずこのボタンを押します"
       },
       "searchArtist": {
-        "title": "アーティストを検索",
+        "title": "ゃ6�9��ティストを検�?,
         "body": {
-          "search": "アーティスト名を入力し、Enter キーまたは検索ボタンで検索します",
-          "deepSearch": "見つからない場合は、<strong>詳細検索</strong>をオンにしてもう一度検索します"
+          "search": "ゃ6�9��ティスト名を入力し��Enter キーまたは検紃6�9��タンで検紃6�9��ます",
+          "deepSearch": "見つからない場合は��?strong>詳細検索</strong>をオンにしてもう丢�度検紃6�9��ます"
         }
       },
       "origin": {
         "title": "出身地を設定",
-        "body": "アーティストの出身地を検索します。通常は<strong>市区町村</strong>や<strong>都道府県</strong>です。地図上で手動選択することもできます。"
+        "body": "ゃ6�9��ティストの出身地を検紃6�9��ます。��常�?strong>市区町村</strong>�?strong>都道府県</strong>です。地図上で手動選択することもできます�?
       },
       "activeLocation": {
         "title": "活動地を設定",
         "body": {
-          "search": "アーティストが現在活動している場所も同じように検索します",
-          "copy": "出身地と同じ場合は、矢印ボタンでコピーできます"
+          "search": "ゃ6�9��ティストが現在活動している場扢�も同じように検索しま�?,
+          "copy": "出身地と同じ場合は��矢印ボタンでコピーできます"
         }
       },
       "careerYears": {
         "title": "活動年を設定",
-        "body": "デビュー年を選択します。アーティストが活動を終了している場合は、終了年も追加します。"
+        "body": "デビュー年を選択します��アーティストが活動を終了している場合は、終了年も追加します�?
       },
       "externalLinks": {
         "title": "外部リンクを追加",
-        "body": "SNS や公式ページなどの外部リンクは任意です"
+        "body": "SNS や公式ページなどの外部リンクは任意で�?
       },
       "artistImage": {
-        "title": "アーティスト画像をアップロード",
-        "body": "アーティストの画像を追加します。この画像はアバターとバナーの両方に使用されます。"
+        "title": "ゃ6�9��ティスト画像をアップロー�?,
+        "body": "ゃ6�9��ティストの画像を追加します��この画像はゃ6�9��ターとバナーの両方に使用されます�?
       },
       "saveArtist": {
-        "title": "アーティストを保存",
-        "body": "すべて設定できたら、アーティストを地図に保存します"
+        "title": "ゃ6�9��ティストを保�?,
+        "body": "すべて設定できたら��アーティストを地図に保存します"
       }
     }
   },
   "about": {
     "title": "Achizuについて",
     "project": {
-      "description": "お気に入りのアーティストを地図で見つけるオープンソースプロジェクトです",
+      "description": "お気に入りのゃ6�9��ティストを地図で見つけるオープンソースプロジェクトで�?,
       "viewOnGithub": "GitHub"
     },
     "credits": {
       "title": "APIとライブラリ",
       "openStreetMap": {
-        "description": "Overpass API による逆ジオコーディング"
+        "description": "Overpass API による��ジオコーディン�?
       },
       "carto": {
-        "description": "ベースマップのスタイルとタイル"
+        "description": "ベースマップのスタイルとタイ�?
       },
       "geoapify": {
-        "description": "ジオコーディングと逆ジオコーディング"
+        "description": "ジオコーディングと��ジオコーディン�?
       },
       "locationIq": {
-        "description": "ジオコーディングと逆ジオコーディング"
+        "description": "ジオコーディングと��ジオコーディン�?
       },
       "musicBrainz": {
-        "description": "アーティストのメタデータと検索"
+        "description": "ゃ6�9��ティストのメタデータと検�?
       }
     }
   },
@@ -415,41 +416,41 @@
     "title": "通知",
     "buttonLabel": "通知（{{count}}件）",
     "dismiss": "通知を閉じる",
-    "less": "折りたたむ",
-    "more": "さらに表示",
+    "less": "折りたたア�",
+    "more": "さらに表�?,
     "pinned": "固定",
-    "clearAll": "すべての通知を消去",
-    "accountPendingApprovalTitle": "アカウント承認待ち",
-    "accountPendingApprovalContent": "アカウントは管理者の承認待ちです",
+    "clearAll": "すべての通知を消�?,
+    "accountPendingApprovalTitle": "ゃ6�9��ウント承認待�?,
+    "accountPendingApprovalContent": "ゃ6�9��ウントは管理者の承認待ちです",
     "pendingApprovals_one": "{{count}}件の承認待ち",
     "pendingApprovals_other": "{{count}}件の承認待ち",
     "pendingApprovals": "承認待ち",
-    "pendingApprovalsContent": "承認待ちのユーザーがいます",
-    "openAdmin": "管理画面を開く"
+    "pendingApprovalsContent": "承認待ちのユーザーがいま�?,
+    "openAdmin": "管理画面を開�?
   },
   "map": {
-    "achizu": "Achizu アーティスト地図",
-    "manualLocationSelection": "地図をクリックして場所を選択",
-    "cancel": "キャンセル",
+    "achizu": "Achizu ゃ6�9��ティスト地図",
+    "manualLocationSelection": "地図をクリックして場扢�を選�?,
+    "cancel": "キャンセ�?,
     "attribution": {
       "aboutAchizu": "Achizuについて"
     },
     "markers": {
-      "clusterArtists": "{{count}}組のアーティスト"
+      "clusterArtists": "{{count}}組のゃ6�9��ティスト"
     },
     "buttons": {
       "addNewArtist": "新しいアーティストを追加",
-      "viewArtistList": "アーティスト一覧を表示",
+      "viewArtistList": "ゃ6�9��ティスト丢�覧を表示",
       "mapControls": {
-        "toggleLocationView": "表示する場所を切り替え",
-        "origin": "出身地",
-        "active": "活動地",
+        "toggleLocationView": "表示する場所を切り替�?,
+        "origin": "出身�?,
+        "active": "活動�?,
         "toggleMapTheme": "地図テーマを切り替え",
-        "light": "ライト",
-        "dark": "ダーク",
-        "useDarkTiles": "ダークモードを使用",
-        "cannotUseDarkTiles": "この地図ではダーク表示を使用できません",
-        "collapseAllClusters": "すべてのクラスターを閉じる",
+        "light": "ライ�?,
+        "dark": "モ�ーク",
+        "useDarkTiles": "モ�ークッ6�9��ドを使用",
+        "cannotUseDarkTiles": "この地図ではモ�ーク表示を使用できません",
+        "collapseAllClusters": "すべてのクラスターを閉じ�?,
         "expandAllClusters": "すべてのクラスターを開く",
         "resetMapDirection": "地図の向きをリセット",
         "locateMe": "現在地へ移動",
@@ -457,231 +458,232 @@
         "zoomOut": "縮小",
         "gigFilter": {
           "open": "絞り込み",
-          "title": "公演フィルター",
-          "starredLabel": "公演の表示",
-          "allGigs": "全公演",
-          "starredGigs": "お気に入り",
-          "tourLabel": "ツアー",
+          "title": "公演フィルタ�?,
+          "starredLabel": "公演の表�?,
+          "allGigs": "全公�?,
+          "starredGigs": "お気に入�?,
+          "tourLabel": "ツア�?,
           "all": "全て",
-          "allTours": "全ツアー",
-          "artistLabel": "アーティスト",
-          "allArtists": "全アーティスト"
+          "allTours": "全ツゃ6�9��",
+          "artistLabel": "ゃ6�9��ティスト",
+          "allArtists": "全アーティス�?
         }
       }
     },
     "error": {
-      "renderMapError": "このブラウザでは地図の表示に対応していません。別のブラウザを使用してください。",
-      "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください。",
-      "loadArtistsError": "アーティストの読み込みに失敗しました。ページを更新してもう一度お試しください。"
+      "renderMapError": "このブラウザでは地図の表示に対応していません。別のブラウザを使用してください�?,
+      "loadMapError": "地図の読み込みに失敗しました。ページを更新してもう一度お試しください�?,
+      "loadArtistsError": "ゃ6�9��ティストの読み込みに失敗しました。ページを更新してもう一度お試しください�?
     }
   },
   "artistList": {
     "aria": {
-      "region": "アーティスト一覧"
+      "region": "ゃ6�9��ティスト丢��?
     },
     "title": {
-      "default": "アーティスト",
-      "featured": "コミュニティのアーティスト"
+      "default": "ゃ6�9��ティスト",
+      "featured": "コミュニティのアーティス�?
     },
     "search": {
-      "ariaLabel": "アーティストまたは場所を検索",
-      "placeholder": "アーティストまたは場所を検索..."
+      "ariaLabel": "ゃ6�9��ティストまたは場扢�を検�?,
+      "placeholder": "ゃ6�9��ティストまたは場扢�を検�?.."
     },
     "sort": {
       "label": "並べ替え",
-      "ariaLabel": "アーティストを並べ替え",
-      "optionsLabel": "アーティストの並べ替えオプション",
-      "ascending": "昇順で並べ替え",
-      "descending": "降順で並べ替え",
+      "ariaLabel": "ゃ6�9��ティストを並べ替�?,
+      "optionsLabel": "ゃ6�9��ティストの並べ替えオプション",
+      "ascending": "昇順で並べ替�?,
+      "descending": "降順で並べ替�?,
       "ascendingShort": "昇順",
       "descendingShort": "降順",
       "options": {
-        "dateAdded": "追加日",
-        "recentlyUpdated": "更新日",
+        "dateAdded": "追加�?,
+        "recentlyUpdated": "更新�?,
         "name": "名前",
-        "activeLocation": "活動地",
-        "originLocation": "出身地",
-        "debutYear": "デビュー年"
+        "activeLocation": "活動�?,
+        "originLocation": "出身�?,
+        "debutYear": "デビュー�?
       }
     },
     "empty": {
-      "noResults": "アーティストが見つかりません",
-      "noneAdded": "まだアーティストが追加されていません"
+      "noResults": "ゃ6�9��ティストが見つかりません",
+      "noneAdded": "まだゃ6�9��ティストが追加されていません"
     },
     "actions": {
-      "copyAll": "すべてのアーティストを自分の地図にコピー",
+      "copyAll": "すべてのゃ6�9��ティストを自分の地図にコピー",
       "share": "自分の地図を共有",
-      "linkCopied": "リンクをコピーしました",
-      "goToLocation": "場所へ移動",
-      "edit": "アーティストを編集",
+      "linkCopied": "リンクをコピーしまし�?,
+      "goToLocation": "場所へ移�?,
+      "edit": "ゃ6�9��ティストを編�?,
       "editShort": "編集",
-      "delete": "アーティストを削除",
+      "delete": "ゃ6�9��ティストを削�?,
       "deleteShort": "削除"
     }
   },
   "userNotFound": {
     "title": "{{username}}が見つかりません ;_;",
-    "reasonsIntro": "次の理由が考えられます:",
+    "reasonsIntro": "次の理由が��えられます:",
     "reasons": {
       "doesNotExist": "ユーザーが存在しない",
       "private": "プロフィールが非公開になっている",
-      "deleted": "アカウントが削除されている"
+      "deleted": "ゃ6�9��ウントが削除されてい�?
     },
     "goBack": "戻る"
   },
   "artistCard": {
     "fields": {
-      "origin": "出身地",
-      "active": "活動地"
+      "origin": "出身�?,
+      "active": "活動�?
     },
     "years": {
-      "present": "活動中"
+      "present": "活動�?
     },
     "actions": {
-      "edit": "アーティストを編集",
-      "delete": "アーティストを削除"
+      "edit": "ゃ6�9��ティストを編�?,
+      "delete": "ゃ6�9��ティストを削�?,
+      "copy": "自分のマップに追�?
     },
     "social": {
-      "website": "アーティストのウェブサイト",
-      "appleMusic": "アーティストの音楽リンク",
-      "youtube": "アーティストの YouTube",
-      "instagram": "アーティストの Instagram",
-      "twitter": "アーティストのXプロフィール"
+      "website": "ゃ6�9��ティストのウェブサイ�?,
+      "appleMusic": "ゃ6�9��ティストの音楽リンク",
+      "youtube": "ゃ6�9��ティスト�?YouTube",
+      "instagram": "ゃ6�9��ティスト�?Instagram",
+      "twitter": "ゃ6�9��ティストのXプロフィール"
     }
   },
   "tour": {
     "actions": {
-      "enterTourMode": "ツアーモードを開始",
+      "enterTourMode": "ツアーモードを開�?,
       "exitTourMode": "自分の地図に戻る",
-      "addGig": "公演を追加",
-      "viewGigPanel": "公演を見る",
+      "addGig": "公演を追�?,
+      "viewGigPanel": "公演を見�?,
       "viewCalendar": "カレンダーを見る",
-      "locateGig": "公演を表示",
+      "locateGig": "公演を表�?,
       "createTour": "ツアーを作成",
       "clearDates": "日付をクリア",
       "exit": "終了",
-      "viewEvent": "イベントを見る",
+      "viewEvent": "イベントを見�?,
       "starGig": "お気に入りに追加",
-      "unstarGig": "お気に入りから削除",
-      "todayOnward": "今後の公演",
-      "upcomingGigs": "今後の公演",
+      "unstarGig": "お気に入りから削�?,
+      "todayOnward": "今後の公�?,
+      "upcomingGigs": "今後の公�?,
       "allDates": "すべての日付"
     },
     "fields": {
-      "artist": "アーティスト",
-      "artists": "アーティスト",
+      "artist": "ゃ6�9��ティスト",
+      "artists": "ゃ6�9��ティスト",
       "gig": "公演",
-      "gigName": "公演名",
+      "gigName": "公演�?,
       "date": "日付",
       "time": "時刻",
-      "tour": "ツアー",
+      "tour": "ツア�?,
       "addToTour": "ツアーに追加",
       "partOfTour": "ツアーに含めますか？",
       "createTour": "ツアーを作成",
       "createTourOptional": "ツアーを作成（任意）",
       "tourName": "ツアー名",
       "gigs": "公演",
-      "from": "開始日",
-      "to": "終了日",
+      "from": "開始�?,
+      "to": "終了�?,
       "venue": "会場",
       "location": "場所",
       "venueLocation": "会場 / 場所"
     },
     "form": {
-      "addTitle": "公演を追加",
-      "editTitle": "公演を編集",
-      "selectArtist": "アーティストを選択",
+      "addTitle": "公演を追�?,
+      "editTitle": "公演を編�?,
+      "selectArtist": "ゃ6�9��ティストを選�?,
       "selectTour": "ツアーを選択",
       "createTour": "ツアーを作成",
       "addArtistToGig": "公演にアーティストを追加",
-      "addToExistingTour": "既存のツアー",
-      "createATour": "新規ツアー",
-      "removeArtist": "{{name}}を削除",
-      "noArtistsFound": "該当するアーティストはいません",
-      "noToursFound": "該当するツアーはありません",
+      "addToExistingTour": "既存のツゃ6�9��",
+      "createATour": "新規ツア�?,
+      "removeArtist": "{{name}}を削�?,
+      "noArtistsFound": "該当するゃ6�9��ティストはいませ�?,
+      "noToursFound": "該当するツアーはありませ�?,
       "noGigsForTour": "現在の日付範囲に公演はありません",
       "sections": {
         "gig": "公演",
-        "tour": "ツアー"
+        "tour": "ツア�?
       },
       "tourMode": {
         "none": "なし",
         "existing": "既存",
         "new": "新規"
       },
-      "preselectedArtist": "{{name}} が選択されています",
+      "preselectedArtist": "{{name}} が選択されていま�?,
       "gigNamePlaceholder": "公演名を入力",
       "venuePlaceholder": "会場名を入力",
-      "locationPlaceholder": "会場 / 場所を検索",
-      "locationSearchHint": "会場が見つからない場合は、会場作成タブから追加してください",
-      "tourNamePlaceholder": "ツアー名を入力"
+      "locationPlaceholder": "会場 / 場所を検�?,
+      "locationSearchHint": "会場が見つからない場合は、会場作成タブから追加してくださ�?,
+      "tourNamePlaceholder": "ツアー名を入�?
     },
     "timePicker": {
-      "enterTime": "時刻を入力",
-      "selectTime": "時刻を選択",
+      "enterTime": "時刻を入�?,
+      "selectTime": "時刻を選�?,
       "selectHour": "時を選択",
       "selectMinute": "分を選択",
-      "dial": "ダイヤル",
-      "manual": "手入力",
-      "hour": "時",
-      "minute": "分",
-      "clear": "クリア"
+      "dial": "モ�イヤ�?,
+      "manual": "手入�?,
+      "hour": "�?,
+      "minute": "�?,
+      "clear": "クリ�?
     },
     "banner": {
       "label": "ツアーモード",
       "default": "今後<count>{{count}}</count>件の公演",
-      "allDates": "全公演 <count>{{count}}</count>件",
-      "singleDate": "{{from}}（<count>{{count}}</count>件の公演）",
-      "interval": "{{from}} - {{to}}（<count>{{count}}</count>件の公演）",
-      "day": "{{day}}をハイライト（<count>{{count}}</count>件の公演）",
+      "allDates": "全公�?<count>{{count}}</count>�?,
+      "singleDate": "{{from}}�?count>{{count}}</count>件の公演�?,
+      "interval": "{{from}} - {{to}}�?count>{{count}}</count>件の公演�?,
+      "day": "{{day}}をハイライト�?count>{{count}}</count>件の公演�?,
       "countLabel_one": "件の公演",
       "countLabel_other": "件の公演",
-      "countLabelUpcoming_one": "件の今後の公演",
-      "countLabelUpcoming_other": "件の今後の公演",
+      "countLabelUpcoming_one": "件の今後の公�?,
+      "countLabelUpcoming_other": "件の今後の公�?,
       "scope": {
-        "all": "すべて",
-        "allTime": "全期間",
+        "all": "すべ�?,
+        "allTime": "全期�?,
         "upcoming": "今後"
       }
     },
     "panel": {
       "title": "公演",
       "empty": "現在の日付範囲に公演はありません",
-      "noResults": "現在の絞り込みに一致する公演はありません",
-      "noTour": "ツアーなし",
+      "noResults": "現在の絞り込みに丢�致する公演はありませ�?,
+      "noTour": "ツアーな�?,
       "search": {
-        "ariaLabel": "公演を検索",
-        "placeholder": "公演を検索"
+        "ariaLabel": "公演を検�?,
+        "placeholder": "公演を検�?
       },
       "sort": {
         "label": "並べ替え",
-        "ariaLabel": "公演を並べ替え",
+        "ariaLabel": "公演を並べ替�?,
         "optionsLabel": "公演の並べ替えオプション",
         "date": "日付",
         "dateAsc": "日付 昇順",
         "dateDesc": "日付 降順",
-        "artist": "アーティスト",
+        "artist": "ゃ6�9��ティスト",
         "location": "場所",
-        "tour": "ツアー"
+        "tour": "ツア�?
       },
       "views": {
         "gig": "公演",
-        "tour": "ツアー",
-        "artist": "アーティスト",
+        "tour": "ツア�?,
+        "artist": "ゃ6�9��ティスト",
         "location": "場所"
       }
     },
     "management": {
-      "title": "ツアー",
+      "title": "ツア�?,
       "open": "ツアーを管理",
-      "empty": "ツアーはありません",
-      "noResults": "現在の絞り込みに一致するツアーはありません",
-      "expandTour": "{{name}}を展開",
+      "empty": "ツアーはありませ�?,
+      "noResults": "現在の絞り込みに丢�致するツゃ6�9��はありません",
+      "expandTour": "{{name}}を展�?,
       "collapseTour": "{{name}}を閉じる",
-      "deleteTour": "{{name}}を削除",
+      "deleteTour": "{{name}}を削�?,
       "deleteAction": "ツアーを削除",
-      "gigCount_one": "公演{{count}}件",
-      "gigCount_other": "公演{{count}}件",
+      "gigCount_one": "公演{{count}}�?,
+      "gigCount_other": "公演{{count}}�?,
       "noGigs": "このツアーに公演はありません",
       "search": {
         "ariaLabel": "ツアーを検索",
@@ -689,81 +691,92 @@
       },
       "sort": {
         "ariaLabel": "ツアーを並べ替え",
-        "optionsLabel": "ツアーの並べ替えオプション",
+        "optionsLabel": "ツアーの並べ替えオプショ�?,
         "date": "日付",
-        "artist": "アーティスト",
-        "gigs": "公演数"
+        "artist": "ゃ6�9��ティスト",
+        "gigs": "公演�?
       }
     },
     "dialogs": {
       "deleteGig": {
         "title": "公演を削除しますか？",
-        "message": "{{artist}}の{{date}}の公演を削除します。この操作は元に戻せません。"
+        "message": "{{artist}}の{{date}}の公演を削除します��この操作は元に戻せません��?
       },
       "deleteTour": {
-        "title": "ツアーを削除しますか？",
-        "message_one": "<name>{{name}}</name>と公演{{count}}件を削除します。この操作は元に戻せません。",
-        "message_other": "<name>{{name}}</name>と公演{{count}}件をすべて削除します。この操作は元に戻せません。"
+        "title": "ツアーを削除しますか�?,
+        "message_one": "<name>{{name}}</name>と公演{{count}}件を削除します��この操作は元に戻せません��?,
+        "message_other": "<name>{{name}}</name>と公演{{count}}件をすべて削除します。この操作は元に戻せません��?
       }
     },
     "errors": {
-      "requiredFields": "アーティスト、日付、場所を選択してください",
+      "requiredFields": "ゃ6�9��ティスト、日付��場扢�を選択してくださ�?,
       "requiredTour": "ツアーを選択してください",
-      "requiredTourName": "ツアー名を入力してください",
-      "missingRequiredFields": "{{fields}}を追加してください",
-      "loadGigs": "公演を読み込めませんでした",
-      "saveFailed": "公演を保存できませんでした。もう一度お試しください。",
-      "deleteFailedTitle": "公演を削除できませんでした",
+      "requiredTourName": "ツアー名を入力してくださ�?,
+      "missingRequiredFields": "{{fields}}を追加してくださ�?,
+      "loadGigs": "公演を読み込めませんでし�?,
+      "saveFailed": "公演を保存できませんでした��もう一度お試しください�?,
+      "deleteFailedTitle": "公演を削除できませんでし�?,
       "deleteFailedMessage": "公演の削除に失敗しました。もう一度お試しください",
       "deleteTourFailedTitle": "ツアーを削除できませんでした",
       "deleteTourFailedMessage": "ツアーと公演の削除に失敗しました。もう一度お試しください"
     },
     "calendar": {
-      "title": "公演カレンダー",
-      "selectDate": "日付を選択",
+      "title": "公演カレンダ�?,
+      "selectDate": "日付を選�?,
       "selectMonth": "月を選択",
-      "previousMonth": "前の月",
-      "nextMonth": "次の月",
+      "previousMonth": "前の�?,
+      "nextMonth": "次の�?,
       "today": "今日",
       "dateRange": "日付範囲",
       "singleDate": "日付: {{date}}",
-      "more": "+{{count}} 件",
-      "remainingEvents": "他 {{count}} 件の公演"
+      "more": "+{{count}} �?,
+      "remainingEvents": "�?{{count}} 件の公演"
     },
     "venueSearch": {
-      "coordsPlaceholder": "緯度、経度",
-      "createVenueName": "会場を作成",
+      "coordsPlaceholder": "緯度、経�?,
+      "createVenueName": "会場を作�?,
       "createdByUser": "ユーザー作成",
-      "failedCreateVenue": "会場を作成できませんでした。もう一度お試しください。",
-      "failedLocation": "検索に失敗しました。もう一度お試しください。",
+      "failedCreateVenue": "会場を作成できませんでした��もう一度お試しください�?,
+      "failedLocation": "検索に失敗しました��もう一度お試しください�?,
       "failedReverseLocation": "この座標の行政区域を取得できませんでした",
-      "manualLocation": "手動で場所を指定",
-      "resultsLabel": "会場と場所の検索結果",
-      "searchLocation": "場所を検索",
-      "searchLocationTab": "場所を検索",
-      "venueCreated": "会場を追加しました",
-      "venueNamePlaceholder": "会場名"
+      "manualLocation": "手動で場扢�を指�?,
+      "resultsLabel": "会場と場扢�の検索結�?,
+      "searchLocation": "場所を検�?,
+      "searchLocationTab": "場所を検�?,
+      "venueCreated": "会場を追加しまし�?,
+      "venueNamePlaceholder": "会場�?
     }
   },
   "app": {
     "dialogs": {
       "deleteArtist": {
-        "title": "アーティストを削除しますか？",
-        "errorTitle": "アーティストを削除できませんでした",
-        "errorMessage": "アーティストの削除に失敗しました。もう一度お試しください。",
-        "message": "<strong>{{name}}</strong>をあなたの地図から削除します。この操作は元に戻せません。"
+        "title": "ゃ6�9��ティストを削除しますか？",
+        "errorTitle": "ゃ6�9��ティストを削除できませんでし�?,
+        "errorMessage": "ゃ6�9��ティストの削除に失敗しました。もう一度お試しください�?,
+        "message": "<strong>{{name}}</strong>をあなたの地図から削除します。この操作は元に戻せません��?
       },
       "copyCollection": {
-        "title": "アーティストコレクションをコピーしますか？",
-        "message_one": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーします",
-        "message_other": "<username>{{username}}</username>の地図から<count>{{count}}組のアーティスト</count>をあなたの地図にコピーします",
-        "skipExisting": "すでにあなたの地図にあるアーティストはスキップされます",
+        "title": "ゃ6�9��ティストコレクションをコピーしますか�?,
+        "message_one": "<username>{{username}}</username>の地図か�?count>{{count}}組のゃ6�9��ティスト</count>をあなたの地図にコピーします",
+        "message_other": "<username>{{username}}</username>の地図か�?count>{{count}}組のゃ6�9��ティスト</count>をあなたの地図にコピーします",
+        "skipExisting": "すでにあなたの地図にあるゃ6�9��ティストはスキップされま�?,
         "successTitle": "コレクションをコピーしました",
-        "successMessage": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
-        "successMessage_one": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
-        "successMessage_other": "{{copied}}組のアーティストをコピーしました。{{skipped}}組をスキップしました。",
+        "successMessage": "{{copied}}組のゃ6�9��ティストをコピーしました。{{skipped}}組をスキップしました�?,
+        "successMessage_one": "{{copied}}組のゃ6�9��ティストをコピーしました。{{skipped}}組をスキップしました�?,
+        "successMessage_other": "{{copied}}組のゃ6�9��ティストをコピーしました。{{skipped}}組をスキップしました�?,
         "errorTitle": "コレクションをコピーできませんでした",
-        "errorMessage": "アーティストコレクションのコピーに失敗しました。もう一度お試しください。"
+        "errorMessage": "ゃ6�9��ティストコレクションのコピーに失敗しました��もう一度お試しください�?
+      },
+      "copyArtist": {
+        "title": "ゃ6�9��ティストを追�?,
+        "message": "<name>{{name}}</name> を自分のマップに追加しますか�?,
+        "successTitle": "ゃ6�9��ティストを追加しまし�?,
+        "successMessage": "<name>{{name}}</name> をマップに追加しました��?,
+        "successToast": "{{name}} をマップに追加しまし�?,
+        "alreadyExistsTitle": "ゃ6�9��ティストをコピーできませんでした",
+        "alreadyExistsMessage": "<name>{{name}}</name> はすでにマップに追加されています�?,
+        "errorTitle": "ゃ6�9��ティストを追加できません",
+        "errorMessage": "このゃ6�9��ティストの追加に失敗しました。もう一度お試しください�?
       }
     }
   }

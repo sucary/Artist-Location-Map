@@ -61,6 +61,8 @@ export default function MapView({
     onLocationPick,
     onEditArtist,
     onDeleteArtist,
+    onCopyArtist,
+    copyingArtistId,
     onEditGig,
     onDeleteGig,
     starredGigIds,
@@ -113,6 +115,7 @@ export default function MapView({
     const [tileTheme, setTileTheme] = useState<MapTileTheme>(getStoredTileTheme);
     const [mapError, setMapError] = useState<string | null>(null);
     const [attributionOpen, setAttributionOpen] = useState(false);
+    const [artistPopupOpen, setArtistPopupOpen] = useState(false);
     const [mobileControlsOpen, setMobileControlsOpen] = useState(true);
     const [canResetMapView, setCanResetMapView] = useState(false);
     const [clusterColorDebugEnabled, setClusterColorDebugEnabled] = useState(false);
@@ -299,13 +302,15 @@ export default function MapView({
                 <ArtistCard
                     artist={artist}
                     showActions={showActions}
+                    onCopyArtist={onCopyArtist}
+                    isCopyingArtist={copyingArtistId === artist.id}
                     locationLanguage={locationLanguage}
                     hideWebsite
                 />
             );
         }
         return undefined;
-    }, [locationLanguage, onToggleGigStar, starredGigIds, tourModeActive, viewingFeatured]);
+    }, [copyingArtistId, locationLanguage, onCopyArtist, onToggleGigStar, starredGigIds, tourModeActive, viewingFeatured]);
 
     const { data: selectedCity } = useQuery({
         queryKey: ['city', selectedCityId],
@@ -330,6 +335,7 @@ export default function MapView({
     const handleArtistPopupOpenChange = useCallback((open: boolean) => {
         const wasOpen = artistPopupLifecycleRef.current.open;
         onArtistPopupOpenChange?.(open);
+        setArtistPopupOpen(open);
 
         if (open) {
             if (!wasOpen) {
@@ -451,6 +457,7 @@ export default function MapView({
         setSelectedCityId,
         onEditArtist: tourModeActive ? onEditGig ? handleMarkerEdit : undefined : onEditArtist,
         onDeleteArtist: tourModeActive ? onDeleteGig ? handleMarkerDelete : undefined : onDeleteArtist,
+        onCopyArtist: tourModeActive ? undefined : onCopyArtist,
         onArtistPopupOpenChange: handleArtistPopupOpenChange,
         artistPopupLifecycleRef,
         canAdjustDisplayCoordinates: tourModeActive ? false : canAdjustDisplayCoordinates,
@@ -972,6 +979,7 @@ export default function MapView({
                 setMobileControlsOpen={setMobileControlsOpen}
                 forceMobileControlsClosed={attributionOpen}
                 onRequestMobileOpen={closeAttribution}
+                artistPopupOpen={artistPopupOpen}
                 showViewToggle={isAuthenticated && !viewingFeatured && !tourModeActive}
                 tourControlSlot={tourControlSlot}
                 gigFilter={tourModeActive ? gigMapFilter : undefined}

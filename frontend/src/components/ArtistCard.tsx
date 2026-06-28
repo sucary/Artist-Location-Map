@@ -1,7 +1,8 @@
-import { useState, type MouseEvent } from 'react';
+import { useRef, useState, type MouseEvent, type TouchEvent } from 'react';
 import type { Artist, LocationLanguage } from '../types/artist';
 import { HomeIcon, MusicIcon, YoutubeIcon, InstagramIcon, XIcon } from './icons/SocialIcons';
-import { CalendarIcon, EditIcon, TrashIcon } from './icons/GeneralIcons';
+import { CalendarIcon, CopyIcon, EditIcon, TrashIcon } from './icons/GeneralIcons';
+import { Spinner } from './ui';
 import { getProfileUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized } from '../utils/locationUtils';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +15,8 @@ interface ArtistCardProps {
     artist: Artist;
     showActions?: boolean;
     onAddGig?: (artist: Artist) => void;
+    onCopyArtist?: (artist: Artist) => void;
+    isCopyingArtist?: boolean;
     locationLanguage?: LocationLanguage;
     artistNameDisplayMode?: ArtistNameDisplayMode;
     hideWebsite?: boolean;
@@ -36,14 +39,43 @@ const ArtistCard = ({
     artist,
     showActions = true,
     onAddGig,
+    onCopyArtist,
+    isCopyingArtist = false,
     locationLanguage = 'en',
     artistNameDisplayMode = DEFAULT_ARTIST_NAME_DISPLAY_MODE,
     hideWebsite = false
 }: ArtistCardProps) => {
     const { t } = useTranslation();
     const [actionsVisible, setActionsVisible] = useState(false);
+    const suppressCopyClickRef = useRef(false);
     const profileUrl = getProfileUrl(artist.sourceImage, artist.profileCrop);
     const displayName = getArtistDisplayNameParts(artist, artistNameDisplayMode);
+
+    const stopActionEvent = (event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.nativeEvent.stopImmediatePropagation?.();
+    };
+
+    const copyArtist = () => {
+        if (isCopyingArtist) return;
+        onCopyArtist?.(artist);
+    };
+
+    const handleCopyClick = (event: MouseEvent<HTMLButtonElement>) => {
+        stopActionEvent(event);
+        if (suppressCopyClickRef.current) {
+            suppressCopyClickRef.current = false;
+            return;
+        }
+        copyArtist();
+    };
+
+    const handleCopyTouchEnd = (event: TouchEvent<HTMLButtonElement>) => {
+        stopActionEvent(event);
+        suppressCopyClickRef.current = true;
+        copyArtist();
+    };
 
     const handleCoverClick = (event: MouseEvent<HTMLDivElement>) => {
         if (!showActions || actionsVisible) return;
@@ -76,6 +108,9 @@ const ArtistCard = ({
                 .artist-action-delete:hover {
                     background-color: rgba(220, 38, 38, 0.95) !important;
                 }
+                .artist-action-copy:hover {
+                    background-color: rgba(0, 0, 0, 0.25) !important;
+                }
             `}</style>
             {/* Header with cover image */}
             <div
@@ -85,6 +120,29 @@ const ArtistCard = ({
             >
                 {/* Bottom gradient for name readability */}
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 via-black/20 to-transparent pointer-events-none" />
+
+                {/* Copy-to-my-map button: top-right. Shown only when viewing
+                    someone else's map / featured (parent supplies onCopyArtist). */}
+                {onCopyArtist && (
+                    <button
+                        type="button"
+                        className="artist-action-copy absolute top-2 right-2 z-20 grid h-8 w-8 place-items-center rounded-full border-0 cursor-pointer disabled:cursor-default"
+                        style={{ backgroundColor: 'transparent', transition: 'background-color 0.15s' }}
+                        data-action="copy"
+                        data-artist-id={artist.id}
+                        disabled={isCopyingArtist}
+                        aria-label={t('artistCard.actions.copy')}
+                        title={t('artistCard.actions.copy')}
+                        onClick={handleCopyClick}
+                        onTouchEnd={handleCopyTouchEnd}
+                    >
+                        {isCopyingArtist ? (
+                            <Spinner size="sm" className="w-4 h-4 text-white" />
+                        ) : (
+                            <CopyIcon className="w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]" />
+                        )}
+                    </button>
+                )}
 
                 {/* Action bar: hover on desktop, first tap on touch screens. */}
                 {showActions && (

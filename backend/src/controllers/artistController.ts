@@ -225,6 +225,115 @@ export const copyArtistsByUsername = asyncHandler(async (req: AuthenticatedReque
     });
 });
 
+export const copyArtistById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const artistId = req.params.id;
+    const targetUserId = req.user!.id;
+    const isAdmin = req.profile?.isAdmin ?? false;
+
+    // Resolve the source artist together with its owner's privacy flag.
+    const sourceResult = await pool.query<{ user_id: string; is_private: boolean }>(
+        `SELECT a.user_id, p.is_private
+         FROM artists a
+         JOIN profiles p ON a.user_id = p.id
+         WHERE a.id = $1`,
+        [artistId]
+    );
+    const source = sourceResult.rows[0];
+
+    if (!source) {
+        throw new AppError('Artist not found', 404);
+    }
+
+    // Private owners' artists are only visible to the owner or an admin.
+    const isOwnArtist = source.user_id === targetUserId;
+    if (!isOwnArtist && !isAdmin && source.is_private) {
+        throw new AppError('Artist not found', 404);
+    }
+
+    if (isOwnArtist) {
+        throw new AppError('Cannot copy an artist that is already in your map', 400);
+    }
+
+    // Same dedup + insert logic as copyArtistsByUsername, scoped to one artist.
+    const result = await pool.query<{
+        copied: number;
+        skip_reason: 'musicbrainz' | 'custom' | null;
+    }>(`
+        WITH source_artists AS (
+            SELECT *
+            FROM artists
+            WHERE id = $1
+        ),
+        classified AS (
+            SELECT
+                s.*,
+                CASE
+                    WHEN s.musicbrainz_mbid IS NOT NULL AND EXISTS (
+                        SELECT 1
+                        FROM artists t
+                        WHERE t.user_id = $2
+                          AND t.musicbrainz_mbid = s.musicbrainz_mbid
+                    ) THEN 'musicbrainz'
+                    WHEN s.musicbrainz_mbid IS NULL AND EXISTS (
+                        SELECT 1
+                        FROM artists t
+                        WHERE t.user_id = $2
+                          AND t.musicbrainz_mbid IS NULL
+                          AND t.name = s.name
+                          AND t.original_city IS NOT DISTINCT FROM s.original_city
+                          AND t.original_province IS NOT DISTINCT FROM s.original_province
+                          AND t.original_country IS NOT DISTINCT FROM s.original_country
+                          AND t.original_city_id IS NOT DISTINCT FROM s.original_city_id
+                          AND t.active_city IS NOT DISTINCT FROM s.active_city
+                          AND t.active_province IS NOT DISTINCT FROM s.active_province
+                          AND t.active_country IS NOT DISTINCT FROM s.active_country
+                          AND t.active_city_id IS NOT DISTINCT FROM s.active_city_id
+                    ) THEN 'custom'
+                    ELSE NULL
+                END AS skip_reason
+            FROM source_artists s
+        ),
+        inserted AS (
+            INSERT INTO artists (
+                user_id, musicbrainz_mbid, name, romanized_name, source_image, avatar_crop, profile_crop,
+                original_city, original_province, original_country, original_display_name,
+                original_coordinates, original_city_id, original_display_coordinates,
+                active_city, active_province, active_country, active_display_name,
+                active_coordinates, active_city_id, active_display_coordinates,
+                instagram_url, twitter_url, apple_music_url, website_url, youtube_url,
+                debut_year, inactive_year
+            )
+            SELECT
+                $2, musicbrainz_mbid, name, romanized_name, source_image, avatar_crop, profile_crop,
+                original_city, original_province, original_country, original_display_name,
+                original_coordinates, original_city_id, original_display_coordinates,
+                active_city, active_province, active_country, active_display_name,
+                active_coordinates, active_city_id, active_display_coordinates,
+                instagram_url, twitter_url, apple_music_url, website_url, youtube_url,
+                debut_year, inactive_year
+            FROM classified
+            WHERE skip_reason IS NULL
+            RETURNING id
+        )
+        SELECT
+            (SELECT COUNT(*) FROM inserted)::int AS copied,
+            (SELECT skip_reason FROM classified LIMIT 1) AS skip_reason
+    `, [artistId, targetUserId]);
+
+    const row = result.rows[0] ?? { copied: 0, skip_reason: null };
+
+    if (row.copied > 0) {
+        // A newly copied public artist can change featured results.
+        invalidateFeaturedArtistsCache();
+    }
+
+    res.status(201).json({
+        copied: row.copied,
+        skipped: row.copied > 0 ? 0 : 1,
+        reason: row.copied > 0 ? null : row.skip_reason
+    });
+});
+
 export const getArtistById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const isAdmin = req.profile?.isAdmin ?? false;
     const userId = req.user!.id;

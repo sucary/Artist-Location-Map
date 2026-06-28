@@ -766,7 +766,7 @@ const ArtistForm = ({
             aria-label={t('artistForm.buttons.uploadFromDevice')}
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*,.heic,.heif"
             onChange={handleFileChange}
             className="hidden"
         />

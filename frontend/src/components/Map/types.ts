@@ -20,6 +20,8 @@ export interface MapViewProps {
     onLocationPick?: ((coordinates: Coordinates | null) => void) | null;
     onEditArtist?: (artist: Artist) => void;
     onDeleteArtist?: (artist: Artist) => void;
+    onCopyArtist?: (artist: Artist) => void;
+    copyingArtistId?: string | null;
     onEditGig?: (gig: Gig) => void;
     onDeleteGig?: (gig: Gig) => void;
     starredGigIds?: Set<string>;

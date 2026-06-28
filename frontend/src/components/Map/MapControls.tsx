@@ -31,6 +31,9 @@ interface MapControlsProps {
     setMobileControlsOpen: (open: boolean) => void;
     forceMobileControlsClosed?: boolean;
     onRequestMobileOpen?: () => void;
+    /** Hides the mobile swipe-to-reopen zone while an artist popup is open so it
+     *  cannot overlap and intercept taps on the popup. */
+    artistPopupOpen?: boolean;
     showViewToggle?: boolean;
     tourControlSlot?: ReactNode;
     gigFilter?: GigMapFilterState;
@@ -75,6 +78,7 @@ export function MapControls({
     setMobileControlsOpen,
     forceMobileControlsClosed = false,
     onRequestMobileOpen,
+    artistPopupOpen = false,
     showViewToggle = true,
     tourControlSlot,
     gigFilter,
@@ -196,7 +200,7 @@ export function MapControls({
     };
 
     const drawerTransform = isMobile ? `translateX(${getCurrentOffset()}px)` : undefined;
-    const mobileSwipeZoneVisible = isMobile && getCurrentOffset() > 0;
+    const mobileSwipeZoneVisible = isMobile && getCurrentOffset() > 0 && !artistPopupOpen;
 
     useEffect(() => {
         if (!isMobile) return;
