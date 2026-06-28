@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "appName": "Achizu",
     "search": "Search",
@@ -168,7 +168,7 @@
     "imageSource": {
       "avatarTitle": "Add image from web URL",
       "bannerTitle": "Add image from web URL",
-      "description": "鈥?Supported formats: JPG, JPEG, PNG, WebP\n鈥?File size 鈮?5 MB\n鈥?Resolution 鈮?1920脳1080 (1080p)",
+      "description": "• Supported formats: JPG, JPEG, PNG, WebP\n• File size ≤ 5 MB\n• Resolution ≤ 1920×1080 (1080p)",
       "inputLabel": "Image URL",
       "placeholder": "https://example.com/image.jpg",
       "useUrl": "Upload"

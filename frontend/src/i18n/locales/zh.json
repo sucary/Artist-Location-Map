@@ -5,17 +5,17 @@
     "cancel": "取消",
     "ok": "确定",
     "save": "保存",
-    "saving": "保存�?,
+    "saving": "保存中",
     "close": "关闭",
     "dismiss": "关闭",
-    "loading": "加载�?,
+    "loading": "加载中",
     "error": "发生错误",
     "redirectToMap": "正在返回地图",
     "backToMap": "返回地图",
     "delete": "删除",
     "copy": "复制",
     "edit": "编辑",
-    "optional": "可��?,
+    "optional": "可选",
     "apply": "应用",
     "city": "城市",
     "create": "创建",
@@ -28,27 +28,27 @@
       "password": "密码",
       "confirmPassword": "确认密码",
       "currentPassword": "当前密码",
-      "newPassword": "新密�?,
-      "confirmNewPassword": "确认新密�?
+      "newPassword": "新密码",
+      "confirmNewPassword": "确认新密码"
     },
     "buttons": {
       "signIn": "登录",
       "signUp": "注册",
-      "sendResetLink": "发��重置链�?,
+      "sendResetLink": "发送重置链接",
       "backToSignIn": "返回登录",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
-      "rememberMe": "记住�?,
+      "rememberMe": "记住我",
       "done": "完成",
-      "resend": "重新发��?,
+      "resend": "重新发送",
       "resetPassword": "重置密码"
     },
     "signIn": {
       "title": "登录",
-      "forgotPassword": "忘记密码�?,
+      "forgotPassword": "忘记密码？",
       "dontHaveAccount": "还没有账号？",
-      "rejectedAccountHint": "如果你的注册申请已被拒绝，此账号将无法再登录。请联系管理员或重新注册�?,
-      "or": "�?
+      "rejectedAccountHint": "如果你的注册申请已被拒绝，此账号将无法再登录。请联系管理员或重新注册。",
+      "or": "或"
     },
     "signUp": {
       "title": "创建账号",
@@ -56,75 +56,75 @@
     },
     "resetPassword": {
       "title": "重置密码",
-      "description": "输入邮箱后，我们会向你发送密码重置链�?,
-      "authSessionExpired": "会话已过期��请重新请求重置链接�?,
-      "passwordUpdated": "密码已更�?,
+      "description": "输入邮箱后，我们会向你发送密码重置链接",
+      "authSessionExpired": "会话已过期。请重新请求重置链接。",
+      "passwordUpdated": "密码已更新",
       "updating": "正在更新密码"
     },
     "emailCheck": {
-      "title": "棢�查邮�?,
-      "message": "已向 {{email}} 发��确认链接��请棢�查收件箱�?,
-      "expiresIn": "确认链接将在 15 分钟后过�?
+      "title": "检查邮箱",
+      "message": "已向 {{email}} 发送确认链接。请检查收件箱。",
+      "expiresIn": "确认链接将在 15 分钟后过期"
     },
     "userNamePrompt": {
-      "title": "创建用户�?,
-      "description": "其他人可以��过用户名找到你",
-      "subdescription": "用户名和可见性之后可以在设置中修�?,
-      "usernameLabel": "用户�?,
-      "usernamePlaceholder": "输入用户�?,
-      "usernameAvailable": "用户名可�?,
-      "notApprovedNotice": "如果你的注册申请已被拒绝，此账号可能无法继续使用。请联系管理员或重新注册�?,
+      "title": "创建用户名",
+      "description": "其他人可以通过用户名找到你",
+      "subdescription": "用户名和可见性之后可以在设置中修改",
+      "usernameLabel": "用户名",
+      "usernamePlaceholder": "输入用户名",
+      "usernameAvailable": "用户名可用",
+      "notApprovedNotice": "如果你的注册申请已被拒绝，此账号可能无法继续使用。请联系管理员或重新注册。",
       "submit": "继续"
     },
     "messages": {
-      "checkEmailConfirmation": "请检查邮箱完成确�?,
-      "resetLinkSent": "请检查邮箱获取密码重置链�?
+      "checkEmailConfirmation": "请检查邮箱完成确认",
+      "resetLinkSent": "请检查邮箱获取密码重置链接"
     },
     "errors": {
-      "emailRequired": "请输入邮�?,
+      "emailRequired": "请输入邮箱",
       "validEmail": "请输入有效的邮箱",
-      "emailExists": "此邮箱已注册。请使用之前的登录方式登录��?,
-      "passwordRequired": "请输入密�?,
-      "passwordMin": "密码至少霢��?6 个字�?,
-      "confirmPasswordRequired": "请确认密�?,
-      "passwordsMatch": "两次输入的密码不丢��?,
+      "emailExists": "此邮箱已注册。请使用之前的登录方式登录。",
+      "passwordRequired": "请输入密码",
+      "passwordMin": "密码至少需要 6 个字符",
+      "confirmPasswordRequired": "请确认密码",
+      "passwordsMatch": "两次输入的密码不一致",
       "incorrectCredentials": "邮箱或密码不正确",
       "unexpectedError": "发生意外错误，请重试",
-      "authEmailLimitReached": "每日密码重置邮件发��次数已达上限，请稍后再试��?,
-      "registrationEmailLimitReached": "每日注册邮件发��次数已达上限，请稍后再试��?,
-      "unableToSignIn": "无法使用 {{provider}} 登录。请尝试其他方式或联系支持��?,
-      "resendEmailFailed": "无法重新发��邮件，请重�?,
-      "userNameMin": "用户名至少需�?3 个字�?,
-      "userNameMax": "用户名不能超�?32 个字�?,
-      "userNamePattern": "用户名只能包含小写字母��数字和下划�?,
-      "userNameTaken": "此用户名已被注册，请输入新的用户�?,
-      "unableToSaveUsername": "无法保存用户名��请重试�?,
-      "confirmationExpired": "确认链接已过期��请重新注册�?
+      "authEmailLimitReached": "每日密码重置邮件发送次数已达上限，请稍后再试。",
+      "registrationEmailLimitReached": "每日注册邮件发送次数已达上限，请稍后再试。",
+      "unableToSignIn": "无法使用 {{provider}} 登录。请尝试其他方式或联系支持。",
+      "resendEmailFailed": "无法重新发送邮件，请重试",
+      "userNameMin": "用户名至少需要 3 个字符",
+      "userNameMax": "用户名不能超过 32 个字符",
+      "userNamePattern": "用户名只能包含小写字母、数字和下划线",
+      "userNameTaken": "此用户名已被注册，请输入新的用户名",
+      "unableToSaveUsername": "无法保存用户名。请重试。",
+      "confirmationExpired": "确认链接已过期。请重新注册。"
     }
   },
   "approval": {
     "title": "账号等待审核",
-    "description": "你的账号正在等待管理员审�?,
+    "description": "你的账号正在等待管理员审核",
     "pending": "你的账号正在等待审核",
-    "approved": "你的账号已��过审核！现在可以登录��?,
+    "approved": "你的账号已通过审核！现在可以登录。",
     "rejected": "你的账号申请已被拒绝"
   },
   "userMenu": {
     "accountMenu": "账号菜单",
     "settings": "设置",
-    "feedback": "发��反�?,
+    "feedback": "发送反馈",
     "adminDashboard": {
       "title": "管理后台"
     },
-    "signOut": "逢�出登�?
+    "signOut": "退出登录"
   },
   "feedback": {
-    "title": "发��反�?,
-    "description": "发现问题或有建议？告诉我们��?,
+    "title": "发送反馈",
+    "description": "发现问题或有建议？告诉我们。",
     "placeholder": "您的反馈...",
-    "submit": "发��?,
-    "success": "感谢您的反馈�?,
-    "error": "无法发��反馈，请重试��?
+    "submit": "发送",
+    "success": "感谢您的反馈！",
+    "error": "无法发送反馈，请重试。"
   },
   "location": {
     "searchPlaceholder": "搜索地点"
@@ -132,14 +132,14 @@
   "artistForm": {
     "fields": {
       "name": "名称",
-      "originalLocation": "出身�?,
-      "searchOriginalLocation": "搜索出身�?,
-      "activeLocation": "活动�?,
-      "searchActiveLocation": "搜索活动�?,
+      "originalLocation": "出身地",
+      "searchOriginalLocation": "搜索出身地",
+      "activeLocation": "活动地",
+      "searchActiveLocation": "搜索活动地",
       "careerYears": "活动年份",
       "debutYear": "出道年份",
       "debut": "出道",
-      "present": "活跃�?,
+      "present": "活跃中",
       "inactiveYear": "停止活动年份",
       "inactive": "停止活动"
     },
@@ -147,13 +147,13 @@
       "avatar": "艺人头像"
     },
     "defaults": {
-      "newArtist": "新艺�?
+      "newArtist": "新艺人"
     },
     "buttons": {
       "editBanner": "编辑艺人横幅",
       "editAvatar": "编辑艺人头像",
       "imageSourceMenu": "图片来源选项",
-      "uploadFromDevice": "从设备上�?,
+      "uploadFromDevice": "从设备上传",
       "uploadFromUrl": "使用网页 URL",
       "editName": "编辑艺人名称",
       "uploadAvatar": "上传图片",
@@ -162,13 +162,13 @@
       "confirm": "确认",
       "continue": "继续",
       "copyOriginalToActive": "将出身地复制到活动地",
-      "setInactive": "将艺人设为停止活�?,
+      "setInactive": "将艺人设为停止活动",
       "setActive": "将艺人设为活动中"
     },
     "imageSource": {
       "avatarTitle": "通过网页 URL 添加图片",
       "bannerTitle": "通过网页 URL 添加图片",
-      "description": "�?支持格式：JPG、JPEG、PNG、WebP\n�?文件大小 �?5 MB\n�?分辨�?�?1920×1080�?080p�?,
+      "description": "• 支持格式：JPG、JPEG、PNG、WebP\n• 文件大小 ≤ 5 MB\n• 分辨率 ≤ 1920×1080（1080p）",
       "inputLabel": "图片 URL",
       "placeholder": "https://example.com/image.jpg",
       "useUrl": "上传"
@@ -187,7 +187,7 @@
       "banner": "横幅",
       "reUpload": "重新上传",
       "reset": "重置",
-      "resetToDefault": "重置为默�?,
+      "resetToDefault": "重置为默认",
       "zoom": "缩放"
     },
     "yearSelect": {
@@ -200,28 +200,28 @@
       "searchLocation": "搜索地点",
       "manualSelect": "在地图上选择地点",
       "failedHeader": "地点搜索失败",
-      "locationSelected": "已��择地点",
+      "locationSelected": "已选择地点",
       "detailedLocationRecommended": "建议选择更详细的地点",
       "retry": "重试",
       "searching": "正在搜索地点",
       "searchMore": "搜索更多结果",
       "noResults": "没有找到结果",
       "errors": {
-        "searchTimedOut": "搜索超时。请重试�?,
-        "failedSearch": "地点搜索失败。请重试�?,
+        "searchTimedOut": "搜索超时。请重试。",
+        "failedSearch": "地点搜索失败。请重试。",
         "failedMore": "搜索更多结果失败",
-        "noLocationsAtPoint": "此位置没有找到地点��请尝试其他位置�?
+        "noLocationsAtPoint": "此位置没有找到地点。请尝试其他位置。"
       }
     },
     "mediaReview": {
-      "requiresReviewTitle": "图片霢�要审�?,
+      "requiresReviewTitle": "图片需要审核",
       "replaceSharedTitle": "替换共享图片",
-      "requiresReviewDescription": "此艺人已有共享图片��你上传的图片会先提交给管理员审核，通过后才会对扢�有人可见�?,
-      "replaceSharedDescription": "此艺人已有共享图片��作为管理员，继续操作会替换扢�有人看到的图片��?,
+      "requiresReviewDescription": "此艺人已有共享图片。你上传的图片会先提交给管理员审核，通过后才会对所有人可见。",
+      "replaceSharedDescription": "此艺人已有共享图片。作为管理员，继续操作会替换所有人看到的图片。",
       "currentImage": "当前图片",
       "currentSharedArtistAlt": "当前共享艺人",
-      "artistImageExistsTitle": "艺人图片已存�?,
-      "sharedImageRecommendation": "由于存储限制，我们强烈建议使用共享艺人图�?,
+      "artistImageExistsTitle": "艺人图片已存在",
+      "sharedImageRecommendation": "由于存储限制，我们强烈建议使用共享艺人图片",
       "submitForReviewDescription": "如果你认为自己的图片更能代表该艺人，可以提交审核",
       "chooseImage": "选择图片",
       "sharedImage": "共享图片",
@@ -229,21 +229,21 @@
       "yourUploadedArtistAlt": "你上传的艺人"
     },
     "musicBrainz": {
-      "artistLabel": "艺人�?,
+      "artistLabel": "艺人名",
       "deepSearch": "深度搜索",
       "searchArtist": "搜索艺人",
-      "artistSelected": "已��择认证艺人",
+      "artistSelected": "已选择认证艺人",
       "artistNotLinked": "艺人尚未关联 MusicBrainz",
-      "searchMusicBrainz": "深度搜索�?,
+      "searchMusicBrainz": "深度搜索中",
       "searchSavedArtists": "正在搜索艺人",
       "processingArtist": "正在处理艺人",
-      "linked": "已关�?,
+      "linked": "已关联",
       "onlineSearchFailed": "深度搜索失败",
       "useExistingRecommendation": "建议优先使用搜索结果中的认证艺人",
       "resultsLabel": "艺人搜索结果",
       "searchingArtists": "正在搜索艺人",
       "artists": "艺人",
-      "noArtistFoundTry": "没有找到艺人，试�?,
+      "noArtistFoundTry": "没有找到艺人，试试",
       "noArtistFound": "没有找到艺人",
       "moreArtists": "更多艺人",
       "onlineResults": "深度搜索结果",
@@ -251,23 +251,23 @@
     },
     "errors": {
       "nameRequired": "艺人名称为必填项",
-      "originalLocationRequired": "出身地为必填�?,
-      "activeLocationRequired": "活动地为必填�?,
-      "invalidWebsiteUrl": "请输入有�?URL（https://...�?,
+      "originalLocationRequired": "出身地为必填项",
+      "activeLocationRequired": "活动地为必填项",
+      "invalidWebsiteUrl": "请输入有效 URL（https://...）",
       "invalidSocialProfileUrl": "请输入有效的 {{platform}} URL",
       "invalidSocialLinkUrl": "社交链接 URL 无效",
       "invalidImageUrl": "请输入有效的图片 URL",
       "imageUploadFailed": "图片上传失败",
-      "failedUploadImage": "图片上传失败。请重试�?,
-      "imageRequirements": "请使用不超过 5 MB �?JPG、PNG �?WebP 图片",
+      "failedUploadImage": "图片上传失败。请重试。",
+      "imageRequirements": "请使用不超过 5 MB 的 JPG、PNG、WebP、HEIC 或 HEIF 图片",
       "saveArtistFailedHeader": "无法保存艺人",
-      "failedSaveArtist": "保存艺人失败。请重试�?
+      "failedSaveArtist": "保存艺人失败。请重试。"
     }
   },
   "banner": {
-    "featuredArtists": "Achizu 地图已收�?<count>{{count}}</count> 位音乐人",
+    "featuredArtists": "Achizu 地图已收集 <count>{{count}}</count> 位音乐人",
     "featuredArtistsLabel": "Achizu 地图",
-    "viewingUser": "正在查看 <username>{{username}}</username> 的地�?,
+    "viewingUser": "正在查看 <username>{{username}}</username> 的地图",
     "backToMyMap": "返回我的地图",
     "viewCommunityArtists": "查看 Achizu 地图",
     "loginCta": "登录并创建你的音乐人地图"
@@ -288,11 +288,11 @@
       "title": "隐私",
       "description": "向其他用户隐藏你的账号和地图",
       "errorHeader": "无法更新隐私设置",
-      "makePublic": "将账号设为公弢�",
-      "makePrivate": "将账号设为私�?
+      "makePublic": "将账号设为公开",
+      "makePrivate": "将账号设为私密"
     },
     "adminTools": {
-      "title": "管理员工�?,
+      "title": "管理员工具",
       "clusterDebug": "圈圈调试",
       "clusterDebugDescription": "在地图上显示圈圈调试控制",
       "showClusterDebug": "显示圈圈调试控制",
@@ -302,7 +302,7 @@
       "title": "显示",
       "locationName": "地点名称语言",
       "locationNameLanguage": "地点名称语言",
-      "hint": "部分地点可能因缺少翻译��显示为其他语言",
+      "hint": "部分地点可能因缺少翻译而显示为其他语言",
       "native": "当地语言"
     },
     "artistNames": {
@@ -311,67 +311,67 @@
       "options": {
         "main": "仅主名称",
         "sub": "仅副名称",
-        "both": "主名�?+ 副名�?,
-        "subFirst": "副名�?+ 主名�?
+        "both": "主名称 + 副名称",
+        "subFirst": "副名称 + 主名称"
       }
     },
     "username": {
-      "title": "更改用户�?,
+      "title": "更改用户名",
       "changeUsername": "新用户名",
-      "errorHeader": "无法更新用户�?,
-      "saveUsername": "保存用户�?
+      "errorHeader": "无法更新用户名",
+      "saveUsername": "保存用户名"
     },
     "password": {
       "title": "更改密码",
       "errorHeader": "无法更新密码",
-      "success": "密码已成功更�?,
+      "success": "密码已成功更新",
       "changePassword": "更改密码"
     },
     "errors": {
-      "failedUpdateUsername": "更新用户名失�?,
-      "unableUpdateUsername": "无法更新用户名��请重试�?,
-      "newPasswordMin": "新密码至少需�?6 个字�?,
-      "currentPasswordIncorrect": "当前密码不正�?,
-      "unableUpdatePassword": "无法更新密码。请重试�?,
+      "failedUpdateUsername": "更新用户名失败",
+      "unableUpdateUsername": "无法更新用户名。请重试。",
+      "newPasswordMin": "新密码至少需要 6 个字符",
+      "currentPasswordIncorrect": "当前密码不正确",
+      "unableUpdatePassword": "无法更新密码。请重试。",
       "failedUpdatePrivacy": "更新隐私设置失败",
-      "unableUpdatePrivacy": "无法更新隐私设置。请重试�?
+      "unableUpdatePrivacy": "无法更新隐私设置。请重试。"
     },
     "uiLanguage": {
       "title": "界面语言",
-      "description": "选择应用界面使用的语訢�",
+      "description": "选择应用界面使用的语言",
       "language": "主要语言"
     }
   },
   "tutorial": {
-    "progress": "�?{{current}}/{{total}} �?,
+    "progress": "第 {{current}}/{{total}} 步",
     "skip": "跳过教程",
-    "next": "下一�?,
+    "next": "下一步",
     "steps": {
       "addArtist": {
-        "title": "添加你的第一个艺�?,
-        "body": "从点击这个按钮开�?
+        "title": "添加你的第一个艺人",
+        "body": "从点击这个按钮开始"
       },
       "searchArtist": {
         "title": "搜索艺人",
         "body": {
-          "search": "输入艺人名称，然后按 Enter 或点击搜索按�?,
-          "deepSearch": "如果找不到艺人，打开 <strong>深度搜索</strong> 后重�?
+          "search": "输入艺人名称，然后按 Enter 或点击搜索按钮",
+          "deepSearch": "如果找不到艺人，打开 <strong>深度搜索</strong> 后重试"
         }
       },
       "origin": {
-        "title": "设置出身�?,
-        "body": "搜索艺人的出身地，��常�?strong>城市</strong>�?strong>省份</strong>。你也可以在地图上手动��择地点�?
+        "title": "设置出身地",
+        "body": "搜索艺人的出身地，通常是<strong>城市</strong>或<strong>省份</strong>。你也可以在地图上手动选择地点。"
       },
       "activeLocation": {
-        "title": "设置活动�?,
+        "title": "设置活动地",
         "body": {
-          "search": "重复地点搜索，��择艺人现在的活动地�?,
+          "search": "重复地点搜索，选择艺人现在的活动地点",
           "copy": "如果和出身地相同，可以用箭头按钮复制"
         }
       },
       "careerYears": {
         "title": "设置活动年份",
-        "body": "选择出道年份。如果艺人已停止活动，也可以添加停止活动年份�?
+        "body": "选择出道年份。如果艺人已停止活动，也可以添加停止活动年份。"
       },
       "externalLinks": {
         "title": "添加外部链接",
@@ -379,11 +379,11 @@
       },
       "artistImage": {
         "title": "上传艺人图片",
-        "body": "为艺人添加图片��该图片会同时用于头像和横幅�?
+        "body": "为艺人添加图片。该图片会同时用于头像和横幅。"
       },
       "saveArtist": {
         "title": "保存艺人",
-        "body": "全部设置完成后，将艺人保存到地图�?
+        "body": "全部设置完成后，将艺人保存到地图！"
       }
     }
   },
@@ -396,72 +396,72 @@
     "credits": {
       "title": "API 和库",
       "openStreetMap": {
-        "description": "基于 Overpass API 的反向地理编�?
+        "description": "基于 Overpass API 的反向地理编码"
       },
       "carto": {
         "description": "地图主题样式"
       },
       "geoapify": {
-        "description": "地理编码和反向地理编�?
+        "description": "地理编码和反向地理编码"
       },
       "locationIq": {
-        "description": "地理编码和反向地理编�?
+        "description": "地理编码和反向地理编码"
       },
       "musicBrainz": {
-        "description": "艺人元数据以及搜�?
+        "description": "艺人元数据以及搜索"
       }
     }
   },
   "notifications": {
     "title": "通知",
-    "buttonLabel": "通知（{{count}}�?,
+    "buttonLabel": "通知（{{count}}）",
     "dismiss": "关闭通知",
     "less": "收起",
     "more": "展开",
     "pinned": "置顶",
-    "clearAll": "清除扢�有��知",
+    "clearAll": "清除所有通知",
     "accountPendingApprovalTitle": "账号等待审核",
-    "accountPendingApprovalContent": "你的账号正在等待管理员审�?,
+    "accountPendingApprovalContent": "你的账号正在等待管理员审核",
     "pendingApprovals_one": "{{count}} 个待审核",
     "pendingApprovals_other": "{{count}} 个待审核",
-    "pendingApprovals": "待审核账�?,
-    "pendingApprovalsContent": "有用户正在等待账号审�?,
+    "pendingApprovals": "待审核账号",
+    "pendingApprovalsContent": "有用户正在等待账号审核",
     "openAdmin": "打开管理后台"
   },
   "map": {
-    "Achizu": "Achizu 音乐人地�?,
+    "Achizu": "Achizu 音乐人地图",
     "manualLocationSelection": "点击地图选择地点",
     "cancel": "取消",
     "attribution": {
       "aboutAchizu": "关于 Achizu"
     },
     "markers": {
-      "clusterArtists": "{{count}} 位艺�?
+      "clusterArtists": "{{count}} 位艺人"
     },
     "buttons": {
-      "addNewArtist": "添加新艺�?,
+      "addNewArtist": "添加新艺人",
       "viewArtistList": "查看艺人列表",
       "mapControls": {
         "toggleLocationView": "切换地点视图",
-        "origin": "出身�?,
-        "active": "活动�?,
+        "origin": "出身地",
+        "active": "活动地",
         "toggleMapTheme": "切换地图主题",
         "light": "浅色",
         "dark": "深色",
         "useDarkTiles": "使用深色地图",
-        "cannotUseDarkTiles": "此地图无法使用深色模�?,
-        "collapseAllClusters": "收起扢�有圈�?,
-        "expandAllClusters": "展开扢�有圈�?,
+        "cannotUseDarkTiles": "此地图无法使用深色模式",
+        "collapseAllClusters": "收起所有圈圈",
+        "expandAllClusters": "展开所有圈圈",
         "resetMapDirection": "重置地图方向",
-        "locateMe": "定位�?,
+        "locateMe": "定位我",
         "zoomIn": "放大",
         "zoomOut": "缩小",
         "gigFilter": {
-          "open": "筛��地图上的演�?,
-          "title": "演出筛��?,
+          "open": "筛选地图上的演出",
+          "title": "演出筛选",
           "starredLabel": "演出显示",
           "allGigs": "全部演出",
-          "starredGigs": "已收藏演�?,
+          "starredGigs": "已收藏演出",
           "tourLabel": "巡演",
           "all": "全部",
           "allTours": "全部巡演",
@@ -471,9 +471,9 @@
       }
     },
     "error": {
-      "renderMapError": "此浏览器不支持地图渲染��请使用其他浏览器��?,
-      "loadMapError": "地图加载失败。请刷新后重试��?,
-      "loadArtistsError": "艺人加载失败。请刷新后重试��?
+      "renderMapError": "此浏览器不支持地图渲染。请使用其他浏览器。",
+      "loadMapError": "地图加载失败。请刷新后重试。",
+      "loadArtistsError": "艺人加载失败。请刷新后重试。"
     }
   },
   "artistList": {
@@ -485,8 +485,8 @@
       "featured": " Achizu 地图"
     },
     "search": {
-      "ariaLabel": "搜索艺人或地�?,
-      "placeholder": "搜索艺人或地�?
+      "ariaLabel": "搜索艺人或地点",
+      "placeholder": "搜索艺人或地点"
     },
     "sort": {
       "label": "排序方式",
@@ -500,8 +500,8 @@
         "dateAdded": "添加日期",
         "recentlyUpdated": "更新日期",
         "name": "名称",
-        "activeLocation": "活动�?,
-        "originLocation": "出身�?,
+        "activeLocation": "活动地",
+        "originLocation": "出身地",
         "debutYear": "出道年份"
       }
     },
@@ -512,7 +512,7 @@
     "actions": {
       "copyAll": "将所有艺人复制到我的地图",
       "share": "分享我的地图",
-      "linkCopied": "链接已复�?,
+      "linkCopied": "链接已复制",
       "goToLocation": "前往地点",
       "edit": "编辑艺人",
       "editShort": "编辑",
@@ -521,10 +521,10 @@
     }
   },
   "userNotFound": {
-    "title": "找不�?{{username}} ;_;",
+    "title": "找不到 {{username}} ;_;",
     "reasonsIntro": "可能的原因：",
     "reasons": {
-      "doesNotExist": "用户不存�?,
+      "doesNotExist": "用户不存在",
       "private": "个人资料是私密的",
       "deleted": "账号已被删除"
     },
@@ -536,12 +536,12 @@
       "active": "活动"
     },
     "years": {
-      "present": "活跃�?
+      "present": "活跃中"
     },
     "actions": {
       "edit": "编辑艺人",
       "delete": "删除艺人",
-      "copy": "复制到我的地�?
+      "copy": "复制到我的地图"
     },
     "social": {
       "website": "艺人网站",
@@ -561,13 +561,13 @@
       "locateGig": "定位演出",
       "createTour": "创建巡演",
       "clearDates": "清除日期",
-      "exit": "逢��?,
+      "exit": "退出",
       "viewEvent": "查看活动",
       "starGig": "收藏演出",
       "unstarGig": "取消收藏演出",
       "todayOnward": "近期演出",
-      "upcomingGigs": "即将到来的演�?,
-      "allDates": "扢�有日�?
+      "upcomingGigs": "即将到来的演出",
+      "allDates": "所有日期"
     },
     "fields": {
       "artist": "艺人",
@@ -577,14 +577,14 @@
       "date": "日期",
       "time": "时间",
       "tour": "巡演",
-      "addToTour": "添加到巡�?,
-      "partOfTour": "属于巡演�?,
+      "addToTour": "添加到巡演",
+      "partOfTour": "属于巡演？",
       "createTour": "创建巡演",
       "createTourOptional": "创建巡演（可选）",
       "tourName": "巡演名称",
       "gigs": "演出",
-      "from": "�?,
-      "to": "�?,
+      "from": "从",
+      "to": "到",
       "venue": "场馆",
       "location": "地点",
       "venueLocation": "场馆 / 地点"
@@ -595,27 +595,27 @@
       "selectArtist": "选择艺人",
       "selectTour": "选择巡演",
       "createTour": "创建巡演",
-      "addArtistToGig": "为演出添加艺�?,
+      "addArtistToGig": "为演出添加艺人",
       "addToExistingTour": "已有巡演",
       "createATour": "创建巡演",
       "removeArtist": "移除 {{name}}",
       "noArtistsFound": "没有找到艺人",
       "noToursFound": "没有找到巡演",
-      "noGigsForTour": "当前日期范围内没有演�?,
+      "noGigsForTour": "当前日期范围内没有演出",
       "sections": {
         "gig": "演出",
         "tour": "巡演"
       },
       "tourMode": {
-        "none": "�?,
+        "none": "无",
         "existing": "已有",
         "new": "新建"
       },
-      "preselectedArtist": "已��择 {{name}}",
+      "preselectedArtist": "已选择 {{name}}",
       "gigNamePlaceholder": "输入演出名称",
       "venuePlaceholder": "输入场馆名称",
       "locationPlaceholder": "搜索场馆 / 地点",
-      "locationSearchHint": "如果找不到场馆，请改用场馆创建功能添�?,
+      "locationSearchHint": "如果找不到场馆，请改用场馆创建功能添加",
       "tourNamePlaceholder": "输入巡演名称"
     },
     "timePicker": {
@@ -632,25 +632,25 @@
     "banner": {
       "label": "巡演模式",
       "default": "<count>{{count}}</count> 场即将到来的演出",
-      "allDates": "已记�?<count>{{count}}</count> 场演�?,
-      "singleDate": "{{from}}�?count>{{count}}</count> 场演出）",
-      "interval": "{{from}} - {{to}}�?count>{{count}}</count> 场演出）",
-      "day": "已高�?{{day}}�?count>{{count}}</count> 场演出）",
-      "countLabel_one": "场演�?,
-      "countLabel_other": "场演�?,
+      "allDates": "已记录 <count>{{count}}</count> 场演出",
+      "singleDate": "{{from}}（<count>{{count}}</count> 场演出）",
+      "interval": "{{from}} - {{to}}（<count>{{count}}</count> 场演出）",
+      "day": "已高亮 {{day}}（<count>{{count}}</count> 场演出）",
+      "countLabel_one": "场演出",
+      "countLabel_other": "场演出",
       "countLabelUpcoming_one": "场即将到来的演出",
       "countLabelUpcoming_other": "场即将到来的演出",
       "scope": {
         "all": "全部",
-        "allTime": "扢�有时�?,
+        "allTime": "所有时间",
         "upcoming": "即将到来"
       }
     },
     "panel": {
       "title": "演出",
-      "empty": "当前日期范围内没有演�?,
-      "noResults": "没有符合当前过滤条件的演�?,
-      "noTour": "无巡�?,
+      "empty": "当前日期范围内没有演出",
+      "noResults": "没有符合当前过滤条件的演出",
+      "noTour": "无巡演",
       "search": {
         "ariaLabel": "搜索演出",
         "placeholder": "搜索演出"
@@ -677,13 +677,13 @@
       "title": "巡演",
       "open": "管理巡演",
       "empty": "没有巡演",
-      "noResults": "没有符合当前过滤条件的巡�?,
+      "noResults": "没有符合当前过滤条件的巡演",
       "expandTour": "展开 {{name}}",
       "collapseTour": "收起 {{name}}",
       "deleteTour": "删除 {{name}}",
       "deleteAction": "删除巡演",
-      "gigCount_one": "{{count}} 场演�?,
-      "gigCount_other": "{{count}} 场演�?,
+      "gigCount_one": "{{count}} 场演出",
+      "gigCount_other": "{{count}} 场演出",
       "noGigs": "此巡演中没有演出",
       "search": {
         "ariaLabel": "搜索巡演",
@@ -700,21 +700,21 @@
     "dialogs": {
       "deleteGig": {
         "title": "删除演出",
-        "message": "删除 {{artist}} �?{{date}} 的演出？此操作无法撤锢��?
+        "message": "删除 {{artist}} 在 {{date}} 的演出？此操作无法撤销。"
       },
       "deleteTour": {
         "title": "删除巡演",
-        "message_one": "删除 <name>{{name}}</name> 及其中的 {{count}} 场演出？此操作无法撤锢��?,
-        "message_other": "删除 <name>{{name}}</name> 及其中的全部 {{count}} 场演出？此操作无法撤锢��?
+        "message_one": "删除 <name>{{name}}</name> 及其中的 {{count}} 场演出？此操作无法撤销。",
+        "message_other": "删除 <name>{{name}}</name> 及其中的全部 {{count}} 场演出？此操作无法撤销。"
       }
     },
     "errors": {
-      "requiredFields": "请��择艺人、日期和地点",
-      "requiredTour": "请��择巡演",
+      "requiredFields": "请选择艺人、日期和地点",
+      "requiredTour": "请选择巡演",
       "requiredTourName": "输入巡演名称",
-      "missingRequiredFields": "请添�?{{fields}}",
+      "missingRequiredFields": "请添加 {{fields}}",
       "loadGigs": "加载演出失败",
-      "saveFailed": "保存演出失败。请重试�?,
+      "saveFailed": "保存演出失败。请重试。",
       "deleteFailedTitle": "无法删除演出",
       "deleteFailedMessage": "删除演出失败。请重试",
       "deleteTourFailedTitle": "无法删除巡演",
@@ -724,23 +724,23 @@
       "title": "演出日历",
       "selectDate": "选择日期",
       "selectMonth": "选择月份",
-      "previousMonth": "上个�?,
-      "nextMonth": "下个�?,
+      "previousMonth": "上个月",
+      "nextMonth": "下个月",
       "today": "今天",
       "dateRange": "日期范围",
       "singleDate": "日期：{{date}}",
       "more": "+{{count}} 更多",
-      "remainingEvents": "还有 {{count}} 个活�?
+      "remainingEvents": "还有 {{count}} 个活动"
     },
     "venueSearch": {
-      "coordsPlaceholder": "纬度，经�?,
+      "coordsPlaceholder": "纬度，经度",
       "createVenueName": "创建场馆",
       "createdByUser": "用户创建",
-      "failedCreateVenue": "创建场馆失败。请重试�?,
-      "failedLocation": "搜索失败。请重试�?,
-      "failedReverseLocation": "无法解析这些坐标的行政地�?,
+      "failedCreateVenue": "创建场馆失败。请重试。",
+      "failedLocation": "搜索失败。请重试。",
+      "failedReverseLocation": "无法解析这些坐标的行政地点",
       "manualLocation": "手动指定位置",
-      "resultsLabel": "场馆和地点结�?,
+      "resultsLabel": "场馆和地点结果",
       "searchLocation": "搜索地点",
       "searchLocationTab": "搜索地点",
       "venueCreated": "场馆已创建并生效",
@@ -752,31 +752,31 @@
       "deleteArtist": {
         "title": "删除艺人",
         "errorTitle": "无法删除艺人",
-        "errorMessage": "删除艺人失败。请重试�?,
-        "message": "从你的地图中删除 <strong>{{name}}</strong>？此操作无法撤销�?
+        "errorMessage": "删除艺人失败。请重试。",
+        "message": "从你的地图中删除 <strong>{{name}}</strong>？此操作无法撤销。"
       },
       "copyCollection": {
         "title": "复制艺人收藏",
-        "message_one": "�?<username>{{username}}</username> 地图中的 <count>{{count}} 位艺�?/count> 复制到你的地图？",
-        "message_other": "�?<username>{{username}}</username> 地图中的 <count>{{count}} 位艺�?/count> 复制到你的地图？",
-        "skipExisting": "已在你地图中的艺人会被跳�?,
-        "successTitle": "收藏已复�?,
-        "successMessage": "已复�?{{copied}} 位艺人，跳过 {{skipped}} �?,
-        "successMessage_one": "已复�?{{copied}} 位艺人，跳过 {{skipped}} �?,
-        "successMessage_other": "已复�?{{copied}} 位艺人，跳过 {{skipped}} �?,
+        "message_one": "将 <username>{{username}}</username> 地图中的 <count>{{count}} 位艺人</count> 复制到你的地图？",
+        "message_other": "将 <username>{{username}}</username> 地图中的 <count>{{count}} 位艺人</count> 复制到你的地图？",
+        "skipExisting": "已在你地图中的艺人会被跳过",
+        "successTitle": "收藏已复制",
+        "successMessage": "已复制 {{copied}} 位艺人，跳过 {{skipped}} 位",
+        "successMessage_one": "已复制 {{copied}} 位艺人，跳过 {{skipped}} 位",
+        "successMessage_other": "已复制 {{copied}} 位艺人，跳过 {{skipped}} 位",
         "errorTitle": "无法复制收藏",
-        "errorMessage": "复制艺人收藏失败。请重试�?
+        "errorMessage": "复制艺人收藏失败。请重试。"
       },
       "copyArtist": {
         "title": "复制艺人",
-        "message": "�?<name>{{name}}</name> 复制到你的地图？",
-        "successTitle": "艺人已复�?,
-        "successMessage": "已将 <name>{{name}}</name> 添加到你的地图��?,
-        "successToast": "已将 {{name}} 添加到你的地�?,
+        "message": "把 <name>{{name}}</name> 复制到你的地图？",
+        "successTitle": "艺人已复制",
+        "successMessage": "<name>{{name}}</name> 已添加到你的地图。",
+        "successToast": "{{name}} 已添加到你的地图",
         "alreadyExistsTitle": "无法复制艺人",
-        "alreadyExistsMessage": "<name>{{name}}</name> 已在你的地图中��?,
+        "alreadyExistsMessage": "<name>{{name}}</name> 已在你的地图中。",
         "errorTitle": "无法复制艺人",
-        "errorMessage": "复制此艺人失败��请重试�?
+        "errorMessage": "复制此艺人失败。请重试。"
       }
     }
   }
