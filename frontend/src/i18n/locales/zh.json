@@ -62,7 +62,7 @@
     },
     "emailCheck": {
       "title": "检查邮箱",
-      "message": "我们已向 {{email}} 发送确认链接。请检查收件箱并点击链接继续。",
+      "message": "已向 {{email}} 发送确认链接。请检查收件箱。",
       "expiresIn": "确认链接将在 15 分钟后过期"
     },
     "userNamePrompt": {

@@ -62,7 +62,7 @@
     },
     "emailCheck": {
       "title": "檢查信箱",
-      "message": "我們已向 {{email}} 傳送確認連結。請檢查收件箱並點擊連結繼續。",
+      "message": "已向 {{email}} 傳送確認連結。請檢查收件箱。",
       "expiresIn": "確認連結將在 15 分鐘後過期"
     },
     "userNamePrompt": {
