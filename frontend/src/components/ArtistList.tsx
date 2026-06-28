@@ -108,11 +108,10 @@ const ArtistList = ({
 
     useEffect(() => {
         if (!isSortOpen || !sortRef.current) return;
-
         const rect = sortRef.current.getBoundingClientRect();
         setSortDropdownPos({
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.left + window.scrollX,
+            top: rect.bottom + 4,
+            left: rect.left,
             width: rect.width,
         });
     }, [isSortOpen]);
@@ -340,7 +339,7 @@ const ArtistList = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     rightIcon={<SearchIcon className="w-4 h-4" />}
-                    className="min-w-0 flex-1 rounded-lg"
+                    className="min-w-0 flex-1 rounded-lg !pl-3.5 !pr-9"
                 />
                     <div ref={sortRef} className="relative shrink-0">
                         <button
@@ -350,7 +349,7 @@ const ArtistList = ({
                             aria-expanded={isSortOpen}
                             aria-controls={isSortOpen ? sortListboxId : undefined}
                             onClick={() => setIsSortOpen((open) => !open)}
-                            className="flex min-w-[6.5rem] items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                            className="flex min-w-[6.5rem] items-center gap-1.5 rounded-lg border border-border-strong bg-surface pl-3 pr-7 py-2 text-left text-sm text-text transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary relative"
                         >
                             <span className="block truncate">
                                 {selectedSortOption ? t(selectedSortOption.labelKey) : t('artistList.sort.options.dateAdded')}
@@ -367,7 +366,8 @@ const ArtistList = ({
                                 style={{
                                     top: `${sortDropdownPos.top}px`,
                                     left: `${sortDropdownPos.left}px`,
-                                    width: `${sortDropdownPos.width}px`,
+                                    width: 'max-content',
+                                    minWidth: `${sortDropdownPos.width}px`,
                                 }}
                             >
                                 {sortOptions.map((option) => (
@@ -380,7 +380,7 @@ const ArtistList = ({
                                             setSortKey(option.value);
                                             setIsSortOpen(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-muted ${
+                                        className={`block w-auto whitespace-nowrap px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-surface-muted ${
                                             option.value === sortKey ? 'text-primary-contrast app-dark:text-primary font-medium' : 'text-text'
                                         }`}
                                     >
