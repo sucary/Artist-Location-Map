@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { API_URL } from '../services/api';
 import type { Profile } from '../types/profile';
 import i18n from '../i18n';
+import { getUiLanguage } from '../i18n/uiLanguage';
 
 interface AuthContextType {
     user: User | null;
@@ -117,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             password,
             options: {
                 emailRedirectTo: window.location.origin,
+                data: { lang: getUiLanguage(i18n.resolvedLanguage ?? i18n.language) },
             },
         });
         return { error };

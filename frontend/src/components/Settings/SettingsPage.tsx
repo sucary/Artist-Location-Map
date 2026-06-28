@@ -12,9 +12,9 @@ import type { Artist } from '../../types/artist';
 import ArtistCard from '../ArtistCard';
 import { useTranslation } from 'react-i18next';
 import { getStoredClusterDebugControlsEnabled, storeClusterDebugControlsEnabled } from '../Map/config/mapStorage';
+import { getUiLanguage, type UiLanguage } from '../../i18n/uiLanguage';
 
 
-type UiLanguage = 'en' | 'zh' | 'zh-Hant' | 'ja';
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
 const isValidUsername = (value: string) => (
     value.length >= 3 &&
@@ -94,18 +94,6 @@ const sampleArtist: Artist = {
     updatedAt: '',
     originalCityId: 'preview-original-city',
     activeCityId: 'preview-tokyo-23-wards',
-};
-const getUiLanguage = (language: string): UiLanguage => {
-    if (language === 'zh-Hant' || language.startsWith('zh-Hant-') || ['zh-TW', 'zh-HK', 'zh-MO'].includes(language)) {
-        return 'zh-Hant';
-    }
-    if (language === 'zh' || language.startsWith('zh-')) {
-        return 'zh';
-    }
-    if (language === 'ja' || language.startsWith('ja-')) {
-        return 'ja';
-    }
-    return 'en';
 };
 
 export function SettingsPage() {

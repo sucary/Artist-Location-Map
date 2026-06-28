@@ -182,3 +182,10 @@ html[data-theme="dark"] .artist-banner-placeholder {
     display: none;
   }
 }
+
+/* Suppress Edge/IE native password reveal & clear buttons so they don't
+   double up with our custom show/hide eye toggle. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
