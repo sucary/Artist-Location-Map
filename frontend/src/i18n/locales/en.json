@@ -486,7 +486,10 @@
     },
     "search": {
       "ariaLabel": "Search artists or locations",
-      "placeholder": "Search artists or locations"
+      "placeholder": "Search artists or locations",
+      "resultCount_one": "{{count}} result",
+      "resultCount_other": "{{count}} results",
+      "clear": "Clear search"
     },
     "sort": {
       "label": "Sort by",
@@ -653,7 +656,10 @@
       "noTour": "No tour",
       "search": {
         "ariaLabel": "Search gigs",
-        "placeholder": "Search gigs"
+        "placeholder": "Search gigs",
+        "resultCount_one": "{{count}} result",
+        "resultCount_other": "{{count}} results",
+        "clear": "Clear search"
       },
       "sort": {
         "label": "Sort by",
@@ -687,7 +693,9 @@
       "noGigs": "No gigs in this tour",
       "search": {
         "ariaLabel": "Search tours",
-        "placeholder": "Search tours"
+        "placeholder": "Search tours",
+        "resultCount_one": "{{count}} result",
+        "resultCount_other": "{{count}} results"
       },
       "sort": {
         "ariaLabel": "Sort tours",

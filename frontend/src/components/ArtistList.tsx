@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getArtists, getArtistsByUsername, getFeaturedArtists } from '../services/api';
-import { SearchIcon, EditIcon, TrashIcon, CopyIcon, ShareIcon, ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from './icons/GeneralIcons';
+import { SearchIcon, EditIcon, TrashIcon, CopyIcon, ShareIcon, ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, CloseIcon } from './icons/GeneralIcons';
 import { MapPinIcon } from './icons/MapIcons';
 import { getAvatarUrl } from '../utils/cloudinaryUrl';
 import { formatLocationLocalized, getSearchableLocationText } from '../utils/locationUtils';
-import { Input, Spinner, CloseButton } from './ui';
+import { Input, Spinner, CloseButton, IconButton } from './ui';
 import ArtistCard from './ArtistCard';
 import type { Artist } from '../types/artist';
 import { useLocationLanguage } from '../context/LocationLanguageContext';
@@ -328,19 +328,31 @@ const ArtistList = ({
             {/* Search & Sort */}
             <div className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                <Input
-                    aria-label={t('artistList.search.ariaLabel')}
-                    type="text"
-                    name="artist-list-search"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    placeholder={t('artistList.search.placeholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    rightIcon={<SearchIcon className="w-4 h-4" />}
-                    className="min-w-0 flex-1 rounded-lg !pl-3.5 !pr-9"
-                />
+                <div className="relative min-w-0 flex-1">
+                    <Input
+                        aria-label={t('artistList.search.ariaLabel')}
+                        type="text"
+                        name="artist-list-search"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        placeholder={t('artistList.search.placeholder')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        rightIcon={searchQuery ? undefined : <SearchIcon className="w-4 h-4" />}
+                        className="w-full rounded-lg !pl-3.5 !pr-9"
+                    />
+                    {searchQuery && (
+                        <IconButton
+                            aria-label={t('artistList.search.clear')}
+                            onClick={() => setSearchQuery('')}
+                            size="sm"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
+                        >
+                            <CloseIcon className="w-4 h-4" />
+                        </IconButton>
+                    )}
+                </div>
                     <div ref={sortRef} className="relative shrink-0">
                         <button
                             type="button"
@@ -411,6 +423,11 @@ const ArtistList = ({
 
             {/* Artist list - max 8 rows visible */}
             <div className="overflow-y-auto flex-1 max-h-128">
+                    {searchQuery.trim() && (
+                        <div className="mx-4 mb-1 rounded-md bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text-secondary" role="status" aria-live="polite">
+                            {t('artistList.search.resultCount', { count: sortedArtists.length })}
+                        </div>
+                    )}
                     {isLoading ? (
                         <div className="flex items-center justify-center py-8">
                             <Spinner className="text-primary" />

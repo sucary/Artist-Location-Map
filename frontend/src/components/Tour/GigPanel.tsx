@@ -1,10 +1,11 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Gig, Tour } from '../../types/gig';
-import { CloseButton, InlineActionMenu, Input } from '../ui';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, PlusIcon, SearchIcon, StarIcon, SwitchHorizontalIcon, TrashIcon } from '../icons/GeneralIcons';
+import { CloseButton, InlineActionMenu, Input, IconButton } from '../ui';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, CloseIcon, PlusIcon, SearchIcon, StarIcon, SwitchHorizontalIcon, TrashIcon } from '../icons/GeneralIcons';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedTimeValue, getBrowserDateLocale } from '../../utils/dateFormatting';
+import { getSearchableLocationText } from '../../utils/locationUtils';
 
 type GigPanelSort = 'date' | 'artist' | 'location';
 type TourPanelSort = 'date' | 'artist' | 'gigs';
@@ -175,9 +176,8 @@ export function GigPanel({
                 gig.gigName,
                 gig.tour?.name,
                 gig.venueName,
-                gig.location.city,
-                gig.location.province,
-                gig.location.country,
+                gig.location.displayName,
+                getSearchableLocationText(gig.location),
                 gig.date,
                 gig.time,
             ].filter(Boolean).join(' ').toLowerCase();
@@ -614,25 +614,37 @@ export function GigPanel({
 
                 <div className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                        <Input
-                            aria-label={t(isManagingTours ? 'tour.management.search.ariaLabel' : 'tour.panel.search.ariaLabel')}
-                            type="text"
-                            name={isManagingTours ? 'tour-list-search' : 'gig-list-search'}
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            placeholder={t(isManagingTours ? 'tour.management.search.placeholder' : 'tour.panel.search.placeholder')}
-                            value={isManagingTours ? tourFilterQuery : filterQuery}
-                            onChange={(event) => {
-                                if (isManagingTours) {
-                                    setTourFilterQuery(event.target.value);
-                                } else {
-                                    setFilterQuery(event.target.value);
-                                }
-                            }}
-                            rightIcon={<SearchIcon className="w-4 h-4" />}
-                            className="min-w-0 flex-1 rounded-lg"
-                        />
+                        <div className="relative min-w-0 flex-1">
+                            <Input
+                                aria-label={t(isManagingTours ? 'tour.management.search.ariaLabel' : 'tour.panel.search.ariaLabel')}
+                                type="text"
+                                name={isManagingTours ? 'tour-list-search' : 'gig-list-search'}
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                placeholder={t(isManagingTours ? 'tour.management.search.placeholder' : 'tour.panel.search.placeholder')}
+                                value={isManagingTours ? tourFilterQuery : filterQuery}
+                                onChange={(event) => {
+                                    if (isManagingTours) {
+                                        setTourFilterQuery(event.target.value);
+                                    } else {
+                                        setFilterQuery(event.target.value);
+                                    }
+                                }}
+                                rightIcon={(isManagingTours ? tourFilterQuery : filterQuery) ? undefined : <SearchIcon className="w-4 h-4" />}
+                                className="w-full rounded-lg !pr-9"
+                            />
+                            {(isManagingTours ? tourFilterQuery : filterQuery) && (
+                                <IconButton
+                                    aria-label={t('tour.panel.search.clear')}
+                                    onClick={() => (isManagingTours ? setTourFilterQuery('') : setFilterQuery(''))}
+                                    size="sm"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded hover:bg-surface-muted"
+                                >
+                                    <CloseIcon className="w-4 h-4" />
+                                </IconButton>
+                            )}
+                        </div>
                         <div ref={sortRef} className="relative shrink-0">
                             <button
                                 type="button"
@@ -712,6 +724,13 @@ export function GigPanel({
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
+                    {(isManagingTours ? tourFilterQuery.trim() : filterQuery.trim()) && (
+                        <div className="mx-4 mb-1 rounded-md bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text-secondary" role="status" aria-live="polite">
+                            {isManagingTours
+                                ? t('tour.management.search.resultCount', { count: filteredSortedTours.length })
+                                : t('tour.panel.search.resultCount', { count: filteredGigs.length })}
+                        </div>
+                    )}
                     {isManagingTours ? (
                         filteredSortedTours.length === 0 ? (
                             <div className="px-4 py-8 text-center text-sm text-text-secondary">

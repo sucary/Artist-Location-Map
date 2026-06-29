@@ -484,7 +484,10 @@
     },
     "search": {
       "ariaLabel": "搜尋藝人或地點",
-      "placeholder": "搜尋藝人或地點"
+      "placeholder": "搜尋藝人或地點",
+      "resultCount_one": "{{count}} 個結果",
+      "resultCount_other": "{{count}} 個結果",
+      "clear": "清除搜尋"
     },
     "sort": {
       "label": "排序方式",
@@ -651,7 +654,10 @@
       "noTour": "無巡演",
       "search": {
         "ariaLabel": "搜尋演出",
-        "placeholder": "搜尋演出"
+        "placeholder": "搜尋演出",
+        "resultCount_one": "{{count}} 個結果",
+        "resultCount_other": "{{count}} 個結果",
+        "clear": "清除搜尋"
       },
       "sort": {
         "label": "排序方式",
@@ -685,7 +691,9 @@
       "noGigs": "此巡演中沒有演出",
       "search": {
         "ariaLabel": "搜尋巡演",
-        "placeholder": "搜尋巡演"
+        "placeholder": "搜尋巡演",
+        "resultCount_one": "{{count}} 個結果",
+        "resultCount_other": "{{count}} 個結果"
       },
       "sort": {
         "ariaLabel": "巡演排序",

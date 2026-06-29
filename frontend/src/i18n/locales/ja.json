@@ -486,7 +486,10 @@
     },
     "search": {
       "ariaLabel": "アーティストまたは場所を検索",
-      "placeholder": "アーティストまたは場所を検索..."
+      "placeholder": "アーティストまたは場所を検索...",
+      "resultCount_one": "{{count}}件の結果",
+      "resultCount_other": "{{count}}件の結果",
+      "clear": "検索をクリア"
     },
     "sort": {
       "label": "並べ替え",
@@ -653,7 +656,10 @@
       "noTour": "ツアーなし",
       "search": {
         "ariaLabel": "公演を検索",
-        "placeholder": "公演を検索"
+        "placeholder": "公演を検索",
+        "resultCount_one": "{{count}}件の結果",
+        "resultCount_other": "{{count}}件の結果",
+        "clear": "検索をクリア"
       },
       "sort": {
         "label": "並べ替え",
@@ -687,7 +693,9 @@
       "noGigs": "このツアーに公演はありません",
       "search": {
         "ariaLabel": "ツアーを検索",
-        "placeholder": "ツアーを検索"
+        "placeholder": "ツアーを検索",
+        "resultCount_one": "{{count}}件の結果",
+        "resultCount_other": "{{count}}件の結果"
       },
       "sort": {
         "ariaLabel": "ツアーを並べ替え",
