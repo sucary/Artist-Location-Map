@@ -169,6 +169,18 @@ export function MusicBrainzArtistPicker({ value, selectedMbid, onNameChange, onS
         }
     }, [isOpen, localResults.length, onlineResults.length]);
 
+    // Scrolling the form dismisses the open dropdown.
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleScroll = (event: Event) => {
+            const target = event.target as Node | null;
+            if (target && dropdownRef.current?.contains(target)) return;
+            setIsOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isOpen]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;

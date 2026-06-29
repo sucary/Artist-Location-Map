@@ -279,6 +279,18 @@ export function VenueLocationSearch({
         });
     }, [isOpen, results.length]);
 
+    // Scrolling the form dismisses the open dropdown.
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleScroll = (event: Event) => {
+            const target = event.target as Node | null;
+            if (target && document.querySelector('.tour-location-search-dropdown')?.contains(target)) return;
+            setIsOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isOpen]);
+
     // Dropdown follows add-artist outside-click behavior
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

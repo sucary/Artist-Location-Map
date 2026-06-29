@@ -69,6 +69,18 @@ const YearSelect = ({
         }
     }, [isOpen]);
 
+    // Scrolling the form dismisses the open dropdown.
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleScroll = (event: Event) => {
+            const target = event.target as Node | null;
+            if (target && dropdownRef.current?.contains(target)) return;
+            setIsOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isOpen]);
+
     // Scroll to matching year when input changes
     useEffect(() => {
         if (isOpen && dropdownRef.current && inputValue) {

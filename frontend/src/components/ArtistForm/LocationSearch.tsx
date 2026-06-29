@@ -93,9 +93,12 @@ export const LocationSearch = ({
     const { t } = useTranslation();
     const cityTypeLabel = t('common.city', { defaultValue: 'City' });
 
-    // Update dropdown position when opening
+    // Compute the portal dropdown position when it opens (and on resize).
     useEffect(() => {
-        if (isOpen && inputRef.current) {
+        if (!isOpen) return;
+
+        const updatePosition = () => {
+            if (!inputRef.current) return;
             const rect = inputRef.current.getBoundingClientRect();
             // Find the outer form panel to cap dropdown within it
             const formContainer = inputRef.current.closest('.rounded-lg.shadow-xl');
@@ -104,15 +107,35 @@ export const LocationSearch = ({
                 : window.innerHeight;
             const gap = 4;
             const maxHeight = Math.max(120, containerBottom - rect.bottom - gap);
-            
+
+            // Dropdown is position: fixed, so use viewport-relative coords (no scroll offsets).
             setDropdownPosition({
-                top: rect.bottom + window.scrollY,
-                left: rect.left + window.scrollX,
+                top: rect.bottom,
+                left: rect.left,
                 width: rect.width,
                 maxHeight
             });
-        }
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        return () => window.removeEventListener('resize', updatePosition);
     }, [isOpen]);
+
+    // Scrolling the form (or page) dismisses the open dropdown.
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleScroll = (event: Event) => {
+            // Ignore scrolling within the dropdown's own results list.
+            const target = event.target as Node | null;
+            if (target && document.querySelector('.location-search-dropdown')?.contains(target)) return;
+            closeDropdown();
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+    }, [isOpen, closeDropdown]);
 
     // Close dropdown when clicking outside
     useEffect(() => {

@@ -46,12 +46,15 @@ const ArtistFormHeader = ({
         };
 
         const closeOnResize = () => setPickerMenu(null);
+        const closeOnScroll = () => setPickerMenu(null);
         document.addEventListener('mousedown', closePickerMenu);
         window.addEventListener('resize', closeOnResize);
+        window.addEventListener('scroll', closeOnScroll, { passive: true, capture: true });
 
         return () => {
             document.removeEventListener('mousedown', closePickerMenu);
             window.removeEventListener('resize', closeOnResize);
+            window.removeEventListener('scroll', closeOnScroll, { capture: true } as EventListenerOptions);
         };
     }, [pickerMenu]);
 

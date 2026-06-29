@@ -175,62 +175,58 @@ export function ArtistMultiSelect({ artists, value, label, placeholder, removeLa
                         );
                     })}
 
-                    <button
-                        type="button"
-                        aria-label={placeholder}
-                        onClick={openArtistField}
-                        className={`grid h-7 place-items-center rounded-full transition-all duration-150 ${
-                            selectedArtists.length === 0 ? 'w-full' : 'w-7'
-                        } ${
-                            isAddingArtist
-                                ? 'bg-primary text-white'
-                                : 'bg-surface-muted text-text-secondary hover:bg-primary hover:text-white'
-                        }`}
-                    >
-                        <PlusIcon className="h-4 w-4" />
-                    </button>
-                </div>
-
-                {isAddingArtist && (
-                    <div className="relative mt-2">
-                        <input
-                            ref={inputRef}
-                            id={inputId}
-                            role="combobox"
-                            aria-autocomplete="list"
-                            aria-activedescendant={activeOptionId}
-                            aria-controls={isOpen ? listboxId : undefined}
-                            aria-expanded={isOpen}
-                            aria-haspopup="listbox"
-                            autoComplete="off"
-                            type="text"
-                            value={query}
-                            onChange={(event) => {
-                                setQuery(event.target.value);
-                                setIsOpen(true);
-                                setActiveIndex(0);
-                            }}
-                            onFocus={() => setIsOpen(true)}
-                            onKeyDown={handleInputKeyDown}
-                            placeholder={placeholder}
-                            className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
-                        />
+                    {isAddingArtist ? (
+                        <div className="relative min-w-[8rem] flex-1">
+                            <input
+                                ref={inputRef}
+                                id={inputId}
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-activedescendant={activeOptionId}
+                                aria-controls={isOpen ? listboxId : undefined}
+                                aria-expanded={isOpen}
+                                aria-haspopup="listbox"
+                                autoComplete="off"
+                                type="text"
+                                value={query}
+                                onChange={(event) => {
+                                    setQuery(event.target.value);
+                                    setIsOpen(true);
+                                    setActiveIndex(0);
+                                }}
+                                onFocus={() => setIsOpen(true)}
+                                onKeyDown={handleInputKeyDown}
+                                placeholder={placeholder}
+                                className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 pr-8 text-sm text-text placeholder:text-text-muted transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary"
+                            />
+                            <button
+                                aria-label={placeholder}
+                                aria-controls={isOpen ? listboxId : undefined}
+                                aria-expanded={isOpen}
+                                aria-haspopup="listbox"
+                                type="button"
+                                onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    setIsOpen((open) => !open);
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary transition-colors hover:bg-primary hover:text-white"
+                            >
+                                <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+                    ) : (
                         <button
-                            aria-label={placeholder}
-                            aria-controls={isOpen ? listboxId : undefined}
-                            aria-expanded={isOpen}
-                            aria-haspopup="listbox"
                             type="button"
-                            onMouseDown={(event) => {
-                                event.preventDefault();
-                                setIsOpen((open) => !open);
-                            }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-secondary transition-colors hover:bg-primary hover:text-white"
+                            aria-label={placeholder}
+                            onClick={openArtistField}
+                            className={`grid h-7 place-items-center rounded-full transition-all duration-150 ${
+                                selectedArtists.length === 0 ? 'w-full' : 'w-7'
+                            } bg-surface-muted text-text-secondary hover:bg-primary hover:text-white`}
                         >
-                            <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            <PlusIcon className="h-4 w-4" />
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {isAddingArtist && isOpen && createPortal(
