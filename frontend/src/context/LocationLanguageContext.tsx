@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import { API_URL } from '../services/api';
 
 const STORAGE_KEY = 'locationLanguage';
-const DEFAULT_LANGUAGE: LocationLanguage = 'en';
+const DEFAULT_LANGUAGE: LocationLanguage = 'native';
 
 interface LocationLanguageContextType {
     locationLanguage: LocationLanguage;
