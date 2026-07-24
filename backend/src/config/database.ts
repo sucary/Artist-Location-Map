@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 
 const poolConfig = {
-    max: 10,
-    idleTimeoutMillis: 10_000,
+    max: 5,
+    idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
 };
 
